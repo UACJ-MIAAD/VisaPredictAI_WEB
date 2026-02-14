@@ -20,7 +20,7 @@ VisaPredict AI es un sistema de predicción de fechas del Boletín de Visas de i
 - Presentación general del proyecto y sus objetivos
 - Visualización de resultados y predicciones
 - Documentación accesible para usuarios finales
-- Información sobre la metodología y el equipo de investigación
+- Información sobre la metodología y el equipo de investigación!
 
 ## 🏗️ Estructura del Proyecto
 
