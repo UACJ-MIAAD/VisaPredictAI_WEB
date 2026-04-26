@@ -67,3 +67,11 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Local backups
+*.bak
+*.html.bak
