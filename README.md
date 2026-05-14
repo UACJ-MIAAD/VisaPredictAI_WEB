@@ -15,35 +15,42 @@
 
 ## 📋 Descripción
 
-VisaPredict AI es un sistema de predicción de fechas del Boletín de Visas de inmigración de EE.UU., basado en modelos de aprendizaje automático y análisis de series temporales. Esta página web sirve como la **interfaz pública del proyecto**, proporcionando:
+VisaPredict AI es un **sistema predictivo aplicado** para las fechas de prioridad del *U.S. Visa Bulletin*, organizado como **panel multiserie** indexado por país o área de cargabilidad, categoría migratoria y tipo de tabla. Genera pronósticos mensuales a horizontes de 1, 3, 6 y 12 meses con **intervalos de predicción al 95 %**, instrumentado bajo la metodología **CRISP-DM** (Chapman et al. 2000). Esta página web sirve como la **interfaz pública descriptiva del proyecto**, proporcionando:
 
 - Presentación general del proyecto y sus objetivos
-- Visualización de resultados y predicciones
-- Documentación accesible para usuarios finales
-- Información sobre la metodología y el equipo de investigación!
+- Resumen de los 4 capítulos del anteproyecto (Introducción, Marco teórico, Producto esperado y validación, Metodología CRISP-DM)
+- Glosario operativo (42 términos) y bibliografía IEEE (64 referencias)
+- Documentación accesible para usuarios finales con disclaimer académico
+- Información sobre el equipo de investigación y la rúbrica del programa MIAAD
+
+> **Sincronizado con la versión v5.13** del `AnteproyectoVisaPredictAI.tex` entregada al Dr. Vicente García Jiménez el 13 de mayo de 2026.
 
 ## 🏗️ Estructura del Proyecto
 
 ```
 VisaPredictAI_WEB/
-├── index.html
-├── assets/
-│   ├── css/
-│   ├── js/
-│   └── img/
-├── pages/
-├── docs/
-└── README.md
+├── CLAUDE.md                       Convenciones, don'ts y mapeo a LaTeX
+├── README.md                       Este archivo
+├── index.html                      SPA principal (todo el sitio, ~2230 líneas)
+├── index4.html                     Versión legacy (anterior a v3, conservada como referencia)
+├── LogoVisaPredictAI.png           Logo principal (header, footer, favicon)
+├── LogoVisaPredictAI_vfull.png     Logo extendido alta resolución
+├── JARSPROFILE.jpg                 Foto del tesista
+├── DrVicente.png                   Foto del director
+├── logouacj.png                    Logo institucional UACJ
+└── .firebaserc                     Config Firebase Hosting (alternativo)
 ```
 
-> *La estructura se actualizará conforme avance el desarrollo.*
+> *Sitio estático single-page sin build step y sin dependencias npm.*
 
 ## 🚀 Tecnologías
 
 | Componente | Tecnología |
 |:-----------|:-----------|
-| Frontend | HTML5, CSS3, JavaScript |
-| Hosting | GitHub Pages |
+| Frontend | HTML5 + CSS3 + Vanilla JS (sin framework) |
+| Tipografías | Google Fonts: Playfair Display, DM Sans, Space Mono |
+| Hosting primario | Netlify (auto-deploy desde `main`) |
+| Hosting alternativo | Firebase Hosting (proyecto `visapredict-ai`) |
 | Diseño | Responsive / Mobile-first |
 
 ## 🎨 Paleta de Colores
@@ -87,5 +94,5 @@ Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE)
 <p align="center">
   <strong>Universidad Autónoma de Ciudad Juárez</strong><br/>
   Maestría en Inteligencia Artificial y Analítica de Datos<br/>
-  2025
+  Sitio v5.13 · Mayo 2026
 </p>

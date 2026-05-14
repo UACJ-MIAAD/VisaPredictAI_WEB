@@ -59,7 +59,7 @@ VisaPredictAI_WEB/                         ← raíz del repositorio Git
 - **Acrónimos:** definir en su primera aparición; reutilizar la sigla después.
 - **Decimales con punto**, no coma.
 - **Disclaimer banner** en la parte superior del `<body>`: el sitio es proyecto personal del autor, no entregable evaluado. Reproducir en el footer también.
-- **Sticky nav** con sombra al scroll · 11 secciones ancladas (`#inicio`, `#resumen`, `#capi`, `#capii`, `#capiii`, `#tablas`, `#reproducibilidad`, `#glosario`, `#referencias`, `#autores`, `#contacto`).
+- **Sticky nav** con sombra al scroll · 12 secciones ancladas (`#inicio`, `#resumen`, `#capi`, `#capii`, `#capiii`, `#capiv`, `#tablas`, `#reproducibilidad`, `#glosario`, `#referencias`, `#autores`, `#contacto`).
 - **Sin librerías externas en runtime** (excepto Google Fonts vía CDN). No introducir Chart.js, jQuery, Bootstrap, etc., sin documentar la decisión aquí.
 - **Reveal animations** vía IntersectionObserver puro · clase `.reveal` con variantes `.reveal--d1`, `.reveal--d2`, etc.
 - **Glosario y referencias** se filtran client-side (`<input>` y `<button class="ref-tab">`) sin estado en URL.
@@ -79,12 +79,18 @@ VisaPredictAI_WEB/                         ← raíz del repositorio Git
   ```
 - **Sincronización con el anteproyecto:** cuando el `.tex` cambia (nuevos fixes de auditoría, ajustes de título, hipótesis, glosario o bibliografía), **revisar y actualizar** las secciones correspondientes del `index.html` para mantener coherencia. Especialmente:
   - Convención F1–F4
-  - Estado de "ARIMA-LSTM" (debe ser uno de los candidatos del benchmark, no "modelo central")
-  - Sentimiento como extensión deseable (no entregable mínimo)
-  - Cobertura multi-país (no México-only)
-  - Niveles de éxito (Tabla 5)
-  - Cantidad de modelos comparados (8 actualmente)
+  - ARIMA-LSTM como uno de los 8 candidatos del **marco comparativo** (NO "benchmark" — token prohibido en .tex; NO "modelo central")
+  - Cobertura multi-país en **3 niveles** (estructural / evaluable / piloto F1–F4)
+  - Niveles de éxito (Tabla 4 del .tex)
+  - Cantidad de modelos comparados (8 actualmente: naïve, ARIMA, SARIMA, Prophet, LSTM puro, ARIMA-LSTM, DeepAR, XGBoost)
   - Disclaimer Apéndice A.4 (proyecto personal vs. entregable evaluado)
+  - **Tokens prohibidos en el HTML** (eliminados en sincronización v5.13): sentimiento, PLN, NLP, SHAP, LIME, BERT, BETO, VADER, XLM-R, multimodal, transformer (excepto bib/glosario para TFT/PatchTST), ablación, **benchmark** (usar "marco comparativo"), **post-hoc** (usar "retrospectiva"), Streamlit, "aplicación local"
+  - **Hipótesis** cualitativas blandas H1/H2 (sin H₀ formal, sin "estadísticamente comprobables" — el rigor estadístico vive en Cap.&nbsp;IV §4.4)
+  - **Demostrador** descrito como "aplicación de demostración" (sin Streamlit, sin Python, sin "local")
+  - **DOI académico** condicional (no compromiso del entregable mínimo; sí compromiso de licencia abierta)
+  - **Metodología** nominada explícitamente como **CRISP-DM** (Chapman et al. 2000 [64])
+  - **Variable predicha** como $y_{p,c,b,t}$ con regresor temporal **único** (no formulación mixta clasificador+regresor)
+  - **Intervalos de predicción al 95\,%** como término operativo central (no "incertidumbre explícita")
 - **Commits:** mensajes en inglés (convención del repo), branch `main`. No usar `git push --force` salvo emergencia documentada.
 
 ## g) Critical Don'ts ⚠️
@@ -130,10 +136,16 @@ with open('index.html') as f: v.feed(f.read())
 print('OK' if not v.errors and not v.stack else f'{len(v.errors)} errors')
 "
 
-# Conteo de secciones, referencias, términos del glosario
-grep -c '<section' index.html       # debe ser 11+ (no incluye banner)
-grep -c 'class=\"ref-item\"' index.html  # debe ser 81 (1:1 con la bibliografía del .tex)
-grep -c 'class=\"gloss-item\"' index.html  # debe ser 51
+# Conteo de secciones, referencias, términos del glosario (post v5.13)
+grep -c '<section' index.html       # debe ser 12+ (no incluye banner)
+grep -c 'class=\"ref-item\"' index.html  # debe ser 64 (1:1 con la bibliografía del .tex v5.13)
+grep -c 'class=\"gloss-item\"' index.html  # debe ser 42
+
+# Auditoría de tokens prohibidos en HTML (deben dar 0)
+for tok in sentimiento benchmark post-hoc streamlit '\bSHAP\b' '\bLIME\b' '\bVADER\b' '\bBETO\b' '\bBERT\b' XLM-R multimodal ablación 'formulación mixta'; do
+  n=$(grep -ciE "$tok" index.html)
+  [ "$n" = "0" ] && echo "✓ $tok" || echo "⚠ $tok: $n"
+done
 
 # Deploy a Firebase (alternativo)
 firebase deploy --only hosting
@@ -142,20 +154,21 @@ firebase deploy --only hosting
 git add . && git commit -m "..." && git push origin main
 ```
 
-## i) Site Sections Map → LaTeX Anteproyecto
+## i) Site Sections Map → LaTeX Anteproyecto (sincronizado v5.13)
 
 | Sección del sitio | Sección del .tex | Notas |
 |---|---|---|
-| Hero | Portada + título oficial v3.3 | Subtítulo refleja "panel multiserie + benchmarking + formulación mixta" |
-| Resumen | `Resumen` | 4 cards: problema, unidad de análisis, estrategia, entregable mínimo |
-| Cap I | Capítulo I (1.1–1.5) | 5 subsecciones inline; H1/H2/H3 falsificables con H₀ explícitas |
-| Cap II | Capítulo II (Marco Teórico A–L) | 12 cards de marco teórico + callout de marco tecnológico |
-| Cap III | Capítulo III (3.1–3.3) | Diagrama SVG de arquitectura mixta, niveles de éxito (Mín/Sat/Ideal) |
-| Tablas | Tablas 1, 2, 3 + figura matriz | Tabla 1 cobertura, Tabla 2 exclusión, Tabla 3 baselines (8), matriz país×categoría×tabla |
-| Reproducibilidad | Apéndice A.3 | 7 cards R1–R7 + estructura del repositorio |
-| Glosario | Glosario `.tex` | 51 términos con buscador en vivo |
-| Referencias | Bibliografía IEEE | 81 entradas con tabs por bloque temático |
-| Autores | Apéndice "Acerca del autor y del asesor" | Foto + bio + email del tesista y del director |
+| Hero | Portada + título oficial v5.13 | Título: &laquo;Predicción de fechas de prioridad…considerando país o área de cargabilidad…&raquo;. Subtítulo refleja sistema predictivo + CRISP-DM + intervalos al 95\,%. |
+| Resumen | `Resumen` (~213 palabras) | 4 cards: problema, unidad de análisis, estrategia (CRISP-DM), entregables tangibles |
+| Cap I | Capítulo I (§1.1–§1.5) | 5 subsecciones; **2 hipótesis cualitativas** (H1, H2) sin H₀, sin "estadísticamente comprobables" |
+| Cap II | Capítulo II (§2.1.1–§2.1.8 + §2.2.1–§2.2.5) | **8 cards** de marco teórico + callout de marco tecnológico (sin SHAP/LIME/Transformers/BERT/BETO/VADER/XLM-R/sentimiento/multimodal) |
+| Cap III | Capítulo III (§3.1–§3.3) | Diagrama SVG con regresor temporal único (no formulación mixta), cobertura en **3 niveles** (estructural/evaluable/piloto F1–F4), niveles de éxito (Mín/Sat/Ideal) |
+| Cap IV | Capítulo IV (§4.0–§4.6) | **NUEVA SECCIÓN v5.13.** 5 cards de fases CRISP-DM (Chapman et al. [64]) mapeadas a las 5 fases operativas del proyecto + cronograma ago'26–may'27 |
+| Tablas | Tablas 1, 2, 3 + figura matriz | Tabla 1 cobertura, Tabla 2 exclusión, Tabla 3 modelos comparados (8 candidatos del marco comparativo), matriz país×categoría×tabla |
+| Reproducibilidad | Apéndice A.3 | 7 cards R1–R7; **R1 DOI condicional** (no compromiso del entregable mínimo) + estructura del repositorio |
+| Glosario | Glosario `.tex` v5.13 | **42 términos** con buscador en vivo (purgados los 9 entradas de tokens prohibidos: BERT, BETO, VADER, SHAP, LIME, XLM-R, Transformer, Fusión multimodal, Sesgo algorítmico) |
+| Referencias | Bibliografía IEEE v5.13 | **64 entradas** en orden monotónico estricto [1]–[64] post-renumeración v4.9. Tabs: Problema [1–15], Métricas&validación [16–23], Series clásicas [24–33], Redes&LSTM [34–48], Híbridos&modernos [49–56], Aplicaciones&tooling [57–63], CRISP-DM [64] |
+| Autores | Apéndice "Acerca del autor y del asesor" | Foto + bio + email del tesista (analítica de datos aplicada, no NLP) y del director |
 | Contacto | — | CTA al email del tesista |
 | Footer | Pie + disclaimer A.4 | Disclaimer académico persistente |
 
@@ -178,4 +191,4 @@ git add . && git commit -m "..." && git push origin main
 
 ---
 
-*Última actualización: 2026-04-26 (rewrite v3.3 alineado con anteproyecto post Fixes 1–21: benchmarking puro, formulación mixta C/U/F, cobertura multi-país, sentimiento como extensión deseable, glosario 51 términos, bibliografía 81 refs, autores y reproducibilidad R1–R7).*
+*Última actualización: 2026-05-13 — sincronización v3.3 → **v5.13** alineada con `AnteproyectoVisaPredictAI.tex` v5.13 entregado al Dr. Vicente García Jiménez. Cambios sustantivos: (1) título oficial actualizado con "considerando país o área de cargabilidad"; (2) eliminados todos los tokens prohibidos (sentimiento, PLN/NLP, SHAP, LIME, BERT, BETO, VADER, XLM-R, multimodal, transformer en cuerpo, ablación, benchmark, post-hoc, formulación mixta clasificación-regresión, Streamlit); (3) **Cap I §1.5** reescrito con 2 hipótesis cualitativas blandas H1/H2 sin H₀; (4) **Cap II** condensado de 12 cards a 8 cards (Marco Teórico §2.1.1–§2.1.8); (5) **Cap III** con regresor temporal único + cobertura en 3 niveles + intervalos de predicción al 95\,% en lugar de "incertidumbre explícita"; (6) **Cap IV NUEVO** con metodología CRISP-DM (Chapman et al. [64]) y mapeo de 5 fases ↔ 6 fases CRISP-DM; (7) bibliografía 81 → **64** entradas con orden monotónico [1]–[64]; (8) glosario 51 → **42** entradas; (9) DOI académico **condicional** en R1; (10) demostrador descrito como "aplicación de demostración" (sin Streamlit/Python/local); (11) bio del autor sin "NLP". Audit post-cirugía: 0 tokens prohibidos, HTML válido, 12 secciones, 64 ref, 42 gloss, 2231 líneas.*

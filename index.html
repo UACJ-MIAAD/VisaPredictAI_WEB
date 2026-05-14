@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VisaPredict AI · Anteproyecto MIAAD UACJ — Evaluación comparativa de modelos predictivos para el Visa Bulletin de los Estados Unidos</title>
-  <meta name="description" content="Anteproyecto MIAAD UACJ. Evaluación comparativa de modelos predictivos para el Visa Bulletin de los Estados Unidos: panel multiserie país × categoría × tabla × mes con formulación mixta clasificación-regresión." />
+  <title>VisaPredict AI · Anteproyecto MIAAD UACJ — Predicción de fechas de prioridad en el Visa Bulletin de los Estados Unidos</title>
+  <meta name="description" content="Anteproyecto MIAAD UACJ. Predicción de fechas de prioridad en el Visa Bulletin de los Estados Unidos considerando país o área de cargabilidad, categoría migratoria y tipo de tabla. Panel multiserie y_{p,c,b,t}, metodología CRISP-DM, intervalos de predicción al 95 %." />
   <meta name="author" content="Javier Augusto Rebull Saucedo" />
   <meta name="theme-color" content="#003CA6" />
   <link rel="icon" href="LogoVisaPredictAI.png" />
@@ -13,8 +13,9 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap" rel="stylesheet" />
   <style>
     /* ============================================================
-       VisaPredict AI — Sitio del proyecto · v3.3
+       VisaPredict AI — Sitio del proyecto · v5.13
        Paleta institucional UACJ
+       Sincronizado con AnteproyectoVisaPredictAI.tex v5.13 (entregado al Dr. Chente, 13-may-2026)
        Acompaña al anteproyecto MIAAD (no es el entregable evaluado)
        ============================================================ */
     :root {
@@ -1133,7 +1134,7 @@
 
 <!-- ═══════════════ DISCLAIMER BAR ═══════════════ -->
 <div class="disclaimer">
-  <strong>Aviso académico:</strong> este sitio es <strong>proyecto personal del autor</strong> con fines descriptivos del trabajo de investigación. <strong>No</strong> es el entregable académico evaluado de la tesis MIAAD &mdash; el demostrador oficial se entrega desde el repositorio público con DOI académico (Apéndice&nbsp;A.2 del anteproyecto).
+  <strong>Aviso académico:</strong> este sitio es <strong>proyecto personal del autor</strong> con fines descriptivos del trabajo. <strong>No</strong> es el entregable académico evaluado de la tesis MIAAD &mdash; el demostrador oficial se entrega como aplicación ejecutable desde el repositorio público bajo licencia abierta (Apéndice&nbsp;A.2 del anteproyecto).
 </div>
 
 <!-- ═══════════════ NAVIGATION ═══════════════ -->
@@ -1149,6 +1150,7 @@
       <li><a href="#capi">Cap. I</a></li>
       <li><a href="#capii">Cap. II</a></li>
       <li><a href="#capiii">Cap. III</a></li>
+      <li><a href="#capiv">Cap. IV</a></li>
       <li><a href="#tablas">Tablas</a></li>
       <li><a href="#glosario">Glosario</a></li>
       <li><a href="#referencias">Referencias</a></li>
@@ -1163,18 +1165,17 @@
 <section class="hero" id="inicio">
   <div class="hero-inner">
     <div>
-      <span class="hero-tag">★ Anteproyecto MIAAD · UACJ · Mayo 2026</span>
-      <h1>Evaluación comparativa de modelos predictivos para el <em>Visa Bulletin</em> de los Estados&nbsp;Unidos</h1>
+      <span class="hero-tag">★ Anteproyecto MIAAD · UACJ · Mayo 2026 · v5.13</span>
+      <h1>Predicción de fechas de prioridad en el <em>Visa Bulletin</em> de los Estados&nbsp;Unidos</h1>
       <p class="hero-sub">
-        Panel multiserie por <strong>país o área de cargabilidad</strong> &times; <strong>categoría migratoria</strong> &times; <strong>tipo de tabla</strong> &times; <strong>mes</strong>.
-        Marco de evaluación comparativa sin privilegiar arquitecturas a priori, formulación mixta clasificación-regresión y validación <em>walk-forward</em> expansiva con corrección de Holm.
+        Sistema predictivo aplicado para el panel multiserie indexado por <strong>país o área de cargabilidad</strong> &times; <strong>categoría migratoria</strong> &times; <strong>tipo de tabla</strong> &times; <strong>mes</strong>. Pronósticos a horizontes de 1, 3, 6 y 12 meses con <strong>intervalos de predicción al 95&nbsp;%</strong>, bajo metodología <strong>CRISP-DM</strong> y validación <em>walk-forward</em> expansiva &mdash; sin privilegiar arquitecturas de antemano.
       </p>
       <div class="hero-actions">
         <a href="#resumen" class="btn btn--primary">
           Leer el resumen
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <a href="#capiii" class="btn btn--outline">Ver metodología</a>
+        <a href="#capiv" class="btn btn--outline">Ver metodología</a>
       </div>
     </div>
 
@@ -1220,12 +1221,12 @@
           <circle cx="48" cy="22" r="3" fill="#FFD600"/><text x="56" y="25">F4-MX</text>
           <circle cx="120" cy="22" r="3" fill="#7FB6FF"/><text x="128" y="25">F2A-IN</text>
           <circle cx="200" cy="22" r="3" fill="rgba(255,255,255,0.85)"/><text x="208" y="25">EB-3 RoW</text>
-          <text x="320" y="25" text-anchor="end" fill="#FFD600">IC 95%</text>
+          <text x="320" y="25" text-anchor="end" fill="#FFD600">PI 95%</text>
         </g>
       </svg>
 
       <div class="hero-stats">
-        <div><div class="hero-stat-val">8</div><div class="hero-stat-lbl">Modelos benchmark</div></div>
+        <div><div class="hero-stat-val">8</div><div class="hero-stat-lbl">Modelos comparados</div></div>
         <div><div class="hero-stat-val">5</div><div class="hero-stat-lbl">Países/áreas piloto</div></div>
         <div><div class="hero-stat-val">≈400</div><div class="hero-stat-lbl">Obs FAD por serie</div></div>
       </div>
@@ -1236,11 +1237,11 @@
 <!-- ═══════════════ METRICS ═══════════════ -->
 <div class="metrics">
   <div class="metrics-inner">
-    <div class="metric reveal"><div class="metric-num">81</div><div class="metric-lbl">Referencias IEEE</div></div>
-    <div class="metric reveal reveal--d1"><div class="metric-num">12</div><div class="metric-lbl">Subsecciones · Marco teórico</div></div>
-    <div class="metric reveal reveal--d2"><div class="metric-num">3</div><div class="metric-lbl">Hipótesis falsificables</div></div>
+    <div class="metric reveal"><div class="metric-num">64</div><div class="metric-lbl">Referencias IEEE</div></div>
+    <div class="metric reveal reveal--d1"><div class="metric-num">8</div><div class="metric-lbl">Subsecciones · Marco teórico</div></div>
+    <div class="metric reveal reveal--d2"><div class="metric-num">2</div><div class="metric-lbl">Hipótesis cualitativas</div></div>
     <div class="metric reveal reveal--d3"><div class="metric-num">7</div><div class="metric-lbl">Componentes de reproducibilidad</div></div>
-    <div class="metric reveal reveal--d4"><div class="metric-num"><em>C/U/F</em></div><div class="metric-lbl">Formulación mixta</div></div>
+    <div class="metric reveal reveal--d4"><div class="metric-num">CRISP-DM</div><div class="metric-lbl">Metodología nominada</div></div>
   </div>
 </div>
 
@@ -1250,7 +1251,7 @@
     <span class="section-tag">Resumen</span>
     <h2 class="section-title">Visión sintética del proyecto</h2>
     <p class="section-sub">
-      El proyecto formula el <em>Visa&nbsp;Bulletin</em> como un panel multiserie y propone un marco de evaluación comparativa sin privilegiar arquitecturas a priori. La novedad metodológica central es la formulación mixta clasificación-regresión que separa el régimen administrativo del valor numérico de la fecha.
+      El proyecto desarrollará un <strong>sistema predictivo aplicado</strong> para las fechas de prioridad del <em>Visa&nbsp;Bulletin</em>, organizado como panel multiserie indexado por país de cargabilidad, categoría migratoria y tipo de tabla, bajo la metodología <strong>CRISP-DM</strong> (Chapman et al. 2000). Se compararán empíricamente modelos lineales y no lineales sin privilegiar arquitecturas de antemano.
     </p>
 
     <div class="grid grid--2">
@@ -1258,28 +1259,28 @@
         <span class="card-tag">Problema</span>
         <h3 class="card-title">Pronóstico transparente del Visa Bulletin</h3>
         <p class="card-text">
-          El boletín mensual del Departamento de Estado de EE.&nbsp;UU. publica fechas de prioridad por país de cargabilidad y categoría migratoria. Más de cuatro décadas de datos públicos sin modelos predictivos abiertos y sistemáticamente evaluados que comuniquen incertidumbre explícita. Cerca de 4&nbsp;millones de personas aguardan una visa familiar [12], dentro de un rezago global de USCIS de 11.5&nbsp;millones de casos para todos los formularios [3].
+          El boletín mensual del Departamento de Estado de EE.&nbsp;UU. publica fechas de prioridad por país de cargabilidad y categoría migratoria. Más de tres décadas de datos públicos (1992&ndash;2026) sin modelos predictivos abiertos y sistemáticamente evaluados que reporten <strong>intervalos de predicción al 95&nbsp;%</strong>. Cerca de 4&nbsp;millones de personas aguardan una visa familiar [6], dentro de un rezago global de USCIS de 11.5&nbsp;millones de casos para todos los formularios [4].
         </p>
       </div>
       <div class="card reveal reveal--d1">
         <span class="card-tag">Unidad de análisis</span>
         <h3 class="card-title">Panel multiserie y<sub>p,c,b,t</sub></h3>
         <p class="card-text">
-          Cada celda combina un país o área de cargabilidad <code>p</code>, una categoría migratoria <code>c</code>, un tipo de tabla <code>b</code> (FAD o DFF) y un mes calendario <code>t</code>. La variable predicha se expresa como días desde una fecha base $t_0$ = 1&nbsp;ene&nbsp;1980. Se estructura como un panel multiserie evaluado de forma desagregada y agregada.
+          Cada celda combina un país o área de cargabilidad <code>p</code>, una categoría migratoria <code>c</code>, un tipo de tabla <code>b</code> (FAD o DFF) y un mes calendario <code>t</code>. La variable predicha es continua: días desde una fecha base. El sistema se entrena exclusivamente sobre observaciones con fecha específica; las celdas <em>Current</em> y <em>Unavailable</em> se conservan como anotación descriptiva.
         </p>
       </div>
       <div class="card reveal reveal--d2">
         <span class="card-tag">Estrategia</span>
-        <h3 class="card-title">Benchmarking + formulación mixta</h3>
+        <h3 class="card-title">Marco comparativo bajo CRISP-DM</h3>
         <p class="card-text">
-          Tres regímenes complementarios: <strong>baselines lineales</strong> (naïve, ARIMA, SARIMA, Prophet), <strong>no lineales locales</strong> (LSTM puro, ARIMA-LSTM) y <strong>globales/tabulares</strong> (DeepAR, XGBoost). Un clasificador estima el estado administrativo $\hat{e} \in \{C, U, F\}$ y, condicional a $\hat{e}=F$, un regresor estima la fecha. Validación <em>walk-forward</em> + Diebold-Mariano con corrección de Holm.
+          Tres familias complementarias: <strong>lineales</strong> (naïve estacional, ARIMA, SARIMA, Prophet), <strong>no lineales locales</strong> (LSTM puro, ARIMA-LSTM) y <strong>globales/tabulares</strong> (DeepAR, XGBoost). Validación <em>walk-forward</em> expansiva con métricas escaladas (sMAPE, MASE, MAE, RMSE) e intervalos de predicción al 95&nbsp;% por tres mecanismos (ARIMA analítico, MC dropout, predicción conforme).
         </p>
       </div>
       <div class="card reveal reveal--d3">
-        <span class="card-tag">Entregable mínimo</span>
-        <h3 class="card-title">Dataset, protocolo y demostrador local</h3>
+        <span class="card-tag">Entregables tangibles</span>
+        <h3 class="card-title">Dataset, sistema y aplicación</h3>
         <p class="card-text">
-          (1) Base de datos longitudinal reproducible del <em>Visa Bulletin</em> con DOI académico; (2) protocolo de evaluación empírica que incluye la formulación mixta como contribución transferible; (3) demostrador académico de visualización con advertencias explícitas sobre el carácter informativo y no legal de las estimaciones.
+          (1)&nbsp;Base de datos longitudinal reproducible del <em>Visa Bulletin</em> 1992&ndash;2026 publicada bajo licencia abierta; (2)&nbsp;sistema predictivo reproducible con código y manifiestos de versiones; (3)&nbsp;aplicación de demostración académica con advertencias explícitas sobre el carácter informativo y no legal de las estimaciones.
         </p>
       </div>
     </div>
@@ -1292,29 +1293,32 @@
     <span class="section-tag">Capítulo I</span>
     <h2 class="section-title">Introducción</h2>
     <p class="section-sub">
-      Antecedentes del régimen estatutario, definición operativa del problema, objetivos, justificación en triple eje contributivo, preguntas de investigación e hipótesis falsificables.
+      Antecedentes del régimen estatutario, definición operativa del problema, objetivos, justificación en triple eje contributivo, preguntas de investigación e hipótesis cualitativas verificables empíricamente.
     </p>
 
     <div class="subsec reveal">
       <h3><span class="num">1.1</span> Antecedentes</h3>
       <p>
-        La <em>Immigration and Nationality Act</em> de 1965 (Ley Hart-Celler) [10] establece el sistema actual de cuotas anuales por categoría con un límite estatutario del 7&nbsp;% por país (<em>per-country limit</em>) que es el origen primario de la retrogresión severa observada en países de alta demanda como México, India, China y Filipinas [12].
+        La <em>Immigration and Nationality Act</em> (INA) de 1965 [10] establece el sistema actual de cuotas anuales por categoría con un límite estatutario del 7&nbsp;% por país (<em>per-country limit</em>) que es el origen primario de la retrogresión severa observada en países de alta demanda como México, India, China y Filipinas [6].
       </p>
       <p>
-        El Departamento de Estado publica mensualmente el <em>Visa Bulletin</em> [11] con dos calendarios: <strong>Final Action Dates</strong> (FAD, desde 1992, ≈408 obs) que autoriza la adjudicación final, y <strong>Dates for Filing</strong> (DFF, desde noviembre&nbsp;de 2015, ≈125 obs) que autoriza el inicio anticipado del trámite de ajuste. Bier [47] documenta que las categorías basadas en empleo de países con límite efectivo, en particular India, han experimentado retrogresiones de varios años en periodos recientes.
+        El Departamento de Estado publica mensualmente el <em>Visa Bulletin</em> [7] con dos calendarios: <strong>Final Action Dates</strong> (FAD, desde 1992, ≈408 obs) que autoriza la adjudicación final, y <strong>Dates for Filing</strong> (DFF, desde noviembre&nbsp;de 2015, ≈125 obs) que autoriza el inicio anticipado del trámite de ajuste. Bier [60] documenta que las categorías basadas en empleo de países con límite efectivo, en particular India, han experimentado retrogresiones de varios años en periodos recientes.
       </p>
       <p>
-        Trabajos previos: Vegesana [6] aplica clasificadores discriminativos al pronóstico de aprobación; Jain et al. [7] proponen un híbrido ARIMA-LSTM para series con dinámica compleja; Carammia et al. [8] y Pu et al. [9] integran ML con datos no tradicionales en flujos migratorios.
+        Trabajos previos: Vegesana [11] aplica clasificadores discriminativos al pronóstico de aprobación; Jain et al. [12] proponen un híbrido ARIMA-LSTM para series con dinámica compleja; Carammia et al. [13] y Pu et al. [9] integran aprendizaje automático con datos a escala en flujos migratorios.
       </p>
     </div>
 
     <div class="subsec reveal">
       <h3><span class="num">1.2</span> Definición del problema</h3>
       <p>
-        A pesar de más de cuatro décadas de datos históricos públicos, no existen modelos predictivos abiertos y sistemáticamente evaluados que estimen, con márgenes explícitos de incertidumbre, la evolución futura de las fechas de prioridad. El subconjunto del rezago migratorio directamente vinculado al <em>Visa Bulletin</em> &mdash;visas familiares en espera consular&mdash; asciende a ≈4&nbsp;millones de personas según FWD.us [12], dentro del rezago global del USCIS de 11.5&nbsp;millones para <strong>todos los formularios</strong> al tercer trimestre del año fiscal 2025 [3].
+        <strong>No se identificó, en la revisión preliminar,</strong> trabajo académico publicado que ofrezca un sistema predictivo abierto, reproducible y sistemáticamente evaluado sobre el panel multiserie del <em>Visa&nbsp;Bulletin</em> con intervalos de predicción al 95&nbsp;%. Las plataformas comerciales existentes son cajas negras sin metodología, datos ni protocolo de evaluación publicados de forma auditable.
       </p>
       <p>
-        El comportamiento mensual presenta tres características que dificultan el pronóstico: <em>retrogresiones</em> abruptas, periodos largos de estancamiento bajo cuota saturada y avances no lineales tras reasignaciones. Las plataformas comerciales existentes (cajas negras sin metodología publicada) no satisfacen la necesidad de pronóstico transparente y auditable.
+        <strong>La consecuencia directa</strong> es que millones de solicitantes deben planificar decisiones de mediano y largo plazo (estabilidad familiar, profesional y financiera) sobre estimaciones opacas o con métodos de baja calidad. Las cifras del rezago se documentan en la Sección&nbsp;1.1 [4], [6].
+      </p>
+      <p>
+        <strong>La necesidad</strong> es construir una base de datos longitudinal pública del <em>Visa&nbsp;Bulletin</em> 1992&ndash;2026 y un sistema predictivo evaluable que convierta más de tres décadas de datos en pronósticos auditables con intervalos de predicción al 95&nbsp;%, llenando una brecha verificable de la literatura aplicada.
       </p>
     </div>
 
@@ -1322,16 +1326,15 @@
       <h3><span class="num">1.3</span> Objetivos</h3>
       <h4>Objetivo general</h4>
       <p>
-        <strong>Evaluar comparativamente</strong> la capacidad predictiva de modelos de series temporales y modelos basados en aprendizaje sobre el panel multiserie $y_{p,c,b,t}$ del <em>Visa&nbsp;Bulletin</em>, incluyendo cuantificación explícita de incertidumbre y heterogeneidad por país-categoría-tabla.
+        <strong>Desarrollar e implementar un sistema predictivo aplicado</strong> para las fechas de prioridad del <em>Visa&nbsp;Bulletin</em>, organizado como panel multiserie $y_{p,c,b,t}$ indexado por país de cargabilidad, categoría migratoria y tipo de tabla, con pronósticos mensuales a horizontes de 1, 3, 6 y 12 meses acompañados de <strong>intervalos de predicción al 95&nbsp;%</strong>, bajo metodología CRISP-DM [64].
       </p>
       <h4>Objetivos específicos</h4>
       <ol>
-        <li>Construir la base de datos longitudinal del <em>Visa Bulletin</em> estructurada por país&nbsp;&times;&nbsp;categoría&nbsp;&times;&nbsp;tabla&nbsp;&times;&nbsp;mes, con licencia abierta y DOI académico.</li>
+        <li>Construir la base de datos longitudinal del <em>Visa Bulletin</em> 1992&ndash;2026 estructurada por país&nbsp;&times;&nbsp;categoría&nbsp;&times;&nbsp;tabla&nbsp;&times;&nbsp;mes, publicada bajo licencia abierta.</li>
         <li>Caracterizar empíricamente el comportamiento histórico de las fechas de prioridad y sus regímenes administrativos por país o área de cargabilidad.</li>
-        <li>Diseñar e implementar la familia completa de modelos enumerada en la <a href="#tablas">Tabla 3</a>, sin privilegiar a priori ninguna arquitectura.</li>
-        <li><em>(Condicional, sujeto a ejecución de la extensión deseable.)</em> Incorporar y evaluar variables exógenas derivadas del análisis de sentimiento de comunidades migrantes y de un calendario pre-registrado de eventos de política.</li>
-        <li>Evaluar el desempeño predictivo mediante validación temporal <em>walk-forward</em> con métricas robustas a escala (sMAPE, MASE, MAE, RMSE) e intervalos de incertidumbre, reportando resultados agregados y desagregados por país o área de cargabilidad, categoría y tipo de tabla.</li>
-        <li>Entregar un <strong>demostrador académico de visualización</strong>, ejecutable localmente o en entorno controlado, que permita consultar series históricas, pronósticos e intervalos de predicción con advertencias explícitas sobre el carácter informativo y no legal de las estimaciones.</li>
+        <li>Diseñar e implementar la familia completa de modelos enumerada en la <a href="#tablas">Tabla&nbsp;3</a>, sin privilegiar de antemano ninguna arquitectura.</li>
+        <li>Evaluar el desempeño predictivo mediante validación temporal <em>walk-forward</em> expansiva con métricas escaladas (sMAPE, MASE, MAE, RMSE) e intervalos de predicción al 95&nbsp;%, reportando resultados agregados y desagregados por país, categoría y tipo de tabla.</li>
+        <li>Entregar una <strong>aplicación de demostración académica</strong> que permita consultar series históricas, pronósticos e intervalos de predicción al 95&nbsp;% con advertencias explícitas sobre el carácter informativo y no legal de las estimaciones.</li>
       </ol>
     </div>
 
@@ -1339,61 +1342,55 @@
       <h3><span class="num">1.4</span> Justificación</h3>
       <h4>Contribución social</h4>
       <p>
-        El proceso de obtención de la residencia permanente afecta a millones de personas en términos de estabilidad familiar, laboral y financiera. Cerca de 4&nbsp;millones permanecen en el extranjero esperando una visa de base familiar [12], cifra que se inscribe en el rezago global del USCIS de 11.5&nbsp;millones de casos pendientes <strong>para todos los formularios</strong> [3]. La contribución del proyecto consiste en <em>evaluar</em> si un sistema abierto puede representar patrones históricos y comunicar márgenes de incertidumbre con mayor transparencia que las herramientas cerradas no auditables del mercado.
+        El proceso de obtención de la residencia permanente afecta a millones de personas en términos de estabilidad familiar, laboral y financiera. Cerca de 4&nbsp;millones permanecen en el extranjero esperando una visa de base familiar [6], dentro del rezago global del USCIS de 11.5&nbsp;millones de casos pendientes para todos los formularios [4]. El proyecto apoya la planificación de los solicitantes con intervalos de predicción al 95&nbsp;% y mayor transparencia que las herramientas cerradas no auditables del mercado.
       </p>
-      <h4>Contribución metodológica (triple eje)</h4>
-      <ul>
-        <li><strong>Caracterización empírica</strong> del régimen multipaís &times; multicategoría &times; multitabla del <em>Visa Bulletin</em>, sustentada en literatura de series con discontinuidades estructurales [49], [50].</li>
-        <li><strong>Protocolo de evaluación mixta</strong> clasificación-regresión que separa el estado administrativo $\hat{e} \in \{C, U, F\}$ de la fecha numérica, transferible a otros sistemas con regímenes categóricos.</li>
-        <li><strong>Dataset abierto</strong> con DOI académico, criterios de evaluabilidad pre-registrados y reproducibilidad verificable (R1–R7, Apéndice&nbsp;A.3).</li>
-      </ul>
-      <h4>Contribución empírica</h4>
+      <h4>Contribución técnica</h4>
       <p>
-        La evaluación comparativa empírica de la familia completa de modelos enumerada en la <a href="#tablas">Tabla&nbsp;3</a> (baselines lineales, modelos no lineales locales, modelos globales y tabulares) se sostiene como fase experimental dentro de este marco, sin privilegiar a priori ninguna arquitectura. Los regresores exógenos derivados de texto quedan relegados a las extensiones deseables del proyecto y <strong>no forman parte del entregable mínimo</strong>.
+        El sistema atiende limitaciones observables de las plataformas comerciales cerradas, particularmente la falta de transparencia sobre datos, metodología y protocolo de evaluación. La integración de un panel multiserie completo (multipaís &times; multicategoría &times; multitabla) bajo un marco comparativo riguroso constituye un aporte aplicado al pronóstico de fenómenos migratorios.
       </p>
+      <h4>Contribución académica</h4>
+      <ul>
+        <li><strong>Base de datos abierta</strong> 1992&ndash;2026 con licencia permisiva, criterios de evaluabilidad pre-registrados y reproducibilidad verificable (R1&ndash;R7, Apéndice&nbsp;A.3).</li>
+        <li><strong>Marco comparativo nominado</strong> bajo CRISP-DM con familia de modelos lineales y no lineales evaluados sin privilegiar arquitecturas de antemano.</li>
+        <li><strong>Cuantificación de incertidumbre</strong> con tres mecanismos para los intervalos de predicción al 95&nbsp;%: ARIMA analítico, MC dropout [40] y predicción conforme [59].</li>
+      </ul>
     </div>
 
     <div class="subsec reveal">
       <h3><span class="num">1.5</span> Preguntas e hipótesis</h3>
 
+      <p style="margin-bottom:1rem;">
+        Coherente con el perfil profesionalizante del programa MIAAD, las preguntas se formulan como <strong>preguntas abiertas</strong> y las hipótesis como <strong>enunciados cualitativos blandos</strong> que se contrastarán empíricamente con los datos del piloto. El rigor estadístico formal (Diebold-Mariano + corrección de Holm a $\alpha = 0.05$) se documenta como decisión metodológica del Capítulo&nbsp;IV, no como umbral pre-comprometido en el cuerpo.
+      </p>
+
       <h4>Pregunta general</h4>
       <p>
-        ¿Con qué precisión y con qué calibración de incertidumbre puede pronosticarse el comportamiento futuro del panel multiserie del <em>Visa Bulletin</em> bajo un marco de evaluación comparativa de modelos, sobre la cobertura de series evaluables y respetando la heterogeneidad estructural entre celdas país-categoría-tabla?
+        ¿Con qué precisión y con qué calibración de los intervalos de predicción al 95&nbsp;% puede pronosticarse el comportamiento futuro del panel multiserie del <em>Visa&nbsp;Bulletin</em> bajo un marco comparativo CRISP-DM, sobre la cobertura de series evaluables y respetando la heterogeneidad estructural entre celdas país&ndash;categoría&ndash;tabla?
       </p>
 
       <h4>Preguntas específicas</h4>
       <ol>
-        <li><strong>Caracterización empírica.</strong> ¿Qué patrones de avance, estancamiento y retrogresión presentan las series por país de cargabilidad y categoría migratoria, y qué proporción de cada serie es evaluable bajo los criterios pre-registrados?</li>
-        <li><strong>Desempeño predictivo.</strong> ¿Cuál de los modelos no lineales de la familia evaluada {ARIMA-LSTM local, DeepAR global, XGBoost tabular} —si alguno— reduce el error de pronóstico (sMAPE, MASE) frente a los baselines lineales más fuertes (ARIMA o Prophet, según el estrato) en diferentes celdas país-categoría-tabla, y con qué magnitud y consistencia?</li>
-        <li><strong>Aporte de variables exógenas</strong> <em>(condicional al despliegue de la extensión deseable)</em>. ¿La incorporación de regresores exógenos, incluyendo señales agregadas de sentimiento, mejora de manera estadísticamente evaluable el desempeño predictivo frente a la versión univariada del ganador empírico del benchmark?</li>
-        <li><strong>Heterogeneidad.</strong> ¿La dificultad predictiva está correlacionada con la longitud efectiva de la serie y con la frecuencia de discontinuidades (retrogresiones, transiciones C/U)?</li>
-        <li><strong>Calibración.</strong> ¿Los intervalos de predicción al 95&nbsp;% alcanzan cobertura empírica cercana a la nominal, en agregado y por estrato?</li>
+        <li><strong>Patrones.</strong> ¿Qué patrones de avance, estancamiento y retrogresión presentan las series por país de cargabilidad y categoría migratoria, y qué proporción de cada serie es evaluable bajo los criterios pre-registrados?</li>
+        <li><strong>Desempeño predictivo.</strong> ¿Qué modelo de los implementados &mdash;lineales (ARIMA, SARIMA, Prophet) o no lineales (LSTM, ARIMA-LSTM, DeepAR, XGBoost)&mdash; ofrece el mejor desempeño predictivo en sMAPE y MASE sobre el conjunto piloto evaluable, y con qué consistencia entre estratos?</li>
+        <li><strong>Características de las series.</strong> ¿Qué características estructurales (longitud efectiva, frecuencia de retrogresiones, frecuencia de estados <em>Current</em>/<em>Unavailable</em>) explican la dificultad predictiva por celda?</li>
+        <li><strong>Cobertura.</strong> ¿Qué cobertura empírica alcanzan los intervalos de predicción al 95&nbsp;% frente a su nominal, en agregado y por estrato?</li>
       </ol>
 
       <h4>Hipótesis</h4>
       <div class="hypo">
-        <div class="hypo-label">H1 · Desempeño predictivo · falsificable</div>
-        <h4>El mejor modelo no lineal reducirá MASE en al menos 60 % de las series piloto.</h4>
-        <p>El <strong>mejor modelo no lineal</strong> de la familia evaluada {ARIMA-LSTM local, DeepAR global, XGBoost tabular} reducirá el MASE respecto al baseline lineal más fuerte (ARIMA o Prophet, según el estrato) en al menos el 60&nbsp;% de las series piloto evaluables, con magnitud media de mejora $\geq 0.05$ unidades de MASE, y significancia estadística al 5&nbsp;% bajo corrección de Holm sobre la familia de comparaciones piloto pre-registradas. La identidad del modelo ganador (local vs. global vs. tabular) es una <em>pregunta empírica</em>.</p>
-        <div class="nul"><strong>H₀:</strong> ningún modelo no lineal reduce MASE en al menos 60 % de las series, o la magnitud media de mejora es &lt; 0.05.</div>
-      </div>
-
-      <div class="hypo hypo--y">
-        <div class="hypo-label">H2 · Aporte de exógenas · condicional</div>
-        <h4>Las exógenas producirán mejora marginal sólo en ciertos estratos.</h4>
-        <p><em>Hipótesis condicional al despliegue de la extensión deseable de regresores externos.</em> Las variables exógenas producirán una mejora marginal sólo en ciertos estratos país-categoría-tabla, evaluada mediante ablación con regresores residualizados. Esta hipótesis sólo se contrasta si la extensión es ejecutada.</p>
-        <div class="nul"><strong>H₀:</strong> la mejora marginal en sMAPE/MASE es nula o negativa de manera consistente entre estratos.</div>
+        <div class="hypo-label">H1 · Desempeño predictivo · cualitativa</div>
+        <h4>El mejor modelo no lineal mejorará al lineal más fuerte en proporción material de las series piloto.</h4>
+        <p>El mejor modelo no lineal de la familia evaluada {LSTM, ARIMA-LSTM, DeepAR, XGBoost} reducirá las métricas centrales (sMAPE, MASE) respecto al modelo lineal más fuerte (ARIMA o Prophet, según el estrato) en una proporción material de las series piloto evaluables. La identidad del modelo ganador es una pregunta empírica que el experimento responderá con datos.</p>
       </div>
 
       <div class="hypo hypo--g">
-        <div class="hypo-label">H3 · Heterogeneidad y calibración · predictiva</div>
-        <h4>La dificultad predictiva está correlacionada con la longitud y discontinuidades.</h4>
-        <p>La dificultad predictiva &mdash;medida como MASE bajo el ganador empírico&mdash; está negativamente correlacionada con la longitud efectiva de la serie y positivamente correlacionada con la frecuencia de retrogresiones y transiciones C/U. Los intervalos al 95&nbsp;% alcanzarán cobertura empírica cercana a la nominal en el agregado pero podrán desviarse en estratos con régimen administrativo inestable.</p>
-        <div class="nul"><strong>H₀:</strong> ni la longitud efectiva ni la frecuencia de discontinuidades predicen la dificultad observada y los intervalos están calibrados de manera homogénea entre estratos.</div>
+        <div class="hypo-label">H2 · Heterogeneidad y calibración · cualitativa</div>
+        <h4>La dificultad predictiva varía por estrato y los intervalos pueden desviarse en regímenes inestables.</h4>
+        <p>La dificultad predictiva &mdash;medida como MASE bajo el ganador empírico&mdash; presentará asociación con la longitud efectiva de la serie y con la frecuencia de discontinuidades (retrogresiones, transiciones C/U). Los intervalos de predicción al 95&nbsp;% alcanzarán cobertura empírica cercana a la nominal en el agregado, pero podrán desviarse en estratos con régimen administrativo inestable.</p>
       </div>
 
       <p class="mt-3" style="font-size:0.85rem;color:var(--text-muted);">
-        Estas hipótesis no asumen relaciones causales entre ningún regresor exógeno (incluido el sentimiento, en caso de ejecutarse la extensión correspondiente) y la dinámica administrativa del Departamento de Estado; sólo postulan asociaciones predictivas estadísticamente comprobables. La interpretación causal queda explícitamente fuera del alcance del proyecto.
+        Estas hipótesis se interpretan en términos de asociaciones predictivas verificables empíricamente con los datos del proyecto, no como afirmaciones causales sobre la dinámica administrativa del Departamento de Estado. La interpretación causal queda explícitamente fuera del alcance.
       </p>
     </div>
   </div>
@@ -1405,7 +1402,7 @@
     <span class="section-tag">Capítulo II</span>
     <h2 class="section-title">Marco teórico y tecnológico</h2>
     <p class="section-sub">
-      Doce subsecciones (A–L) cubren desde el sistema de inmigración estadounidense hasta la heterogeneidad del pronóstico multiserie. Cada subsección cierra con un párrafo <em>Implicación para este proyecto</em> que conecta el contenido teórico con decisiones de diseño concretas.
+      Ocho subsecciones de marco teórico (§2.1.1&ndash;§2.1.8) cubren desde el sistema de inmigración estadounidense hasta la heterogeneidad del pronóstico multiserie, más cinco subsecciones de marco tecnológico (§2.2.1&ndash;§2.2.5). Cada subsección teórica cierra con un párrafo <em>Implicación para este proyecto</em> que conecta el contenido con decisiones de diseño concretas.
     </p>
 
     <div class="grid grid--3">
@@ -1414,7 +1411,7 @@
         <div class="card-icon">A</div>
         <h3 class="card-title">Sistema de inmigración &amp; Visa Bulletin</h3>
         <p class="card-text">
-          INA 1965 [10], cuotas anuales, límite per-country 7 %, calendarios FAD/DFF [11]. Convención: <strong>F1–F4</strong> = {F1, F2A, F2B, F3, F4} (cinco series por país de cargabilidad), no rango excluyente.
+          INA 1965 [10], cuotas anuales, <em>per-country limit</em> del 7&nbsp;%, calendarios <strong>Final Action Dates</strong> (FAD) y <strong>Dates for Filing</strong> (DFF) [7]. Convención: <strong>F1&ndash;F4</strong> = {F1, F2A, F2B, F3, F4} (cinco series por país de cargabilidad), no rango excluyente.
         </p>
       </div>
 
@@ -1422,7 +1419,7 @@
         <div class="card-icon">B</div>
         <h3 class="card-title">Series de tiempo clásicas</h3>
         <p class="card-text">
-          Box &amp; Jenkins [15], [16]; Hamilton [17]; Hyndman &amp; Athanasopoulos [18]. Estacionariedad (ADF [19], KPSS [20]), criterios AIC/BIC [21], [22]. ARIMA, SARIMA, ARIMAX y Prophet [59] son los baselines lineales contra los que los modelos no lineales deberán probarse.
+          Descomposición clásica $Y_t = T_t + S_t + C_t + \varepsilon_t$. Box &amp; Jenkins [24], [29]; Hamilton [25]; Hyndman &amp; Athanasopoulos [26]. Pruebas de estacionariedad ADF [27] y KPSS [28] (con hipótesis nulas opuestas), criterios AIC [30] y BIC [31]. ARIMA, SARIMA y Prophet [32] como modelos lineales de referencia.
         </p>
       </div>
 
@@ -1430,7 +1427,7 @@
         <div class="card-icon">C</div>
         <h3 class="card-title">Fundamentos de DL para series</h3>
         <p class="card-text">
-          Backprop [23], MLP, regularización ($L_2$, dropout [62], dropout recurrente [41], BatchNorm [63]) y early stopping [26]. Adam [61] como optimizador estándar. Estos componentes se emplearán en los modelos no lineales del benchmark.
+          Backpropagation [36], MLP, regularización (<em>weight decay</em>, dropout [39], dropout recurrente [40], <em>batch normalization</em> [41]) y <em>early stopping</em>. ReLU [37] y optimizador Adam [38] como estándares. Componentes empleados en los modelos no lineales del marco comparativo.
         </p>
       </div>
 
@@ -1438,7 +1435,7 @@
         <div class="card-icon">D</div>
         <h3 class="card-title">RNN y LSTM</h3>
         <p class="card-text">
-          Elman [24], Bengio et al. [25]: el problema del gradiente desvaneciente; Hochreiter &amp; Schmidhuber [29] introducen LSTM; Bi-LSTM [27], [51]; encoder-decoder [27], atención [64].
+          Elman [42], Bengio et al. [37]: el problema del gradiente desvaneciente. Hochreiter &amp; Schmidhuber [43] introducen LSTM con celdas de memoria y compuertas. Variantes BiLSTM [44], [45] y GRU [47]. La LSTM constituye el componente no lineal del híbrido ARIMA-LSTM.
         </p>
       </div>
 
@@ -1446,63 +1443,31 @@
         <div class="card-icon">E</div>
         <h3 class="card-title">Híbridos y arquitecturas modernas</h3>
         <p class="card-text">
-          Zhang [30] populariza la cascada lineal+no-lineal; ARIMA-LSTM en epidemiología [7], [46], economía [45], energía [44] y comercio [43]. ARIMA-LSTM es <strong>uno de los candidatos del benchmark</strong> junto con DeepAR global [68] y XGBoost tabular [69]; TFT [66], N-BEATS [65] y PatchTST [67] como referencia teórica fuera del entregable mínimo.
+          Zhang [19] formaliza la hibridación lineal+no-lineal; ARIMA-LSTM en epidemiología [12], [21], economía [51], energía [52] y comercio [20]. La M4 Competition [50] y ES-RNN [49] muestran que las combinaciones dominan. <strong>DeepAR</strong> [22] global y <strong>XGBoost</strong> [56] tabular completan la familia comparada; TFT [54], N-BEATS [53] y PatchTST [55] sólo como referencia.
         </p>
       </div>
 
       <div class="card reveal">
         <div class="card-icon">F</div>
-        <h3 class="card-title">NLP y análisis de sentimiento</h3>
+        <h3 class="card-title">Aprendizaje aplicado a fenómenos migratorios</h3>
         <p class="card-text">
-          Vaswani et al. [33] introduce el transformer; BERT [32], BETO, XLM-R [70] como modelos contextuales multilingües; VADER [37] como léxico-rule-based para inglés. <strong>Pertinente sólo si se ejecuta la extensión deseable.</strong>
+          Vegesana [11] aplica clasificadores discriminativos al pronóstico de aprobación; Carammia et al. [13] forecast de flujos de asilo con aprendizaje automático y datos a escala; Pu et al. [9] revisan métodos y fuentes; Hoffmann Pham &amp; Luengo-Oroz [57] sobre modelado predictivo de movimientos de refugiados.
         </p>
       </div>
 
       <div class="card reveal">
         <div class="card-icon">G</div>
-        <h3 class="card-title">Fusión multimodal acotada</h3>
+        <h3 class="card-title">Métricas, validación e intervalos al 95&nbsp;%</h3>
         <p class="card-text">
-          Baltrušaitis et al. [71] taxonomiza fusión temprana, tardía e híbrida. El proyecto adopta una fusión híbrida acotada (concatenación de regresores exógenos al vector de entrada del LSTM), no arquitectura multimodal profunda en sentido estricto.
+          Hyndman &amp; Koehler [16]: MASE como métrica universal escalada por el naïve estacional. Walk-forward de Tashman [58] y Bergmeir &amp; Benítez [17]. <strong>Diebold-Mariano</strong> [18] con corrección de Holm para la familia pre-registrada. Intervalos de predicción al 95&nbsp;% por tres mecanismos: ARIMA analítico, MC dropout [40] y <strong>predicción conforme</strong> [59].
         </p>
       </div>
 
       <div class="card reveal">
         <div class="card-icon">H</div>
-        <h3 class="card-title">ML aplicado a fenómenos migratorios</h3>
-        <p class="card-text">
-          Vegesana [6], Carammia et al. [8], Pu et al. [9], Hoffmann Pham &amp; Luengo-Oroz [53]. Esta tesis explora la integración de datos estructurados del <em>Visa Bulletin</em> con datos no estructurados como <em>extensión deseable</em>; el entregable mínimo se sostiene sobre la evaluación comparativa de la serie estructurada.
-        </p>
-      </div>
-
-      <div class="card reveal">
-        <div class="card-icon">I</div>
-        <h3 class="card-title">Métricas y validación temporal</h3>
-        <p class="card-text">
-          Hyndman &amp; Koehler [38]: MASE como métrica universal escalada por el naïve estacional. <em>Walk-forward</em> de Tashman [39] y Bergmeir &amp; Benítez [40]. Diebold-Mariano [72] como contraste complementario con corrección de Holm sobre la familia pre-registrada.
-        </p>
-      </div>
-
-      <div class="card reveal">
-        <div class="card-icon">J</div>
-        <h3 class="card-title">Interpretabilidad post-hoc</h3>
-        <p class="card-text">
-          Molnar [56]: interpretabilidad intrínseca vs. <em>post-hoc</em>. SHAP [42] basado en valores de Shapley; LIME [74]. Aplicados a los modelos no lineales evaluados (LSTM puro, ARIMA-LSTM, DeepAR, XGBoost).
-        </p>
-      </div>
-
-      <div class="card reveal">
-        <div class="card-icon">K</div>
-        <h3 class="card-title">Ética y equidad en IA migratoria</h3>
-        <p class="card-text">
-          Mehrabi et al. [76], Barocas et al. [77]; Beduschi [78] sobre uso de IA en gestión migratoria; Molnar (P.) [75] sobre <em>technological testing grounds</em>. Cuantificación de incertidumbre como obligación ética: nunca pronóstico puntual sin intervalo.
-        </p>
-      </div>
-
-      <div class="card reveal">
-        <div class="card-icon">L</div>
         <h3 class="card-title">Pronóstico multiserie y heterogeneidad</h3>
         <p class="card-text">
-          Modelos locales (entrenados por celda), globales (DeepAR [68] sobre el panel) y jerárquicos. La elección entre regímenes se decide empíricamente con datos del proyecto, dado el régimen de datos pequeño por serie.
+          Modelos locales (entrenados por celda), globales (DeepAR [22] sobre el panel) y tabulares (XGBoost [56]). La elección entre regímenes es una pregunta empírica que el proyecto responde con datos, dado el régimen de datos pequeño por serie ($\sim$400 obs FAD, $\sim$125 obs DFF).
         </p>
       </div>
 
@@ -1511,7 +1476,7 @@
     <div class="callout mt-4">
       <div class="callout-head">📐 Marco tecnológico (resumen)</div>
       <p>
-        Python 3.x, <code>pandas</code>, <code>numpy</code>, <code>statsmodels</code>, <code>scikit-learn</code> [81], <code>XGBoost</code> [69], <code>PyTorch</code> [80], <code>Prophet</code> [59], <code>shap</code> [42], <code>lime</code> [74], <code>matplotlib</code>/<code>seaborn</code>/<code>Plotly</code>, <code>MLflow</code>. Para sentimiento (extensión deseable): <code>VADER</code> [37], <code>Transformers</code>, <code>BETO</code>, <code>XLM-R</code> [70], <code>spaCy</code>, <code>NLTK</code>. Versionado: Git/GitHub bajo licencia abierta.
+        <strong>Lenguaje y librerías:</strong> Python 3.x con <code>pandas</code>, <code>numpy</code>, <code>statsmodels</code>, <code>scikit-learn</code> [62], <code>XGBoost</code> [56], <code>PyTorch</code> [63], <code>Prophet</code> [32]. <strong>Visualización:</strong> <code>matplotlib</code>, <code>seaborn</code>. <strong>Versionado:</strong> Git/GitHub bajo licencia abierta. <strong>Documentación:</strong> LaTeX/Overleaf. <strong>Reproducibilidad:</strong> manifiestos de versiones (<code>requirements.txt</code>), semillas registradas, MLflow para bitácora de hiperparámetros.
       </p>
     </div>
   </div>
@@ -1521,9 +1486,9 @@
 <section class="section section--alt" id="capiii">
   <div class="section-inner">
     <span class="section-tag">Capítulo III</span>
-    <h2 class="section-title">Metodología</h2>
+    <h2 class="section-title">Producto esperado y validación</h2>
     <p class="section-sub">
-      Solución, gobernanza del alcance y forma de validación. La metodología separa explícitamente el <strong>entregable mínimo</strong> defensible del conjunto de <strong>extensiones deseables</strong> condicionadas a holgura del horizonte.
+      Descripción del producto, gobernanza del alcance y forma de validación. El capítulo responde estrictamente a &laquo;¿qué se entrega?&raquo; y &laquo;¿cómo se valida?&raquo;; las decisiones operativas (parámetros, hiperparámetros, esquema de pruebas) se documentan en el Capítulo&nbsp;IV.
     </p>
 
     <div class="subsec reveal">
@@ -1531,7 +1496,7 @@
 
       <h4>3.1.1 · Marco metodológico</h4>
       <p>
-        Marco de <strong>evaluación comparativa</strong> (benchmarking) sin asumir a priori un ganador. Tres regímenes complementarios: (a) baselines lineales, (b) modelos no lineales locales, (c) modelos globales y tabulares. La identidad del modelo ganador es una pregunta empírica del estudio.
+        Marco comparativo sin privilegiar arquitecturas de antemano, instrumentado bajo <strong>CRISP-DM</strong> [64]. Tres familias complementarias: (a)&nbsp;modelos lineales (naïve estacional, ARIMA, SARIMA, Prophet), (b)&nbsp;modelos no lineales locales (LSTM, ARIMA-LSTM), (c)&nbsp;modelos globales y tabulares (DeepAR, XGBoost). La identidad del modelo con mejor desempeño es una pregunta empírica del estudio.
       </p>
 
       <h4>3.1.2 · Arquitectura tentativa</h4>
@@ -1572,24 +1537,23 @@
           <text x="240" y="125" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">Scraping y</text>
           <text x="240" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">normalización</text>
 
-          <!-- 3 Features y etiquetas -->
+          <!-- 3 Features -->
           <rect x="340" y="55" width="120" height="220" rx="14" fill="url(#stageY)"/>
           <text x="400" y="95" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#001C52">3. Features</text>
-          <text x="400" y="112" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#001C52">+ etiquetas</text>
+          <text x="400" y="112" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#001C52">+ anotación</text>
           <text x="400" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52">Series numéricas</text>
           <text x="400" y="158" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52">Calendario fiscal</text>
-          <text x="400" y="184" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52" font-weight="700">Etiquetas C/U/F</text>
+          <text x="400" y="184" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52" font-weight="700">C/U/F (descriptiva)</text>
 
           <!-- 4 Modelado -->
           <rect x="500" y="55" width="200" height="220" rx="14" fill="url(#stageBlue)" stroke="#FFD600" stroke-width="3"/>
-          <text x="600" y="92" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="14" fill="#fff">4. Modelado mixto</text>
-          <text x="600" y="120" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">Clasificador</text>
-          <text x="600" y="135" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#FFD600" font-style="italic">ê ∈ {C, U, F}</text>
-          <text x="600" y="160" text-anchor="middle" font-family="DM Sans" font-size="13" fill="#FFD600">↓</text>
-          <text x="600" y="180" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">si ê = F</text>
-          <text x="600" y="200" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">Regresor temporal</text>
-          <text x="600" y="225" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">{ARIMA-LSTM · DeepAR · XGBoost}</text>
-          <text x="600" y="240" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.7)">+ baselines lineales</text>
+          <text x="600" y="92" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="14" fill="#fff">4. Modelado</text>
+          <text x="600" y="120" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">Regresor temporal</text>
+          <text x="600" y="135" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#FFD600" font-style="italic">entrenado sólo con e = F</text>
+          <text x="600" y="165" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">Marco comparativo</text>
+          <text x="600" y="183" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">8 modelos · CRISP-DM</text>
+          <text x="600" y="208" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">lineales + no lineales +</text>
+          <text x="600" y="222" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">globales / tabulares</text>
 
           <!-- 5 Validación -->
           <rect x="740" y="55" width="160" height="220" rx="14" fill="url(#stageBlue)"/>
@@ -1597,8 +1561,8 @@
           <text x="820" y="125" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">Walk-forward</text>
           <text x="820" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">expansiva</text>
           <text x="820" y="167" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">sMAPE · MASE</text>
-          <text x="820" y="184" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">macro-F1</text>
-          <text x="820" y="201" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">cobertura emp.</text>
+          <text x="820" y="184" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">MAE · RMSE</text>
+          <text x="820" y="201" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">cobertura PI 95%</text>
 
           <!-- Arrows -->
           <line x1="142" y1="165" x2="178" y2="165" stroke="#003CA6" stroke-width="2" marker-end="url(#arrow)"/>
@@ -1609,28 +1573,28 @@
           <!-- Resultado -->
           <rect x="100" y="295" width="720" height="50" rx="12" fill="#fff" stroke="#003CA6" stroke-width="1.5"/>
           <text x="120" y="320" font-family="DM Sans" font-weight="700" font-size="11" fill="#003CA6">Resultado esperado</text>
-          <text x="120" y="335" font-family="DM Sans" font-size="10" fill="#555559">Pronóstico mensual por país × categoría × tabla (h = 1, 3, 6, 12 meses) con IC 95 %, 8 modelos comparados, Holm, repositorio reproducible con DOI.</text>
+          <text x="120" y="335" font-family="DM Sans" font-size="10" fill="#555559">Pronóstico mensual por país × categoría × tabla (h = 1, 3, 6, 12 meses) con intervalos de predicción al 95 %, 8 modelos comparados, repositorio reproducible bajo licencia abierta.</text>
         </svg>
       </div>
 
-      <h4>3.1.3 · Cobertura analítica propuesta</h4>
+      <h4>3.1.3 · Cobertura analítica en tres niveles</h4>
       <p>
-        El sistema admite, en la dimensión <strong>país</strong>, a México, India, China, Filipinas y <em>All Chargeability Areas Except Those Listed</em>; en la dimensión <strong>categoría</strong>, las cinco preferencias familiares (F1, F2A, F2B, F3, F4) y las basadas en empleo (EB-1 a EB-5 con subcategorías); en la dimensión <strong>tabla</strong>, FAD y DFF. La validación piloto comienza por celdas de alta demanda como F4-México por la severidad de sus rezagos.
+        La cobertura del sistema se organiza en tres niveles explícitos:
+      </p>
+      <ul>
+        <li><strong>Base de datos estructural.</strong> Contiene todas las combinaciones de país (México, India, China, Filipinas, <em>All Chargeability Areas Except Those Listed</em>) &times; categoría (familiares F1, F2A, F2B, F3, F4 y basadas en empleo EB-1 a EB-5 con subcategorías) &times; tabla (FAD, DFF).</li>
+        <li><strong>Cobertura evaluable.</strong> Series con histórico, continuidad y variabilidad suficientes para pronóstico, según los criterios pre-registrados de la <a href="#tablas">Tabla&nbsp;2</a>.</li>
+        <li><strong>Cobertura piloto inicial.</strong> Categorías familiares F1&ndash;F4 sobre los países de alta demanda y la agrupación residual, comenzando por México por la severidad de sus rezagos.</li>
+      </ul>
+
+      <h4>3.1.4 · Variable predicha</h4>
+      <p>
+        Sea $y_{p,c,b,t}$ la fecha de prioridad transformada a días desde una fecha base, para la celda (país $p$, categoría $c$, tabla $b$) en el mes $t$. La variable es <strong>continua</strong> y constituye el objetivo de un <strong>regresor temporal único</strong>. El sistema se entrena exclusivamente sobre observaciones con estado $e=F$ (fecha específica); las observaciones <em>Current</em> y <em>Unavailable</em> se preservan en la base de datos como anotación descriptiva pero <strong>no son objetivo predictivo</strong>. Las retrogresiones dentro del régimen $F$ se conservan como observaciones legítimas (fenómeno objetivo del sistema migratorio).
       </p>
 
-      <h4>3.1.4 · Variable predicha y formulación mixta</h4>
+      <h4>3.1.5 · Aislamiento del entrenamiento</h4>
       <p>
-        Sea $y_{p,c,b,t}$ la fecha de prioridad transformada a días desde $t_0$ = 1&nbsp;ene&nbsp;1980 para la celda (país, categoría, tabla) en el mes $t$. El protocolo distingue dos planos:
-      </p>
-      <ol>
-        <li><strong>Plano de etiquetas categóricas.</strong> Cada observación recibe $e_{p,c,b,t} \in \{C, U, F\}$ que el clasificador toma como salida a predecir.</li>
-        <li><strong>Plano de valores numéricos.</strong> Las observaciones con $e=F$ retienen su fecha de prioridad y constituyen el conjunto sobre el cual se entrena el regresor; las observaciones $C$ y $U$ se preservan en la base de datos pero <strong>no participan</strong> en el entrenamiento del regresor.</li>
-        <li>Las <em>retrogresiones</em> dentro del régimen $F$ se conservan como observaciones legítimas, sin imputarlas, dado que constituyen un fenómeno objetivo del sistema migratorio.</li>
-      </ol>
-
-      <h4>3.1.5 · Aislamiento del entrenamiento del regresor</h4>
-      <p>
-        Las métricas de regresión sólo se calculan sobre observaciones cuyo estado real corresponde a una fecha específica, no sobre <em>Current</em> ni <em>Unavailable</em>. Esto evita penalizar al regresor con observaciones categóricas que pertenecen al subproblema de clasificación.
+        Las métricas de regresión se calculan exclusivamente sobre observaciones con fecha específica. Esto evita contaminar la evaluación con observaciones categóricas (<em>Current</em>/<em>Unavailable</em>) que están fuera del objetivo predictivo del sistema. La caracterización descriptiva de los regímenes C/U/F vive en el reporte de exploración (Cap.&nbsp;IV, Fase&nbsp;2), no en las métricas operativas.
       </p>
     </div>
 
@@ -1640,29 +1604,27 @@
 
       <div class="grid grid--2">
         <div class="card">
-          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Delimitaciones · 8</span>
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Delimitaciones · 7</span>
           <h4 class="card-title" style="font-size:1rem;">Decisiones del investigador</h4>
           <ul style="margin-top:0.4rem;">
             <li><strong>Geografía:</strong> MX · IN · CN · PH · All Charg.</li>
-            <li><strong>Tablas:</strong> FAD &amp; DFF (separadas)</li>
-            <li><strong>Horizonte:</strong> h = 1, 3, 6, 12 meses</li>
-            <li><strong>Modelos:</strong> 8 comparados; transformadores fuera</li>
-            <li><strong>Sentimiento:</strong> extensión deseable (no entregable mínimo)</li>
-            <li><strong>Métricas:</strong> sMAPE · MASE · MAE · RMSE · macro-F1</li>
-            <li><strong>Validación:</strong> walk-forward + Holm</li>
-            <li><strong>Demostrador:</strong> local desde repositorio con DOI</li>
+            <li><strong>Tablas:</strong> FAD &amp; DFF (evaluadas separadamente)</li>
+            <li><strong>Horizontes:</strong> h = 1, 3, 6, 12 meses</li>
+            <li><strong>Modelos:</strong> 8 comparados (lineales + no lineales)</li>
+            <li><strong>Métricas:</strong> sMAPE · MASE · MAE · RMSE</li>
+            <li><strong>Validación:</strong> walk-forward expansiva</li>
+            <li><strong>Aplicación:</strong> demostración académica desde repositorio</li>
           </ul>
         </div>
         <div class="card">
-          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Limitaciones · 6</span>
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Limitaciones · 5</span>
           <h4 class="card-title" style="font-size:1rem;">Factores externos</h4>
           <ul style="margin-top:0.4rem;">
-            <li><strong>Datos:</strong> ≈400 obs FAD, ≈125 obs DFF por serie [49], [50]</li>
+            <li><strong>Datos:</strong> $\sim$400 obs FAD, $\sim$125 obs DFF por serie</li>
             <li><strong>Discontinuidades estructurales</strong> del marco regulatorio</li>
             <li><strong>Composición variable</strong> de <em>All Chargeability</em></li>
-            <li><strong>Corpus:</strong> aplicable solo si extensión es ejecutada</li>
             <li><strong>Recursos computacionales</strong> académicos (no productivos)</li>
-            <li><strong>Cambios de política</strong> con impacto no observado en el periodo</li>
+            <li><strong>Volatilidad regulatoria</strong> con impacto no observado en el periodo (p. ej. anuncios de política recientes [3])</li>
           </ul>
         </div>
       </div>
@@ -1670,15 +1632,15 @@
       <h4>Gobernanza del alcance</h4>
       <div class="grid grid--2">
         <div class="card" style="border-left:5px solid var(--azul);">
-          <strong style="color:var(--azul);">Entregable mínimo (científico)</strong>
+          <strong style="color:var(--azul);">Producto científico</strong>
           <p class="card-text mt-2">
-            (i) Base longitudinal reproducible CSV con licencia abierta; (ii) protocolo de <em>series evaluables</em> (Tabla 2); (iii) implementación de la familia completa (Tabla 3) bajo el clasificador-regresor mixto sobre la cobertura piloto; (iv) <em>walk-forward</em> con métricas de regresión, clasificación y calibración.
+            (i)&nbsp;Base longitudinal reproducible CSV bajo licencia abierta; (ii)&nbsp;protocolo de <em>series evaluables</em> (<a href="#tablas">Tabla&nbsp;2</a>); (iii)&nbsp;implementación de la familia completa (<a href="#tablas">Tabla&nbsp;3</a>) bajo regresor temporal único entrenado con observaciones $e=F$ sobre la cobertura piloto; (iv)&nbsp;walk-forward con métricas de regresión y calibración de los intervalos de predicción al 95&nbsp;%.
           </p>
         </div>
         <div class="card" style="border-left:5px solid var(--amarillo-d);">
-          <strong style="color:var(--amarillo-d);">Entregable mínimo (demostrativo)</strong>
+          <strong style="color:var(--amarillo-d);">Producto demostrativo</strong>
           <p class="card-text mt-2">
-            Demostrador académico de visualización ejecutable localmente o en entorno controlado, con disclaimer académico versionado en repositorio. <strong>No</strong> compromiso de despliegue público continuo; el dominio <code>visapredictai.com</code> es proyecto personal del autor, no entregable evaluado.
+            <strong>Aplicación de demostración académica</strong> ejecutable desde el repositorio, con disclaimer versionado. <strong>No</strong> compromiso de despliegue público continuo; el dominio <code>visapredictai.com</code> es proyecto personal del autor, no entregable evaluado (Apéndice&nbsp;A.4).
           </p>
         </div>
       </div>
@@ -1687,13 +1649,17 @@
     <div class="subsec reveal">
       <h3><span class="num">3.3</span> Forma de validación</h3>
 
+      <p style="margin-bottom:1rem;">
+        El Capítulo&nbsp;III describe <em>qué se valida</em> y <em>con qué nivel se reporta éxito</em>. Las decisiones operativas (parámetros del walk-forward, esquema de pruebas confirmatorias, control familiar de error) se documentan en el Capítulo&nbsp;IV.
+      </p>
+
       <div class="steps">
-        <div class="step"><span class="step-num">01</span><h4>Walk-forward expansivo</h4><p>Validación interna anidada para selección de hiperparámetros; reporte por horizonte (h = 1, 3, 6, 12 meses).</p></div>
-        <div class="step"><span class="step-num">02</span><h4>Métricas mixtas</h4><p>Regresión: sMAPE, MASE, MAE, RMSE. Clasificación: macro-F1, exactitud balanceada. Calibración: cobertura empírica vs. nominal.</p></div>
-        <div class="step"><span class="step-num">03</span><h4>Diebold-Mariano + Holm</h4><p>Familia pre-registrada de comparaciones piloto; corrección de Holm a $\alpha = 0.05$ familiar; intervalos de confianza por estrato.</p></div>
-        <div class="step"><span class="step-num">04</span><h4>Incertidumbre</h4><p>Cuatro estrategias: ARIMA analítico · MC dropout [41] · bootstrap temporal en bloques [40] · predicción conforme [73].</p></div>
-        <div class="step"><span class="step-num">05</span><h4>Validación cualitativa</h4><p>Estudios de caso en celdas críticas + validación <em>post-hoc</em> acotada sobre boletines posteriores al cierre del entrenamiento.</p></div>
-        <div class="step"><span class="step-num">06</span><h4>Amenazas a la validez</h4><p>Validez interna (leakage), externa (generalización), constructo (proxies) y estadística (tamaño muestral, potencia preliminar).</p></div>
+        <div class="step"><span class="step-num">01</span><h4>Walk-forward expansivo</h4><p>Validación temporal con conjunto de entrenamiento que avanza un mes a la vez, respetando la causalidad. Reporte por horizonte ($h = 1, 3, 6, 12$ meses).</p></div>
+        <div class="step"><span class="step-num">02</span><h4>Métricas escaladas</h4><p>sMAPE, MASE, MAE y RMSE definidas formalmente en §2.1.7. MAPE sólo como complemento. Calibración: cobertura empírica de los intervalos de predicción al 95&nbsp;% vs. nominal.</p></div>
+        <div class="step"><span class="step-num">03</span><h4>Comparación estadística</h4><p>Comparación formal entre el mejor modelo no lineal y el lineal más fuerte sobre la familia pre-registrada de celdas piloto (instrumentación específica en Cap.&nbsp;IV §4.4).</p></div>
+        <div class="step"><span class="step-num">04</span><h4>Intervalos de predicción al 95&nbsp;%</h4><p>Tres mecanismos complementarios: ARIMA analítico bajo supuestos gaussianos, MC dropout [40] para redes neuronales y predicción conforme [59] como referencia agnóstica al modelo.</p></div>
+        <div class="step"><span class="step-num">05</span><h4>Validación cualitativa</h4><p>Estudios de caso en celdas críticas y validación retrospectiva acotada sobre boletines posteriores al cierre del entrenamiento; lectura legible para usuarios finales con disclaimer.</p></div>
+        <div class="step"><span class="step-num">06</span><h4>Amenazas a la validez</h4><p>Validez interna (<em>data leakage</em>), externa (generalización), de constructo (proxies de la dificultad) y estadística (tamaño muestral, potencia preliminar).</p></div>
       </div>
 
       <h4>Niveles de éxito</h4>
@@ -1701,19 +1667,75 @@
         <div class="level level--min">
           <span class="level-tag">Mínimo</span>
           <h4>Reporte honesto del experimento</h4>
-          <p>Construcción reproducible del dataset, ejecución completa del walk-forward sobre la cobertura piloto, reporte de métricas. <strong>No requiere</strong> que ningún modelo no lineal supere a los baselines lineales: el reporte de un resultado nulo también satisface el nivel mínimo.</p>
+          <p>Construcción reproducible del dataset, ejecución completa del walk-forward sobre la cobertura piloto, reporte de métricas escaladas e intervalos de predicción al 95&nbsp;%. <strong>No requiere</strong> que ningún modelo no lineal supere a los lineales: el reporte de un resultado nulo también satisface el nivel mínimo.</p>
         </div>
         <div class="level level--sat">
           <span class="level-tag">Satisfactorio</span>
-          <h4>Criterios numéricos cumplidos</h4>
-          <p>El mejor modelo no lineal de la familia {ARIMA-LSTM, DeepAR, XGBoost} reduce MASE respecto al baseline lineal más fuerte en ≥ 60 % de las series piloto, magnitud media ≥ 0.05 unidades de MASE, y Diebold-Mariano sobrevive Holm a $\alpha=0.05$.</p>
+          <h4>Mejora material y verificable</h4>
+          <p>El mejor modelo no lineal de la familia {LSTM, ARIMA-LSTM, DeepAR, XGBoost} mejora a los lineales más fuertes en una proporción material de las series piloto, con magnitud verificable en sMAPE/MASE. La instrumentación estadística específica vive en el Cap.&nbsp;IV §4.4.</p>
         </div>
         <div class="level level--ideal">
           <span class="level-tag">Ideal ★</span>
           <h4>Calibración + bitácora estable</h4>
-          <p>Si la extensión deseable es ejecutada, la variante con sentimiento muestra mejora marginal medible en al menos un subconjunto de estratos. IC al 95 % con cobertura empírica ≈ nominal en agregado. Bitácora post-hoc de al menos 6 ciclos mensuales.</p>
+          <p>Los intervalos de predicción al 95&nbsp;% alcanzan cobertura empírica cercana a la nominal en el agregado. Bitácora retrospectiva sobre al menos 6 ciclos mensuales del boletín posteriores al cierre del entrenamiento. Aplicación de demostración funcional con disclaimer.</p>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ CAPÍTULO IV ═══════════════ -->
+<section class="section" id="capiv">
+  <div class="section-inner">
+    <span class="section-tag">Capítulo IV</span>
+    <h2 class="section-title">Metodología CRISP-DM</h2>
+    <p class="section-sub">
+      El proyecto se instrumenta bajo <strong>CRISP-DM</strong> (<em>Cross-Industry Standard Process for Data Mining</em>) [64], metodología establecida desde 2000 que se ha convertido en estándar <em>de facto</em> para proyectos de minería de datos y aprendizaje automático aplicado. Sus seis fases canónicas se mapean a las cinco fases operativas del proyecto.
+    </p>
+
+    <div class="grid grid--2">
+      <div class="card reveal">
+        <span class="card-tag">Fase 1 · CRISP-DM 1+2</span>
+        <h3 class="card-title">Comprensión del negocio &amp; de los datos</h3>
+        <p class="card-text">
+          Atendida en los Capítulos&nbsp;I y II del anteproyecto. Define el problema, los actores afectados (millones de solicitantes), las cifras del rezago, el régimen estatutario INA 1965, la estructura del <em>Visa Bulletin</em> y las decisiones metodológicas de alto nivel.
+        </p>
+      </div>
+      <div class="card reveal reveal--d1">
+        <span class="card-tag">Fase 2 · CRISP-DM 2</span>
+        <h3 class="card-title">Análisis exploratorio</h3>
+        <p class="card-text">
+          Caracterización del comportamiento histórico por serie evaluable: descomposición STL, pruebas ADF&nbsp;[27] y KPSS&nbsp;[28], identificación cuantitativa de retrogresiones y periodos C/U, aplicación de los criterios de exclusión de la <a href="#tablas">Tabla&nbsp;2</a>.
+        </p>
+      </div>
+      <div class="card reveal reveal--d2">
+        <span class="card-tag">Fase 3 · CRISP-DM 3+4</span>
+        <h3 class="card-title">Preparación &amp; modelado</h3>
+        <p class="card-text">
+          Construcción del panel multiserie $y_{p,c,b,t}$ y entrenamiento de los 8 modelos de la <a href="#tablas">Tabla&nbsp;3</a>: lineales (naïve, ARIMA, SARIMA, Prophet), no lineales locales (LSTM, ARIMA-LSTM) y globales/tabulares (DeepAR, XGBoost). Selección de hiperparámetros sin <em>data leakage</em>; generación de intervalos de predicción al 95&nbsp;% por tres mecanismos.
+        </p>
+      </div>
+      <div class="card reveal reveal--d3">
+        <span class="card-tag">Fase 4 · CRISP-DM 5</span>
+        <h3 class="card-title">Evaluación</h3>
+        <p class="card-text">
+          Walk-forward expansivo con métricas escaladas (sMAPE, MASE, MAE, RMSE) por horizonte y agregadas. Cálculo de cobertura empírica de los intervalos al 95&nbsp;%. Comparación estadística formal con Diebold-Mariano [18] sobre la familia pre-registrada de comparaciones, con corrección de Holm a $\alpha = 0.05$ familiar. Diagnóstico de <em>overfitting</em> y <em>leakage</em>, amenazas a la validez.
+        </p>
+      </div>
+      <div class="card reveal reveal--d4" style="grid-column:1/-1;">
+        <span class="card-tag">Fase 5 · CRISP-DM 6</span>
+        <h3 class="card-title">Despliegue</h3>
+        <p class="card-text">
+          Publicación del dataset bajo licencia abierta, congelación del repositorio (R1&ndash;R7), aplicación de demostración académica con advertencias de uso (disclaimer del Apéndice&nbsp;A.5) y reporte final integral. <strong>No</strong> hay compromiso de servicio público permanente: el sistema es académico, evaluado y reproducible, no operativo.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout mt-4">
+      <div class="callout-head">⏱️ Cronograma agosto 2026 &ndash; mayo 2027</div>
+      <p>
+        Las cinco fases se distribuyen sobre 10 meses con granularidad semanal (40 semanas activas + receso académico de diciembre 2026), alineadas con los periodos PI-I (ago&ndash;nov 2026) y PI-II (ene&ndash;may 2027) del programa MIAAD. Hitos verificables en cada cierre de fase, con revisión del documento entregable y valoración del director de tesis.
+      </p>
     </div>
   </div>
 </section>
@@ -1736,7 +1758,7 @@
           <tr><td><strong>Categorías familiares</strong></td><td>F1, F2A, F2B, F3, F4</td><td>Convención <strong>F1–F4</strong> = conjunto completo {F1, F2A, F2B, F3, F4}.</td></tr>
           <tr><td><strong>Categorías de empleo</strong></td><td>EB-1, EB-2, EB-3, EB-4, EB-5 (+ subcategorías)</td><td>Esquemática; incluye <em>Other Workers</em>, <em>Certain Religious Workers</em>, <em>set-asides</em>.</td></tr>
           <tr><td><strong>Tipo de tabla</strong></td><td>Final Action Dates (FAD), Dates for Filing (DFF)</td><td>Evaluadas <strong>separadamente</strong>, sin comparación cruzada directa.</td></tr>
-          <tr><td><strong>Códigos especiales</strong></td><td><em>Current</em> (C) y <em>Unavailable</em> (U)</td><td>Tratados como etiquetas categóricas del clasificador en la formulación mixta (Sec. 3.1.5).</td></tr>
+          <tr><td><strong>Códigos especiales</strong></td><td><em>Current</em> (C) y <em>Unavailable</em> (U)</td><td>Conservados como anotación descriptiva en la base de datos; no participan del entrenamiento del regresor (§3.1.5).</td></tr>
         </tbody>
       </table>
     </div>
@@ -1751,14 +1773,14 @@
           <tr><td><strong>Variabilidad nula</strong></td><td>Serie con valor constante (ej. <em>Current</em> permanente) en el periodo evaluado; no aporta información predictiva.</td></tr>
           <tr><td><strong>Datos faltantes no recuperables</strong></td><td>Tres o más meses consecutivos no publicados sin recuperación posible mediante archivos del DOS.</td></tr>
           <tr><td><strong>Cambios normativos no armonizables</strong></td><td>Modificaciones administrativas que alteran la definición de la categoría (ej. redefinición de subcategorías EB).</td></tr>
-          <tr><td><strong>Ausencia de fecha específica</strong></td><td>La combinación nunca publicó una fecha específica; sólo <em>Current</em> o <em>Unavailable</em>. Pertenece exclusivamente al subproblema de clasificación.</td></tr>
+          <tr><td><strong>Ausencia de fecha específica</strong></td><td>La combinación nunca publicó una fecha específica; sólo <em>Current</em> o <em>Unavailable</em>. Sin objetivo numérico para entrenar el regresor.</td></tr>
           <tr><td><strong>Composición variable</strong></td><td>Aplicable a <em>All Chargeability Areas Except Those Listed</em>: composición de países cambia a lo largo del periodo (no-estacionariedad de composición). Se acompañará de advertencia explícita en cualquier inferencia.</td></tr>
         </tbody>
       </table>
     </div>
     <p class="tbl-caption">Series excluidas se reportan descriptivamente pero no entran al pipeline cuantitativo. Fuente: elaboración propia.</p>
 
-    <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-top:2.5rem;margin-bottom:0.8rem;">Tabla 3 · Modelos de referencia (8 comparados)</h3>
+    <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-top:2.5rem;margin-bottom:0.8rem;">Tabla 3 · Modelos comparados (8 candidatos del marco comparativo)</h3>
     <div class="tbl-wrap reveal">
       <table class="tbl">
         <thead>
@@ -1767,22 +1789,22 @@
             <th>Tipo</th>
             <th class="num">sMAPE obj.</th>
             <th class="num">MASE obj.</th>
-            <th>Función en el benchmark</th>
+            <th>Función en el marco comparativo</th>
           </tr>
         </thead>
         <tbody>
           <tr><td><strong>Naïve estacional</strong></td><td>Línea base ingenua</td><td class="num">—</td><td class="num">1.00</td><td>Referencia mínima.</td></tr>
-          <tr><td><strong>ARIMA</strong></td><td>Lineal univariado [15], [16]</td><td class="num">&lt; 25 %</td><td class="num">&lt; 0.97</td><td>Baseline lineal sin estacionalidad.</td></tr>
+          <tr><td><strong>ARIMA</strong></td><td>Lineal univariado [24], [29]</td><td class="num">&lt; 25 %</td><td class="num">&lt; 0.97</td><td>Modelo lineal sin estacionalidad.</td></tr>
           <tr><td><strong>SARIMA</strong></td><td>Lineal estacional</td><td class="num">&lt; 22 %</td><td class="num">&lt; 0.94</td><td>Captura ciclos anuales del año fiscal.</td></tr>
-          <tr><td><strong>Prophet</strong></td><td>Aditivo con <em>changepoints</em> [59]</td><td class="num">&lt; 20 %</td><td class="num">&lt; 0.92</td><td>Modela retrogresiones como cambios de régimen.</td></tr>
-          <tr><td><strong>LSTM puro</strong></td><td>Profundo univariado [29]</td><td class="num">&lt; 20 %</td><td class="num">&lt; 0.90</td><td>Capacidad no lineal sin componente lineal.</td></tr>
-          <tr><td><strong>ARIMA-LSTM</strong></td><td>Híbrido local [7], [30]</td><td class="num">&lt; 17 %</td><td class="num">&lt; 0.88</td><td>Referencia híbrida lineal + no lineal por serie.</td></tr>
-          <tr><td><strong>DeepAR</strong></td><td>Profundo global multiserie [68]</td><td class="num">&lt; 17 %</td><td class="num">&lt; 0.88</td><td>Aprende transferencia entre series del panel.</td></tr>
-          <tr><td><strong>XGBoost + regresores</strong></td><td>Tabular con exógenas [69]</td><td class="num">&lt; 18 %</td><td class="num">&lt; 0.90</td><td>Alternativa con <em>features</em> de calendario.</td></tr>
+          <tr><td><strong>Prophet</strong></td><td>Aditivo con <em>changepoints</em> [32]</td><td class="num">&lt; 20 %</td><td class="num">&lt; 0.92</td><td>Modela retrogresiones como cambios de régimen.</td></tr>
+          <tr><td><strong>LSTM puro</strong></td><td>Profundo univariado [43]</td><td class="num">&lt; 20 %</td><td class="num">&lt; 0.90</td><td>Capacidad no lineal sin componente lineal.</td></tr>
+          <tr><td><strong>ARIMA-LSTM</strong></td><td>Híbrido local [12], [19]</td><td class="num">&lt; 17 %</td><td class="num">&lt; 0.88</td><td>Referencia híbrida lineal + no lineal por serie.</td></tr>
+          <tr><td><strong>DeepAR</strong></td><td>Profundo global multiserie [22]</td><td class="num">&lt; 17 %</td><td class="num">&lt; 0.88</td><td>Aprende transferencia entre series del panel.</td></tr>
+          <tr><td><strong>XGBoost + regresores</strong></td><td>Tabular con exógenas [56]</td><td class="num">&lt; 18 %</td><td class="num">&lt; 0.90</td><td>Alternativa con <em>features</em> de calendario.</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="tbl-caption"><strong>Ningún modelo se destaca a priori como "central"</strong>: el benchmarking determinará empíricamente cuál(es) lidera(n) en cada estrato. La variante con sentimiento se considera <em>extensión deseable</em>, no parte del entregable mínimo. Fuente: elaboración propia.</p>
+    <p class="tbl-caption">Ningún modelo se privilegia de antemano como &laquo;central&raquo;: el marco comparativo determinará empíricamente cuál(es) lidera(n) en cada estrato. Umbrales objetivo orientativos. Fuente: elaboración propia.</p>
 
     <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-top:2.5rem;margin-bottom:0.8rem;">Figura · Matriz de cobertura país × categoría × tabla</h3>
     <div class="matrix reveal">
@@ -1839,11 +1861,11 @@
     <span class="section-tag">Apéndice A.3</span>
     <h2 class="section-title">Anexo de reproducibilidad</h2>
     <p class="section-sub">
-      Conforme al compromiso enunciado en la Sección 3.2, el repositorio público incluye los siguientes siete componentes verificables por terceros:
+      Conforme al compromiso enunciado en la Sección 3.2, el repositorio público incluye los siguientes siete componentes verificables por terceros. La obtención del <strong>DOI académico</strong> es <em>condicional</em>, no compromiso del entregable mínimo.
     </p>
 
     <div class="repro-grid">
-      <div class="repro-card reveal"><span class="repro-card-num">R1</span><div class="repro-card-title">DOI académico</div><p class="repro-card-text">Repositorio archivado en Zenodo o equivalente, con identificador único persistente vinculado al <em>commit hash</em> congelado en la fecha de defensa.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R1</span><div class="repro-card-title">DOI académico (condicional)</div><p class="repro-card-text">Si el autor decide solicitarlo, archivado en Zenodo o equivalente, con identificador único persistente vinculado al <em>commit hash</em> congelado en la fecha de defensa. La publicación bajo licencia abierta (MIT o equivalente) sí es compromiso firme.</p></div>
       <div class="repro-card reveal"><span class="repro-card-num">R2</span><div class="repro-card-title">Manifiesto de dependencias</div><p class="repro-card-text"><code>requirements.txt</code> con versiones fijadas (==), complementado opcionalmente con <code>environment.yml</code> para Conda.</p></div>
       <div class="repro-card reveal"><span class="repro-card-num">R3</span><div class="repro-card-title">Semillas aleatorias</div><p class="repro-card-text">Cada experimento documenta la(s) semilla(s) usada(s) para NumPy, PyTorch y Scikit-learn al inicio de cada notebook o script.</p></div>
       <div class="repro-card reveal"><span class="repro-card-num">R4</span><div class="repro-card-title">Especificación del hardware</div><p class="repro-card-text">Memoria, modelo de CPU, presencia/ausencia de GPU, sistema operativo y arquitectura (Apple Silicon, x86_64) en <code>REPRODUCIBILITY.md</code>.</p></div>
@@ -1867,63 +1889,54 @@
     <span class="section-tag">Glosario</span>
     <h2 class="section-title">Vocabulario operativo</h2>
     <p class="section-sub">
-      Más de cincuenta términos del dominio migratorio y del aprendizaje estadístico utilizados a lo largo del anteproyecto. Use el buscador para filtrar por término o por palabra clave dentro de la definición.
+      Cuarenta y dos términos del dominio migratorio y del aprendizaje estadístico utilizados a lo largo del anteproyecto. Use el buscador para filtrar por término o por palabra clave dentro de la definición.
     </p>
 
     <input type="text" id="glossSearch" class="glossary-search" placeholder="Buscar en el glosario..." aria-label="Buscar en el glosario"/>
 
     <div class="glossary-list" id="glossList">
-      <div class="gloss-item" data-k="acf autocorrelation function arima"><div class="gloss-term">ACF<span class="acro">Autocorrelation Function</span></div><div class="gloss-def">Función que cuantifica la correlación entre observaciones separadas por distintos rezagos temporales; herramienta central en la identificación de modelos ARIMA.</div></div>
-      <div class="gloss-item" data-k="adam adaptive moment optimizador"><div class="gloss-term">Adam<span class="acro">Adaptive Moment Estimation</span></div><div class="gloss-def">Optimizador de gradiente estocástico que combina momento y tasas de aprendizaje adaptativas por parámetro; estándar de facto en redes profundas.</div></div>
-      <div class="gloss-item" data-k="aic akaike information criterion seleccion modelos"><div class="gloss-term">AIC<span class="acro">Akaike Information Criterion</span></div><div class="gloss-def">Criterio de selección de modelos que balancea ajuste y parsimonia: AIC = 2k − 2 ln 𝓛.</div></div>
-      <div class="gloss-item" data-k="arima autoregressive integrated moving average lineal"><div class="gloss-term">ARIMA<span class="acro">Autoregressive Integrated Moving Average</span></div><div class="gloss-def">Familia de modelos estadísticos de series de tiempo que combina componentes autorregresivos, de diferenciación y de media móvil para capturar dinámicas lineales.</div></div>
-      <div class="gloss-item" data-k="arimax exogenas regresoras"><div class="gloss-term">ARIMAX</div><div class="gloss-def">Extensión de ARIMA que incorpora variables exógenas regresoras además de la dinámica endógena de la serie objetivo.</div></div>
-      <div class="gloss-item" data-k="backlog rezago acumulado migratorio"><div class="gloss-term">Backlog (neto)</div><div class="gloss-def">Volumen acumulado de solicitudes pendientes que excede la capacidad operativa del sistema, medido restando solicitudes resueltas de las recibidas en un periodo.</div></div>
-      <div class="gloss-item" data-k="cargabilidad chargeability area pais"><div class="gloss-term">País de cargabilidad<span class="acro">chargeability area</span></div><div class="gloss-def">Categoría administrativa bajo la cual el Departamento de Estado contabiliza una solicitud para fines del límite estatutario del 7 %. Por defecto coincide con el país de nacimiento.</div></div>
-      <div class="gloss-item" data-k="all chargeability areas except those listed agrupacion"><div class="gloss-term">All Chargeability Areas Except Those Listed</div><div class="gloss-def">Agrupación administrativa residual del Visa Bulletin que reúne países no listados explícitamente. Su composición varía a lo largo del tiempo (no-estacionariedad de composición).</div></div>
-      <div class="gloss-item" data-k="nacionalidad pais nacimiento"><div class="gloss-term">Nacionalidad vs. país de cargabilidad</div><div class="gloss-def">Términos no equivalentes en derecho migratorio estadounidense; la cargabilidad sigue al país de nacimiento (INA Sección 202).</div></div>
-      <div class="gloss-item" data-k="batch normalization regularizacion"><div class="gloss-term">Batch Normalization</div><div class="gloss-def">Técnica que estandariza las activaciones de una capa al interior de cada minibatch para estabilizar y acelerar el entrenamiento.</div></div>
-      <div class="gloss-item" data-k="bert bidirectional encoder representations transformers"><div class="gloss-term">BERT<span class="acro">Bidirectional Encoder Representations from Transformers</span></div><div class="gloss-def">Modelo de lenguaje preentrenado basado en transformers que aprende representaciones contextuales bidireccionales de palabras.</div></div>
-      <div class="gloss-item" data-k="beto bert español"><div class="gloss-term">BETO</div><div class="gloss-def">Variante monolingüe de BERT preentrenada exclusivamente sobre corpus en español.</div></div>
-      <div class="gloss-item" data-k="bilstm bidirectional lstm"><div class="gloss-term">Bi-LSTM<span class="acro">Bidirectional LSTM</span></div><div class="gloss-def">Variante de LSTM que procesa la secuencia simultáneamente en dirección cronológica y anticronológica.</div></div>
-      <div class="gloss-item" data-k="deepar probabilistic forecasting global"><div class="gloss-term">DeepAR</div><div class="gloss-def">Arquitectura probabilística basada en LSTM autorregresiva que produce pronósticos con distribuciones predictivas en lugar de puntos.</div></div>
-      <div class="gloss-item" data-k="dates for filing dff calendario"><div class="gloss-term">Dates for Filing</div><div class="gloss-def">Calendario publicado mensualmente por el DOS que autoriza el inicio anticipado del trámite de ajuste de estatus, generalmente con fechas más recientes que las FAD.</div></div>
-      <div class="gloss-item" data-k="diebold mariano prueba"><div class="gloss-term">Diebold-Mariano (prueba)</div><div class="gloss-def">Prueba estadística formal de comparación de precisión predictiva entre dos modelos sobre una misma serie, bajo hipótesis nula de igualdad de errores esperados.</div></div>
-      <div class="gloss-item" data-k="dropout regularizacion sobreajuste"><div class="gloss-term">Dropout</div><div class="gloss-def">Técnica de regularización que desactiva aleatoriamente una fracción de neuronas durante el entrenamiento, forzando redundancia representacional.</div></div>
-      <div class="gloss-item" data-k="eb empleo categorias laborales"><div class="gloss-term">EB-1 a EB-5</div><div class="gloss-def">Categorías de preferencia laboral para residencia permanente en EE. UU., desde trabajadores prioritarios (EB-1) hasta inversionistas (EB-5).</div></div>
-      <div class="gloss-item" data-k="early stopping detencion temprana"><div class="gloss-term">Early Stopping</div><div class="gloss-def">Estrategia de regularización implícita que interrumpe el entrenamiento cuando el error sobre el conjunto de validación deja de mejorar.</div></div>
-      <div class="gloss-item" data-k="f1 f2a f2b f3 f4 familiar preferencia"><div class="gloss-term">F1, F2A, F2B, F3, F4</div><div class="gloss-def">Categorías de preferencia familiar definidas por la INA: hijos adultos solteros de ciudadanos (F1), cónyuges/hijos menores de residentes (F2A), hijos adultos solteros de residentes (F2B), hijos casados de ciudadanos (F3) y hermanos de ciudadanos (F4).</div></div>
-      <div class="gloss-item" data-k="final action dates fad fecha prioridad"><div class="gloss-term">Final Action Dates</div><div class="gloss-def">Fecha de prioridad publicada mensualmente que determina qué solicitantes pueden recibir la adjudicación final de su residencia permanente en ese mes fiscal.</div></div>
-      <div class="gloss-item" data-k="fusion multimodal integracion modalidades"><div class="gloss-term">Fusión multimodal</div><div class="gloss-def">Conjunto de estrategias para integrar información de distintas modalidades (numérica, textual, visual): fusión temprana, tardía e híbrida.</div></div>
-      <div class="gloss-item" data-k="gradient boosting ensamble xgboost"><div class="gloss-term">Gradient Boosting</div><div class="gloss-def">Familia de métodos de ensamble que construye secuencialmente modelos débiles, cada uno enfocado en corregir los errores residuales del ensamble previo.</div></div>
-      <div class="gloss-item" data-k="ina immigration nationality act 1965"><div class="gloss-term">INA<span class="acro">Immigration and Nationality Act</span></div><div class="gloss-def">Ley federal estadounidense de 1965 que estableció el sistema actual de cuotas por categoría y país para la residencia permanente.</div></div>
-      <div class="gloss-item" data-k="lime local interpretable model agnostic"><div class="gloss-term">LIME<span class="acro">Local Interpretable Model-agnostic Explanations</span></div><div class="gloss-def">Método de interpretabilidad local que aproxima el comportamiento de un modelo complejo mediante un modelo lineal entrenado sobre perturbaciones de la instancia.</div></div>
-      <div class="gloss-item" data-k="lstm long short term memory recurrente"><div class="gloss-term">LSTM<span class="acro">Long Short-Term Memory</span></div><div class="gloss-def">Arquitectura RNN diseñada por Hochreiter y Schmidhuber (1997) con celdas de memoria y compuertas para capturar dependencias temporales de largo plazo.</div></div>
+      <div class="gloss-item" data-k="acf autocorrelation function"><div class="gloss-term">ACF<span class="acro">Autocorrelation Function</span></div><div class="gloss-def">Función que cuantifica la correlación entre observaciones separadas por distintos rezagos temporales; herramienta central en la identificación de modelos ARIMA.</div></div>
+      <div class="gloss-item" data-k="adam adaptive moment estimation"><div class="gloss-term">Adam<span class="acro">Adaptive Moment Estimation</span></div><div class="gloss-def">Algoritmo de optimización de gradiente estocástico que combina momento y tasas de aprendizaje adaptativas por parámetro; estándar <em>de facto</em> en entrenamiento de redes profundas.</div></div>
+      <div class="gloss-item" data-k="aic akaike information criterion"><div class="gloss-term">AIC<span class="acro">Akaike Information Criterion</span></div><div class="gloss-def">Criterio de selección de modelos que balancea ajuste y parsimonia: AIC = 2k − 2 ln(L).</div></div>
+      <div class="gloss-item" data-k="arima autoregressive integrated moving average"><div class="gloss-term">ARIMA<span class="acro">Autoregressive Integrated Moving Average</span></div><div class="gloss-def">Familia de modelos estadísticos de series de tiempo que combina componentes autorregresivos, de diferenciación y de media móvil para capturar dinámicas lineales.</div></div>
+      <div class="gloss-item" data-k="arimax"><div class="gloss-term">ARIMAX</div><div class="gloss-def">Extensión de ARIMA que incorpora variables exógenas regresoras además de la dinámica endógena de la serie objetivo.</div></div>
+      <div class="gloss-item" data-k="backlog neto"><div class="gloss-term">Backlog (neto)</div><div class="gloss-def">En el contexto migratorio, volumen acumulado de solicitudes pendientes de procesamiento que excede la capacidad operativa del sistema, medido restando las solicitudes resueltas de las recibidas en un período.</div></div>
+      <div class="gloss-item" data-k="país de cargabilidad chargeability area"><div class="gloss-term">País de cargabilidad (<em>chargeability area</em>)</div><div class="gloss-def">Categoría administrativa bajo la cual el Departamento de Estado contabiliza una solicitud para fines del límite estatutario del 7&nbsp;%. Por defecto coincide con el país de nacimiento del solicitante principal, no con su nacionalidad ni con su país de residencia. Las áreas de cargabilidad reportadas en el <em>Visa Bulletin</em> incluyen países individuales (México, India, China, Filipinas, etc.) y la categoría agregada <em>All Chargeability Areas Except Those Listed</em>, que NO es un país sino una agrupación residual.</div></div>
+      <div class="gloss-item" data-k="all chargeability areas except those listed"><div class="gloss-term">All Chargeability Areas Except Those Listed</div><div class="gloss-def">Categoría agregada del <em>Visa Bulletin</em> que reúne a todos los países de cargabilidad no listados explícitamente. Es una agrupación administrativa, no una entidad geográfica única; incluye decenas de países de baja a media demanda. Su <strong>composición varía a lo largo del tiempo</strong> conforme países entran y salen del estado de &ldquo;límite efectivo&rdquo; por superación de cuota, lo cual constituye una forma de no-estacionariedad de composición. Por esta razón, esta serie se reportará en la cobertura piloto pero será analizada con cautela explícita: cualquier inferencia sobre tendencia se acompañará de la advertencia sobre cambio de composición.</div></div>
+      <div class="gloss-item" data-k="nacionalidad vs país de cargabilidad"><div class="gloss-term">Nacionalidad vs. país de cargabilidad</div><div class="gloss-def">Términos no equivalentes en derecho migratorio estadounidense. La cargabilidad sigue, por defecto, al país de nacimiento (INA Sección 202); la nacionalidad del solicitante puede o no coincidir con su país de cargabilidad. Para evitar ambigüedad, el presente documento utiliza consistentemente <em>país o área de cargabilidad</em> cuando se refiere a la dimensión p del <em>Visa Bulletin</em>.</div></div>
+      <div class="gloss-item" data-k="batch normalization"><div class="gloss-term">Batch Normalization</div><div class="gloss-def">Técnica de regularización que estandariza las activaciones de una capa al interior de cada minibatch para estabilizar y acelerar el entrenamiento.</div></div>
+      <div class="gloss-item" data-k="bilstm bidirectional long short-term memory"><div class="gloss-term">BiLSTM<span class="acro">Bidirectional Long Short-Term Memory</span></div><div class="gloss-def">Variante de LSTM que procesa la secuencia simultáneamente en dirección cronológica y anticronológica, permitiendo que cada estado oculto incorpore contexto pasado y futuro.</div></div>
+      <div class="gloss-item" data-k="deepar"><div class="gloss-term">DeepAR</div><div class="gloss-def">Arquitectura probabilística basada en LSTM autorregresiva, diseñada para producir pronósticos de series de tiempo con distribuciones predictivas en lugar de puntos.</div></div>
+      <div class="gloss-item" data-k="dates for filing"><div class="gloss-term">Dates for Filing</div><div class="gloss-def">Calendario publicado mensualmente por el Departamento de Estado que autoriza el inicio anticipado del trámite de ajuste de estatus, generalmente con fechas más recientes que las <em>Final Action Dates</em>.</div></div>
+      <div class="gloss-item" data-k="dieboldmariano prueba"><div class="gloss-term">Diebold-Mariano (prueba)</div><div class="gloss-def">Prueba estadística formal de comparación de precisión predictiva entre dos modelos sobre una misma serie, bajo hipótesis nula de igualdad de errores esperados.</div></div>
+      <div class="gloss-item" data-k="dropout"><div class="gloss-term">Dropout</div><div class="gloss-def">Técnica de regularización que desactiva aleatoriamente una fracción de neuronas durante el entrenamiento, forzando redundancia representacional y reduciendo el sobreajuste.</div></div>
+      <div class="gloss-item" data-k="eb1 a eb5"><div class="gloss-term">EB-1 a EB-5</div><div class="gloss-def">Categorías de preferencia laboral para residencia permanente en EE.&nbsp;UU., desde trabajadores prioritarios con habilidades extraordinarias (EB-1) hasta inversionistas (EB-5).</div></div>
+      <div class="gloss-item" data-k="early stopping"><div class="gloss-term">Early Stopping</div><div class="gloss-def">Estrategia de regularización implícita que interrumpe el entrenamiento cuando el error sobre el conjunto de validación deja de mejorar durante un número predefinido de épocas.</div></div>
+      <div class="gloss-item" data-k="f1 f2a f2b f3 f4"><div class="gloss-term">F1, F2A, F2B, F3, F4</div><div class="gloss-def">Categorías de preferencia familiar definidas por la INA: hijos adultos solteros de ciudadanos (F1), cónyuges e hijos menores de residentes (F2A), hijos adultos solteros de residentes (F2B), hijos casados de ciudadanos (F3) y hermanos de ciudadanos (F4).</div></div>
+      <div class="gloss-item" data-k="final action dates"><div class="gloss-term">Final Action Dates</div><div class="gloss-def">Fecha de prioridad publicada mensualmente en el <em>Visa Bulletin</em> que determina qué solicitantes pueden recibir la adjudicación final de su residencia permanente en ese mes fiscal.</div></div>
+      <div class="gloss-item" data-k="gradient boosting"><div class="gloss-term">Gradient Boosting</div><div class="gloss-def">Familia de métodos de ensamble que construye secuencialmente modelos débiles, cada uno enfocado en corregir los errores residuales del ensamble previo; XGBoost es su implementación más difundida.</div></div>
+      <div class="gloss-item" data-k="ina immigration and nationality act"><div class="gloss-term">INA<span class="acro">Immigration and Nationality Act</span></div><div class="gloss-def">Ley federal estadounidense de 1965 que estableció el sistema actual de cuotas por categoría y país para la residencia permanente.</div></div>
+      <div class="gloss-item" data-k="lstm long short-term memory"><div class="gloss-term">LSTM<span class="acro">Long Short-Term Memory</span></div><div class="gloss-def">Arquitectura de red neuronal recurrente diseñada por Hochreiter y Schmidhuber en 1997 que incorpora celdas de memoria y compuertas para capturar dependencias temporales de largo plazo y mitigar el desvanecimiento del gradiente.</div></div>
       <div class="gloss-item" data-k="mae mean absolute error"><div class="gloss-term">MAE<span class="acro">Mean Absolute Error</span></div><div class="gloss-def">Error absoluto medio: promedio de los valores absolutos de los errores de predicción.</div></div>
-      <div class="gloss-item" data-k="mape porcentual absoluto"><div class="gloss-term">MAPE<span class="acro">Mean Absolute Percentage Error</span></div><div class="gloss-def">Error porcentual absoluto medio; sensible a valores cercanos a cero y asimétrico entre sobre y subestimaciones.</div></div>
-      <div class="gloss-item" data-k="mase mean absolute scaled error"><div class="gloss-term">MASE<span class="acro">Mean Absolute Scaled Error</span></div><div class="gloss-def">Error absoluto escalado medio (Hyndman &amp; Koehler); métrica universal que normaliza el error por el error del naïve estacional.</div></div>
-      <div class="gloss-item" data-k="monte carlo dropout incertidumbre"><div class="gloss-term">Monte Carlo Dropout</div><div class="gloss-def">Técnica de cuantificación de incertidumbre que aplica dropout también en inferencia, interpretando las predicciones como muestras de una distribución predictiva aproximada.</div></div>
-      <div class="gloss-item" data-k="nbeats neural basis expansion analysis"><div class="gloss-term">N-BEATS</div><div class="gloss-def">Arquitectura profunda puramente basada en bloques residuales que ofrece pronósticos interpretables sin recurrir a mecanismos recurrentes.</div></div>
-      <div class="gloss-item" data-k="pacf partial autocorrelation function"><div class="gloss-term">PACF<span class="acro">Partial Autocorrelation Function</span></div><div class="gloss-def">Mide la correlación entre la observación actual y observaciones rezagadas eliminando la influencia lineal de los rezagos intermedios.</div></div>
-      <div class="gloss-item" data-k="patchtst transformer series largas"><div class="gloss-term">PatchTST</div><div class="gloss-def">Arquitectura transformer reciente que segmenta la serie en <em>patches</em> tratados como tokens, logrando rendimiento competitivo con costo computacional reducido.</div></div>
-      <div class="gloss-item" data-k="conformal prediction prediccion conforme"><div class="gloss-term">Predicción conforme<span class="acro">Conformal Prediction</span></div><div class="gloss-def">Marco no paramétrico (Vovk, Gammerman, Shafer) que produce intervalos de predicción con garantías de cobertura válidas bajo el supuesto mínimo de intercambiabilidad.</div></div>
-      <div class="gloss-item" data-k="priority date fecha prioridad"><div class="gloss-term">Priority Date</div><div class="gloss-def">Fecha oficial de registro de una petición migratoria, asignada al recibirse por USCIS o por el Departamento del Trabajo; funciona como turno en la cola.</div></div>
-      <div class="gloss-item" data-k="prophet meta forecasting"><div class="gloss-term">Prophet</div><div class="gloss-def">Biblioteca de pronóstico de Meta AI que modela series como suma de componentes de tendencia, estacionalidad y festividades; robusta ante observaciones faltantes.</div></div>
-      <div class="gloss-item" data-k="per country limit cuota 7 porciento"><div class="gloss-term">Per-country limit</div><div class="gloss-def">Límite legal del 7 % de las visas de preferencia anuales disponibles para nacionales de un mismo país; origen principal de la retrogresión observada.</div></div>
-      <div class="gloss-item" data-k="relu rectified linear unit"><div class="gloss-term">ReLU<span class="acro">Rectified Linear Unit</span></div><div class="gloss-def">Función de activación no lineal f(x) = max(0, x); de uso dominante en redes profundas modernas.</div></div>
-      <div class="gloss-item" data-k="retrogresion retroceso fechas prioridad"><div class="gloss-term">Retrogresión</div><div class="gloss-def">Fenómeno en el que las fechas de prioridad del <em>Visa Bulletin</em> retroceden en lugar de avanzar, reflejando agotamiento anticipado de cuotas o reajustes internos.</div></div>
+      <div class="gloss-item" data-k="mape mean absolute percentage error"><div class="gloss-term">MAPE<span class="acro">Mean Absolute Percentage Error</span></div><div class="gloss-def">Error porcentual absoluto medio; sensible a valores cercanos a cero y asimétrico entre sobre y subestimaciones.</div></div>
+      <div class="gloss-item" data-k="mase mean absolute scaled error"><div class="gloss-term">MASE<span class="acro">Mean Absolute Scaled Error</span></div><div class="gloss-def">Error absoluto escalado medio propuesto por Hyndman y Koehler; métrica universal que normaliza el error por el error del naïve estacional.</div></div>
+      <div class="gloss-item" data-k="monte carlo dropout"><div class="gloss-term">Monte Carlo Dropout</div><div class="gloss-def">Técnica de cuantificación de incertidumbre que aplica dropout también en inferencia, interpretando las predicciones resultantes como muestras de una distribución predictiva aproximada.</div></div>
+      <div class="gloss-item" data-k="nbeats neural basis expansion analysis for time series"><div class="gloss-term">N-BEATS<span class="acro">Neural Basis Expansion Analysis for Time Series</span></div><div class="gloss-def">Arquitectura profunda puramente basada en bloques residuales que ofrece pronósticos interpretables sin recurrir a mecanismos recurrentes.</div></div>
+      <div class="gloss-item" data-k="pacf partial autocorrelation function"><div class="gloss-term">PACF<span class="acro">Partial Autocorrelation Function</span></div><div class="gloss-def">Función que mide la correlación entre la observación actual y observaciones rezagadas eliminando la influencia lineal de los rezagos intermedios.</div></div>
+      <div class="gloss-item" data-k="patchtst"><div class="gloss-term">PatchTST</div><div class="gloss-def">Arquitectura transformer reciente para pronóstico de series largas que segmenta la serie en <em>patches</em> temporales tratados como tokens, logrando un rendimiento competitivo con un costo computacional reducido.</div></div>
+      <div class="gloss-item" data-k="predicción conforme conformal prediction"><div class="gloss-term">Predicción conforme<span class="acro">Conformal Prediction</span></div><div class="gloss-def">Marco no paramétrico introducido por Vovk, Gammerman y Shafer que produce intervalos de predicción con garantías de cobertura válidas bajo el supuesto mínimo de intercambiabilidad de los datos.</div></div>
+      <div class="gloss-item" data-k="priority date"><div class="gloss-term">Priority Date</div><div class="gloss-def"><span class="acro">Fecha de prioridad</span>Fecha oficial de registro de una petición migratoria, asignada al recibirse por USCIS o por el Departamento del Trabajo; funciona como turno en la cola de procesamiento.</div></div>
+      <div class="gloss-item" data-k="prophet"><div class="gloss-term">Prophet</div><div class="gloss-def">Biblioteca de pronóstico desarrollada por Meta AI que modela series de tiempo como suma de componentes de tendencia, estacionalidad y efectos de festividades, robusta ante observaciones faltantes y valores atípicos.</div></div>
+      <div class="gloss-item" data-k="percountry limit"><div class="gloss-term">Per-country limit</div><div class="gloss-def">Límite legal del 7&nbsp;% de las visas de preferencia anuales disponibles para nacionales de un mismo país, origen principal de la severa retrogresión observada en países de alta demanda como México, India, China y Filipinas.</div></div>
+      <div class="gloss-item" data-k="relu rectified linear unit"><div class="gloss-term">ReLU<span class="acro">Rectified Linear Unit</span></div><div class="gloss-def">Función de activación no lineal f(x) = max(0, x); de uso dominante en redes profundas modernas por su simplicidad computacional y su mitigación del desvanecimiento del gradiente.</div></div>
+      <div class="gloss-item" data-k="retrogresión"><div class="gloss-term">Retrogresión</div><div class="gloss-def">Fenómeno del sistema migratorio estadounidense en el que las fechas de prioridad del <em>Visa Bulletin</em> retroceden en lugar de avanzar, reflejando un agotamiento anticipado de cuotas o reajustes internos en la asignación de visas.</div></div>
       <div class="gloss-item" data-k="rmse root mean squared error"><div class="gloss-term">RMSE<span class="acro">Root Mean Squared Error</span></div><div class="gloss-def">Raíz del error cuadrático medio; métrica sensible a errores grandes por su penalización cuadrática.</div></div>
-      <div class="gloss-item" data-k="sarima estacional"><div class="gloss-term">SARIMA</div><div class="gloss-def">Extensión estacional de ARIMA con componentes autorregresivos, de diferenciación y de media móvil a nivel estacional con período s.</div></div>
-      <div class="gloss-item" data-k="sesgo algoritmico bias fairness"><div class="gloss-term">Sesgo algorítmico</div><div class="gloss-def">Error sistemático que produce desempeño desigual de un modelo sobre distintos subgrupos poblacionales, originado por asimetrías en los datos o decisiones de diseño.</div></div>
-      <div class="gloss-item" data-k="shap shapley additive explanations"><div class="gloss-term">SHAP<span class="acro">SHapley Additive exPlanations</span></div><div class="gloss-def">Método de interpretabilidad que asigna a cada característica un valor derivado de la teoría de juegos cooperativos, cuantificando su contribución marginal.</div></div>
-      <div class="gloss-item" data-k="smape symmetric percentage"><div class="gloss-term">sMAPE<span class="acro">Symmetric Mean Absolute Percentage Error</span></div><div class="gloss-def">Variante simétrica del MAPE que utiliza el promedio de los valores absolutos observados y predichos en el denominador.</div></div>
-      <div class="gloss-item" data-k="tft temporal fusion transformer"><div class="gloss-term">TFT<span class="acro">Temporal Fusion Transformer</span></div><div class="gloss-def">Arquitectura híbrida transformer-recurrente diseñada para pronóstico interpretable multi-horizonte con entradas heterogéneas.</div></div>
-      <div class="gloss-item" data-k="transformer atencion attention"><div class="gloss-term">Transformer</div><div class="gloss-def">Arquitectura neuronal basada exclusivamente en mecanismos de atención (Vaswani et al., 2017); base de los modelos de lenguaje modernos.</div></div>
-      <div class="gloss-item" data-k="vader sentiment lexico"><div class="gloss-term">VADER<span class="acro">Valence Aware Dictionary and sEntiment Reasoner</span></div><div class="gloss-def">Herramienta léxica y basada en reglas para análisis de sentimiento, optimizada para texto breve de redes sociales en inglés.</div></div>
-      <div class="gloss-item" data-k="visa bulletin boletin departamento estado"><div class="gloss-term">Visa Bulletin</div><div class="gloss-def">Boletín mensual publicado por la Oficina de Asuntos Consulares del Departamento de Estado de EE. UU. con fechas de prioridad por categoría y país.</div></div>
-      <div class="gloss-item" data-k="walk forward validation series temporal"><div class="gloss-term">Walk-forward Validation</div><div class="gloss-def">Estrategia de validación para series de tiempo en la que el conjunto de entrenamiento se expande progresivamente hacia el futuro, respetando la causalidad temporal.</div></div>
-      <div class="gloss-item" data-k="xgboost extreme gradient boosting tabular"><div class="gloss-term">XGBoost<span class="acro">eXtreme Gradient Boosting</span></div><div class="gloss-def">Implementación escalable y regularizada de gradient boosting sobre árboles de decisión; referente de alto rendimiento en competiciones de ML.</div></div>
-      <div class="gloss-item" data-k="xlm-r cross lingual roberta"><div class="gloss-term">XLM-R<span class="acro">Cross-lingual Language Model — RoBERTa</span></div><div class="gloss-def">Modelo de lenguaje multilingüe preentrenado sobre 100 idiomas con arquitectura RoBERTa, adecuado para transferencia cruzada entre idiomas.</div></div>
+      <div class="gloss-item" data-k="sarima"><div class="gloss-term">SARIMA</div><div class="gloss-def">Extensión estacional de ARIMA que incorpora componentes autorregresivos, de diferenciación y de media móvil a nivel estacional con período s.</div></div>
+      <div class="gloss-item" data-k="smape symmetric mean absolute percentage error"><div class="gloss-term">sMAPE<span class="acro">Symmetric Mean Absolute Percentage Error</span></div><div class="gloss-def">Variante simétrica del MAPE que utiliza el promedio de los valores absolutos observados y predichos en el denominador.</div></div>
+      <div class="gloss-item" data-k="tft temporal fusion transformer"><div class="gloss-term">TFT<span class="acro">Temporal Fusion Transformer</span></div><div class="gloss-def">Arquitectura híbrida transformer-recurrente para pronóstico multi-horizonte con entradas heterogéneas (pasado, covariables conocidas, variables estáticas).</div></div>
+      <div class="gloss-item" data-k="visa bulletin"><div class="gloss-term"><em>Visa Bulletin</em></div><div class="gloss-def">Boletín mensual publicado por la Oficina de Asuntos Consulares del Departamento de Estado de EE.&nbsp;UU. que actualiza las fechas de prioridad para cada categoría migratoria y país.</div></div>
+      <div class="gloss-item" data-k="walkforward validation"><div class="gloss-term">Walk-forward Validation</div><div class="gloss-def">Estrategia de validación para series de tiempo en la que el conjunto de entrenamiento se expande progresivamente hacia el futuro, respetando la causalidad temporal.</div></div>
+      <div class="gloss-item" data-k="xgboost extreme gradient boosting"><div class="gloss-term">XGBoost<span class="acro">eXtreme Gradient Boosting</span></div><div class="gloss-def">Implementación escalable y regularizada de <em>gradient boosting</em> sobre árboles de decisión; referente de alto rendimiento en competiciones de aprendizaje automático.</div></div>
     </div>
     <div class="gloss-empty" id="glossEmpty" style="display:none;">No se encontraron términos para esa búsqueda.</div>
   </div>
@@ -1935,103 +1948,85 @@
     <span class="section-tag">Bibliografía</span>
     <h2 class="section-title">Referencias IEEE</h2>
     <p class="section-sub">
-      Ochenta y un referencias en orden de primera aparición. Filtre por bloque temático para navegar las fuentes del problema, los baselines estadísticos, las arquitecturas profundas, NLP/sentimiento, validación temporal, interpretabilidad o ética.
+      Sesenta y cuatro referencias IEEE en orden monotónico estricto de primera aparición. Filtre por bloque temático para navegar las fuentes del problema migratorio, los modelos lineales y profundos, los híbridos y arquitecturas modernas, las métricas y validación temporal, los recursos aplicados o la metodología CRISP-DM.
     </p>
 
     <div class="ref-tabs">
-      <button class="ref-tab active" data-range="all">Todas (81)</button>
-      <button class="ref-tab" data-range="1-14">Problema [1–14]</button>
-      <button class="ref-tab" data-range="15-22">Series clásicas [15–22]</button>
-      <button class="ref-tab" data-range="23-31">Redes &amp; LSTM [23–31]</button>
-      <button class="ref-tab" data-range="32-37">NLP &amp; sentimiento [32–37]</button>
-      <button class="ref-tab" data-range="38-46">Métricas &amp; validación [38–46]</button>
-      <button class="ref-tab" data-range="47-58">Aplicación migratoria [47–58]</button>
-      <button class="ref-tab" data-range="59-74">DL profundo &amp; XAI [59–74]</button>
-      <button class="ref-tab" data-range="75-81">Ética &amp; tooling [75–81]</button>
+      <button class="ref-tab active" data-range="all">Todas (64)</button>
+      <button class="ref-tab" data-range="1-15">Problema migratorio [1–15]</button>
+      <button class="ref-tab" data-range="16-23">Métricas &amp; validación [16–23]</button>
+      <button class="ref-tab" data-range="24-33">Series clásicas [24–33]</button>
+      <button class="ref-tab" data-range="34-48">Redes &amp; LSTM [34–48]</button>
+      <button class="ref-tab" data-range="49-56">Híbridos &amp; modernos [49–56]</button>
+      <button class="ref-tab" data-range="57-63">Aplicaciones &amp; tooling [57–63]</button>
+      <button class="ref-tab" data-range="64-64">CRISP-DM [64]</button>
     </div>
 
     <ol class="ref-list" id="refList">
-      <li class="ref-item" data-n="1"><span class="ref-num">[1]</span>U.S. Citizenship and Immigration Services, "The Colorful History of the Green Card," <em>USCIS Stories from the Archives</em>, ene. 2023. <a href="https://www.uscis.gov/about-us/our-history/stories-from-the-archives/the-colorful-history-of-the-green-card" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="2"><span class="ref-num">[2]</span>A. Bao, "Trump says U.S. to 'permanently pause migration from all Third World Countries' after DC shooting," <em>CNBC</em>, nov. 2025. <a href="https://www.cnbc.com/2025/11/28/trump-us-to-permanently-pause-migration-from-all-third-world-countries.html" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="3"><span class="ref-num">[3]</span>U.S. Citizenship and Immigration Services, "Quarterly All Forms, Net Backlog and Frontlog, FY 2025, Q3," 2025. <a href="https://www.uscis.gov/tools/reports-and-studies/immigration-and-citizenship-data" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="4"><span class="ref-num">[4]</span>Boundless Immigration, "USCIS Backlogs Hit Record High as EB-1A Growth Slows: Q2 FY2025 Data Analysis," sep. 2025. <a href="https://www.boundless.com/blog/uscis-q2-fy2025-data" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="5"><span class="ref-num">[5]</span>E. Fabio, "Time series analysis on U.S. immigration data," tesis de maestría, Dept. of Mathematics and Statistics, San Diego State Univ., 2022.</li>
-      <li class="ref-item" data-n="6"><span class="ref-num">[6]</span>S. Vegesana, "Predictive analytics for classification of immigration visa applications: a discriminative ML approach," reporte de maestría, Kansas State Univ., 2018.</li>
-      <li class="ref-item" data-n="7"><span class="ref-num">[7]</span>S. Jain, S. Agrawal, E. Mohapatra y K. Srinivasan, "A novel ensemble ARIMA-LSTM approach for evaluating COVID-19 cases and future outbreak preparedness," <em>Health Care Science</em>, vol. 3, no. 6, pp. 409–425, dic. 2024, doi: 10.1002/hcs2.123.</li>
-      <li class="ref-item" data-n="8"><span class="ref-num">[8]</span>M. Carammia, S. M. Iacus y T. Wilkin, "Forecasting asylum-related migration flows with ML and data at scale," <em>Scientific Reports</em>, vol. 12, no. 1, art. 1457, ene. 2022, doi: 10.1038/s41598-022-05241-8.</li>
-      <li class="ref-item" data-n="9"><span class="ref-num">[9]</span>T. Pu, C. Huang, J. Yang y M. Huang, "Transcending Time and Space: Survey Methods, Uncertainty, and Development in Human Migration Prediction," <em>Sustainability</em>, vol. 15, no. 13, art. 10584, jul. 2023, doi: 10.3390/su151310584.</li>
-      <li class="ref-item" data-n="10"><span class="ref-num">[10]</span>U.S. Congress, "Immigration and Nationality Act of 1965 (Hart-Celler Act)," Pub. L. 89-236, 79 Stat. 911, oct. 1965.</li>
-      <li class="ref-item" data-n="11"><span class="ref-num">[11]</span>U.S. Department of State, Bureau of Consular Affairs, "Visa Bulletin for February 2026," vol. XI, no. 11, ene. 2026. <a href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="12"><span class="ref-num">[12]</span>FWD.us, "Family-Based Immigration Backlogs: 5 Things to Know," FWD.us Policy Report, 2022. <a href="https://www.fwd.us/news/family-based-immigration-backlogs/" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="13"><span class="ref-num">[13]</span>U.S. Department of State, Bureau of Consular Affairs, "Immigrant Visa Statistics: Mexico Family Preference Final Action Dates from FY1992–2023," 2024.</li>
-      <li class="ref-item" data-n="14"><span class="ref-num">[14]</span>M. Jordan, "Immigrants Are Becoming U.S. Citizens at Fastest Clip in Years," <em>The New York Times</em>, ago. 2024.</li>
-      <li class="ref-item" data-n="15"><span class="ref-num">[15]</span>G. E. P. Box y G. M. Jenkins, <em>Time Series Analysis: Forecasting and Control</em>, rev. ed. San Francisco: Holden-Day, 1976.</li>
-      <li class="ref-item" data-n="16"><span class="ref-num">[16]</span>G. E. P. Box, G. M. Jenkins, G. C. Reinsel y G. M. Ljung, <em>Time Series Analysis</em>, 5.ª ed. Hoboken, NJ: Wiley, 2015.</li>
-      <li class="ref-item" data-n="17"><span class="ref-num">[17]</span>J. D. Hamilton, <em>Time Series Analysis</em>. Princeton, NJ: Princeton Univ. Press, 1994.</li>
-      <li class="ref-item" data-n="18"><span class="ref-num">[18]</span>R. J. Hyndman y G. Athanasopoulos, <em>Forecasting: Principles and Practice</em>, 3.ª ed. Melbourne: OTexts, 2021. <a href="https://otexts.com/fpp3/" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="19"><span class="ref-num">[19]</span>D. A. Dickey y W. A. Fuller, "Distribution of the estimators for autoregressive time series with a unit root," <em>J. Amer. Statist. Assoc.</em>, vol. 74, no. 366a, pp. 427–431, 1979.</li>
-      <li class="ref-item" data-n="20"><span class="ref-num">[20]</span>D. Kwiatkowski et al., "Testing the null hypothesis of stationarity against the alternative of a unit root," <em>J. Econometrics</em>, vol. 54, no. 1–3, pp. 159–178, 1992.</li>
-      <li class="ref-item" data-n="21"><span class="ref-num">[21]</span>H. Akaike, "A new look at the statistical model identification," <em>IEEE Trans. Autom. Control</em>, vol. 19, no. 6, pp. 716–723, dic. 1974.</li>
-      <li class="ref-item" data-n="22"><span class="ref-num">[22]</span>G. Schwarz, "Estimating the dimension of a model," <em>Ann. Statist.</em>, vol. 6, no. 2, pp. 461–464, mar. 1978.</li>
-      <li class="ref-item" data-n="23"><span class="ref-num">[23]</span>D. E. Rumelhart, G. E. Hinton y R. J. Williams, "Learning representations by back-propagating errors," <em>Nature</em>, vol. 323, no. 6088, pp. 533–536, 1986.</li>
-      <li class="ref-item" data-n="24"><span class="ref-num">[24]</span>J. L. Elman, "Finding structure in time," <em>Cognitive Science</em>, vol. 14, no. 2, pp. 179–211, 1990.</li>
-      <li class="ref-item" data-n="25"><span class="ref-num">[25]</span>Y. Bengio, P. Simard y P. Frasconi, "Learning long-term dependencies with gradient descent is difficult," <em>IEEE Trans. Neural Netw.</em>, vol. 5, no. 2, pp. 157–166, mar. 1994.</li>
-      <li class="ref-item" data-n="26"><span class="ref-num">[26]</span>I. Goodfellow, Y. Bengio y A. Courville, <em>Deep Learning</em>. Cambridge, MA: MIT Press, 2016. <a href="http://www.deeplearningbook.org" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="27"><span class="ref-num">[27]</span>K. Cho et al., "Learning phrase representations using RNN encoder-decoder for statistical machine translation," <em>EMNLP 2014</em>, pp. 1724–1734.</li>
-      <li class="ref-item" data-n="28"><span class="ref-num">[28]</span>A. Graves y J. Schmidhuber, "Framewise phoneme classification with bidirectional LSTM and other neural network architectures," <em>Neural Netw.</em>, vol. 18, no. 5–6, pp. 602–610, 2005.</li>
-      <li class="ref-item" data-n="29"><span class="ref-num">[29]</span>S. Hochreiter y J. Schmidhuber, "Long short-term memory," <em>Neural Computation</em>, vol. 9, no. 8, pp. 1735–1780, nov. 1997.</li>
-      <li class="ref-item" data-n="30"><span class="ref-num">[30]</span>G. P. Zhang, "Time series forecasting using a hybrid ARIMA and neural network model," <em>Neurocomputing</em>, vol. 50, pp. 159–175, 2003.</li>
-      <li class="ref-item" data-n="31"><span class="ref-num">[31]</span>S. Smyl, "A hybrid method of exponential smoothing and recurrent neural networks for time series forecasting," <em>Int. J. Forecasting</em>, vol. 36, no. 1, pp. 75–85, 2020.</li>
-      <li class="ref-item" data-n="32"><span class="ref-num">[32]</span>J. Devlin, M.-W. Chang, K. Lee y K. Toutanova, "BERT: Pre-training of deep bidirectional transformers for language understanding," <em>NAACL-HLT 2019</em>, pp. 4171–4186.</li>
-      <li class="ref-item" data-n="33"><span class="ref-num">[33]</span>A. Vaswani et al., "Attention is all you need," <em>NIPS 2017</em>, pp. 5998–6008.</li>
-      <li class="ref-item" data-n="34"><span class="ref-num">[34]</span>B. Liu, <em>Sentiment Analysis: Mining Opinions, Sentiments, and Emotions</em>, 2.ª ed. Cambridge: CUP, 2020.</li>
-      <li class="ref-item" data-n="35"><span class="ref-num">[35]</span>B. Pang y L. Lee, "Opinion mining and sentiment analysis," <em>Found. and Trends in Information Retrieval</em>, vol. 2, no. 1–2, pp. 1–135, 2008.</li>
-      <li class="ref-item" data-n="36"><span class="ref-num">[36]</span>S. Makridakis, E. Spiliotis y V. Assimakopoulos, "The M4 Competition: 100,000 time series and 61 forecasting methods," <em>Int. J. Forecasting</em>, vol. 36, no. 1, pp. 54–74, 2020.</li>
-      <li class="ref-item" data-n="37"><span class="ref-num">[37]</span>C. J. Hutto y E. Gilbert, "VADER: A parsimonious rule-based model for sentiment analysis of social media text," <em>ICWSM 2014</em>, pp. 216–225.</li>
-      <li class="ref-item" data-n="38"><span class="ref-num">[38]</span>R. J. Hyndman y A. B. Koehler, "Another look at measures of forecast accuracy," <em>Int. J. Forecasting</em>, vol. 22, no. 4, pp. 679–688, 2006.</li>
-      <li class="ref-item" data-n="39"><span class="ref-num">[39]</span>L. J. Tashman, "Out-of-sample tests of forecasting accuracy: An analysis and review," <em>Int. J. Forecasting</em>, vol. 16, no. 4, pp. 437–450, 2000.</li>
-      <li class="ref-item" data-n="40"><span class="ref-num">[40]</span>C. Bergmeir y J. M. Benítez, "On the use of cross-validation for time series predictor evaluation," <em>Information Sciences</em>, vol. 191, pp. 192–213, may. 2012.</li>
-      <li class="ref-item" data-n="41"><span class="ref-num">[41]</span>Y. Gal y Z. Ghahramani, "A theoretically grounded application of dropout in recurrent neural networks," <em>NIPS 2016</em>.</li>
-      <li class="ref-item" data-n="42"><span class="ref-num">[42]</span>S. M. Lundberg y S.-I. Lee, "A unified approach to interpreting model predictions," <em>NIPS 2017</em>, pp. 4766–4777.</li>
-      <li class="ref-item" data-n="43"><span class="ref-num">[43]</span>C. B. A. Satrio et al., "Forecasting Indonesia exports using a hybrid model ARIMA-LSTM," <em>Procedia CS</em>, vol. 179, pp. 480–487, 2021.</li>
-      <li class="ref-item" data-n="44"><span class="ref-num">[44]</span>A. Agbessi Pierre et al., "Peak electrical energy consumption prediction by ARIMA, LSTM, GRU, ARIMA-LSTM and ARIMA-GRU approaches," <em>Energies</em>, vol. 16, no. 12, art. 4739, 2023.</li>
-      <li class="ref-item" data-n="45"><span class="ref-num">[45]</span>S. Hamiane et al., "Comparative analysis of LSTM, ARIMA, and hybrid models for forecasting future GDP," <em>Ingénierie des Systèmes d'Information</em>, vol. 29, no. 3, pp. 1061–1072, 2024.</li>
-      <li class="ref-item" data-n="46"><span class="ref-num">[46]</span>M. S. A. Mahmud y N. M. Noor, "Hybrid ARIMA-LSTM for COVID-19 forecasting: A comparative AI modeling study," <em>PeerJ Computer Science</em>, vol. 11, art. e3195, 2025.</li>
-      <li class="ref-item" data-n="47"><span class="ref-num">[47]</span>D. J. Bier, "Immigration wait times from quotas have doubled," Cato Institute Policy Analysis No. 873, jun. 2019. <a href="https://www.cato.org/publications/policy-analysis/immigration-wait-times-quotas-have-doubled" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="48"><span class="ref-num">[48]</span>V. I. Kontopoulou et al., "A review of ARIMA vs. ML approaches for time series forecasting in data driven networks," <em>Future Internet</em>, vol. 15, no. 8, art. 255, jul. 2023.</li>
-      <li class="ref-item" data-n="49"><span class="ref-num">[49]</span>B. Lim y S. Zohren, "Time-series forecasting with deep learning: A survey," <em>Phil. Trans. R. Soc. A</em>, vol. 379, art. 20200209, 2021.</li>
-      <li class="ref-item" data-n="50"><span class="ref-num">[50]</span>B. Lindemann et al., "A survey on long short-term memory networks for time series prediction," <em>Procedia CIRP</em>, vol. 99, pp. 650–655, 2021.</li>
-      <li class="ref-item" data-n="51"><span class="ref-num">[51]</span>M. Schuster y K. K. Paliwal, "Bidirectional recurrent neural networks," <em>IEEE Trans. Signal Process.</em>, vol. 45, no. 11, pp. 2673–2681, nov. 1997.</li>
-      <li class="ref-item" data-n="52"><span class="ref-num">[52]</span>P. Pandit et al., "Hybrid time series models with exogenous variable for improved yield forecasting of major Rabi crops in India," <em>Scientific Reports</em>, vol. 13, art. 22240, dic. 2023.</li>
-      <li class="ref-item" data-n="53"><span class="ref-num">[53]</span>K. Hoffmann Pham y M. Luengo-Oroz, "Predictive modelling of movements of refugees and internally displaced people," <em>J. Ethnic and Migration Studies</em>, vol. 49, no. 2, pp. 408–444, 2023.</li>
-      <li class="ref-item" data-n="54"><span class="ref-num">[54]</span>S. Alaparthi y M. Mishra, "A BERT framework to sentiment analysis of tweets," <em>Sensors</em>, vol. 23, no. 1, art. 506, ene. 2023.</li>
-      <li class="ref-item" data-n="55"><span class="ref-num">[55]</span>A. Karanikola, C. M. Liapis y S. Kotsiantis, "Investigating deep stock market forecasting with sentiment analysis," <em>Entropy</em>, vol. 25, no. 2, art. 219, 2023.</li>
-      <li class="ref-item" data-n="56"><span class="ref-num">[56]</span>C. Molnar, <em>Interpretable Machine Learning</em>, 2.ª ed., 2022. <a href="https://christophm.github.io/interpretable-ml-book/" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="57"><span class="ref-num">[57]</span>S. Makridakis, E. Spiliotis y V. Assimakopoulos, "Statistical and ML forecasting methods: Concerns and ways forward," <em>PLoS ONE</em>, vol. 13, no. 3, art. e0194889, 2018.</li>
-      <li class="ref-item" data-n="58"><span class="ref-num">[58]</span>G. Ding et al., "Comparison of ARIMA and LSTM in forecasting the incidence of HFMD combined and uncombined with exogenous meteorological variables in Ningbo, China," <em>Int. J. Environ. Res. Public Health</em>, vol. 18, no. 11, art. 6174, 2021.</li>
-      <li class="ref-item" data-n="59"><span class="ref-num">[59]</span>S. J. Taylor y B. Letham, "Forecasting at scale," <em>The American Statistician</em>, vol. 72, no. 1, pp. 37–45, 2018.</li>
-      <li class="ref-item" data-n="60"><span class="ref-num">[60]</span>Y. LeCun, Y. Bengio y G. Hinton, "Deep learning," <em>Nature</em>, vol. 521, no. 7553, pp. 436–444, may. 2015.</li>
-      <li class="ref-item" data-n="61"><span class="ref-num">[61]</span>D. P. Kingma y J. Ba, "Adam: A method for stochastic optimization," <em>ICLR 2015</em>. <a href="https://arxiv.org/abs/1412.6980" target="_blank" rel="noopener">arXiv:1412.6980</a></li>
-      <li class="ref-item" data-n="62"><span class="ref-num">[62]</span>N. Srivastava et al., "Dropout: A simple way to prevent neural networks from overfitting," <em>JMLR</em>, vol. 15, no. 56, pp. 1929–1958, 2014.</li>
-      <li class="ref-item" data-n="63"><span class="ref-num">[63]</span>S. Ioffe y C. Szegedy, "Batch normalization: Accelerating deep network training by reducing internal covariate shift," <em>ICML 2015</em>, pp. 448–456.</li>
-      <li class="ref-item" data-n="64"><span class="ref-num">[64]</span>D. Bahdanau, K. Cho y Y. Bengio, "Neural machine translation by jointly learning to align and translate," <em>ICLR 2015</em>. <a href="https://arxiv.org/abs/1409.0473" target="_blank" rel="noopener">arXiv:1409.0473</a></li>
-      <li class="ref-item" data-n="65"><span class="ref-num">[65]</span>B. N. Oreshkin et al., "N-BEATS: Neural basis expansion analysis for interpretable time series forecasting," <em>ICLR 2020</em>. <a href="https://arxiv.org/abs/1905.10437" target="_blank" rel="noopener">arXiv:1905.10437</a></li>
-      <li class="ref-item" data-n="66"><span class="ref-num">[66]</span>B. Lim, S. Ö. Arık, N. Loeff y T. Pfister, "Temporal Fusion Transformers for interpretable multi-horizon time series forecasting," <em>Int. J. Forecasting</em>, vol. 37, no. 4, pp. 1748–1764, 2021.</li>
-      <li class="ref-item" data-n="67"><span class="ref-num">[67]</span>Y. Nie, N. H. Nguyen, P. Sinthong y J. Kalagnanam, "A time series is worth 64 words: Long-term forecasting with transformers," <em>ICLR 2023</em>. <a href="https://arxiv.org/abs/2211.14730" target="_blank" rel="noopener">arXiv:2211.14730</a></li>
-      <li class="ref-item" data-n="68"><span class="ref-num">[68]</span>D. Salinas, V. Flunkert, J. Gasthaus y T. Januschowski, "DeepAR: Probabilistic forecasting with autoregressive recurrent networks," <em>Int. J. Forecasting</em>, vol. 36, no. 3, pp. 1181–1191, 2020.</li>
-      <li class="ref-item" data-n="69"><span class="ref-num">[69]</span>T. Chen y C. Guestrin, "XGBoost: A scalable tree boosting system," <em>KDD 2016</em>, pp. 785–794.</li>
-      <li class="ref-item" data-n="70"><span class="ref-num">[70]</span>A. Conneau et al., "Unsupervised cross-lingual representation learning at scale," <em>ACL 2020</em>, pp. 8440–8451.</li>
-      <li class="ref-item" data-n="71"><span class="ref-num">[71]</span>T. Baltrušaitis, C. Ahuja y L.-P. Morency, "Multimodal machine learning: A survey and taxonomy," <em>IEEE TPAMI</em>, vol. 41, no. 2, pp. 423–443, feb. 2019.</li>
-      <li class="ref-item" data-n="72"><span class="ref-num">[72]</span>F. X. Diebold y R. S. Mariano, "Comparing predictive accuracy," <em>J. Bus. &amp; Econ. Stat.</em>, vol. 13, no. 3, pp. 253–263, 1995.</li>
-      <li class="ref-item" data-n="73"><span class="ref-num">[73]</span>V. Vovk, A. Gammerman y G. Shafer, <em>Algorithmic Learning in a Random World</em>. New York: Springer, 2005.</li>
-      <li class="ref-item" data-n="74"><span class="ref-num">[74]</span>M. T. Ribeiro, S. Singh y C. Guestrin, "Why should I trust you?: Explaining the predictions of any classifier," <em>KDD 2016</em>, pp. 1135–1144.</li>
-      <li class="ref-item" data-n="75"><span class="ref-num">[75]</span>N. Mehrabi et al., "A survey on bias and fairness in machine learning," <em>ACM Computing Surveys</em>, vol. 54, no. 6, art. 115, jul. 2021.</li>
-      <li class="ref-item" data-n="76"><span class="ref-num">[76]</span>S. Barocas, M. Hardt y A. Narayanan, <em>Fairness and Machine Learning: Limitations and Opportunities</em>. MIT Press, 2023. <a href="https://fairmlbook.org/" target="_blank" rel="noopener">[En línea]</a></li>
-      <li class="ref-item" data-n="77"><span class="ref-num">[77]</span>A. Beduschi, "International migration management in the age of artificial intelligence," <em>Migration Studies</em>, vol. 9, no. 3, pp. 576–596, sep. 2021.</li>
-      <li class="ref-item" data-n="78"><span class="ref-num">[78]</span>P. Molnar, "Technological testing grounds: Migration management experiments and reflections from the ground up," EDRi y Refugee Law Lab, nov. 2020.</li>
-      <li class="ref-item" data-n="79"><span class="ref-num">[79]</span>F. Chollet, <em>Deep Learning with Python</em>, 2.ª ed. Shelter Island, NY: Manning, 2021.</li>
-      <li class="ref-item" data-n="80"><span class="ref-num">[80]</span>A. Paszke et al., "PyTorch: An imperative style, high-performance deep learning library," <em>NeurIPS 2019</em>, pp. 8026–8037.</li>
-      <li class="ref-item" data-n="81"><span class="ref-num">[81]</span>F. Pedregosa et al., "Scikit-learn: Machine learning in Python," <em>JMLR</em>, vol. 12, pp. 2825–2830, 2011.</li>
+      <li class="ref-item" data-n="1"><span class="ref-num">[1]</span>U.S. Citizenship and Immigration Services, &ldquo;The Colorful History of the Green Card,&rdquo; USCIS Stories from the Archives, ene. 2023. [En línea]. Disponible en: <a href="https://www.uscis.gov/about-us/our-history/stories-from-the-archives/the-colorful-history-of-the-green-card" target="_blank" rel="noopener">https://www.uscis.gov/about-us/our-history/stories-from-the-archives/the-colorful-history-of-the-green-card</a></li>
+      <li class="ref-item" data-n="2"><span class="ref-num">[2]</span>CitizenPath, &ldquo;History of the Green Card,&rdquo; CitizenPath, nov. 2023. [En línea]. Disponible en: <a href="https://citizenpath.com/history-green-card/" target="_blank" rel="noopener">https://citizenpath.com/history-green-card/</a></li>
+      <li class="ref-item" data-n="3"><span class="ref-num">[3]</span>A. Bao, &ldquo;Trump says U.S. to `permanently pause migration from all Third World Countries' after DC shooting,&rdquo; <em>CNBC</em>, nov. 2025. [En línea]. Disponible en: <a href="https://www.cnbc.com/2025/11/28/trump-us-to-permanently-pause-migration-from-all-third-world-countries.html" target="_blank" rel="noopener">https://www.cnbc.com/2025/11/28/trump-us-to-permanently-pause-migration-from-all-third-world-countries.html</a></li>
+      <li class="ref-item" data-n="4"><span class="ref-num">[4]</span>U.S. Citizenship and Immigration Services, &ldquo;Quarterly All Forms, Net Backlog and Frontlog, Fiscal Year 2025, Quarter 3,&rdquo; USCIS Immigration and Citizenship Data, 2025. [En línea]. Disponible en: <a href="https://www.uscis.gov/tools/reports-and-studies/immigration-and-citizenship-data" target="_blank" rel="noopener">https://www.uscis.gov/tools/reports-and-studies/immigration-and-citizenship-data</a></li>
+      <li class="ref-item" data-n="5"><span class="ref-num">[5]</span>Boundless Immigration, &ldquo;USCIS Backlogs Hit Record High as EB-1A Growth Slows: Q2 FY2025 Data Analysis,&rdquo; sep. 2025. [En línea]. Disponible en: <a href="https://www.boundless.com/blog/uscis-q2-fy2025-data" target="_blank" rel="noopener">https://www.boundless.com/blog/uscis-q2-fy2025-data</a></li>
+      <li class="ref-item" data-n="6"><span class="ref-num">[6]</span>FWD.us, &ldquo;Family-Based Immigration Backlogs: 5 Things to Know,&rdquo; FWD.us Policy Report, 2022. [En línea]. Disponible en: <a href="https://www.fwd.us/news/family-based-immigration-backlogs/" target="_blank" rel="noopener">https://www.fwd.us/news/family-based-immigration-backlogs/</a></li>
+      <li class="ref-item" data-n="7"><span class="ref-num">[7]</span>U.S. Department of State, Bureau of Consular Affairs, &ldquo;Visa Bulletin for May 2026,&rdquo; Washington, DC, EE.&nbsp;UU., may. 2026. [En línea]. Disponible en: <a href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/2026/visa-bulletin-for-may-2026.html" target="_blank" rel="noopener">https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/2026/visa-bulletin-for-may-2026.html</a></li>
+      <li class="ref-item" data-n="8"><span class="ref-num">[8]</span>E. Fabio, &ldquo;Time series analysis on U.S. immigration data,&rdquo; tesis de maestría, Dept. of Mathematics and Statistics, San Diego State University, San Diego, CA, EE.&nbsp;UU., 2022. [En línea]. Disponible en: <a href="https://digitalcollections.sdsu.edu/do/d37e5cc6-0741-4312-b779-167574c09d57" target="_blank" rel="noopener">https://digitalcollections.sdsu.edu/do/d37e5cc6-0741-4312-b779-167574c09d57</a></li>
+      <li class="ref-item" data-n="9"><span class="ref-num">[9]</span>T. Pu, C. Huang, J. Yang y M. Huang, &ldquo;Transcending Time and Space: Survey Methods, Uncertainty, and Development in Human Migration Prediction,&rdquo; <em>Sustainability</em>, vol. 15, no. 13, art. 10584, jul. 2023, doi: 10.3390/su151310584.</li>
+      <li class="ref-item" data-n="10"><span class="ref-num">[10]</span>U.S. Congress, &ldquo;Immigration and Nationality Act of 1965 (Hart-Celler Act),&rdquo; Pub. L. 89-236, 79 Stat. 911, oct. 1965. [En línea]. Disponible en: <a href="https://www.govinfo.gov/content/pkg/STATUTE-79/pdf/STATUTE-79-Pg911.pdf" target="_blank" rel="noopener">https://www.govinfo.gov/content/pkg/STATUTE-79/pdf/STATUTE-79-Pg911.pdf</a></li>
+      <li class="ref-item" data-n="11"><span class="ref-num">[11]</span>S. Vegesana, &ldquo;Predictive analytics for classification of immigration visa applications: a discriminative machine learning approach,&rdquo; reporte de maestría, Dept. of Computer Science, Kansas State University, Manhattan, KS, EE.&nbsp;UU., 2018. [En línea]. Disponible en: <a href="https://krex.k-state.edu/items/895cd8b1-8b57-4ffa-9570-4427e97ed4a1" target="_blank" rel="noopener">https://krex.k-state.edu/items/895cd8b1-8b57-4ffa-9570-4427e97ed4a1</a></li>
+      <li class="ref-item" data-n="12"><span class="ref-num">[12]</span>S. Jain, S. Agrawal, E. Mohapatra y K. Srinivasan, &ldquo;A novel ensemble ARIMA-LSTM approach for evaluating COVID-19 cases and future outbreak preparedness,&rdquo; <em>Health Care Science</em>, vol. 3, no. 6, pp. 409&ndash;425, dic. 2024, doi: 10.1002/hcs2.123.</li>
+      <li class="ref-item" data-n="13"><span class="ref-num">[13]</span>M. Carammia, S. M. Iacus y T. Wilkin, &ldquo;Forecasting asylum-related migration flows with machine learning and data at scale,&rdquo; <em>Scientific Reports</em>, vol. 12, no. 1, art. 1457, ene. 2022, doi: 10.1038/s41598-022-05241-8.</li>
+      <li class="ref-item" data-n="14"><span class="ref-num">[14]</span>U.S. Department of State, Bureau of Consular Affairs, &ldquo;Immigrant Visa Statistics: Mexico Family Preference Final Action Dates from FY1992&ndash;2023,&rdquo; 2024. [En línea]. Disponible en: <a href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics.html" target="_blank" rel="noopener">https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics.html</a></li>
+      <li class="ref-item" data-n="15"><span class="ref-num">[15]</span>M. Jordan, &ldquo;Immigrants Are Becoming U.S. Citizens at Fastest Clip in Years,&rdquo; <em>The New York Times</em>, ago. 2024. [En línea]. Disponible en: <a href="https://www.nytimes.com/2024/08/12/us/immigration-us-citizenship-rates.html" target="_blank" rel="noopener">https://www.nytimes.com/2024/08/12/us/immigration-us-citizenship-rates.html</a></li>
+      <li class="ref-item" data-n="16"><span class="ref-num">[16]</span>R. J. Hyndman y A. B. Koehler, &ldquo;Another look at measures of forecast accuracy,&rdquo; <em>Int. J. Forecasting</em>, vol. 22, no. 4, pp. 679&ndash;688, 2006, doi: 10.1016/j.ijforecast.2006.03.001.</li>
+      <li class="ref-item" data-n="17"><span class="ref-num">[17]</span>C. Bergmeir y J. M. Benítez, &ldquo;On the use of cross-validation for time series predictor evaluation,&rdquo; <em>Information Sciences</em>, vol. 191, pp. 192&ndash;213, may. 2012, doi: 10.1016/j.ins.2011.12.028.</li>
+      <li class="ref-item" data-n="18"><span class="ref-num">[18]</span>F. X. Diebold y R. S. Mariano, &ldquo;Comparing predictive accuracy,&rdquo; <em>Journal of Business &amp; Economic Statistics</em>, vol. 13, no. 3, pp. 253&ndash;263, 1995, doi: 10.1080/07350015.1995.10524599.</li>
+      <li class="ref-item" data-n="19"><span class="ref-num">[19]</span>G. P. Zhang, &ldquo;Time series forecasting using a hybrid ARIMA and neural network model,&rdquo; <em>Neurocomputing</em>, vol. 50, pp. 159&ndash;175, 2003, doi: 10.1016/S0925-2312(01)00702-0.</li>
+      <li class="ref-item" data-n="20"><span class="ref-num">[20]</span>C. B. A. Satrio, W. Darmawan, B. U. Nadia y N. Hanafiah, &ldquo;Forecasting Indonesia exports using a hybrid model ARIMA-LSTM,&rdquo; <em>Procedia Computer Science</em>, vol. 179, pp. 480&ndash;487, 2021, doi: 10.1016/j.procs.2021.01.031.</li>
+      <li class="ref-item" data-n="21"><span class="ref-num">[21]</span>M. S. A. Mahmud y N. M. Noor, &ldquo;Hybrid ARIMA-LSTM for COVID-19 forecasting: A comparative AI modeling study,&rdquo; <em>PeerJ Computer Science</em>, vol. 11, art. e3195, 2025, doi: 10.7717/peerj-cs.3195.</li>
+      <li class="ref-item" data-n="22"><span class="ref-num">[22]</span>D. Salinas, V. Flunkert, J. Gasthaus y T. Januschowski, &ldquo;DeepAR: Probabilistic forecasting with autoregressive recurrent networks,&rdquo; <em>Int. J. Forecasting</em>, vol. 36, no. 3, pp. 1181&ndash;1191, 2020, doi: 10.1016/j.ijforecast.2019.07.001.</li>
+      <li class="ref-item" data-n="23"><span class="ref-num">[23]</span>S. Makridakis, E. Spiliotis y V. Assimakopoulos, &ldquo;Statistical and machine learning forecasting methods: Concerns and ways forward,&rdquo; <em>PLoS ONE</em>, vol. 13, no. 3, art. e0194889, 2018, doi: 10.1371/journal.pone.0194889.</li>
+      <li class="ref-item" data-n="24"><span class="ref-num">[24]</span>G. E. P. Box y G. M. Jenkins, <em>Time Series Analysis: Forecasting and Control</em>, rev. ed. San Francisco, CA, EE.&nbsp;UU.: Holden-Day, 1976.</li>
+      <li class="ref-item" data-n="25"><span class="ref-num">[25]</span>J. D. Hamilton, <em>Time Series Analysis</em>. Princeton, NJ, EE.&nbsp;UU.: Princeton Univ. Press, 1994.</li>
+      <li class="ref-item" data-n="26"><span class="ref-num">[26]</span>R. J. Hyndman y G. Athanasopoulos, <em>Forecasting: Principles and Practice</em>, 3.ª ed. Melbourne, Australia: OTexts, 2021. [En línea]. Disponible en: <a href="https://otexts.com/fpp3/" target="_blank" rel="noopener">https://otexts.com/fpp3/</a></li>
+      <li class="ref-item" data-n="27"><span class="ref-num">[27]</span>D. A. Dickey y W. A. Fuller, &ldquo;Distribution of the estimators for autoregressive time series with a unit root,&rdquo; <em>J. Amer. Statist. Assoc.</em>, vol. 74, no. 366a, pp. 427&ndash;431, 1979, doi: 10.1080/01621459.1979.10482531.</li>
+      <li class="ref-item" data-n="28"><span class="ref-num">[28]</span>D. Kwiatkowski, P. C. B. Phillips, P. Schmidt y Y. Shin, &ldquo;Testing the null hypothesis of stationarity against the alternative of a unit root,&rdquo; <em>J. Econometrics</em>, vol. 54, no. 1&ndash;3, pp. 159&ndash;178, 1992, doi: 10.1016/0304-4076(92)90104-Y.</li>
+      <li class="ref-item" data-n="29"><span class="ref-num">[29]</span>G. E. P. Box, G. M. Jenkins, G. C. Reinsel y G. M. Ljung, <em>Time Series Analysis: Forecasting and Control</em>, 5.ª ed. Hoboken, NJ, EE.&nbsp;UU.: John Wiley &amp; Sons, 2015.</li>
+      <li class="ref-item" data-n="30"><span class="ref-num">[30]</span>H. Akaike, &ldquo;A new look at the statistical model identification,&rdquo; <em>IEEE Trans. Autom. Control</em>, vol. 19, no. 6, pp. 716&ndash;723, dic. 1974, doi: 10.1109/TAC.1974.1100705.</li>
+      <li class="ref-item" data-n="31"><span class="ref-num">[31]</span>G. Schwarz, &ldquo;Estimating the dimension of a model,&rdquo; <em>Ann. Statist.</em>, vol. 6, no. 2, pp. 461&ndash;464, mar. 1978, doi: 10.1214/aos/1176344136.</li>
+      <li class="ref-item" data-n="32"><span class="ref-num">[32]</span>S. J. Taylor y B. Letham, &ldquo;Forecasting at scale,&rdquo; <em>The American Statistician</em>, vol. 72, no. 1, pp. 37&ndash;45, 2018, doi: 10.1080/00031305.2017.1380080.</li>
+      <li class="ref-item" data-n="33"><span class="ref-num">[33]</span>V. I. Kontopoulou, A. D. Panagopoulos, I. Kakkos y G. K. Matsopoulos, &ldquo;A review of ARIMA vs. machine learning approaches for time series forecasting in data driven networks,&rdquo; <em>Future Internet</em>, vol. 15, no. 8, art. 255, jul. 2023, doi: 10.3390/fi15080255.</li>
+      <li class="ref-item" data-n="34"><span class="ref-num">[34]</span>I. Goodfellow, Y. Bengio y A. Courville, <em>Deep Learning</em>. Cambridge, MA, EE.&nbsp;UU.: MIT Press, 2016. [En línea]. Disponible en: <a href="http://www.deeplearningbook.org" target="_blank" rel="noopener">http://www.deeplearningbook.org</a></li>
+      <li class="ref-item" data-n="35"><span class="ref-num">[35]</span>Y. LeCun, Y. Bengio y G. Hinton, &ldquo;Deep learning,&rdquo; <em>Nature</em>, vol. 521, no. 7553, pp. 436&ndash;444, may. 2015, doi: 10.1038/nature14539.</li>
+      <li class="ref-item" data-n="36"><span class="ref-num">[36]</span>D. E. Rumelhart, G. E. Hinton y R. J. Williams, &ldquo;Learning representations by back-propagating errors,&rdquo; <em>Nature</em>, vol. 323, no. 6088, pp. 533&ndash;536, 1986, doi: 10.1038/323533a0.</li>
+      <li class="ref-item" data-n="37"><span class="ref-num">[37]</span>Y. Bengio, P. Simard y P. Frasconi, &ldquo;Learning long-term dependencies with gradient descent is difficult,&rdquo; <em>IEEE Trans. Neural Netw.</em>, vol. 5, no. 2, pp. 157&ndash;166, mar. 1994, doi: 10.1109/72.279181.</li>
+      <li class="ref-item" data-n="38"><span class="ref-num">[38]</span>D. P. Kingma y J. Ba, &ldquo;Adam: A method for stochastic optimization,&rdquo; en <em>Proc. 3rd Int. Conf. Learning Representations (ICLR)</em>, San Diego, CA, EE.&nbsp;UU., may. 2015.</li>
+      <li class="ref-item" data-n="39"><span class="ref-num">[39]</span>N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever y R. Salakhutdinov, &ldquo;Dropout: A simple way to prevent neural networks from overfitting,&rdquo; <em>Journal of Machine Learning Research</em>, vol. 15, no. 56, pp. 1929&ndash;1958, 2014.</li>
+      <li class="ref-item" data-n="40"><span class="ref-num">[40]</span>Y. Gal y Z. Ghahramani, &ldquo;A theoretically grounded application of dropout in recurrent neural networks,&rdquo; en <em>Advances in Neural Information Processing Systems 29 (NIPS 2016)</em>, 2016.</li>
+      <li class="ref-item" data-n="41"><span class="ref-num">[41]</span>S. Ioffe y C. Szegedy, &ldquo;Batch normalization: Accelerating deep network training by reducing internal covariate shift,&rdquo; en <em>Proc. 32nd Int. Conf. Machine Learning (ICML)</em>, Lille, Francia, jul. 2015, pp. 448&ndash;456.</li>
+      <li class="ref-item" data-n="42"><span class="ref-num">[42]</span>J. L. Elman, &ldquo;Finding structure in time,&rdquo; <em>Cognitive Science</em>, vol. 14, no. 2, pp. 179&ndash;211, 1990, doi: 10.1207/s15516709cog1402_1.</li>
+      <li class="ref-item" data-n="43"><span class="ref-num">[43]</span>S. Hochreiter y J. Schmidhuber, &ldquo;Long short-term memory,&rdquo; <em>Neural Computation</em>, vol. 9, no. 8, pp. 1735&ndash;1780, nov. 1997, doi: 10.1162/neco.1997.9.8.1735.</li>
+      <li class="ref-item" data-n="44"><span class="ref-num">[44]</span>M. Schuster y K. K. Paliwal, &ldquo;Bidirectional recurrent neural networks,&rdquo; <em>IEEE Trans. Signal Process.</em>, vol. 45, no. 11, pp. 2673&ndash;2681, nov. 1997, doi: 10.1109/78.650093.</li>
+      <li class="ref-item" data-n="45"><span class="ref-num">[45]</span>A. Graves y J. Schmidhuber, &ldquo;Framewise phoneme classification with bidirectional LSTM and other neural network architectures,&rdquo; <em>Neural Netw.</em>, vol. 18, no. 5&ndash;6, pp. 602&ndash;610, 2005, doi: 10.1016/j.neunet.2005.06.042.</li>
+      <li class="ref-item" data-n="46"><span class="ref-num">[46]</span>B. Lindemann, T. Müller, H. Vietz, N. Jazdi y M. Weyrich, &ldquo;A survey on long short-term memory networks for time series prediction,&rdquo; <em>Procedia CIRP</em>, vol. 99, pp. 650&ndash;655, 2021, doi: 10.1016/j.procir.2021.03.088.</li>
+      <li class="ref-item" data-n="47"><span class="ref-num">[47]</span>K. Cho, B. van Merriënboer, C. Gulcehre, D. Bahdanau, F. Bougares, H. Schwenk y Y. Bengio, &ldquo;Learning phrase representations using RNN encoder-decoder for statistical machine translation,&rdquo; en <em>Proc. 2014 Conf. Empirical Methods Natural Language Processing (EMNLP)</em>, Doha, Qatar, oct. 2014, pp. 1724&ndash;1734, doi: 10.3115/v1/D14-1179.</li>
+      <li class="ref-item" data-n="48"><span class="ref-num">[48]</span>B. Lim y S. Zohren, &ldquo;Time-series forecasting with deep learning: A survey,&rdquo; <em>Phil. Trans. R. Soc. A</em>, vol. 379, no. 2194, art. 20200209, 2021, doi: 10.1098/rsta.2020.0209.</li>
+      <li class="ref-item" data-n="49"><span class="ref-num">[49]</span>S. Smyl, &ldquo;A hybrid method of exponential smoothing and recurrent neural networks for time series forecasting,&rdquo; <em>Int. J. Forecasting</em>, vol. 36, no. 1, pp. 75&ndash;85, 2020, doi: 10.1016/j.ijforecast.2019.03.017.</li>
+      <li class="ref-item" data-n="50"><span class="ref-num">[50]</span>S. Makridakis, E. Spiliotis y V. Assimakopoulos, &ldquo;The M4 Competition: 100,000 time series and 61 forecasting methods,&rdquo; <em>Int. J. Forecasting</em>, vol. 36, no. 1, pp. 54&ndash;74, 2020, doi: 10.1016/j.ijforecast.2019.04.014.</li>
+      <li class="ref-item" data-n="51"><span class="ref-num">[51]</span>S. Hamiane, Y. Ghanou, H. Khalifi y M. Telmem, &ldquo;Comparative analysis of LSTM, ARIMA, and hybrid models for forecasting future GDP,&rdquo; <em>Ingénierie des Systèmes d'Information</em>, vol. 29, no. 3, pp. 1061&ndash;1072, 2024, doi: 10.18280/isi.290306.</li>
+      <li class="ref-item" data-n="52"><span class="ref-num">[52]</span>A. Agbessi Pierre, A. A. Salami, K. S. Agbosse y B. Birregah, &ldquo;Peak electrical energy consumption prediction by ARIMA, LSTM, GRU, ARIMA-LSTM and ARIMA-GRU approaches,&rdquo; <em>Energies</em>, vol. 16, no. 12, art. 4739, 2023, doi: 10.3390/en16124739.</li>
+      <li class="ref-item" data-n="53"><span class="ref-num">[53]</span>B. N. Oreshkin, D. Carpov, N. Chapados y Y. Bengio, &ldquo;N-BEATS: Neural basis expansion analysis for interpretable time series forecasting,&rdquo; en <em>Proc. 8th Int. Conf. Learning Representations (ICLR)</em>, abr. 2020.</li>
+      <li class="ref-item" data-n="54"><span class="ref-num">[54]</span>B. Lim, S. Ö. Arık, N. Loeff y T. Pfister, &ldquo;Temporal Fusion Transformers for interpretable multi-horizon time series forecasting,&rdquo; <em>Int. J. Forecasting</em>, vol. 37, no. 4, pp. 1748&ndash;1764, 2021, doi: 10.1016/j.ijforecast.2021.03.012.</li>
+      <li class="ref-item" data-n="55"><span class="ref-num">[55]</span>Y. Nie, N. H. Nguyen, P. Sinthong y J. Kalagnanam, &ldquo;A time series is worth 64 words: Long-term forecasting with transformers,&rdquo; en <em>Proc. 11th Int. Conf. Learning Representations (ICLR)</em>, may. 2023.</li>
+      <li class="ref-item" data-n="56"><span class="ref-num">[56]</span>T. Chen y C. Guestrin, &ldquo;XGBoost: A scalable tree boosting system,&rdquo; en <em>Proc. 22nd ACM SIGKDD Int. Conf. Knowledge Discovery and Data Mining (KDD)</em>, San Francisco, CA, EE.&nbsp;UU., ago. 2016, pp. 785&ndash;794, doi: 10.1145/2939672.2939785.</li>
+      <li class="ref-item" data-n="57"><span class="ref-num">[57]</span>K. Hoffmann Pham y M. Luengo-Oroz, &ldquo;Predictive modelling of movements of refugees and internally displaced people: Towards a computational framework,&rdquo; <em>J. Ethnic and Migration Studies</em>, vol. 49, no. 2, pp. 408&ndash;444, 2023, doi: 10.1080/1369183X.2022.2100546.</li>
+      <li class="ref-item" data-n="58"><span class="ref-num">[58]</span>L. J. Tashman, &ldquo;Out-of-sample tests of forecasting accuracy: An analysis and review,&rdquo; <em>Int. J. Forecasting</em>, vol. 16, no. 4, pp. 437&ndash;450, 2000, doi: 10.1016/S0169-2070(00)00065-0.</li>
+      <li class="ref-item" data-n="59"><span class="ref-num">[59]</span>V. Vovk, A. Gammerman y G. Shafer, <em>Algorithmic Learning in a Random World</em>. Nueva York, NY, EE.&nbsp;UU.: Springer, 2005, doi: 10.1007/b106715.</li>
+      <li class="ref-item" data-n="60"><span class="ref-num">[60]</span>D. J. Bier, &ldquo;Immigration wait times from quotas have doubled: Green card backlogs are long, growing, and inequitable,&rdquo; Cato Institute Policy Analysis No. 873, jun. 2019. [En línea]. Disponible en: <a href="https://www.cato.org/publications/policy-analysis/immigration-wait-times-quotas-have-doubled" target="_blank" rel="noopener">https://www.cato.org/publications/policy-analysis/immigration-wait-times-quotas-have-doubled</a></li>
+      <li class="ref-item" data-n="61"><span class="ref-num">[61]</span>F. Chollet, <em>Deep Learning with Python</em>, 2.ª ed. Shelter Island, NY, EE.&nbsp;UU.: Manning Publications, 2021.</li>
+      <li class="ref-item" data-n="62"><span class="ref-num">[62]</span>F. Pedregosa <em>et al.</em>, &ldquo;Scikit-learn: Machine learning in Python,&rdquo; <em>Journal of Machine Learning Research</em>, vol. 12, pp. 2825&ndash;2830, 2011.</li>
+      <li class="ref-item" data-n="63"><span class="ref-num">[63]</span>A. Paszke <em>et al.</em>, &ldquo;PyTorch: An imperative style, high-performance deep learning library,&rdquo; en <em>Advances in Neural Information Processing Systems 32 (NeurIPS 2019)</em>, 2019, pp. 8026&ndash;8037.</li>
+      <li class="ref-item" data-n="64"><span class="ref-num">[64]</span>P. Chapman, J. Clinton, R. Kerber, T. Khabaza, T. Reinartz, C. Shearer, y R. Wirth, <em>CRISP-DM 1.0: Step-by-step Data Mining Guide</em>. Chicago, IL, EE.&nbsp;UU.: SPSS Inc. / The CRISP-DM Consortium, 2000.</li>
     </ol>
   </div>
 </section>
@@ -2052,7 +2047,7 @@
           <div class="author-name">Javier Augusto Rebull Saucedo</div>
           <div class="author-role">Tesista · MIAAD · UACJ · Matrícula 263483</div>
           <p class="author-bio">
-            Estudiante de la Maestría en Inteligencia Artificial y Analítica de Datos (MIAAD) de la Universidad Autónoma de Ciudad Juárez. En el ámbito profesional se desempeña como <em>Sr. Associate Application Developer</em> en Banco Santander US, con residencia en Boston, Massachusetts. Su interés académico se centra en el modelado predictivo de fenómenos sociales con impacto en comunidades migrantes, combinando técnicas de aprendizaje profundo, series de tiempo y NLP.
+            Estudiante de la Maestría en Inteligencia Artificial y Analítica de Datos (MIAAD) de la Universidad Autónoma de Ciudad Juárez. En el ámbito profesional se desempeña como <em>Sr. Associate Application Developer</em> en Banco Santander US, con residencia en Boston, Massachusetts. Su interés académico se centra en el modelado predictivo de fenómenos sociales con impacto en comunidades migrantes, combinando técnicas de aprendizaje profundo, series de tiempo y analítica de datos aplicada.
           </p>
           <div class="author-meta">
             <a href="mailto:al263483@alumnos.uacj.mx">▶ al263483@alumnos.uacj.mx</a>
@@ -2128,6 +2123,7 @@
         <li><a href="#capi">Capítulo I</a></li>
         <li><a href="#capii">Capítulo II</a></li>
         <li><a href="#capiii">Capítulo III</a></li>
+        <li><a href="#capiv">Capítulo IV</a></li>
         <li><a href="#tablas">Tablas y figuras</a></li>
       </ul>
     </div>
