@@ -59,7 +59,7 @@ VisaPredictAI_WEB/                         ← raíz del repositorio Git
 - **Acrónimos:** definir en su primera aparición; reutilizar la sigla después.
 - **Decimales con punto**, no coma.
 - **Disclaimer banner** en la parte superior del `<body>`: el sitio es proyecto personal del autor, no entregable evaluado. Reproducir en el footer también.
-- **Sticky nav** con sombra al scroll · 12 secciones ancladas (`#inicio`, `#resumen`, `#capi`, `#capii`, `#capiii`, `#capiv`, `#tablas`, `#reproducibilidad`, `#glosario`, `#referencias`, `#autores`, `#contacto`).
+- **Sticky nav** con sombra al scroll · 13 secciones ancladas (`#inicio`, `#resumen`, `#capi`, `#capii`, `#capiii`, `#capiv`, `#datos`, `#tablas`, `#reproducibilidad`, `#glosario`, `#referencias`, `#autores`, `#contacto`).
 - **Sin librerías externas en runtime** (excepto Google Fonts vía CDN). No introducir Chart.js, jQuery, Bootstrap, etc., sin documentar la decisión aquí.
 - **Reveal animations** vía IntersectionObserver puro · clase `.reveal` con variantes `.reveal--d1`, `.reveal--d2`, etc.
 - **Glosario y referencias** se filtran client-side (`<input>` y `<button class="ref-tab">`) sin estado en URL.
@@ -137,7 +137,7 @@ print('OK' if not v.errors and not v.stack else f'{len(v.errors)} errors')
 "
 
 # Conteo de secciones, referencias, términos del glosario (post v5.13)
-grep -c '<section' index.html       # debe ser 12+ (no incluye banner)
+grep -c '<section' index.html       # debe ser 13+ (no incluye banner; +#datos 14-jun-2026)
 grep -c 'class=\"ref-item\"' index.html  # debe ser 64 (1:1 con la bibliografía del .tex v5.13)
 grep -c 'class=\"gloss-item\"' index.html  # debe ser 42
 
@@ -164,6 +164,7 @@ git add . && git commit -m "..." && git push origin main
 | Cap II | Capítulo II (§2.1.1–§2.1.8 + §2.2.1–§2.2.5) | **8 cards** de marco teórico + callout de marco tecnológico (sin SHAP/LIME/Transformers/BERT/BETO/VADER/XLM-R/sentimiento/multimodal) |
 | Cap III | Capítulo III (§3.1–§3.3) | Diagrama SVG con regresor temporal único (no formulación mixta), cobertura en **3 niveles** (estructural/evaluable/piloto F1–F4), niveles de éxito (Mín/Sat/Ideal) |
 | Cap IV | Capítulo IV (§4.0–§4.6) | **NUEVA SECCIÓN v5.13.** 5 cards de fases CRISP-DM (Chapman et al. [64]) mapeadas a las 5 fases operativas del proyecto + cronograma ago'26–may'27 |
+| **Base de datos** (`#datos`) | §3.1.5–§3.1.6 + Cap IV Fase 1 + repo `VisaBulletinScraping` | **NUEVA SECCIÓN 14-jun-2026.** Documenta la construcción del panel $y_{p,c,b,t}$ (Objetivo 1): banda de métricas (194 series · 27,127 obs · 290 boletines dic-2001→2026), 3 diagramas SVG (pipeline 6 etapas, odisea EB-5, distribución de estado F/C/U), 5 brechas H1–H5 + bonus robustez, búsqueda profunda 290/295 (5 muertos Wayback-only), mega-auditoría 12 dim (APTO). Cifras = artefacto de datos, NO resultados predictivos. Coherente con `.tex` reconciliado (dic-2001 ~290 obs, t₀=1975, [14]) |
 | Tablas | Tablas 1, 2, 3 + figura matriz | Tabla 1 cobertura, Tabla 2 exclusión, Tabla 3 modelos comparados (8 candidatos del marco comparativo), matriz país×categoría×tabla |
 | Reproducibilidad | Apéndice A.3 | 7 cards R1–R7; **R1 DOI condicional** (no compromiso del entregable mínimo) + estructura del repositorio |
 | Glosario | Glosario `.tex` v5.13 | **42 términos** con buscador en vivo (purgados los 9 entradas de tokens prohibidos: BERT, BETO, VADER, SHAP, LIME, XLM-R, Transformer, Fusión multimodal, Sesgo algorítmico) |

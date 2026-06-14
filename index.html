@@ -1151,6 +1151,7 @@
       <li><a href="#capii">Cap. II</a></li>
       <li><a href="#capiii">Cap. III</a></li>
       <li><a href="#capiv">Cap. IV</a></li>
+      <li><a href="#datos">Base de datos</a></li>
       <li><a href="#tablas">Tablas</a></li>
       <li><a href="#glosario">Glosario</a></li>
       <li><a href="#referencias">Referencias</a></li>
@@ -1740,6 +1741,260 @@
   </div>
 </section>
 
+<!-- ═══════════════ CONSTRUCCIÓN DE LA BASE DE DATOS ═══════════════ -->
+<section class="section section--alt" id="datos">
+  <div class="section-inner">
+    <span class="section-tag">Objetivo 1 · Entregable 01</span>
+    <h2 class="section-title">Construcción de la base de datos</h2>
+    <p class="section-sub">
+      El primer entregable ya está construido: el panel multiserie $y_{p,c,b,t}$ del <em>U.S. Visa Bulletin</em> &mdash;extraído, anotado, consolidado y auditado de extremo a extremo&mdash; desde el repositorio público <a href="https://github.com/UACJ-MIAAD/VisaBulletinScraping" target="_blank" rel="noopener">VisaBulletinScraping</a>. Esta sección documenta con detalle cómo se levantó y qué se halló en el camino.
+    </p>
+
+    <div class="metrics">
+      <div class="metrics-inner">
+        <div class="metric reveal"><div class="metric-num">194</div><div class="metric-lbl">Series país&times;categoría&times;tabla</div></div>
+        <div class="metric reveal reveal--d1"><div class="metric-num">27,127</div><div class="metric-lbl">Observaciones mensuales</div></div>
+        <div class="metric reveal reveal--d2"><div class="metric-num">290</div><div class="metric-lbl">Boletines · dic-2001 &rarr; 2026</div></div>
+        <div class="metric reveal reveal--d3"><div class="metric-num">21</div><div class="metric-lbl">Categorías canónicas</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">APTO</div><div class="metric-lbl">Veredicto mega-auditoría</div></div>
+      </div>
+    </div>
+
+    <!-- D.1 El panel -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> El panel multiserie $y_{p,c,b,t}$</h3>
+      <p>
+        Cada celda del panel es la fecha de prioridad de una combinación (país&nbsp;$p$, categoría&nbsp;$c$, tabla&nbsp;$b$) en el mes&nbsp;$t$, transformada a <strong>días desde una fecha base</strong> ($t_0 = $ 1&nbsp;de&nbsp;enero&nbsp;de&nbsp;1975, anterior a la prioridad más antigua observada: noviembre&nbsp;de&nbsp;1979 en Filipinas&nbsp;F4). Cada observación conserva además su <strong>estado administrativo</strong> &mdash;<em>Current</em>&nbsp;(C), <em>Final</em>&nbsp;(F, fecha específica) o <em>Unavailable</em>&nbsp;(U)&mdash; como anotación descriptiva. El objetivo predictivo se entrena <strong>exclusivamente sobre las observaciones con estado&nbsp;F</strong>.
+      </p>
+      <div class="pill-row">
+        <span class="pill pill--y">5 países: MX · IN · CN · PH · All&nbsp;Charg.</span>
+        <span class="pill pill--y">16 categorías de empleo · 5 familiares</span>
+        <span class="pill pill--y">2 tablas: FAD &amp; DFF (separadas)</span>
+        <span class="pill pill--green">15,662 obs entrenables (estado F · 58&nbsp;%)</span>
+      </div>
+      <div class="grid grid--4 mt-2">
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Empleo · FAD</span><div class="metric-num" style="font-size:1.6rem;">11,287</div><p style="font-size:0.82rem;color:var(--gris);">desde dic-2001</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Empleo · DFF</span><div class="metric-num" style="font-size:1.6rem;">5,648</div><p style="font-size:0.82rem;color:var(--gris);">desde oct-2015</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Familiar · FAD</span><div class="metric-num" style="font-size:1.6rem;">6,967</div><p style="font-size:0.82rem;color:var(--gris);">desde dic-2001</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Familiar · DFF</span><div class="metric-num" style="font-size:1.6rem;">3,225</div><p style="font-size:0.82rem;color:var(--gris);">desde nov-2015</p></div>
+      </div>
+    </div>
+
+    <!-- D.2 Pipeline -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Arquitectura del pipeline de datos</h3>
+      <p>De HTML crudo a panel auditado en seis etapas reproducibles, ejecutadas a diario por una GitHub&nbsp;Action.</p>
+      <div class="arch reveal mt-2">
+        <svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" aria-label="Pipeline de construcción de la base de datos">
+          <defs>
+            <linearGradient id="bdBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#003CA6"/><stop offset="100%" stop-color="#1955BF"/></linearGradient>
+            <linearGradient id="bdY" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD600"/><stop offset="100%" stop-color="#E6BD00"/></linearGradient>
+            <marker id="bdArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#003CA6"/></marker>
+          </defs>
+          <!-- 1 Fuente -->
+          <rect x="15" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
+          <text x="85" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">1. Fuente</text>
+          <text x="85" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">Visa Bulletin HTML</text>
+          <text x="85" y="134" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">travel.state.gov</text>
+          <text x="85" y="162" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">290 boletines</text>
+          <text x="85" y="178" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">dic-2001 &rarr; 2026</text>
+          <!-- 2 Scraper -->
+          <rect x="173" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
+          <text x="243" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">2. Scraper</text>
+          <text x="243" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">retry + backoff</text>
+          <text x="243" y="134" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">detección tolerante</text>
+          <text x="243" y="162" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">5 familias de</text>
+          <text x="243" y="178" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">formato HTML</text>
+          <!-- 3 Anotación (yellow) -->
+          <rect x="331" y="55" width="140" height="160" rx="14" fill="url(#bdY)"/>
+          <text x="401" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#001C52">3. Anotación</text>
+          <text x="401" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#001C52">estado por celda</text>
+          <text x="401" y="138" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#001C52">C / F / U / NA</text>
+          <text x="401" y="166" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#003CA6" font-style="italic">sólo F es objetivo</text>
+          <!-- 4 Normalización -->
+          <rect x="489" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
+          <text x="559" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">4. Normaliza</text>
+          <text x="559" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">21 categorías</text>
+          <text x="559" y="134" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">canónicas</text>
+          <text x="559" y="162" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">días desde</text>
+          <text x="559" y="178" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">$t_0$ = 1975</text>
+          <!-- 5 Panel (highlight) -->
+          <rect x="647" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)" stroke="#FFD600" stroke-width="3"/>
+          <text x="717" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">5. Panel</text>
+          <text x="717" y="116" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#FFD600" font-style="italic">y(p,c,b,t)</text>
+          <text x="717" y="146" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">194 series</text>
+          <text x="717" y="164" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">27,127 obs</text>
+          <text x="717" y="186" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">CSV licencia abierta</text>
+          <!-- 6 Auditoría -->
+          <rect x="805" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
+          <text x="875" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">6. Auditoría</text>
+          <text x="875" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">12 dimensiones</text>
+          <text x="875" y="146" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#FFD600">0 críticos</text>
+          <text x="875" y="170" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.88)">veredicto APTO</text>
+          <!-- arrows -->
+          <line x1="157" y1="135" x2="171" y2="135" stroke="#003CA6" stroke-width="2" marker-end="url(#bdArrow)"/>
+          <line x1="315" y1="135" x2="329" y2="135" stroke="#003CA6" stroke-width="2" marker-end="url(#bdArrow)"/>
+          <line x1="473" y1="135" x2="487" y2="135" stroke="#003CA6" stroke-width="2" marker-end="url(#bdArrow)"/>
+          <line x1="631" y1="135" x2="645" y2="135" stroke="#003CA6" stroke-width="2" marker-end="url(#bdArrow)"/>
+          <line x1="789" y1="135" x2="803" y2="135" stroke="#003CA6" stroke-width="2" marker-end="url(#bdArrow)"/>
+          <!-- footer note -->
+          <rect x="120" y="238" width="720" height="30" rx="10" fill="#fff" stroke="#003CA6" stroke-width="1.3"/>
+          <text x="480" y="257" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#555559">Ejecutado a diario por GitHub Action · datos crudos generados sólo por script, nunca editados a mano.</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- D.3 Las cinco brechas -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> Las cinco brechas resueltas</h3>
+      <p>La base heredada cubría sólo cuatro categorías de empleo, una tabla y perdía la información de estado. Cada brecha se cerró con una corrección verificada (auditoría <em>antes</em>&nbsp;&rarr;&nbsp;<em>después</em>).</p>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H1 · Estado</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Anotación C/F/U preservada</h4>
+          <p style="font-size:0.85rem;">El código aplanaba <em>Current</em>&rarr;fecha del boletín y <em>Unavailable</em>&rarr;vacío, borrando el régimen. Ahora una columna <code>status</code> lo conserva y el modelo entrena sólo sobre&nbsp;F.</p>
+          <div class="pill-row"><span class="pill pill--g">antes: estado perdido</span><span class="pill pill--green">ahora: C/F/U/NA</span></div>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H2 · Tabla DFF</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Dates for Filing de empleo</h4>
+          <p style="font-size:0.85rem;">El scraper cortaba tras la primera tabla (sólo FAD). Ahora captura las dos tablas <em>employment-based</em> etiquetadas por tipo; DFF disponible desde oct-2015.</p>
+          <div class="pill-row"><span class="pill pill--g">antes: sólo FAD</span><span class="pill pill--green">ahora: FAD + DFF</span></div>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H3 · Categorías</span>
+          <h4 class="card-title" style="font-size:0.98rem;">EB-5 y subcategorías</h4>
+          <p style="font-size:0.85rem;">El filtro descartaba todo salvo EB-1 a EB-4. Un clasificador normaliza 20&nbsp;años de deriva de etiquetas a 16&nbsp;códigos canónicos (EB-5, <em>Other Workers</em>, <em>set-asides</em>&hellip;).</p>
+          <div class="pill-row"><span class="pill pill--g">antes: 4 categorías</span><span class="pill pill--green">ahora: 16 + 5 familiares</span></div>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H4 · Cobertura</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Extensión al piso de la fuente</h4>
+          <p style="font-size:0.85rem;">Detección robusta de columnas (categoría&nbsp;=&nbsp;col&nbsp;0; país por nombre normalizado) recuperó 2001&ndash;2003 y reparó la serie residual (<em>All&nbsp;Charg.</em> estaba truncada a 2016).</p>
+          <div class="pill-row"><span class="pill pill--g">antes: desde oct-2003</span><span class="pill pill--green">ahora: desde dic-2001</span></div>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H5 · NA</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Vacío desambiguado</h4>
+          <p style="font-size:0.85rem;">El antiguo &laquo;vacío&raquo; mezclaba <em>Unavailable</em> con celdas no parseadas. El estado distingue ahora&nbsp;U de&nbsp;NA: en el panel actual, cero celdas&nbsp;NA.</p>
+          <div class="pill-row"><span class="pill pill--g">antes: vacío ambiguo</span><span class="pill pill--green">ahora: U &ne; NA</span></div>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Bonus · Robustez</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Sin pérdidas silenciosas</h4>
+          <p style="font-size:0.85rem;">La auditoría detectó un mes (dic-2007) perdido por un fallo HTTP transitorio. Se añadió <code>retry</code> con <em>backoff</em> y reporte explícito: ningún mes se descarta en silencio.</p>
+          <div class="pill-row"><span class="pill pill--g">antes: caída silenciosa</span><span class="pill pill--green">ahora: reintento + aviso</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D.4 Odisea EB-5 -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Taxonomía de categorías y la odisea del EB-5</h3>
+      <p>
+        Normalizar las categorías exigió absorber <strong>68 variantes de etiqueta</strong> distintas (saltos de línea, espacios duros, errores tipográficos) acumuladas en dos décadas. El caso extremo es la quinta preferencia de empleo (EB-5), cuya estructura cambió de régimen tres veces: el sistema captura cada época bajo un código canónico estable.
+      </p>
+      <div class="arch reveal mt-2">
+        <svg viewBox="0 0 920 210" xmlns="http://www.w3.org/2000/svg" aria-label="Evolución histórica de las categorías EB-5">
+          <defs>
+            <linearGradient id="ebBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#003CA6"/><stop offset="100%" stop-color="#1955BF"/></linearGradient>
+            <linearGradient id="ebY" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD600"/><stop offset="100%" stop-color="#E6BD00"/></linearGradient>
+          </defs>
+          <text x="40" y="40" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">Evolución de régimen de la categoría EB-5</text>
+          <!-- band segments -->
+          <rect x="40" y="60" width="292" height="50" rx="8" fill="url(#ebBlue)"/>
+          <text x="186" y="82" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#fff">5th · TEA · Pilot</text>
+          <text x="186" y="98" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">EB5 · EB5_TEA · EB5_PILOT</text>
+
+          <rect x="334" y="60" width="142" height="50" rx="8" fill="#1955BF"/>
+          <text x="405" y="82" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#fff">TEA + Pilot</text>
+          <text x="405" y="98" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">EB5_TEA</text>
+
+          <rect x="478" y="60" width="254" height="50" rx="8" fill="url(#ebY)"/>
+          <text x="605" y="82" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#001C52">Regional / Non-Regional Center</text>
+          <text x="605" y="98" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#003CA6">EB5_RC · EB5_NONRC</text>
+
+          <rect x="734" y="60" width="146" height="50" rx="8" fill="url(#ebBlue)" stroke="#FFD600" stroke-width="2.5"/>
+          <text x="807" y="80" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#fff">Unreserved +</text>
+          <text x="807" y="93" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#fff">3 Set-Asides</text>
+          <text x="807" y="105" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#FFD600">RURAL·HIGHUNEMP·INFRA</text>
+          <!-- axis -->
+          <line x1="40" y1="125" x2="880" y2="125" stroke="#555559" stroke-width="1"/>
+          <line x1="40" y1="120" x2="40" y2="130" stroke="#555559" stroke-width="1"/>
+          <line x1="332" y1="120" x2="332" y2="130" stroke="#555559" stroke-width="1"/>
+          <line x1="478" y1="120" x2="478" y2="130" stroke="#555559" stroke-width="1"/>
+          <line x1="734" y1="120" x2="734" y2="130" stroke="#555559" stroke-width="1"/>
+          <line x1="880" y1="120" x2="880" y2="130" stroke="#555559" stroke-width="1"/>
+          <text x="40" y="145" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#555559">2003</text>
+          <text x="332" y="145" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#555559">2011</text>
+          <text x="478" y="145" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#555559">2015</text>
+          <text x="734" y="145" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#555559">2022</text>
+          <text x="880" y="145" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#555559">2026</text>
+          <!-- note -->
+          <text x="40" y="178" font-family="DM Sans" font-size="9.5" fill="#555559">16 códigos canónicos de empleo normalizados desde 68 variantes históricas; la desambiguación respeta</text>
+          <text x="40" y="192" font-family="DM Sans" font-size="9.5" fill="#555559">que &laquo;regional center&raquo; es subcadena de &laquo;non-regional center&raquo; y de los rótulos TEA previos.</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- D.5 Búsqueda profunda -->
+    <div class="subsec reveal">
+      <h3><span class="num">05</span> Búsqueda profunda de boletines faltantes</h3>
+      <p>
+        Se enumeró cada mes esperado y se sondeó tanto la URL construida como el <em>Wayback Machine</em>. La cobertura a nivel boletín es de <strong>290 de 295 meses (98.3&nbsp;%)</strong>. Los cinco ausentes (marzo, septiembre, octubre y noviembre de 2009; octubre de 2012) devuelven 404 en travel.state.gov y sólo existen en el archivo legacy del Wayback Machine, por lo que quedan documentados como recuperables manualmente.
+      </p>
+      <div class="pill-row">
+        <span class="pill pill--green">290 / 295 meses presentes</span>
+        <span class="pill pill--y">5 meses sólo en archivo legacy</span>
+        <span class="pill pill--g">0 huecos no explicados</span>
+      </div>
+      <div class="callout mt-2">
+        <div class="callout-head">🗓️ Alcance temporal honesto</div>
+        <p>
+          Las <em>Final Action Dates</em> se publican desde 1992&nbsp;[14], pero la serie mensual estructuralmente homogénea que el módulo consolida desde el HTML del boletín abarca de forma continua <strong>diciembre&nbsp;de&nbsp;2001&nbsp;&ndash;&nbsp;2026 (&asymp;&nbsp;290&nbsp;observaciones por serie)</strong>. El periodo 1992&ndash;2001 existe en fuentes estadísticas y de archivo, reservado a integración posterior. Las <em>Dates for Filing</em> sólo existen desde noviembre&nbsp;de&nbsp;2015 (&asymp;&nbsp;125&nbsp;observaciones).
+        </p>
+      </div>
+    </div>
+
+    <!-- D.6 Mega-auditoría -->
+    <div class="subsec reveal">
+      <h3><span class="num">06</span> Mega-auditoría de calidad (12 dimensiones)</h3>
+      <p>
+        El panel se somete a una auditoría exhaustiva: esquema, completitud, inventario de series, distribución de estado, huecos, unicidad de clave, validez de fechas, coherencia FAD&nbsp;vs&nbsp;DFF, anomalías de salto, reconciliación fuente&harr;panel, matriz de cobertura y entrenabilidad. <strong>Veredicto: APTO</strong> &mdash; cero hallazgos críticos, cero advertencias.
+      </p>
+
+      <h4>Distribución de estado administrativo</h4>
+      <div class="arch reveal mt-2">
+        <svg viewBox="0 0 920 130" xmlns="http://www.w3.org/2000/svg" aria-label="Distribución de estados C, F y U en el panel">
+          <rect x="40" y="34" width="485" height="46" fill="#003CA6"/>
+          <rect x="525" y="34" width="338" height="46" fill="#9aa0a6"/>
+          <rect x="863" y="34" width="17" height="46" fill="#E6BD00"/>
+          <text x="282" y="62" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">F · 15,662 · 58 %</text>
+          <text x="694" y="62" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">C · 10,896 · 40 %</text>
+          <text x="40" y="104" font-family="DM Sans" font-size="10" fill="#555559">F = fecha específica (objetivo) · C = Current · U = Unavailable (568 · 2 %)</text>
+        </svg>
+      </div>
+
+      <h4 class="mt-2">Dos hallazgos informativos (fenómenos reales, no errores)</h4>
+      <div class="grid grid--2 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Informativo · 1</span>
+          <h4 class="card-title" style="font-size:0.98rem;">6 inversiones DFF &lt; FAD</h4>
+          <p style="font-size:0.85rem;">El Departamento de Estado publica ocasionalmente fechas de presentación pocos días por detrás de la acción final. Los valores crudos parsean correctamente: son datos reales, no fallos de extracción.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Informativo · 2</span>
+          <h4 class="card-title" style="font-size:0.98rem;">14 saltos fuertes mes a mes</h4>
+          <p style="font-size:0.85rem;">Retrogresiones y avances reales &mdash;la transición EB-4 de diciembre&nbsp;de&nbsp;2022 y los rezagos de México&nbsp;F1/F3 de los años&nbsp;80&mdash;. El sistema predictivo deberá tolerar las retrogresiones como fenómeno legítimo.</p>
+        </div>
+      </div>
+      <p class="mt-2" style="font-size:0.82rem;color:var(--gris);">
+        <strong>Nota.</strong> Las cifras de esta sección describen el <em>artefacto de datos construido</em> (el panel), no resultados predictivos. Este sitio es un proyecto personal del autor con fines descriptivos y no sustituye la asesoría legal migratoria individual.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════ TABLAS Y FIGURAS ═══════════════ -->
 <section class="section" id="tablas">
   <div class="section-inner">
@@ -2124,6 +2379,7 @@
         <li><a href="#capii">Capítulo II</a></li>
         <li><a href="#capiii">Capítulo III</a></li>
         <li><a href="#capiv">Capítulo IV</a></li>
+        <li><a href="#datos">Base de datos</a></li>
         <li><a href="#tablas">Tablas y figuras</a></li>
       </ul>
     </div>
