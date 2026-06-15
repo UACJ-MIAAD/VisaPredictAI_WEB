@@ -2286,9 +2286,136 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
       <p style="text-align:center;font-size:0.82rem;color:var(--gris);margin-top:0.6rem;">Esquema estrella · hechos en dorado, dimensiones en azul, dimensiones conformes resaltadas, marts <em>gold</em> en verde, gobernanza en gris.</p>
     </div>
 
-    <!-- 01 categorías -->
+    <!-- 01 catálogo de tablas -->
     <div class="subsec reveal">
-      <h3><span class="num">01</span> Todas las categorías, incluida la Diversity Visa</h3>
+      <h3><span class="num">01</span> Catálogo de tablas, campos y llaves</h3>
+      <p>El almacén tiene <strong>11 tablas</strong> &mdash; <strong>7 dimensiones</strong>, <strong>2 hechos</strong> y <strong>2 de gobernanza</strong> &mdash; más <strong>6 vistas/marts</strong>. Cada columna lleva su llave: <strong style="color:var(--azul);">PK</strong> primaria · <em style="color:#1955BF;">FK</em> foránea · <span style="color:#C99A00;">UK</span> única. Tipos entre paréntesis.</p>
+
+      <h4 style="margin:1rem 0 .5rem;color:var(--azul);font-size:.95rem;">Dimensiones · 7</h4>
+      <div class="grid grid--3">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimensión</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_area</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>area_id</code> <strong style="color:var(--azul);">PK</strong> <span style="color:#999;">(int)</span></li>
+            <li><code>slug</code> <span style="color:#C99A00;">UK</span> · <code>name</code> <span style="color:#999;">(str)</span></li>
+            <li><code>is_residual_group</code> <span style="color:#999;">(bool)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimensión</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_category</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>category_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>block</code> · <code>code</code> <span style="color:#C99A00;">UK</span><span style="color:#999;">(block,code)</span></li>
+            <li><code>parent_code</code> · <code>preference_level</code></li>
+            <li><code>is_subcategory</code> · <code>ina_basis</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimensión</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_date</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>date_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>bulletin_date</code> <span style="color:#C99A00;">UK</span> <span style="color:#999;">(date)</span></li>
+            <li><code>year</code> · <code>month</code> · <code>quarter</code></li>
+            <li><code>us_fiscal_year</code> <span style="color:#999;">(int)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimensión</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_status</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>status</code> <strong style="color:var(--azul);">PK</strong> <span style="color:#999;">(C/F/U/UNK)</span></li>
+            <li><code>label</code> · <code>description</code></li>
+            <li><code>is_predictable</code> <span style="color:#999;">(bool · F)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimensión</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_table</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>table_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>code</code> <span style="color:#C99A00;">UK</span> <span style="color:#999;">(FAD/DFF)</span></li>
+            <li><code>name</code> <span style="color:#999;">(str)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimensión</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_region</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>region_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>slug</code> <span style="color:#C99A00;">UK</span> · <code>name</code></li>
+            <li><span style="color:#999;">6 regiones DV</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:#1955BF;background:rgba(25,85,191,0.1);">dim · linaje</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_category_alias</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>alias_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>category_id</code> <em style="color:#1955BF;">FK</em>→dim_category</li>
+            <li><code>raw_label</code> <span style="color:#C99A00;">UK</span><span style="color:#999;">(cat,label)</span></li>
+            <li><code>valid_from</code>·<code>valid_to</code>·<code>n_months</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 style="margin:1.2rem 0 .5rem;color:var(--azul);font-size:.95rem;">Hechos · 2</h4>
+      <div class="grid grid--2">
+        <div class="card" style="border-color:#E6BD00;">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">hecho · fechas</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">fact_priority</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><strong style="color:var(--azul);">PK</strong> compuesta: <code>area_id·category_id·table_id·date_id</code> <span style="color:#999;">(las 4 <em style="color:#1955BF;">FK</em>)</span></li>
+            <li><code>status</code> <em style="color:#1955BF;">FK</em>→dim_status</li>
+            <li><code>priority_date</code> <span style="color:#999;">(date · sólo F)</span></li>
+            <li><code>days_since_base</code> = $y$ <span style="color:#999;">(int · sólo F)</span> · <code>raw_value</code></li>
+            <li style="color:#777;">CHECK: dominio status · días&nbsp;&ge;&nbsp;0 · definido sólo si F</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:#E6BD00;">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">hecho · rango DV</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">fact_dv_rank</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><strong style="color:var(--azul);">PK</strong> compuesta: <code>region_id·date_id</code> <span style="color:#999;">(<em style="color:#1955BF;">FK</em>)</span></li>
+            <li><code>status</code> <em style="color:#1955BF;">FK</em>→dim_status</li>
+            <li><code>rank_cutoff</code> <span style="color:#999;">(int · sólo F)</span></li>
+            <li><code>raw_value</code> · <code>exceptions</code> <span style="color:#999;">(por país)</span></li>
+            <li style="color:#777;">CHECK: rango&nbsp;&ge;&nbsp;0 · definido sólo si F</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 style="margin:1.2rem 0 .5rem;color:var(--azul);font-size:.95rem;">Gobernanza · 2</h4>
+      <div class="grid grid--2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">gobernanza</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">etl_run</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>run_id</code> <strong style="color:var(--azul);">PK</strong> · <code>built_at_utc</code> <span style="color:#999;">(ts)</span></li>
+            <li><code>schema_version</code> · <code>n_fact_priority</code> · <code>n_fact_dv</code></li>
+            <li><code>n_trainable_f</code> · <code>pct_trainable</code> <span style="color:#999;">(calidad)</span></li>
+            <li><code>panel_floor</code> · <code>panel_ceiling</code> <span style="color:#999;">(date)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">gobernanza</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">schema_version</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>version</code> <span style="color:#999;">(int)</span></li>
+            <li><code>description</code> <span style="color:#999;">(str)</span></li>
+            <li><span style="color:#999;">detecta drift / evolución del esquema</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="mt-2" style="font-size:.84rem;color:var(--gris);"><strong>Vistas y marts · 6:</strong> <code>v_panel_long</code> y <code>v_dv_long</code> reconstruyen el panel/DV sin pérdida; <code>v_category_alias</code> (linaje), <code>v_trainable_by_preference</code> (roll-up por preferencia), y los marts de modelado <code>mart_training_F</code> y <code>mart_series_summary</code>.</p>
+    </div>
+
+    <!-- 02 categorías -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Todas las categorías, incluida la Diversity Visa</h3>
       <p>Familia (F1&ndash;F4) y empleo (EB-1 a EB-5 con 16 subcódigos canónicos) viven en el hecho de fechas <code>fact_priority</code> ($y_{p,c,b,t}$). La <strong>Diversity Visa</strong> publica un <strong>número de rango</strong> por región, no una fecha &mdash; así que no cabe en el panel y obtiene su propio hecho <code>fact_dv_rank</code> (6 regiones &times; mes) y su dimensión <code>dim_region</code>.</p>
       <div class="pill-row">
         <span class="pill pill--y">familia + empleo + Diversity Visa</span>
@@ -2299,7 +2426,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
 
     <!-- 02 modelo dimensional -->
     <div class="subsec reveal">
-      <h3><span class="num">02</span> Jerarquía, dimensiones conformes y linaje</h3>
+      <h3><span class="num">03</span> Jerarquía, dimensiones conformes y linaje</h3>
       <div class="grid grid--3 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Jerarquía</span>
@@ -2321,7 +2448,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
 
     <!-- 03 gobernanza + marts -->
     <div class="subsec reveal">
-      <h3><span class="num">03</span> Gobernanza, calidad y marts de modelado</h3>
+      <h3><span class="num">04</span> Gobernanza, calidad y marts de modelado</h3>
       <div class="grid grid--3 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Contrato</span>
@@ -2343,7 +2470,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
 
     <!-- 04 límites declarados -->
     <div class="subsec reveal">
-      <h3><span class="num">04</span> Límites declarados (auditoría adversarial)</h3>
+      <h3><span class="num">05</span> Límites declarados (auditoría adversarial)</h3>
       <p>Una auditoría independiente re-derivó el modelo desde cero. Pasó fuerte &mdash;<strong>0 claves foráneas huérfanas, 48/48 alias re-clasifican a su canónico, las constraints rechazan toda fila inválida, contenido reproducible</strong>&mdash; y dejó estos límites <strong>sin barnizar</strong>:</p>
       <div class="grid grid--2 mt-2">
         <div class="card">
