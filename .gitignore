@@ -75,3 +75,6 @@ node_modules/
 # Local backups
 *.bak
 *.html.bak
+
+# Internal AI/context notes — not part of the published site
+CLAUDE.md
