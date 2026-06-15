@@ -1152,6 +1152,7 @@
       <li><a href="#capiii">Cap. III</a></li>
       <li><a href="#capiv">Cap. IV</a></li>
       <li><a href="#datos">Base de datos</a></li>
+      <li><a href="#mlops">MLOps</a></li>
       <li><a href="#tablas">Tablas</a></li>
       <li><a href="#glosario">Glosario</a></li>
       <li><a href="#referencias">Referencias</a></li>
@@ -1303,7 +1304,7 @@
         La <em>Immigration and Nationality Act</em> (INA) de 1965 [10] establece el sistema actual de cuotas anuales por categoría con un límite estatutario del 7&nbsp;% por país (<em>per-country limit</em>) que es el origen primario de la retrogresión severa observada en países de alta demanda como México, India, China y Filipinas [6].
       </p>
       <p>
-        El Departamento de Estado publica mensualmente el <em>Visa Bulletin</em> [7] con dos calendarios: <strong>Final Action Dates</strong> (FAD, desde 1992, ≈408 obs) que autoriza la adjudicación final, y <strong>Dates for Filing</strong> (DFF, desde noviembre&nbsp;de 2015, ≈125 obs) que autoriza el inicio anticipado del trámite de ajuste. Bier [60] documenta que las categorías basadas en empleo de países con límite efectivo, en particular India, han experimentado retrogresiones de varios años en periodos recientes.
+        El Departamento de Estado publica mensualmente el <em>Visa Bulletin</em> [7] con dos calendarios: <strong>Final Action Dates</strong> (FAD, publicadas desde 1992; la serie mensual homogénea del pipeline abarca dic-2001&ndash;hoy, ≈290 obs) que autoriza la adjudicación final, y <strong>Dates for Filing</strong> (DFF, desde noviembre&nbsp;de 2015, ≈125 obs) que autoriza el inicio anticipado del trámite de ajuste. Bier [60] documenta que las categorías basadas en empleo de países con límite efectivo, en particular India, han experimentado retrogresiones de varios años en periodos recientes.
       </p>
       <p>
         Trabajos previos: Vegesana [11] aplica clasificadores discriminativos al pronóstico de aprobación; Jain et al. [12] proponen un híbrido ARIMA-LSTM para series con dinámica compleja; Carammia et al. [13] y Pu et al. [9] integran aprendizaje automático con datos a escala en flujos migratorios.
@@ -1995,8 +1996,167 @@
   </div>
 </section>
 
+<!-- ═══════════════ INGENIERÍA / MLOps ═══════════════ -->
+<section class="section" id="mlops">
+  <div class="section-inner">
+    <span class="section-tag">Ingeniería del pipeline</span>
+    <h2 class="section-title">Prácticas MLOps</h2>
+    <p class="section-sub">
+      La base de datos no es un script suelto: es un sistema de ingeniería <strong>reproducible, probado y auto-protegido</strong> que se ejecuta a diario. Esta sección documenta cada práctica MLOps en producción en el repositorio <a href="https://github.com/UACJ-MIAAD/VisaBulletinScraping" target="_blank" rel="noopener">VisaBulletinScraping</a>.
+    </p>
+
+    <div class="metrics">
+      <div class="metrics-inner">
+        <div class="metric reveal"><div class="metric-num">27</div><div class="metric-lbl">Pruebas automatizadas</div></div>
+        <div class="metric reveal reveal--d1"><div class="metric-num">2</div><div class="metric-lbl">Workflows de CI</div></div>
+        <div class="metric reveal reveal--d2"><div class="metric-num">~70&nbsp;%</div><div class="metric-lbl">Cobertura · gate &ge;&nbsp;65&nbsp;%</div></div>
+        <div class="metric reveal reveal--d3"><div class="metric-num">ruff+mypy</div><div class="metric-lbl">Lint · formato · tipos</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">0</div><div class="metric-lbl">Críticos en auditoría</div></div>
+      </div>
+    </div>
+
+    <!-- M.1 Reproducibilidad -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> Reproducibilidad determinista</h3>
+      <p>
+        El entorno de desarrollo y el de integración continua son <strong>idénticos</strong>: mismas versiones de Python y de cada dependencia, fijadas con pin exacto. Cualquier persona reproduce el mismo dato byte por byte.
+      </p>
+      <div class="pill-row">
+        <span class="pill pill--y">dependencias con pin exacto (`pandas==3.0.0`&hellip;)</span>
+        <span class="pill pill--y">Python 3.14 · dev = CI</span>
+        <span class="pill pill--y">`.python-version` + `requirements.txt` + `pyproject.toml`</span>
+        <span class="pill pill--green">salida del pipeline verificada byte-idéntica</span>
+      </div>
+    </div>
+
+    <!-- M.2 Pruebas en 3 niveles -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Pruebas automatizadas en tres niveles</h3>
+      <p>27 pruebas bajo <em>pytest</em> con un <strong>piso de cobertura ejecutable</strong> (`fail_under=65`): la cobertura no puede erosionarse sin romper el CI.</p>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 1 · 12 casos</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Funciones puras</h4>
+          <p style="font-size:0.85rem;">Clasificadores de estado (C/F/U/UNK) y de categoría (20&nbsp;años de deriva de etiquetas, desambiguación de subcadenas). Sin I/O, deterministas.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 2 · 6 casos</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Extracción offline</h4>
+          <p style="font-size:0.85rem;">El parseo real corre sobre <strong>4 fixtures HTML</strong> guardados (eras de formato 2002/2007/2020/2022) <strong>sin red</strong>: rápido, determinista, cubre la lógica donde viven los bugs.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 3 · 9 invariantes</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Contrato del panel</h4>
+          <p style="font-size:0.85rem;">Invariantes duras del producto: clave única, 0 días negativos, dominio de estado, fecha de prioridad sólo en `F`, conteo mínimo de filas. Cualquier regresión falla el gate.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- M.3 CI/CD doble pipeline -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> Integración continua: dos pipelines</h3>
+      <p>Un pipeline valida el <strong>código</strong> en cada cambio; otro refresca el <strong>dato</strong> a diario con un gate de calidad antes de publicar.</p>
+      <div class="arch reveal mt-2">
+        <svg viewBox="0 0 960 320" xmlns="http://www.w3.org/2000/svg" aria-label="Los dos pipelines de integración continua">
+          <defs>
+            <linearGradient id="mlBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#003CA6"/><stop offset="100%" stop-color="#1955BF"/></linearGradient>
+            <linearGradient id="mlY" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD600"/><stop offset="100%" stop-color="#E6BD00"/></linearGradient>
+            <marker id="mlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#003CA6"/></marker>
+          </defs>
+          <!-- Lane 1: code CI -->
+          <text x="20" y="32" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">CI de código · cada push / PR  (ci.yml)</text>
+          <rect x="20" y="44" width="150" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="95" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">push / PR</text>
+          <text x="95" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">a main</text>
+          <rect x="210" y="44" width="170" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="295" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">ruff</text>
+          <text x="295" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">lint + formato</text>
+          <rect x="420" y="44" width="150" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="495" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">mypy</text>
+          <text x="495" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">tipos</text>
+          <rect x="610" y="44" width="330" height="56" rx="12" fill="url(#mlBlue)" stroke="#FFD600" stroke-width="2.5"/>
+          <text x="775" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">pytest + cobertura</text>
+          <text x="775" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">27 pruebas · gate &ge; 65 %</text>
+          <line x1="172" y1="72" x2="208" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="382" y1="72" x2="418" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="572" y1="72" x2="608" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <!-- divider -->
+          <line x1="20" y1="128" x2="940" y2="128" stroke="#e3e3e6" stroke-width="1"/>
+          <!-- Lane 2: data cron -->
+          <text x="20" y="162" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">Refresco de datos · diario  (update_graphs.yml)</text>
+          <rect x="20" y="174" width="120" height="56" rx="12" fill="url(#mlY)"/>
+          <text x="80" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#001C52">cron</text>
+          <text x="80" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#003CA6">00:00 UTC</text>
+          <rect x="170" y="174" width="120" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="230" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">scrape</text>
+          <text x="230" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">2 scrapers</text>
+          <rect x="320" y="174" width="120" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="380" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">build panel</text>
+          <rect x="470" y="174" width="150" height="56" rx="12" fill="url(#mlBlue)" stroke="#FFD600" stroke-width="2.5"/>
+          <text x="545" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">gate de tests</text>
+          <text x="545" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">rojo = no publica</text>
+          <rect x="650" y="174" width="150" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="725" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">commit + push</text>
+          <rect x="650" y="252" width="290" height="44" rx="10" fill="#fff" stroke="#E6BD00" stroke-width="1.5"/>
+          <text x="795" y="279" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#555559">en fallo &rarr; abre/comenta un issue de alerta</text>
+          <line x1="142" y1="202" x2="168" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="292" y1="202" x2="318" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="442" y1="202" x2="468" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="622" y1="202" x2="648" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="545" y1="232" x2="545" y2="274" stroke="#E6BD00" stroke-width="2"/>
+          <line x1="545" y1="274" x2="648" y2="274" stroke="#E6BD00" stroke-width="2" marker-end="url(#mlArrow)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- M.4 Robustez -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Robustez ante el mundo real</h3>
+      <p>La fuente es HTML vivo de 20&nbsp;años con formatos cambiantes y fallos transitorios. El pipeline está blindado contra cada modo de fallo observado.</p>
+      <div class="grid grid--3 mt-2">
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Red</span><h4 class="card-title" style="font-size:0.95rem;">Retry + backoff</h4><p style="font-size:0.84rem;">Un fallo HTTP transitorio reintenta con espera creciente; ya no se pierde un mes en silencio (antes un `except: pass` los tragaba).</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Reproducibilidad</span><h4 class="card-title" style="font-size:0.95rem;">Orden determinista</h4><p style="font-size:0.84rem;">Las filas se ordenan por clave completa, no por un sort inestable: un mes caído ya no reordena en cascada el resto del archivo.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Integridad</span><h4 class="card-title" style="font-size:0.95rem;">Abort en fallo masivo</h4><p style="font-size:0.84rem;">Si fallan &gt;10 boletines (rediseño/caída de la fuente), el scraper aborta sin escribir: nunca se publica un panel degradado.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Observabilidad</span><h4 class="card-title" style="font-size:0.95rem;">Alertas en fallo</h4><p style="font-size:0.84rem;">Un gate rojo o un crash abren (o comentan) un issue de seguimiento: el fallo avisa, no muere callado en la pestaña de Actions.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Correctitud</span><h4 class="card-title" style="font-size:0.95rem;">Centinela `UNK`</h4><p style="font-size:0.84rem;">El estado &laquo;sin dato&raquo; usa `UNK`, no `NA`: el string `"NA"` lo coerciona pandas a NaN al leer y borraba la anotación. `UNK` es seguro para cualquier consumidor.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Detección</span><h4 class="card-title" style="font-size:0.95rem;">Hallado por los tests</h4><p style="font-size:0.84rem;">El bug del centinela y un mes perdido por la red los <strong>cazaron las pruebas y el reporte de fallos</strong>, no un usuario: la red de seguridad funcionando.</p></div>
+      </div>
+    </div>
+
+    <!-- M.5 Contrato + auditorías + versionado -->
+    <div class="subsec reveal">
+      <h3><span class="num">05</span> Contrato de datos, linaje y versionado</h3>
+      <div class="grid grid--2 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Contrato &amp; linaje</span>
+          <h4 class="card-title" style="font-size:0.98rem;">El dato se valida solo</h4>
+          <ul style="font-size:0.85rem;margin-top:0.4rem;">
+            <li>Invariantes duras del panel como pruebas ejecutables (el esquema <em>es</em> el contrato).</li>
+            <li><strong>Linaje a nivel celda</strong>: `raw_value` conserva la celda original tal cual se publicó.</li>
+            <li>Auditoría programática de <strong>12 dimensiones</strong> con veredicto APTO (0 hallazgos críticos).</li>
+            <li>Hooks de pre-commit: bloqueo de archivos grandes, fin de línea, YAML/TOML, ruff.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Versionado</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Cada artefacto donde corresponde</h4>
+          <ul style="font-size:0.85rem;margin-top:0.4rem;">
+            <li>Los <strong>CSV abiertos viven en git</strong>: descargables directo, sin DVC ni credenciales (son el entregable).</li>
+            <li>Las <strong>figuras no se versionan</strong> (artefactos regenerables) para no inflar el historial.</li>
+            <li><strong>DVC</strong> inicializado y reservado para los artefactos de modelo del próximo semestre (checkpoints, pronósticos).</li>
+            <li><strong>`Makefile`</strong>: `make install · scrape · panel · test · check · all` (operación de un comando).</li>
+          </ul>
+        </div>
+      </div>
+      <p class="mt-2" style="font-size:0.82rem;color:var(--gris);">
+        <strong>Nota.</strong> Esta sección describe la <em>ingeniería del pipeline de datos</em>, no resultados predictivos. Proyecto personal del autor con fines descriptivos.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════ TABLAS Y FIGURAS ═══════════════ -->
-<section class="section" id="tablas">
+<section class="section section--alt" id="tablas">
   <div class="section-inner">
     <span class="section-tag">Tablas y figuras</span>
     <h2 class="section-title">Visualizaciones clave</h2>
@@ -2106,7 +2266,7 @@
         <span class="matrix-legend-item" style="margin-left:auto;color:var(--text-muted);font-size:0.72rem;">* Composición variable · advertencia explícita</span>
       </div>
     </div>
-    <p class="tbl-caption">FAD evaluado desde 1992 (≈408 obs); DFF desde noviembre 2015 (≈125 obs). Cada celda piloto se reporta agregada y desagregada. Fuente: elaboración propia.</p>
+    <p class="tbl-caption">FAD publicado desde 1992; serie homogénea del pipeline dic-2001&ndash;hoy (≈290 obs). DFF desde noviembre 2015 (≈125 obs). Cada celda piloto se reporta agregada y desagregada. Fuente: elaboración propia.</p>
   </div>
 </section>
 
@@ -2380,6 +2540,7 @@
         <li><a href="#capiii">Capítulo III</a></li>
         <li><a href="#capiv">Capítulo IV</a></li>
         <li><a href="#datos">Base de datos</a></li>
+        <li><a href="#mlops">Prácticas MLOps</a></li>
         <li><a href="#tablas">Tablas y figuras</a></li>
       </ul>
     </div>
