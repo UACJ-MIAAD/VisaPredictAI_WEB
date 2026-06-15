@@ -1153,6 +1153,7 @@
       <li><a href="#capiv">Cap. IV</a></li>
       <li><a href="#datos">Base de datos</a></li>
       <li><a href="#mlops">MLOps</a></li>
+      <li><a href="#estructura">Estructura</a></li>
       <li><a href="#tablas">Tablas</a></li>
       <li><a href="#glosario">Glosario</a></li>
       <li><a href="#referencias">Referencias</a></li>
@@ -1748,7 +1749,7 @@
     <span class="section-tag">Objetivo 1 · Entregable 01</span>
     <h2 class="section-title">Construcción de la base de datos</h2>
     <p class="section-sub">
-      El primer entregable ya está construido: el panel multiserie $y_{p,c,b,t}$ del <em>U.S. Visa Bulletin</em> &mdash;extraído, anotado, consolidado y auditado de extremo a extremo&mdash; desde el repositorio público <a href="https://github.com/UACJ-MIAAD/VisaBulletinScraping" target="_blank" rel="noopener">VisaBulletinScraping</a>. Esta sección documenta con detalle cómo se levantó y qué se halló en el camino.
+      El primer entregable ya está construido: el panel multiserie $y_{p,c,b,t}$ del <em>U.S. Visa Bulletin</em> &mdash;extraído, anotado, consolidado y auditado de extremo a extremo&mdash; desde el repositorio público <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>. Esta sección documenta con detalle cómo se levantó y qué se halló en el camino.
     </p>
 
     <div class="metrics">
@@ -2002,7 +2003,7 @@
     <span class="section-tag">Ingeniería del pipeline</span>
     <h2 class="section-title">Prácticas MLOps</h2>
     <p class="section-sub">
-      La base de datos no es un script suelto: es un sistema de ingeniería <strong>reproducible, probado y auto-protegido</strong> que se ejecuta a diario. Esta sección documenta cada práctica MLOps en producción en el repositorio <a href="https://github.com/UACJ-MIAAD/VisaBulletinScraping" target="_blank" rel="noopener">VisaBulletinScraping</a>.
+      La base de datos no es un script suelto: es un sistema de ingeniería <strong>reproducible, probado y auto-protegido</strong> que se ejecuta a diario. Esta sección documenta cada práctica MLOps en producción en el repositorio <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>.
     </p>
 
     <div class="metrics">
@@ -2150,6 +2151,104 @@
       </div>
       <p class="mt-2" style="font-size:0.82rem;color:var(--gris);">
         <strong>Nota.</strong> Esta sección describe la <em>ingeniería del pipeline de datos</em>, no resultados predictivos. Proyecto personal del autor con fines descriptivos.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ ESTRUCTURA · COOKIECUTTER ═══════════════ -->
+<section class="section section--alt" id="estructura">
+  <div class="section-inner">
+    <span class="section-tag">Estructura del repositorio</span>
+    <h2 class="section-title">Plantilla Cookiecutter Data Science</h2>
+    <p class="section-sub">
+      El repositorio no organiza sus archivos al azar: adopta <strong>Cookiecutter Data Science</strong> (CCDS), la plantilla estándar de la comunidad para proyectos de ciencia de datos. Cualquier persona que la conozca encuentra cada archivo donde espera &mdash;datos crudos separados de los derivados, reportes y documentación en su lugar, y un paquete instalable con una sola fuente de verdad para las dependencias&mdash; en el repositorio <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>.
+    </p>
+
+    <!-- E.1 Árbol del repositorio -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> El árbol, de un vistazo</h3>
+      <p>La convención CCDS separa por <strong>rol</strong>, no por tipo de archivo: el dato crudo (fuente inmutable) nunca se mezcla con el derivado (regenerable), y el código vive aparte de los reportes y la documentación.</p>
+      <pre style="font-family:var(--font-mono);font-size:0.8rem;line-height:1.55;background:#fff;border:1px solid #e3e3e6;border-left:4px solid var(--azul);border-radius:10px;padding:1.1rem 1.2rem;margin-top:1rem;overflow-x:auto;color:var(--negro);">VisaPredictAI/
+├── data/
+│   ├── raw/          <span style="color:var(--gris);"># 10 CSV por país, recién scrapeados (fuente)</span>
+│   └── processed/    <span style="color:var(--gris);"># visa_panel_long.csv — el panel derivado</span>
+├── reports/          <span style="color:var(--gris);"># auditorías generadas (*_report.md)</span>
+├── docs/             <span style="color:var(--gris);"># documentación (DVC.md…)</span>
+├── tests/            <span style="color:var(--gris);"># pytest + fixtures HTML offline</span>
+├── config.py         <span style="color:var(--gris);"># rutas y constantes (RAW_DIR, PROCESSED_DIR…)</span>
+├── visa_common.py    <span style="color:var(--gris);"># helpers compartidos de scraping</span>
+├── scrape_*.py       <span style="color:var(--gris);"># scrapers (empleo + familiar)</span>
+├── build_panel.py    <span style="color:var(--gris);"># consolida raw → processed</span>
+├── pyproject.toml    <span style="color:var(--gris);"># deps + tooling + paquete (fuente única)</span>
+├── Makefile          <span style="color:var(--gris);"># operación de un comando</span>
+├── LICENSE           <span style="color:var(--gris);"># MIT</span>
+└── .github/workflows/ <span style="color:var(--gris);"># CI de código + cron de datos</span></pre>
+    </div>
+
+    <!-- E.2 Mapa plantilla → repo -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Qué hace cada pieza</h3>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">data/raw/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Fuente inmutable</h4>
+          <p style="font-size:0.85rem;">Los 10 CSV por país tal como salen de los scrapers. Nunca se editan a mano: si algo cambia, se corrige el scraper, no el dato.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">data/processed/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Derivado regenerable</h4>
+          <p style="font-size:0.85rem;">El panel multiserie $y_{p,c,b,t}$ que produce <code>build_panel.py</code>. Separarlo del crudo deja claro qué es fuente y qué es resultado.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">reports/ · docs/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Reportes y docs</h4>
+          <p style="font-size:0.85rem;">Las auditorías de calidad (12 dimensiones) se escriben en <code>reports/</code>; la documentación operativa (p.&nbsp;ej. la estrategia DVC) vive en <code>docs/</code>.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">tests/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Contrato ejecutable</h4>
+          <p style="font-size:0.85rem;">Suite <em>pytest</em> con fixtures HTML para extracción offline e invariantes duras del panel: el esquema <em>es</em> el contrato.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">config.py · visa_common.py</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Núcleo compartido</h4>
+          <p style="font-size:0.85rem;"><code>config.py</code> centraliza rutas y constantes; <code>visa_common.py</code> reúne los helpers de scraping (fuente única, sin duplicar lógica entre scrapers).</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">pyproject.toml</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Una sola fuente de verdad</h4>
+          <p style="font-size:0.85rem;">Dependencias (runtime y dev), configuración de <em>ruff/mypy/pytest</em> y el empaquetado, todo en un archivo: el paquete es instalable con <code>pip install -e .</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- E.3 Cómo se usa -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> Cómo se usa en el día a día</h3>
+      <p>La estructura habilita un flujo de un solo comando y reproducible: el dato fluye <strong>de <code>raw/</code> a <code>processed/</code></strong>, y todo el toolchain se instala desde una sola fuente.</p>
+      <pre style="font-family:var(--font-mono);font-size:0.8rem;line-height:1.7;background:#fff;border:1px solid #e3e3e6;border-left:4px solid var(--amarillo-d);border-radius:10px;padding:1.1rem 1.2rem;margin-top:1rem;overflow-x:auto;color:var(--negro);">git clone https://github.com/UACJ-MIAAD/VisaPredictAI.git
+cd VisaPredictAI
+make install   <span style="color:var(--gris);"># = pip install -e ".[dev]"  (runtime + herramientas)</span>
+make scrape    <span style="color:var(--gris);"># escribe data/raw/*.csv</span>
+make panel     <span style="color:var(--gris);"># consolida data/processed/visa_panel_long.csv</span>
+make check     <span style="color:var(--gris);"># ruff + mypy + pytest (gate de cobertura)</span>
+make audit     <span style="color:var(--gris);"># auditorías → reports/</span></pre>
+    </div>
+
+    <!-- E.4 Adaptaciones honestas -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Adaptaciones honestas</h3>
+      <p>CCDS es un punto de partida, no un dogma. Se adopta lo que sirve a un proyecto de <strong>adquisición de datos</strong> y se omite, a conciencia, lo que aún no aplica &mdash;sin estructura de relleno.</p>
+      <div class="pill-row">
+        <span class="pill pill--green">licencia MIT en repo público</span>
+        <span class="pill pill--green">paquete instalable + layout plano (`pip install -e .`)</span>
+        <span class="pill pill--y">sin `notebooks/` ni `models/` todavía &mdash; el modelado es del próximo semestre (DVC ya reservado)</span>
+        <span class="pill pill--y">sin `.env` &mdash; el scraping es de datos públicos, sin secretos</span>
+        <span class="pill pill--y">`data/raw` y `data/processed` versionados en git (son el entregable abierto)</span>
+      </div>
+      <p class="mt-2" style="font-size:0.82rem;color:var(--gris);">
+        <strong>Nota.</strong> Esta sección describe la <em>organización del repositorio de datos</em>, no resultados predictivos. Proyecto personal del autor con fines descriptivos.
       </p>
     </div>
   </div>
@@ -2511,7 +2610,7 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         Escribir al tesista
       </a>
-      <a class="btn btn--outline" href="https://github.com/UACJ-MIAAD/VisaBulletinScraping" target="_blank" rel="noopener">
+      <a class="btn btn--outline" href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">
         Repositorio del scraping
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 17L17 7M7 7h10v10"/></svg>
       </a>
@@ -2541,6 +2640,7 @@
         <li><a href="#capiv">Capítulo IV</a></li>
         <li><a href="#datos">Base de datos</a></li>
         <li><a href="#mlops">Prácticas MLOps</a></li>
+        <li><a href="#estructura">Estructura del repo</a></li>
         <li><a href="#tablas">Tablas y figuras</a></li>
       </ul>
     </div>
@@ -2559,7 +2659,7 @@
         <li><a href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html" target="_blank" rel="noopener">Visa Bulletin oficial</a></li>
         <li><a href="https://www.uscis.gov/" target="_blank" rel="noopener">USCIS</a></li>
         <li><a href="https://www.uacj.mx" target="_blank" rel="noopener">UACJ</a></li>
-        <li><a href="https://github.com/UACJ-MIAAD/VisaBulletinScraping" target="_blank" rel="noopener">GitHub · Scraping</a></li>
+        <li><a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">GitHub · Scraping</a></li>
       </ul>
     </div>
   </div>
