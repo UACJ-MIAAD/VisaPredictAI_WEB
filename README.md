@@ -19,6 +19,7 @@ VisaPredict AI es un **sistema predictivo aplicado** para las fechas de priorida
 
 - Presentación general del proyecto y sus objetivos
 - Resumen de los 4 capítulos del anteproyecto (Introducción, Marco teórico, Producto esperado y validación, Metodología CRISP-DM)
+- **Secciones de ingeniería de datos** (`#datos`, `#mlops`, `#estructura`, `#modelo`): la construcción del panel, las prácticas MLOps, la plantilla cookiecutter del repo, y el **almacén estrella en DuckDB** con su **diagrama ER** y el catálogo de las 11 tablas
 - Glosario operativo (42 términos) y bibliografía IEEE (64 referencias)
 - Documentación accesible para usuarios finales con disclaimer académico
 - Información sobre el equipo de investigación y la rúbrica del programa MIAAD
@@ -31,7 +32,8 @@ VisaPredict AI es un **sistema predictivo aplicado** para las fechas de priorida
 VisaPredictAI_WEB/
 ├── CLAUDE.md                       Convenciones, don'ts y mapeo a LaTeX
 ├── README.md                       Este archivo
-├── index.html                      SPA principal (todo el sitio, ~2230 líneas)
+├── index.html                      SPA principal (todo el sitio, ~2990 líneas, 16 secciones)
+├── schema_er.svg                   Diagrama ER del almacén de datos (sección #modelo)
 ├── index4.html                     Versión legacy (anterior a v3, conservada como referencia)
 ├── LogoVisaPredictAI.png           Logo principal (header, footer, favicon)
 ├── LogoVisaPredictAI_vfull.png     Logo extendido alta resolución
@@ -69,7 +71,7 @@ Basada en el **Manual Básico de Identidad Gráfica Institucional** de la UACJ.
 | Repositorio | Descripción |
 |:------------|:------------|
 | [VisaPredictAI_WEB](https://github.com/UACJ-MIAAD/VisaPredictAI_WEB) | 📍 Este repositorio — Página web del proyecto |
-| *VisaPredictAI* (próximamente) | Modelos de ML, datos y análisis |
+| [VisaPredictAI](https://github.com/UACJ-MIAAD/VisaPredictAI) | Scraping, panel multiserie y **almacén estrella DuckDB** (datos + base de datos) |
 
 ## 👥 Equipo
 
