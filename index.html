@@ -1154,6 +1154,7 @@
       <li><a href="#datos">Base de datos</a></li>
       <li><a href="#mlops">MLOps</a></li>
       <li><a href="#estructura">Estructura</a></li>
+      <li><a href="#modelo">Modelo BD</a></li>
       <li><a href="#tablas">Tablas</a></li>
       <li><a href="#glosario">Glosario</a></li>
       <li><a href="#referencias">Referencias</a></li>
@@ -2254,6 +2255,115 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
   </div>
 </section>
 
+<!-- ═══════════════ MODELO DE DATOS · ESQUEMA ESTRELLA ═══════════════ -->
+<section class="section" id="modelo">
+  <div class="section-inner">
+    <span class="section-tag">Ingeniería de datos · modelado dimensional</span>
+    <h2 class="section-title">Almacén de datos en esquema estrella</h2>
+    <p class="section-sub">
+      El panel plano se eleva a un <strong>almacén dimensional normalizado</strong> en
+      DuckDB: hechos centrales por grano, dimensiones conformes alrededor, y las
+      invariantes del contrato promovidas a <strong>constraints declarativas</strong>
+      (PK/FK/CHECK) que rechazan en la carga cualquier fila inválida. Cubre todas las
+      categorías del <em>Visa Bulletin</em> &mdash;familia, empleo y Diversity Visa&mdash;
+      con linaje, gobernanza y <em>marts</em> listos para el modelado. La definición
+      vive en `schema.sql`; el modelo se reconstruye con `make db`.
+    </p>
+
+    <div class="metrics">
+      <div class="metrics-inner">
+        <div class="metric reveal"><div class="metric-num">7</div><div class="metric-lbl">Dimensiones</div></div>
+        <div class="metric reveal reveal--d1"><div class="metric-num">2</div><div class="metric-lbl">Hechos · fechas + rango DV</div></div>
+        <div class="metric reveal reveal--d2"><div class="metric-num">PK·FK·CHECK</div><div class="metric-lbl">El esquema es el contrato</div></div>
+        <div class="metric reveal reveal--d3"><div class="metric-num">65</div><div class="metric-lbl">Pruebas automatizadas</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">DuckDB</div><div class="metric-lbl">Embebido · SQL · Parquet</div></div>
+      </div>
+    </div>
+
+    <!-- ER diagram -->
+    <div class="reveal mt-2">
+      <img src="schema_er.svg" alt="Diagrama entidad-relación del esquema estrella: dos hechos al centro, siete dimensiones, dimensiones conformes resaltadas, bridge de linaje, gobernanza y marts" style="width:100%;height:auto;border:1px solid #e3e3e6;border-radius:14px;background:#fff;padding:10px;box-sizing:border-box;"/>
+      <p style="text-align:center;font-size:0.82rem;color:var(--gris);margin-top:0.6rem;">Esquema estrella · hechos en dorado, dimensiones en azul, dimensiones conformes resaltadas, marts <em>gold</em> en verde, gobernanza en gris.</p>
+    </div>
+
+    <!-- 01 categorías -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> Todas las categorías, incluida la Diversity Visa</h3>
+      <p>Familia (F1&ndash;F4) y empleo (EB-1 a EB-5 con 16 subcódigos canónicos) viven en el hecho de fechas <code>fact_priority</code> ($y_{p,c,b,t}$). La <strong>Diversity Visa</strong> publica un <strong>número de rango</strong> por región, no una fecha &mdash; así que no cabe en el panel y obtiene su propio hecho <code>fact_dv_rank</code> (6 regiones &times; mes) y su dimensión <code>dim_region</code>.</p>
+      <div class="pill-row">
+        <span class="pill pill--y">familia + empleo + Diversity Visa</span>
+        <span class="pill pill--y">DV = rango regional (hecho separado)</span>
+        <span class="pill pill--green">Schedule A excluida con evidencia (no es categoría con fecha)</span>
+      </div>
+    </div>
+
+    <!-- 02 modelo dimensional -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Jerarquía, dimensiones conformes y linaje</h3>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Jerarquía</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Roll-ups por preferencia</h4>
+          <p style="font-size:0.85rem;"><code>dim_category</code> lleva <code>parent_code</code>, <code>preference_level</code> y base estatutaria INA: las subcategorías se pliegan a su preferencia (todas las EB-5 bajo EB-5) vía la vista <code>v_trainable_by_preference</code>.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Conformes</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Dimensiones compartidas</h4>
+          <p style="font-size:0.85rem;"><code>dim_date</code> y <code>dim_status</code> son <strong>conformes</strong>: ambos hechos las comparten, así que el tiempo y el régimen C/F/U/UNK se definen una sola vez y se cruzan igual en todo el almacén.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Linaje</span>
+          <h4 class="card-title" style="font-size:0.98rem;">20 años de deriva, auditables</h4>
+          <p style="font-size:0.85rem;"><code>dim_category_alias</code> saca la normalización de etiquetas del código a <strong>datos</strong>: cada grafía publicada &rarr; categoría canónica con su ventana de meses (48 alias; EB5_TEA tuvo 7 grafías 2001&ndash;2015).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 gobernanza + marts -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> Gobernanza, calidad y marts de modelado</h3>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Contrato</span>
+          <h4 class="card-title" style="font-size:0.98rem;">El esquema rechaza lo inválido</h4>
+          <p style="font-size:0.85rem;">PK compuesta, FK a cada dimensión y CHECK (dominio de estado, días&nbsp;&ge;&nbsp;0, variable definida sólo si <code>status='F'</code>): el contrato vive en el esquema, no sólo en los tests.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Provenance</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Auditoría de carga + calidad</h4>
+          <p style="font-size:0.85rem;"><code>etl_run</code> registra cada <em>build</em> (versión de esquema, conteos, <strong>score de entrenabilidad</strong>, piso/techo temporal); <code>schema_version</code> marca la evolución. Arquitectura medallón raw&rarr;panel&rarr;gold.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Marts gold</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Listo para el modelado</h4>
+          <p style="font-size:0.85rem;"><code>mart_training_F</code> = conjunto entrenable limpio (sólo <code>F</code> con la variable dependiente y features de tiempo); <code>mart_series_summary</code> resume cada serie para filtrar las evaluables.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 límites declarados -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Límites declarados (auditoría adversarial)</h3>
+      <p>Una auditoría independiente re-derivó el modelo desde cero. Pasó fuerte &mdash;<strong>0 claves foráneas huérfanas, 48/48 alias re-clasifican a su canónico, las constraints rechazan toda fila inválida, contenido reproducible</strong>&mdash; y dejó estos límites <strong>sin barnizar</strong>:</p>
+      <div class="grid grid--2 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">Cobertura DV</span>
+          <h4 class="card-title" style="font-size:0.98rem;">2002&ndash;2003 parcial</h4>
+          <p style="font-size:0.84rem;">El piso DV llega a 2001-12, pero ~20 meses de 2002&ndash;2003 publican la Diversity Visa en HTML <strong>no-tabular</strong>, aún no parseado (trabajo futuro). La <em>advance notification</em> (mes futuro) también queda fuera de alcance.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Sin degradación silenciosa</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Gate de cobertura DV</h4>
+          <p style="font-size:0.84rem;">Esos huecos <strong>ya no son silenciosos</strong>: <code>test_dv_coverage_floor</code> (en el gate diario) exige pisos de filas, meses y meses completos, y aborta el commit si un scrape degrada la cobertura.</p>
+        </div>
+      </div>
+      <p class="mt-2" style="font-size:0.82rem;color:var(--gris);">
+        <strong>Nota.</strong> Esta sección describe la <em>ingeniería del almacén de datos</em>, no resultados predictivos. Proyecto personal del autor con fines descriptivos.
+      </p>
+    </div>
+  </div>
+</section>
+
 <!-- ═══════════════ TABLAS Y FIGURAS ═══════════════ -->
 <section class="section section--alt" id="tablas">
   <div class="section-inner">
@@ -2641,6 +2751,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
         <li><a href="#datos">Base de datos</a></li>
         <li><a href="#mlops">Prácticas MLOps</a></li>
         <li><a href="#estructura">Estructura del repo</a></li>
+        <li><a href="#modelo">Modelo de datos (BD)</a></li>
         <li><a href="#tablas">Tablas y figuras</a></li>
       </ul>
     </div>
