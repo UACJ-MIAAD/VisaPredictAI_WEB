@@ -2291,6 +2291,40 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
       <p style="text-align:center;font-size:0.82rem;color:var(--gris);margin-top:0.6rem;">Esquema estrella · hechos en dorado, dimensiones en azul, dimensiones conformes resaltadas, marts <em>gold</em> en verde, gobernanza en gris.</p>
     </div>
 
+    <!-- 00 por qué DuckDB -->
+    <div class="subsec reveal">
+      <h3><span class="num">00</span> Por qué DuckDB: criterios de selección</h3>
+      <p>La elección del motor responde al <strong>perfil de uso</strong>, no a la moda. El acceso a la base es <strong>analítico y de solo-lectura</strong> (escaneos, agregaciones y <em>joins</em> en estrella sobre ~27&nbsp;000 filas), se regenera de un CSV versionado y debe correr <strong>en cualquier máquina al clonar: sin servidor, sin nube y sin costo</strong>. Sobre ese perfil se fijaron seis criterios.</p>
+
+      <div class="grid grid--3 mt-2">
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Embebido</span><h4 class="card-title" style="font-size:0.98rem;">Cero servidor</h4><p style="font-size:0.85rem;">Corre dentro del proceso (Python/CLI), sin demonio que instalar ni puerto que abrir. Clonar y <code>make db</code> basta: reproducibilidad total dev&harr;CI.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Analítico</span><h4 class="card-title" style="font-size:0.98rem;">Columnar y vectorizado</h4><p style="font-size:0.85rem;">Motor OLAP orientado a columnas: los escaneos y agregaciones del panel son su caso de uso natural, no el transaccional fila&nbsp;a&nbsp;fila.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Local y gratis</span><h4 class="card-title" style="font-size:0.98rem;">Sin nube, sin cuenta</h4><p style="font-size:0.85rem;">Decisión NO-AWS explícita: nada de credenciales, facturación ni red. El entregable académico se reproduce sin barreras.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">SQL + contrato</span><h4 class="card-title" style="font-size:0.98rem;">PK/FK/CHECK nativas</h4><p style="font-size:0.85rem;">SQL estándar con constraints declarativas que rechazan en la carga cualquier fila inválida: el esquema <em>es</em> el contrato de datos.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Interoperable</span><h4 class="card-title" style="font-size:0.98rem;">Parquet y pandas</h4><p style="font-size:0.85rem;">Lee y escribe Parquet y DataFrames de forma nativa; el puente al modelado en Python es directo, sin un ETL intermedio.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Un archivo</span><h4 class="card-title" style="font-size:0.98rem;">Regenerable</h4><p style="font-size:0.85rem;">La base es un solo archivo <code>.duckdb</code> derivado (gitignored); si se borra o corrompe, <code>make db</code> lo reconstruye en segundos.</p></div>
+      </div>
+
+      <h4 style="margin:1.4rem 0 .5rem;color:var(--azul);font-size:.95rem;">Estado del arte: marco comparativo</h4>
+      <p>En el panorama 2024&ndash;2025, DuckDB es el referente de <strong>base de datos analítica embebida</strong> (a menudo descrito como &laquo;el SQLite del OLAP&raquo;). Frente a las alternativas consideradas para este componente:</p>
+
+      <table>
+        <thead><tr><th>Opción</th><th>Modelo</th><th>Servidor</th><th>Veredicto</th><th>Razón</th></tr></thead>
+        <tbody>
+          <tr><td><strong>DuckDB</strong></td><td>OLAP columnar, embebido</td><td>No</td><td><strong>Elegido</strong></td><td>Analítico, sin servidor, local y gratis, SQL con constraints, Parquet nativo</td></tr>
+          <tr><td>SQLite</td><td>OLTP por filas, embebido</td><td>No</td><td>Parcial</td><td>Embebido y gratis, pero orientado a filas: lento en escaneos y agregaciones; sin columnar ni Parquet nativo</td></tr>
+          <tr><td>PostgreSQL</td><td>OLTP por filas, cliente&ndash;servidor</td><td>Sí</td><td>No</td><td>Excelente para apps concurrentes, pero exige un servidor corriendo &mdash; rompe el &laquo;clonar y correr&raquo;</td></tr>
+          <tr><td>Parquet + pandas</td><td>Archivo + memoria</td><td>No</td><td>Parcial</td><td>Rápido y columnar, pero sin motor SQL ni integridad relacional (sin PK/FK/CHECK = sin contrato)</td></tr>
+          <tr><td>BigQuery / Snowflake / Redshift</td><td>OLAP en la nube</td><td>Gestionado</td><td>No</td><td>Potentes a gran escala, pero de pago, con cuenta y red &mdash; incompatibles con la reproducibilidad NO-AWS</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout mt-2">
+        <div class="callout-head">🦆 Síntesis de la decisión</div>
+        <p>Para un panel analítico, pequeño y de solo-lectura que debe reproducirse gratis y sin servidor, DuckDB combina lo <strong>embebido</strong> de SQLite con el <strong>rendimiento columnar</strong> de un almacén de datos y las <strong>garantías de integridad</strong> de SQL. El Parquet tipado que exporta deja abierta la puerta a escalar a la nube en el futuro sin reescribir el modelo.</p>
+      </div>
+    </div>
+
     <!-- 01 catálogo de tablas -->
     <div class="subsec reveal">
       <h3><span class="num">01</span> Catálogo de tablas, campos y llaves</h3>
