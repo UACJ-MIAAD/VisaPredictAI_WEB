@@ -1787,7 +1787,7 @@
     <!-- D.2 Pipeline -->
     <div class="subsec reveal">
       <h3><span class="num">02</span> Arquitectura del pipeline de datos</h3>
-      <p>De HTML crudo a panel auditado en seis etapas reproducibles, ejecutadas a diario por una GitHub&nbsp;Action.</p>
+      <p>De HTML crudo a panel auditado en seis etapas reproducibles, ejecutadas por una GitHub&nbsp;Action al publicarse un nuevo boletín.</p>
       <div class="arch reveal mt-2">
         <svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" aria-label="Pipeline de construcción de la base de datos">
           <defs>
@@ -1843,7 +1843,7 @@
           <line x1="789" y1="135" x2="803" y2="135" stroke="#003CA6" stroke-width="2" marker-end="url(#bdArrow)"/>
           <!-- footer note -->
           <rect x="120" y="238" width="720" height="30" rx="10" fill="#fff" stroke="#003CA6" stroke-width="1.3"/>
-          <text x="480" y="257" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#555559">Ejecutado a diario por GitHub Action · datos crudos generados sólo por script, nunca editados a mano.</text>
+          <text x="480" y="257" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#555559">Ejecutado al publicarse cada boletín · datos crudos generados sólo por script, nunca editados a mano.</text>
         </svg>
       </div>
     </div>
@@ -2062,7 +2062,7 @@
     <span class="section-tag">Ingeniería del pipeline</span>
     <h2 class="section-title">Prácticas MLOps</h2>
     <p class="section-sub">
-      La base de datos no es un script suelto: es un sistema de ingeniería <strong>reproducible, probado y auto-protegido</strong> que se ejecuta a diario. Esta sección documenta cada práctica MLOps en producción en el repositorio <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>.
+      La base de datos no es un script suelto: es un sistema de ingeniería <strong>reproducible, probado y auto-protegido</strong> que se ejecuta de forma automatizada. Esta sección documenta cada práctica MLOps en producción en el repositorio <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>.
     </p>
 
     <div class="metrics">
@@ -2120,7 +2120,7 @@
     <!-- M.3 CI/CD doble pipeline -->
     <div class="subsec reveal">
       <h3><span class="num">03</span> Integración continua: dos pipelines</h3>
-      <p>Un pipeline valida el <strong>código</strong> en cada cambio; otro refresca el <strong>dato</strong> a diario con un gate de calidad antes de publicar.</p>
+      <p>Un pipeline valida el <strong>código</strong> en cada cambio; otro refresca el <strong>dato</strong> cuando llega un boletín nuevo, con un gate de calidad antes de publicar.</p>
       <div class="arch reveal mt-2">
         <svg viewBox="0 0 960 320" xmlns="http://www.w3.org/2000/svg" aria-label="Los dos pipelines de integración continua">
           <defs>
@@ -2148,7 +2148,7 @@
           <!-- divider -->
           <line x1="20" y1="128" x2="940" y2="128" stroke="#e3e3e6" stroke-width="1"/>
           <!-- Lane 2: data cron -->
-          <text x="20" y="162" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">Refresco de datos · diario  (update_graphs.yml)</text>
+          <text x="20" y="162" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">Refresco de datos · por boletín  (freeze_and_rebuild.yml)</text>
           <rect x="20" y="174" width="120" height="56" rx="12" fill="url(#mlY)"/>
           <text x="80" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#001C52">cron</text>
           <text x="80" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#003CA6">00:00 UTC</text>
@@ -2578,7 +2578,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Sin degradación silenciosa</span>
           <h4 class="card-title" style="font-size:0.98rem;">Gate de cobertura DV</h4>
-          <p style="font-size:0.84rem;">Esos huecos <strong>ya no son silenciosos</strong>: <code>test_dv_coverage_floor</code> (en el gate diario) exige pisos de filas, meses y meses completos, y aborta el commit si un scrape degrada la cobertura.</p>
+          <p style="font-size:0.84rem;">Esos huecos <strong>ya no son silenciosos</strong>: <code>test_dv_coverage_floor</code> (en el gate de datos) exige pisos de filas, meses y meses completos, y aborta el commit si un scrape degrada la cobertura.</p>
         </div>
       </div>
       <p class="mt-2" style="font-size:0.82rem;color:var(--gris);">
