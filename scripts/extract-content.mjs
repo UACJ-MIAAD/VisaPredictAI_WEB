@@ -52,13 +52,20 @@ function stripDisclaimers(s) {
 
 // ── 3. Neutralize light-only inline styles → semantic tokens (dark-mode safe)
 function themeInline(s) {
-  return s
-    .replace(/background:#fff\b/g, "background:var(--color-surface)")
-    .replace(/border:1px solid #e3e3e6/g, "border:1px solid var(--color-border)")
-    .replace(/stroke="#e3e3e6"/g, 'stroke="var(--color-border)"')
-    .replace(/color:var\(--negro\)/g, "color:var(--color-ink)")
-    // diagram lane labels printed near-black → follow ink so they read in dark
-    .replace(/fill="#231F20"/g, 'fill="currentColor"');
+  return (
+    s
+      .replace(/background:#fff\b/g, "background:var(--color-surface)")
+      .replace(/border:1px solid #e3e3e6/g, "border:1px solid var(--color-border)")
+      .replace(/stroke="#e3e3e6"/g, 'stroke="var(--color-border)"')
+      .replace(/color:var\(--negro\)/g, "color:var(--color-ink)")
+      // diagram lane labels printed near-black → follow ink so they read in dark
+      .replace(/fill="#231F20"/g, 'fill="currentColor"')
+      // ── editorial de-boxing: strip decorative inline chrome so content.css
+      //    controls the look (chip tints, left-accent bars, card borders)
+      .replace(/background:rgba\([^)]*\)\s*;?/g, "")
+      .replace(/border-left:\s*\d+px\s+solid\s+[^;"']+;?/g, "")
+      .replace(/border-color:\s*#[0-9A-Fa-f]{3,6}\s*;?/g, "")
+  );
 }
 
 // ── 4. Extract each top-level <section id="…"> (sections do not nest)
