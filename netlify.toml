@@ -1,0 +1,7 @@
+# Static export — no Next.js runtime/plugin needed; publish the prerendered out/.
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "22"

@@ -1,100 +1,67 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/UACJ-003CA6?style=for-the-badge" alt="UACJ"/>
-  <img src="https://img.shields.io/badge/MIAAD-FFD600?style=for-the-badge&logoColor=003CA6&labelColor=003CA6" alt="MIAAD"/>
-  <img src="https://img.shields.io/badge/Status-En%20Desarrollo-FFD600?style=for-the-badge&labelColor=555559" alt="Status"/>
-  <img src="https://img.shields.io/badge/Licencia-MIT-003CA6?style=for-the-badge&labelColor=555559" alt="Licencia"/>
-</p>
+# VisaPredict AI — sitio del proyecto (MIAAD · UACJ)
 
-# 🌐 VisaPredict AI — Web
+Sitio editorial estilo *data journalism* del anteproyecto **VisaPredict AI**.
+Reconstruido (jun-2026) de un HTML estático único a **Next.js (App Router) +
+TypeScript + Tailwind + shadcn/ui**, con tema claro/oscuro, KaTeX, gráficas
+Recharts y una tabla histórica virtualizada (TanStack) sobre el panel real
+`y_{p,c,b,t}` del *U.S. Visa Bulletin*.
 
-**Sitio web oficial del proyecto VisaPredict AI**, desarrollado como parte del programa de Maestría en Inteligencia Artificial y Analítica de Datos (MIAAD) de la Universidad Autónoma de Ciudad Juárez (UACJ).
+## Stack
 
-> Este repositorio contiene exclusivamente el código fuente de la **página web del proyecto**. Para el código de los modelos de Machine Learning y análisis de datos, consulta el repositorio principal.
+- **Next.js 15** (App Router) · **TypeScript** · **Tailwind v4** · **shadcn/ui**
+- **next-themes** (claro/oscuro sin FOUC, vía variables CSS semánticas)
+- **KaTeX** (matemáticas) · **Recharts** (gráficas) · **TanStack Table + Virtual** (tabla de ~27 k filas)
+- **v0-sdk** como motor de diseño (concepto en `content/v0-design-notes.md`)
+- **Export estático** (`output: "export"`) → se publica como sitio estático
 
----
+## Desarrollo
 
-## 📋 Descripción
-
-VisaPredict AI es un **sistema predictivo aplicado** para las fechas de prioridad del *U.S. Visa Bulletin*, organizado como **panel multiserie** indexado por país o área de cargabilidad, categoría migratoria y tipo de tabla. Genera pronósticos mensuales a horizontes de 1, 3, 6 y 12 meses con **intervalos de predicción al 95 %**, instrumentado bajo la metodología **CRISP-DM** (Chapman et al. 2000). Esta página web sirve como la **interfaz pública descriptiva del proyecto**, proporcionando:
-
-- Presentación general del proyecto y sus objetivos
-- Resumen de los 4 capítulos del anteproyecto (Introducción, Marco teórico, Producto esperado y validación, Metodología CRISP-DM)
-- **Secciones de ingeniería de datos** (`#datos`, `#mlops`, `#estructura`, `#modelo`): la construcción del panel, las prácticas MLOps, la plantilla cookiecutter del repo, y el **almacén estrella en DuckDB** con su **diagrama ER** y el catálogo de las 11 tablas
-- Glosario operativo (42 términos) y bibliografía IEEE (64 referencias)
-- Documentación accesible para usuarios finales con disclaimer académico
-- Información sobre el equipo de investigación y la rúbrica del programa MIAAD
-
-> **Sincronizado con la versión v5.13** del `AnteproyectoVisaPredictAI.tex` entregada al Dr. Vicente García Jiménez el 13 de mayo de 2026.
-
-## 🏗️ Estructura del Proyecto
-
-```
-VisaPredictAI_WEB/
-├── CLAUDE.md                       Convenciones, don'ts y mapeo a LaTeX
-├── README.md                       Este archivo
-├── index.html                      SPA principal (todo el sitio, ~2990 líneas, 16 secciones)
-├── schema_er.svg                   Diagrama ER del almacén de datos (sección #modelo)
-├── index4.html                     Versión legacy (anterior a v3, conservada como referencia)
-├── LogoVisaPredictAI.png           Logo principal (header, footer, favicon)
-├── LogoVisaPredictAI_vfull.png     Logo extendido alta resolución
-├── JARSPROFILE.jpg                 Foto del tesista
-├── DrVicente.png                   Foto del director
-├── logouacj.png                    Logo institucional UACJ
-└── .firebaserc                     Config Firebase Hosting (alternativo)
+```bash
+npm install
+npm run dev        # http://localhost:3000  (corre el extractor de contenido antes)
 ```
 
-> *Sitio estático single-page sin build step y sin dependencias npm.*
+## Build y verificación
 
-## 🚀 Tecnologías
+```bash
+npm run build      # genera contenido + export estático en out/
+npm run typecheck  # tsc --noEmit
+npm run lint       # eslint .
+```
 
-| Componente | Tecnología |
-|:-----------|:-----------|
-| Frontend | HTML5 + CSS3 + Vanilla JS (sin framework) |
-| Tipografías | Google Fonts: Playfair Display, DM Sans, Space Mono |
-| Hosting primario | Netlify (auto-deploy desde `main`) |
-| Hosting alternativo | Firebase Hosting (proyecto `visapredict-ai`) |
-| Diseño | Responsive / Mobile-first |
+## Arquitectura de rutas
 
-## 🎨 Paleta de Colores
+El sitio se dividió de un monolito de scroll único a **rutas separadas por
+responsabilidad** (App Router). `lib/site-map.ts` es la **fuente única de
+verdad**: nav, scroll-spy, menú móvil, footer y composición de páginas derivan
+de ahí.
 
-Basada en el **Manual Básico de Identidad Gráfica Institucional** de la UACJ.
+| Ruta | Contenido | First Load JS |
+|---|---|---|
+| `/` | Hero · Resumen · navegador de partes · Autores · Contacto | ~106 kB |
+| `/anteproyecto` | Capítulos I–IV · Tablas · Reproducibilidad | ~106 kB |
+| `/ingenieria` | Panel · MLOps · Estructura · Modelo de datos | ~106 kB |
+| `/datos-historicos` | Boletines en vivo · explorador interactivo | ~119 kB |
+| `/recursos` | Glosario (42) · Referencias IEEE (64) | ~106 kB |
 
-| Color | Pantone | HEX | Uso |
-|:------|:--------|:----|:----|
-| 🔵 Azul | 293 C | `#003CA6` | Color primario institucional |
-| 🟡 Amarillo | Yellow 012 C | `#FFD600` | Color secundario (web e imprenta) |
-| ⚫ Gris | Cool Gray 11 C | `#555559` | Textos y elementos de apoyo |
-| ⬛ Negro | Process Black | `#231F20` | Textos y arreglos negativos |
+Recharts y TanStack Table se cargan con `next/dynamic` **solo** en
+`/datos-historicos`, y aun ahí de forma diferida al montar el explorador
+(`components/sections/panel-explorer.tsx`).
 
-## 🔗 Repositorios Relacionados
+## Contenido
 
-| Repositorio | Descripción |
-|:------------|:------------|
-| [VisaPredictAI_WEB](https://github.com/UACJ-MIAAD/VisaPredictAI_WEB) | 📍 Este repositorio — Página web del proyecto |
-| [VisaPredictAI](https://github.com/UACJ-MIAAD/VisaPredictAI) | Scraping, panel multiserie y **almacén estrella DuckDB** (datos + base de datos) |
+La prosa académica (capítulos, glosario de 42 términos, 64 referencias IEEE) se
+preserva **literal** desde `content/source.html` y se transforma en build con
+`scripts/extract-content.mjs` (quita avisos, renderiza KaTeX) hacia
+`lib/content/sections.generated.ts`. Las secciones nuevas (hero, boletines en
+vivo, *Datos históricos*) son componentes React.
 
-## 👥 Equipo
+Datos históricos: `public/data/visa_panel_long.csv` (panel real del repo
+`UACJ-MIAAD/VisaPredictAI`). El feed de boletines se consume en vivo desde
+`raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI`. No hay datos inventados:
+las combinaciones sin fecha muestran un estado «datos no encontrados».
 
-| Rol | Nombre | Institución |
-|:----|:-------|:------------|
-| Estudiante | Javier Rebull | UACJ — MIAAD |
-| Director de Tesis | Dr. Vicente García Jiménez | UACJ — Depto. de Ingeniería Eléctrica y Computación |
+## Despliegue
 
-## 🏛️ Contexto Académico
-
-Este proyecto se desarrolla en el marco del programa de **Maestría en Inteligencia Artificial y Analítica de Datos (MIAAD)** de la UACJ, dentro de las líneas de investigación:
-
-- Analítica Descriptiva y Predictiva
-- Analítica Prescriptiva y Soporte a la Decisión
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
-
----
-
-<p align="center">
-  <strong>Universidad Autónoma de Ciudad Juárez</strong><br/>
-  Maestría en Inteligencia Artificial y Analítica de Datos<br/>
-  Sitio v5.13 · Mayo 2026
-</p>
+- **Netlify** (`netlify.toml`): `command = npm run build`, `publish = out`.
+- Cualquier hosting estático sirve el directorio `out/`.
