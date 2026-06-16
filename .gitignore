@@ -78,3 +78,8 @@ node_modules/
 
 # Internal AI/context notes — not part of the published site
 CLAUDE.md
+.next/
+next-env.d.ts
+.v0/
+*.tsbuildinfo
+out/
