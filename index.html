@@ -2031,25 +2031,30 @@
       </div>
     </div>
 
-    <!-- M.2 Pruebas en 3 niveles -->
+    <!-- M.2 Pruebas en 4 niveles -->
     <div class="subsec reveal">
-      <h3><span class="num">02</span> Pruebas automatizadas en tres niveles</h3>
-      <p>28 pruebas bajo <em>pytest</em> con un <strong>piso de cobertura ejecutable</strong> (`fail_under=65`): la cobertura no puede erosionarse sin romper el CI.</p>
-      <div class="grid grid--3 mt-2">
+      <h3><span class="num">02</span> Pruebas automatizadas en cuatro niveles</h3>
+      <p>65 pruebas bajo <em>pytest</em> con un <strong>piso de cobertura ejecutable</strong> (`fail_under=65`): la cobertura no puede erosionarse sin romper el CI.</p>
+      <div class="grid grid--4 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 1 · 12 casos</span>
           <h4 class="card-title" style="font-size:0.98rem;">Funciones puras</h4>
           <p style="font-size:0.85rem;">Clasificadores de estado (C/F/U/UNK) y de categoría (20&nbsp;años de deriva de etiquetas, desambiguación de subcadenas). Sin I/O, deterministas.</p>
         </div>
         <div class="card">
-          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 2 · 6 casos</span>
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 2 · 10 casos</span>
           <h4 class="card-title" style="font-size:0.98rem;">Extracción offline</h4>
           <p style="font-size:0.85rem;">El parseo real corre sobre <strong>4 fixtures HTML</strong> guardados (eras de formato 2002/2007/2020/2022) <strong>sin red</strong>: rápido, determinista, cubre la lógica donde viven los bugs.</p>
         </div>
         <div class="card">
-          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 3 · 10 invariantes</span>
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 3 · 12 invariantes</span>
           <h4 class="card-title" style="font-size:0.98rem;">Contrato del panel</h4>
           <p style="font-size:0.85rem;">Invariantes duras del producto: clave única, 0 días negativos, dominio de estado, fecha de prioridad sólo en `F`, <strong>completitud de meses</strong> (un mes caído por la red falla el gate y dispara la alerta). Cualquier regresión bloquea el commit.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Nivel 4 · 31 casos</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Contrato del almacén</h4>
+          <p style="font-size:0.85rem;">El esquema estrella DuckDB se carga bajo constraints <strong>PK/FK/CHECK</strong> vivos: verifican que el panel se reconstruye sin pérdida (<code>v_panel_long</code>), que cada hecho respeta el contrato y que las vistas y marts cuadran.</p>
         </div>
       </div>
     </div>
@@ -2078,7 +2083,7 @@
           <text x="495" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">tipos</text>
           <rect x="610" y="44" width="330" height="56" rx="12" fill="url(#mlBlue)" stroke="#FFD600" stroke-width="2.5"/>
           <text x="775" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">pytest + cobertura</text>
-          <text x="775" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">28 pruebas · gate &ge; 65 %</text>
+          <text x="775" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">65 pruebas · gate &ge; 65 %</text>
           <line x1="172" y1="72" x2="208" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
           <line x1="382" y1="72" x2="418" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
           <line x1="572" y1="72" x2="608" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
@@ -2091,7 +2096,7 @@
           <text x="80" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#003CA6">00:00 UTC</text>
           <rect x="170" y="174" width="120" height="56" rx="12" fill="url(#mlBlue)"/>
           <text x="230" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">scrape</text>
-          <text x="230" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">2 scrapers</text>
+          <text x="230" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">1 fetch &middot; 3 secc.</text>
           <rect x="320" y="174" width="120" height="56" rx="12" fill="url(#mlBlue)"/>
           <text x="380" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">build panel</text>
           <rect x="470" y="174" width="150" height="56" rx="12" fill="url(#mlBlue)" stroke="#FFD600" stroke-width="2.5"/>
@@ -2116,7 +2121,7 @@
       <h3><span class="num">04</span> Robustez ante el mundo real</h3>
       <p>La fuente es HTML vivo de 20&nbsp;años con formatos cambiantes y fallos transitorios. El pipeline está blindado contra cada modo de fallo observado.</p>
       <div class="grid grid--3 mt-2">
-        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Red</span><h4 class="card-title" style="font-size:0.95rem;">Retry + backoff</h4><p style="font-size:0.84rem;">Un fallo HTTP transitorio reintenta con espera creciente; ya no se pierde un mes en silencio (antes un `except: pass` los tragaba).</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Red</span><h4 class="card-title" style="font-size:0.95rem;">Retry + backoff</h4><p style="font-size:0.84rem;">Un fallo HTTP transitorio (5xx, timeout) reintenta con espera creciente; un 4xx permanente ya no se reintenta. Ya no se pierde un mes en silencio (antes un `except: pass` los tragaba).</p></div>
         <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Reproducibilidad</span><h4 class="card-title" style="font-size:0.95rem;">Orden determinista</h4><p style="font-size:0.84rem;">Las filas se ordenan por clave completa, no por un sort inestable: un mes caído ya no reordena en cascada el resto del archivo.</p></div>
         <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Integridad</span><h4 class="card-title" style="font-size:0.95rem;">Abort en fallo masivo</h4><p style="font-size:0.84rem;">Si fallan &gt;10 boletines (rediseño/caída de la fuente), el scraper aborta sin escribir: nunca se publica un panel degradado.</p></div>
         <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Observabilidad</span><h4 class="card-title" style="font-size:0.95rem;">Alertas en fallo</h4><p style="font-size:0.84rem;">Un gate rojo o un crash abren (o comentan) un issue de seguimiento: el fallo avisa, no muere callado en la pestaña de Actions.</p></div>
@@ -2179,7 +2184,7 @@
 ├── tests/            <span style="color:var(--gris);"># pytest + fixtures HTML offline</span>
 ├── config.py         <span style="color:var(--gris);"># rutas y constantes (RAW_DIR, PROCESSED_DIR…)</span>
 ├── visa_common.py    <span style="color:var(--gris);"># helpers compartidos de scraping</span>
-├── scrape_*.py       <span style="color:var(--gris);"># scrapers (empleo + familiar)</span>
+├── scrape_*.py       <span style="color:var(--gris);"># empleo · familiar · DV + scrape_all (1 fetch, 3 secc.)</span>
 ├── build_panel.py    <span style="color:var(--gris);"># consolida raw → processed</span>
 ├── pyproject.toml    <span style="color:var(--gris);"># deps + tooling + paquete (fuente única)</span>
 ├── Makefile          <span style="color:var(--gris);"># operación de un comando</span>
