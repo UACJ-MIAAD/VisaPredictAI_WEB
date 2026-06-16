@@ -1152,6 +1152,7 @@
       <li><a href="#capiii">Cap. III</a></li>
       <li><a href="#capiv">Cap. IV</a></li>
       <li><a href="#datos">Base de datos</a></li>
+      <li><a href="#boletines">Boletines</a></li>
       <li><a href="#mlops">MLOps</a></li>
       <li><a href="#estructura">Estructura</a></li>
       <li><a href="#modelo">Modelo BD</a></li>
@@ -1995,6 +1996,63 @@
         <strong>Nota.</strong> Las cifras de esta sección describen el <em>artefacto de datos construido</em> (el panel), no resultados predictivos. Este sitio es un proyecto personal del autor con fines descriptivos y no sustituye la asesoría legal migratoria individual.
       </p>
     </div>
+  </div>
+</section>
+
+<!-- ═══════════════ BOLETINES (feed en vivo) ═══════════════ -->
+<style>
+  .bln-news{background:linear-gradient(135deg,var(--azul),#0a2f7a);color:#fff;border-radius:var(--radius);padding:1.6rem 1.8rem;box-shadow:var(--shadow);margin:1.2rem 0 1.6rem}
+  .bln-news h3{margin:.3rem 0 .4rem;font-size:1.5rem;color:#fff}
+  .bln-badge{display:inline-block;background:var(--amarillo);color:var(--negro);font-weight:700;font-size:.7rem;letter-spacing:.06em;padding:.25rem .6rem;border-radius:999px;text-transform:uppercase}
+  .bln-summary{font-size:1.02rem;opacity:.96;margin:.3rem 0 0}
+  .bln-meta{font-size:.78rem;opacity:.8;margin-top:.6rem;font-family:'Space Mono',monospace}
+  .bln-controls{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+  .bln-field{display:flex;flex-direction:column;font-size:.76rem;color:var(--gris);gap:.3rem;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+  .bln-field select,.bln-field input{font-family:inherit;font-size:.92rem;text-transform:none;letter-spacing:0;padding:.5rem .7rem;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);min-width:240px}
+  .bln-tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:#fff;max-height:560px}
+  .bln-table{width:100%;border-collapse:collapse;font-size:.88rem}
+  .bln-table th{text-align:left;background:var(--azul);color:#fff;padding:.6rem .8rem;font-weight:600;white-space:nowrap;position:sticky;top:0}
+  .bln-table td{padding:.5rem .8rem;border-top:1px solid var(--border);white-space:nowrap}
+  .bln-table tbody tr:hover{background:rgba(0,60,166,.04)}
+  .bln-st{font-weight:700;font-size:.74rem;padding:.12rem .45rem;border-radius:6px}
+  .bln-st-F{background:rgba(29,122,29,.13);color:#1d7a1d}
+  .bln-st-C{background:rgba(0,60,166,.1);color:var(--azul)}
+  .bln-st-U,.bln-st-UNK{background:rgba(120,120,120,.14);color:var(--gris)}
+  .bln-up{color:#1d7a1d;font-weight:700}
+  .bln-down{color:#c0392b;font-weight:700}
+  .bln-flat{color:var(--gris)}
+  .bln-foot{font-size:.78rem;color:var(--gris);padding:.6rem .2rem 0;margin:0}
+</style>
+<section class="section" id="boletines">
+  <div class="section-inner">
+    <span class="section-tag">Datos en vivo · U.S. Visa Bulletin</span>
+    <h2 class="section-title">Boletines</h2>
+    <p class="section-sub">
+      Cada mes el Departamento de Estado de EE.&nbsp;UU. publica un nuevo <em>Visa Bulletin</em>. En cuanto aparece, el pipeline lo congela, reconstruye el panel y actualiza este feed automáticamente. Las fechas son <strong>datos oficiales publicados</strong> &mdash;no predicciones del modelo&mdash; con el movimiento respecto al mes anterior.
+    </p>
+
+    <div class="bln-news reveal" id="blnNews">
+      <p class="bln-summary">Cargando el último boletín&hellip;</p>
+    </div>
+
+    <div class="bln-controls reveal">
+      <label class="bln-field">Mes del boletín
+        <select id="blnMonth" aria-label="Mes del boletín"></select>
+      </label>
+      <label class="bln-field">Filtrar
+        <input id="blnFilter" type="text" placeholder="país, categoría&hellip; (ej. México, EB2)" aria-label="Filtrar">
+      </label>
+    </div>
+
+    <div class="bln-tablewrap reveal">
+      <table class="bln-table">
+        <thead><tr>
+          <th>País / área</th><th>Bloque</th><th>Categoría</th><th>Tabla</th><th>Estado</th><th>Fecha</th><th>Movimiento</th>
+        </tr></thead>
+        <tbody id="blnBody"></tbody>
+      </table>
+    </div>
+    <p class="bln-foot" id="blnFoot"></p>
   </div>
 </section>
 
@@ -3018,6 +3076,69 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
       });
     });
   });
+})();
+
+/* ── Boletines: feed en vivo desde el repositorio de datos ── */
+(function () {
+  const FEED = 'https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main/data/processed/bulletins.json';
+  const sec = document.getElementById('boletines');
+  if (!sec) return;
+  const COUNTRY = { mexico: 'México', india: 'India', china: 'China', philippines: 'Filipinas', all_chargeability: 'All Charg.' };
+  const BLOCK = { employment: 'Empleo', family: 'Familiar' };
+  const MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  let DATA = null, loaded = false;
+
+  const country = c => COUNTRY[c] || c;
+  const block = b => BLOCK[b] || b;
+  const mLabel = m => { const [y, mo] = m.split('-'); return MES[+mo - 1] + ' ' + y; };
+  const mov = d => {
+    if (d === null || d === undefined) return '<span class="bln-flat">&mdash;</span>';
+    if (d > 0) return '<span class="bln-up">&#9650; +' + d + ' d</span>';
+    if (d < 0) return '<span class="bln-down">&#9660; ' + d + ' d</span>';
+    return '<span class="bln-flat">= 0</span>';
+  };
+
+  function renderNews() {
+    const m = DATA.latest_month, rows = DATA.months[m] || [];
+    const adv = rows.filter(r => r.delta_days > 0).length;
+    const ret = rows.filter(r => r.delta_days < 0).length;
+    document.getElementById('blnNews').innerHTML =
+      '<span class="bln-badge">Nuevo boletín</span>' +
+      '<h3>Boletín de ' + mLabel(m) + '</h3>' +
+      '<p class="bln-summary"><strong>' + adv + '</strong> categorías avanzaron &middot; <strong>' + ret + '</strong> retrocedieron respecto al mes anterior.</p>' +
+      '<p class="bln-meta">' + rows.length + ' series &middot; ventana ' + DATA.available_months.length + ' meses &middot; actualizado ' + DATA.generated_utc + '</p>';
+  }
+
+  function renderTable() {
+    const m = document.getElementById('blnMonth').value;
+    const q = document.getElementById('blnFilter').value.trim().toLowerCase();
+    const rows = (DATA.months[m] || []).filter(r =>
+      !q || (country(r.country) + ' ' + block(r.block) + ' ' + r.category + ' ' + r.table).toLowerCase().includes(q));
+    document.getElementById('blnBody').innerHTML = rows.map(r =>
+      '<tr><td>' + country(r.country) + '</td><td>' + block(r.block) + '</td><td>' + r.category + '</td><td>' + r.table + '</td>' +
+      '<td><span class="bln-st bln-st-' + r.status + '">' + r.status + '</span></td>' +
+      '<td>' + (r.raw_value || '&mdash;') + '</td><td>' + mov(r.delta_days) + '</td></tr>').join('');
+    document.getElementById('blnFoot').textContent = rows.length + ' series en ' + mLabel(m) + (q ? ' (filtradas)' : '');
+  }
+
+  function boot() {
+    const sel = document.getElementById('blnMonth');
+    sel.innerHTML = DATA.available_months.slice().reverse().map(m => '<option value="' + m + '">' + mLabel(m) + '</option>').join('');
+    sel.value = DATA.latest_month;
+    sel.addEventListener('change', renderTable);
+    document.getElementById('blnFilter').addEventListener('input', renderTable);
+    renderNews(); renderTable();
+  }
+
+  function load() {
+    if (loaded) return; loaded = true;
+    fetch(FEED).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => { DATA = d; boot(); })
+      .catch(() => { document.getElementById('blnNews').innerHTML = '<p class="bln-summary">No se pudo cargar el feed de boletines en este momento. Intenta recargar la página.</p>'; });
+  }
+
+  // Lazy-load: traer el feed solo cuando la sección entra al viewport.
+  const io = new IntersectionObserver((es) => { es.forEach(e => { if (e.isIntersecting) { load(); io.disconnect(); } }); }, { rootMargin: '200px' });
+  io.observe(sec);
 })();
 </script>
 
