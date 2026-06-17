@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Playfair_Display, DM_Sans, Space_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SITE_URL } from "@/lib/seo";
@@ -111,6 +112,12 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
+        {/* Privacy-friendly, cookieless analytics. Tracks SPA route changes. */}
+        <Script
+          defer
+          data-domain="visapredictai.com"
+          src="https://plausible.io/js/script.js"
+        />
       </body>
     </html>
   );
