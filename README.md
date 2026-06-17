@@ -139,6 +139,9 @@ npm run lint       # eslint .
 
 ## Analítica — eventos personalizados de Plausible
 
+**Dashboard de estadísticas:** https://plausible.io/visapredictai.com
+(panel cookieless de visitas, fuentes, páginas y eventos).
+
 `lib/analytics.ts` → `track()`. Eventos: `Language Switch`, `Theme Toggle`,
 `Explore Section`, `Explore Historical CTA`, `CSV Export`, `Explorer Filter`.
 Para verlos: registrarlos como **Goals → Custom event** en el panel de Plausible.
