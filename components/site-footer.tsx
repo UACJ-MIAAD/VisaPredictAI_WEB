@@ -1,15 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ROUTES } from "@/lib/site-map";
+import { ROUTES, rLabel, sLabel } from "@/lib/site-map";
+import { useLang } from "@/components/lang-provider";
+import { tr } from "@/lib/i18n";
 
 const EXTERNAL = [
-  { label: "Visa Bulletin oficial", href: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html" },
+  { label: "Visa Bulletin", href: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html" },
   { label: "USCIS", href: "https://www.uscis.gov/" },
   { label: "UACJ", href: "https://www.uacj.mx" },
   { label: "GitHub · VisaPredictAI", href: "https://github.com/UACJ-MIAAD/VisaPredictAI" },
 ];
 
 export function SiteFooter() {
+  const { lang } = useLang();
   return (
     <footer className="footer">
       <div className="footer-inner">
@@ -20,20 +25,16 @@ export function SiteFooter() {
               VisaPredict<span>AI</span>
             </b>
           </div>
-          <p>
-            Sitio del proyecto VisaPredict AI · Anteproyecto de la Maestría en
-            Inteligencia Artificial y Analítica de Datos (MIAAD) de la
-            Universidad Autónoma de Ciudad Juárez.
-          </p>
+          <p>{tr(lang, "footerBlurb")}</p>
         </div>
 
         {ROUTES.filter((r) => r.path !== "/").map((r) => (
           <div key={r.path}>
-            <h4>{r.label}</h4>
+            <h4>{rLabel(r, lang)}</h4>
             <ul>
               {r.sections.map((s) => (
                 <li key={s.id}>
-                  <Link href={`${r.path}#${s.id}`}>{s.label}</Link>
+                  <Link href={`${r.path}#${s.id}`}>{sLabel(s, lang)}</Link>
                 </li>
               ))}
             </ul>
@@ -41,7 +42,7 @@ export function SiteFooter() {
         ))}
 
         <div>
-          <h4>Externos</h4>
+          <h4>{tr(lang, "footerExternal")}</h4>
           <ul>
             {EXTERNAL.map((e) => (
               <li key={e.href}>
