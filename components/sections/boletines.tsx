@@ -127,7 +127,7 @@ export function Boletines() {
           </div>
         ) : (
           <>
-            <div className="mb-5 border-t-2 border-[var(--color-ink)] pt-4">
+            <div className="mb-5 border-t-2 border-[var(--color-rule)] pt-4">
               {month === data.latest_month && (
                 <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-accent)]">
                   {tr(lang, "blnBadge")}
@@ -171,7 +171,7 @@ export function Boletines() {
               </label>
             </div>
 
-            <div className="overflow-x-auto border-t-2 border-[var(--color-ink)]">
+            <div className="overflow-x-auto border-t-2 border-[var(--color-rule)]">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left">
