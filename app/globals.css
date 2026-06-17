@@ -18,23 +18,29 @@
   --color-accent-strong: #003ca6; /* full UACJ blue for emphasis */
   --color-accent-2: #9a6a12; /* AA-compliant ochre/gold */
   --color-border: #e3e7ee;
+  --color-rule: #14181f; /* strong editorial module rule (= ink in light) */
   --color-danger: #b32424;
   --color-success: #1f7a4d;
   --radius: 0.5rem;
 }
 
+/* ── Dark theme — inspired by award-winning dark UIs (Linear, GitHub Dark
+   Dimmed, Vercel Geist): deep cool charcoal (never pure black), clear
+   elevation steps, off-white text (not #fff), a soft blue that doesn't
+   vibrate, low-contrast borders, and a soft module rule (not glaring white). */
 .dark {
-  --color-bg: #14161c;
-  --color-surface: #1c1f27;
-  --color-surface-soft: #21242d;
-  --color-ink: #e9ebf0;
-  --color-muted: #a4adbb;
-  --color-accent: #6aa3ee; /* brighter blue for dark */
-  --color-accent-strong: #8db8f2;
-  --color-accent-2: #e0b258;
-  --color-border: #313742;
-  --color-danger: #ef8d8d;
-  --color-success: #79c79b;
+  --color-bg: #0e1117; /* deep cool charcoal, slight blue undertone */
+  --color-surface: #161b22; /* elevation +1 */
+  --color-surface-soft: #1b212b; /* elevation +2 (alt sections, insets) */
+  --color-ink: #e7ebf1; /* comfortable off-white, not pure white */
+  --color-muted: #98a2b3; /* cool gray, AA on bg */
+  --color-accent: #74b2ff; /* soft confident blue, AA, doesn't vibrate */
+  --color-accent-strong: #9ccbff;
+  --color-accent-2: #e4b45e; /* warm gold pop */
+  --color-border: #262d39; /* subtle, just-visible hairline */
+  --color-rule: #475160; /* editorial rule: visible, never glaring white */
+  --color-danger: #f0867f;
+  --color-success: #5ed299;
 }
 
 /* shadcn/ui token aliases mapped onto the editorial palette */

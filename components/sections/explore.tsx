@@ -21,7 +21,7 @@ export function Explore() {
             <Link
               key={r.path}
               href={localePath(r.path, lang)}
-              className="group border-t-2 border-[var(--color-ink)] pt-3"
+              className="group border-t-2 border-[var(--color-rule)] pt-3"
             >
               <span className="font-mono text-xs text-[var(--color-accent)]">
                 {String(i + 1).padStart(2, "0")}
