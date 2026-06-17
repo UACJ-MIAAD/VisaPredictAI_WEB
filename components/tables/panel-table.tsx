@@ -11,10 +11,9 @@ import {
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpDown, Download, SlidersHorizontal } from "lucide-react";
-import {
-  type VisaPanelRow,
-  countryLabel,
-} from "@/lib/data/visa-panel";
+import { type VisaPanelRow, countryLabel } from "@/lib/data/visa-panel";
+import { tr } from "@/lib/i18n";
+import type { Lang } from "@/lib/site-map";
 
 function StatusChip({ s }: { s: string }) {
   const color =
@@ -32,25 +31,17 @@ function StatusChip({ s }: { s: string }) {
   );
 }
 
-const columns: ColumnDef<VisaPanelRow>[] = [
-  { accessorKey: "country", header: "País / área", cell: (c) => countryLabel(c.getValue<string>()) },
-  { accessorKey: "block", header: "Bloque" },
-  { accessorKey: "category", header: "Categoría" },
-  { accessorKey: "table", header: "Tabla" },
-  { accessorKey: "bulletinMonth", header: "Mes" },
-  {
-    accessorKey: "status",
-    header: "Estado",
-    cell: (c) => <StatusChip s={c.getValue<string>()} />,
-  },
-  {
-    accessorKey: "priorityDate",
-    header: "Fecha prioridad",
-    cell: (c) => c.getValue<string | null>() ?? "—",
-  },
+const makeColumns = (lang: Lang): ColumnDef<VisaPanelRow>[] => [
+  { accessorKey: "country", header: tr(lang, "thPais"), cell: (c) => countryLabel(c.getValue<string>()) },
+  { accessorKey: "block", header: tr(lang, "thBloque") },
+  { accessorKey: "category", header: tr(lang, "thCategoria") },
+  { accessorKey: "table", header: tr(lang, "thTabla") },
+  { accessorKey: "bulletinMonth", header: tr(lang, "thMes") },
+  { accessorKey: "status", header: tr(lang, "thEstado"), cell: (c) => <StatusChip s={c.getValue<string>()} /> },
+  { accessorKey: "priorityDate", header: tr(lang, "thFecha"), cell: (c) => c.getValue<string | null>() ?? "—" },
   {
     accessorKey: "daysSinceBase",
-    header: "Días-base",
+    header: tr(lang, "thDias"),
     cell: (c) => {
       const v = c.getValue<number | null>();
       return <span className="tabular-nums">{v ?? "—"}</span>;
@@ -58,7 +49,7 @@ const columns: ColumnDef<VisaPanelRow>[] = [
   },
   {
     accessorKey: "movement",
-    header: "Movimiento",
+    header: tr(lang, "thMov"),
     cell: (c) => {
       const v = c.getValue<number | null>();
       if (v == null) return <span className="text-muted-foreground">—</span>;
@@ -72,11 +63,12 @@ const columns: ColumnDef<VisaPanelRow>[] = [
   },
 ];
 
-const COL_LABEL: Record<string, string> = {
-  country: "País", block: "Bloque", category: "Categoría", table: "Tabla",
-  bulletinMonth: "Mes", status: "Estado", priorityDate: "Fecha prioridad",
-  daysSinceBase: "Días-base", movement: "Movimiento",
-};
+const colLabel = (lang: Lang, id: string) =>
+  ({
+    country: tr(lang, "thPais"), block: tr(lang, "thBloque"), category: tr(lang, "thCategoria"),
+    table: tr(lang, "thTabla"), bulletinMonth: tr(lang, "thMes"), status: tr(lang, "thEstado"),
+    priorityDate: tr(lang, "thFecha"), daysSinceBase: tr(lang, "thDias"), movement: tr(lang, "thMov"),
+  })[id] ?? id;
 
 function exportCsv(rows: VisaPanelRow[]) {
   const head = "country,block,category,table,bulletin_month,status,priority_date,days_since_base,movement";
@@ -95,8 +87,9 @@ function exportCsv(rows: VisaPanelRow[]) {
   URL.revokeObjectURL(url);
 }
 
-export function PanelTable({ rows }: { rows: VisaPanelRow[] }) {
+export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const columns = React.useMemo(() => makeColumns(lang), [lang]);
 
   const table = useReactTable({
     data: rows,
@@ -125,12 +118,12 @@ export function PanelTable({ rows }: { rows: VisaPanelRow[] }) {
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground tabular-nums">
-          {tableRows.length.toLocaleString("es-MX")} filas
+          {tableRows.length.toLocaleString(lang === "en" ? "en-US" : "es-MX")} {tr(lang, "rows")}
         </p>
         <div className="flex items-center gap-2">
           <details className="relative">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-secondary">
-              <SlidersHorizontal className="h-4 w-4" aria-hidden /> Columnas
+              <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "columns")}
             </summary>
             <div className="absolute right-0 z-10 mt-1 w-48 rounded-lg border border-border bg-card p-2 shadow-lg">
               {table.getAllLeafColumns().map((col) => (
@@ -140,7 +133,7 @@ export function PanelTable({ rows }: { rows: VisaPanelRow[] }) {
                     checked={col.getIsVisible()}
                     onChange={col.getToggleVisibilityHandler()}
                   />
-                  {COL_LABEL[col.id] ?? col.id}
+                  {colLabel(lang, col.id)}
                 </label>
               ))}
             </div>

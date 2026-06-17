@@ -1,0 +1,264 @@
+<div class="section-inner">
+    <span class="section-tag">Data engineering · dimensional modeling</span>
+    <h2 class="section-title">Star-schema data warehouse</h2>
+    <p class="section-sub">
+      The flat panel is promoted to a <strong>normalized dimensional warehouse</strong> in
+      DuckDB: central facts by grain, conformed dimensions around them, and the
+      contract invariants raised to <strong>declarative constraints</strong>
+      (PK/FK/CHECK) that reject any invalid row at load time. It covers every
+      category of the <em>Visa Bulletin</em> &mdash;family, employment and Diversity Visa&mdash;
+      with lineage, governance and <em>marts</em> ready for modeling. The definition
+      lives in `schema.sql`; the model is rebuilt with `make db`.
+    </p>
+
+    <div class="metrics">
+      <div class="metrics-inner">
+        <div class="metric reveal"><div class="metric-num">7</div><div class="metric-lbl">Dimensions</div></div>
+        <div class="metric reveal reveal--d1"><div class="metric-num">2</div><div class="metric-lbl">Facts · dates + DV rank</div></div>
+        <div class="metric reveal reveal--d2"><div class="metric-num">PK·FK·CHECK</div><div class="metric-lbl">The schema is the contract</div></div>
+        <div class="metric reveal reveal--d3"><div class="metric-num">65</div><div class="metric-lbl">Automated tests</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">DuckDB</div><div class="metric-lbl">Embedded · SQL · Parquet</div></div>
+      </div>
+    </div>
+
+    <!-- ER diagram -->
+    <div class="reveal mt-2">
+      <img src="schema_er.svg" alt="Entity-relationship diagram of the star schema: two facts at the center, seven dimensions, conformed dimensions highlighted, lineage bridge, governance and marts" style="width:100%;height:auto;border:1px solid #e3e3e6;border-radius:14px;background:#fff;padding:10px;box-sizing:border-box;"/>
+      <p style="text-align:center;font-size:0.82rem;color:var(--gris);margin-top:0.6rem;">Star schema · facts in gold, dimensions in blue, conformed dimensions highlighted, <em>gold</em> marts in green, governance in gray.</p>
+    </div>
+
+    <!-- 00 why DuckDB -->
+    <div class="subsec reveal">
+      <h3><span class="num">00</span> Why DuckDB: selection criteria</h3>
+      <p>The engine choice follows the <strong>usage profile</strong>, not the trend. Access to the database is <strong>analytical and read-only</strong> (scans, aggregations and star <em>joins</em> over ~27&nbsp;000 rows), it is regenerated from a versioned CSV, and it must run <strong>on any machine right after cloning: no server, no cloud and no cost</strong>. Against that profile, six criteria were set.</p>
+
+      <div class="grid grid--3 mt-2">
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Embedded</span><h4 class="card-title" style="font-size:0.98rem;">Zero server</h4><p style="font-size:0.85rem;">It runs inside the process (Python/CLI), with no daemon to install nor port to open. Cloning and <code>make db</code> is enough: full dev&harr;CI reproducibility.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Analytical</span><h4 class="card-title" style="font-size:0.98rem;">Columnar and vectorized</h4><p style="font-size:0.85rem;">A column-oriented OLAP engine: the panel's scans and aggregations are its natural use case, not the row&nbsp;by&nbsp;row transactional one.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Local and free</span><h4 class="card-title" style="font-size:0.98rem;">No cloud, no account</h4><p style="font-size:0.85rem;">An explicit NO-AWS decision: no credentials, billing or network. The academic deliverable reproduces without barriers.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">SQL + contract</span><h4 class="card-title" style="font-size:0.98rem;">Native PK/FK/CHECK</h4><p style="font-size:0.85rem;">Standard SQL with declarative constraints that reject any invalid row at load time: the schema <em>is</em> the data contract.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Interoperable</span><h4 class="card-title" style="font-size:0.98rem;">Parquet and pandas</h4><p style="font-size:0.85rem;">It reads and writes Parquet and DataFrames natively; the bridge to modeling in Python is direct, with no intermediate ETL.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">One file</span><h4 class="card-title" style="font-size:0.98rem;">Regenerable</h4><p style="font-size:0.85rem;">The database is a single derived <code>.duckdb</code> file (gitignored); if it is deleted or corrupted, <code>make db</code> rebuilds it in seconds.</p></div>
+      </div>
+
+      <h4 style="margin:1.4rem 0 .5rem;color:var(--azul);font-size:.95rem;">State of the art: comparison framework</h4>
+      <p>In the 2024&ndash;2025 landscape, DuckDB is the reference for an <strong>embedded analytical database</strong> (often described as &laquo;the SQLite of OLAP&raquo;). Compared with the alternatives considered for this component:</p>
+
+      <table>
+        <thead><tr><th>Option</th><th>Model</th><th>Server</th><th>Verdict</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td><strong>DuckDB</strong></td><td>Columnar OLAP, embedded</td><td>No</td><td><strong>Chosen</strong></td><td>Analytical, serverless, local and free, SQL with constraints, native Parquet</td></tr>
+          <tr><td>SQLite</td><td>Row-based OLTP, embedded</td><td>No</td><td>Partial</td><td>Embedded and free, but row-oriented: slow on scans and aggregations; no columnar nor native Parquet</td></tr>
+          <tr><td>PostgreSQL</td><td>Row-based OLTP, client&ndash;server</td><td>Yes</td><td>No</td><td>Excellent for concurrent apps, but it requires a running server &mdash; it breaks the &laquo;clone and run&raquo;</td></tr>
+          <tr><td>Parquet + pandas</td><td>File + memory</td><td>No</td><td>Partial</td><td>Fast and columnar, but with no SQL engine nor relational integrity (no PK/FK/CHECK = no contract)</td></tr>
+          <tr><td>BigQuery / Snowflake / Redshift</td><td>Cloud OLAP</td><td>Managed</td><td>No</td><td>Powerful at large scale, but paid, with account and network &mdash; incompatible with NO-AWS reproducibility</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout mt-2">
+        <div class="callout-head">🦆 Decision synthesis</div>
+        <p>For an analytical, small and read-only panel that must reproduce for free and without a server, DuckDB combines the <strong>embedded</strong> nature of SQLite with the <strong>columnar performance</strong> of a data warehouse and the <strong>integrity guarantees</strong> of SQL. The typed Parquet it exports leaves the door open to scaling to the cloud in the future without rewriting the model.</p>
+      </div>
+    </div>
+
+    <!-- 01 table catalog -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> Catalog of tables, fields and keys</h3>
+      <p>The warehouse has <strong>11 tables</strong> &mdash; <strong>7 dimensions</strong>, <strong>2 facts</strong> and <strong>2 governance</strong> &mdash; plus <strong>6 views/marts</strong>. Each column carries its key: <strong style="color:var(--azul);">PK</strong> primary · <em style="color:#1955BF;">FK</em> foreign · <span style="color:#C99A00;">UK</span> unique. Types in parentheses.</p>
+
+      <h4 style="margin:1rem 0 .5rem;color:var(--azul);font-size:.95rem;">Dimensions · 7</h4>
+      <div class="grid grid--3">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimension</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_area</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>area_id</code> <strong style="color:var(--azul);">PK</strong> <span style="color:#999;">(int)</span></li>
+            <li><code>slug</code> <span style="color:#C99A00;">UK</span> · <code>name</code> <span style="color:#999;">(str)</span></li>
+            <li><code>is_residual_group</code> <span style="color:#999;">(bool)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimension</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_category</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>category_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>block</code> · <code>code</code> <span style="color:#C99A00;">UK</span><span style="color:#999;">(block,code)</span></li>
+            <li><code>parent_code</code> · <code>preference_level</code></li>
+            <li><code>is_subcategory</code> · <code>ina_basis</code></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimension</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_date</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>date_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>bulletin_date</code> <span style="color:#C99A00;">UK</span> <span style="color:#999;">(date)</span></li>
+            <li><code>year</code> · <code>month</code> · <code>quarter</code></li>
+            <li><code>us_fiscal_year</code> <span style="color:#999;">(int)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimension</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_status</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>status</code> <strong style="color:var(--azul);">PK</strong> <span style="color:#999;">(C/F/U/UNK)</span></li>
+            <li><code>label</code> · <code>description</code></li>
+            <li><code>is_predictable</code> <span style="color:#999;">(bool · F)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimension</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_table</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>table_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>code</code> <span style="color:#C99A00;">UK</span> <span style="color:#999;">(FAD/DFF)</span></li>
+            <li><code>name</code> <span style="color:#999;">(str)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">dimension</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_region</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>region_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>slug</code> <span style="color:#C99A00;">UK</span> · <code>name</code></li>
+            <li><span style="color:#999;">6 DV regions</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:#1955BF;background:rgba(25,85,191,0.1);">dim · lineage</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">dim_category_alias</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>alias_id</code> <strong style="color:var(--azul);">PK</strong></li>
+            <li><code>category_id</code> <em style="color:#1955BF;">FK</em>→dim_category</li>
+            <li><code>raw_label</code> <span style="color:#C99A00;">UK</span><span style="color:#999;">(cat,label)</span></li>
+            <li><code>valid_from</code>·<code>valid_to</code>·<code>n_months</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 style="margin:1.2rem 0 .5rem;color:var(--azul);font-size:.95rem;">Facts · 2</h4>
+      <div class="grid grid--2">
+        <div class="card" style="border-color:#E6BD00;">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">fact · dates</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">fact_priority</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><strong style="color:var(--azul);">PK</strong> composite: <code>area_id·category_id·table_id·date_id</code> <span style="color:#999;">(all 4 <em style="color:#1955BF;">FK</em>)</span></li>
+            <li><code>status</code> <em style="color:#1955BF;">FK</em>→dim_status</li>
+            <li><code>priority_date</code> <span style="color:#999;">(date · F only)</span></li>
+            <li><code>days_since_base</code> = $y$ <span style="color:#999;">(int · F only)</span> · <code>raw_value</code></li>
+            <li style="color:#777;">CHECK: status domain · days&nbsp;&ge;&nbsp;0 · defined only if F</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color:#E6BD00;">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">fact · DV rank</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">fact_dv_rank</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><strong style="color:var(--azul);">PK</strong> composite: <code>region_id·date_id</code> <span style="color:#999;">(<em style="color:#1955BF;">FK</em>)</span></li>
+            <li><code>status</code> <em style="color:#1955BF;">FK</em>→dim_status</li>
+            <li><code>rank_cutoff</code> <span style="color:#999;">(int · F only)</span></li>
+            <li><code>raw_value</code> · <code>exceptions</code> <span style="color:#999;">(by country)</span></li>
+            <li style="color:#777;">CHECK: rank&nbsp;&ge;&nbsp;0 · defined only if F</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 style="margin:1.2rem 0 .5rem;color:var(--azul);font-size:.95rem;">Governance · 2</h4>
+      <div class="grid grid--2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">governance</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">etl_run</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>run_id</code> <strong style="color:var(--azul);">PK</strong> · <code>built_at_utc</code> <span style="color:#999;">(ts)</span></li>
+            <li><code>schema_version</code> · <code>n_fact_priority</code> · <code>n_fact_dv</code></li>
+            <li><code>n_trainable_f</code> · <code>pct_trainable</code> <span style="color:#999;">(quality)</span></li>
+            <li><code>panel_floor</code> · <code>panel_ceiling</code> <span style="color:#999;">(date)</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">governance</span>
+          <h4 class="card-title" style="font-size:.95rem;font-family:var(--font-mono);">schema_version</h4>
+          <ul style="font-size:.82rem;list-style:none;padding:0;margin:.35rem 0 0;line-height:1.8;">
+            <li><code>version</code> <span style="color:#999;">(int)</span></li>
+            <li><code>description</code> <span style="color:#999;">(str)</span></li>
+            <li><span style="color:#999;">detects schema drift / evolution</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="mt-2" style="font-size:.84rem;color:var(--gris);"><strong>Views and marts · 6:</strong> <code>v_panel_long</code> and <code>v_dv_long</code> reconstruct the panel/DV losslessly; <code>v_category_alias</code> (lineage), <code>v_trainable_by_preference</code> (roll-up by preference), and the modeling marts <code>mart_training_F</code> and <code>mart_series_summary</code>.</p>
+    </div>
+
+    <!-- 02 categories -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Every category, including the Diversity Visa</h3>
+      <p>Family (F1&ndash;F4) and employment (EB-1 through EB-5 with 16 canonical subcodes) live in the dates fact <code>fact_priority</code> ($y_{p,c,b,t}$). The <strong>Diversity Visa</strong> publishes a <strong>rank number</strong> by region, not a date &mdash; so it does not fit in the panel and gets its own fact <code>fact_dv_rank</code> (6 regions &times; month) and its dimension <code>dim_region</code>.</p>
+      <div class="pill-row">
+        <span class="pill pill--y">family + employment + Diversity Visa</span>
+        <span class="pill pill--y">DV = regional rank (separate fact)</span>
+        <span class="pill pill--green">Schedule A excluded with evidence (not a category with a date)</span>
+      </div>
+    </div>
+
+    <!-- 02 dimensional model -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> Hierarchy, conformed dimensions and lineage</h3>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Hierarchy</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Roll-ups by preference</h4>
+          <p style="font-size:0.85rem;"><code>dim_category</code> carries <code>parent_code</code>, <code>preference_level</code> and INA statutory basis: subcategories fold into their preference (all EB-5 under EB-5) via the view <code>v_trainable_by_preference</code>.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Conformed</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Shared dimensions</h4>
+          <p style="font-size:0.85rem;"><code>dim_date</code> and <code>dim_status</code> are <strong>conformed</strong>: both facts share them, so time and the C/F/U/UNK regime are defined once and join the same way across the whole warehouse.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Lineage</span>
+          <h4 class="card-title" style="font-size:0.98rem;">20 years of drift, auditable</h4>
+          <p style="font-size:0.85rem;"><code>dim_category_alias</code> moves label normalization out of code and into <strong>data</strong>: each published spelling &rarr; canonical category with its month window (48 aliases; EB5_TEA had 7 spellings 2001&ndash;2015).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 governance + marts -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Governance, quality and modeling marts</h3>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Contract</span>
+          <h4 class="card-title" style="font-size:0.98rem;">The schema rejects the invalid</h4>
+          <p style="font-size:0.85rem;">Composite PK, FK to each dimension and CHECK (status domain, days&nbsp;&ge;&nbsp;0, variable defined only if <code>status='F'</code>): the contract lives in the schema, not only in the tests.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Provenance</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Load audit + quality</h4>
+          <p style="font-size:0.85rem;"><code>etl_run</code> records each <em>build</em> (schema version, counts, <strong>trainability score</strong>, temporal floor/ceiling); <code>schema_version</code> marks the evolution. Medallion architecture raw&rarr;panel&rarr;gold.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Gold marts</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Ready for modeling</h4>
+          <p style="font-size:0.85rem;"><code>mart_training_F</code> = clean trainable set (only <code>F</code> with the dependent variable and time features); <code>mart_series_summary</code> summarizes each series to filter the evaluable ones.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 declared limits -->
+    <div class="subsec reveal">
+      <h3><span class="num">05</span> Declared limits (adversarial audit)</h3>
+      <p>An independent audit re-derived the model from scratch. It passed strongly &mdash;<strong>0 orphan foreign keys, 48/48 aliases re-classify to their canonical form, the constraints reject every invalid row, reproducible content</strong>&mdash; and left these limits <strong>unvarnished</strong>:</p>
+      <div class="grid grid--2 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">DV coverage</span>
+          <h4 class="card-title" style="font-size:0.98rem;">2002&ndash;2003 partial</h4>
+          <p style="font-size:0.84rem;">The DV floor reaches 2001-12, but ~20 months of 2002&ndash;2003 publish the Diversity Visa in <strong>non-tabular</strong> HTML, not yet parsed (future work). The <em>advance notification</em> (future month) is also out of scope.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">No silent degradation</span>
+          <h4 class="card-title" style="font-size:0.98rem;">DV coverage gate</h4>
+          <p style="font-size:0.84rem;">Those gaps <strong>are no longer silent</strong>: <code>test_dv_coverage_floor</code> (in the data gate) requires floors of rows, months and complete months, and aborts the commit if a scrape degrades coverage.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>

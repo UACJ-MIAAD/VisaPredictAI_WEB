@@ -1,0 +1,111 @@
+<div class="section-inner">
+    <span class="section-tag">Tables and figures</span>
+    <h2 class="section-title">Key visualizations</h2>
+    <p class="section-sub">
+      Proposed coverage, methodological exclusion criteria, compared baselines, and a country&times;category&times;table matrix with three coverage levels (structural / evaluable / pilot).
+    </p>
+
+    <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-bottom:0.8rem;">Table 1 · Proposed analytical coverage</h3>
+    <div class="tbl-wrap reveal">
+      <table class="tbl">
+        <thead><tr><th>Dimension</th><th>Admitted values</th><th>Operational notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Country / chargeability</strong></td><td>Mexico, India, China, Philippines, <em>All Chargeability Areas Except Those Listed</em></td><td>The last one is not a country but an administrative grouping with variable composition.</td></tr>
+          <tr><td><strong>Family categories</strong></td><td>F1, F2A, F2B, F3, F4</td><td>Convention <strong>F1–F4</strong> = the full set {F1, F2A, F2B, F3, F4}.</td></tr>
+          <tr><td><strong>Employment categories</strong></td><td>EB-1, EB-2, EB-3, EB-4, EB-5 (+ subcategories)</td><td>Schematic; includes <em>Other Workers</em>, <em>Certain Religious Workers</em>, <em>set-asides</em>.</td></tr>
+          <tr><td><strong>Table type</strong></td><td>Final Action Dates (FAD), Dates for Filing (DFF)</td><td>Evaluated <strong>separately</strong>, with no direct cross comparison.</td></tr>
+          <tr><td><strong>Special codes</strong></td><td><em>Current</em> (C) and <em>Unavailable</em> (U)</td><td>Kept as descriptive annotation in the database; they do not participate in the regressor's training (§3.1.5).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-caption">Structure of the multiseries panel $y_{p,c,b,t}$. Source: own elaboration.</p>
+
+    <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-top:2.5rem;margin-bottom:0.8rem;">Table 2 · Methodological exclusion criteria</h3>
+    <div class="tbl-wrap reveal">
+      <table class="tbl">
+        <thead><tr><th style="width:30%;">Criterion</th><th>Operational description</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Insufficient length</strong></td><td>Fewer than 60 monthly observations after filtering missing data; prevents building a viable walk-forward partition.</td></tr>
+          <tr><td><strong>Zero variability</strong></td><td>Series with a constant value (e.g., permanent <em>Current</em>) over the evaluated period; provides no predictive information.</td></tr>
+          <tr><td><strong>Non-recoverable missing data</strong></td><td>Three or more consecutive months unpublished with no possible recovery from DOS archives.</td></tr>
+          <tr><td><strong>Non-harmonizable regulatory changes</strong></td><td>Administrative modifications that alter the category's definition (e.g., redefinition of EB subcategories).</td></tr>
+          <tr><td><strong>Absence of a specific date</strong></td><td>The combination never published a specific date; only <em>Current</em> or <em>Unavailable</em>. No numerical target to train the regressor.</td></tr>
+          <tr><td><strong>Variable composition</strong></td><td>Applicable to <em>All Chargeability Areas Except Those Listed</em>: the composition of countries changes over the period (compositional non-stationarity). It will be accompanied by an explicit warning in any inference.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-caption">Excluded series are reported descriptively but do not enter the quantitative pipeline. Source: own elaboration.</p>
+
+    <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-top:2.5rem;margin-bottom:0.8rem;">Table 3 · Compared models (8 candidates of the comparative framework)</h3>
+    <div class="tbl-wrap reveal">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Type</th>
+            <th class="num">sMAPE target</th>
+            <th class="num">MASE target</th>
+            <th>Role in the comparative framework</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Seasonal naïve</strong></td><td>Naive baseline</td><td class="num">—</td><td class="num">1.00</td><td>Minimum reference.</td></tr>
+          <tr><td><strong>ARIMA</strong></td><td>Univariate linear [24], [29]</td><td class="num">&lt; 25 %</td><td class="num">&lt; 0.97</td><td>Linear model without seasonality.</td></tr>
+          <tr><td><strong>SARIMA</strong></td><td>Seasonal linear</td><td class="num">&lt; 22 %</td><td class="num">&lt; 0.94</td><td>Captures annual fiscal-year cycles.</td></tr>
+          <tr><td><strong>Prophet</strong></td><td>Additive with <em>changepoints</em> [32]</td><td class="num">&lt; 20 %</td><td class="num">&lt; 0.92</td><td>Models retrogressions as regime changes.</td></tr>
+          <tr><td><strong>Pure LSTM</strong></td><td>Univariate deep [43]</td><td class="num">&lt; 20 %</td><td class="num">&lt; 0.90</td><td>Nonlinear capacity without a linear component.</td></tr>
+          <tr><td><strong>ARIMA-LSTM</strong></td><td>Local hybrid [12], [19]</td><td class="num">&lt; 17 %</td><td class="num">&lt; 0.88</td><td>Hybrid linear + nonlinear reference per series.</td></tr>
+          <tr><td><strong>DeepAR</strong></td><td>Global multiseries deep [22]</td><td class="num">&lt; 17 %</td><td class="num">&lt; 0.88</td><td>Learns transfer across panel series.</td></tr>
+          <tr><td><strong>XGBoost + regressors</strong></td><td>Tabular with exogenous variables [56]</td><td class="num">&lt; 18 %</td><td class="num">&lt; 0.90</td><td>Alternative with calendar <em>features</em>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tbl-caption">No model is privileged beforehand as &laquo;central&raquo;: the comparative framework will empirically determine which one(s) lead in each stratum. Indicative target thresholds. Source: own elaboration.</p>
+
+    <h3 style="font-family:var(--font-display);color:var(--azul);font-size:1.4rem;margin-top:2.5rem;margin-bottom:0.8rem;">Figure · Country × category × table coverage matrix</h3>
+    <div class="matrix reveal">
+      <table class="matrix-tbl">
+        <thead>
+          <tr>
+            <th class="row-h">Country / Category</th>
+            <th>F1</th><th>F2A</th><th>F2B</th><th>F3</th><th>F4</th>
+            <th>EB-1</th><th>EB-2</th><th>EB-3</th><th>EB-4</th><th>EB-5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl">Mexico 🇲🇽</td>
+            <td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td>
+            <td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="struct">○</td><td class="struct">○</td>
+          </tr>
+          <tr>
+            <td class="lbl">India 🇮🇳</td>
+            <td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td>
+            <td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="struct">○</td><td class="struct">○</td>
+          </tr>
+          <tr>
+            <td class="lbl">China 🇨🇳</td>
+            <td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td>
+            <td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="struct">○</td><td class="eval">●</td>
+          </tr>
+          <tr>
+            <td class="lbl">Philippines 🇵🇭</td>
+            <td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td><td class="piloto">★</td>
+            <td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="struct">○</td><td class="struct">○</td>
+          </tr>
+          <tr>
+            <td class="lbl">All Charg. *</td>
+            <td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="eval">●</td>
+            <td class="eval">●</td><td class="eval">●</td><td class="eval">●</td><td class="struct">○</td><td class="struct">○</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="matrix-legend">
+        <span class="matrix-legend-item"><span class="matrix-legend-sw" style="background:linear-gradient(135deg,var(--amarillo) 0%,var(--amarillo-d) 100%);"></span> ★ Pilot · minimum deliverable</span>
+        <span class="matrix-legend-item"><span class="matrix-legend-sw" style="background:rgba(0,60,166,0.20);"></span> ● Evaluable · quantitative pipeline</span>
+        <span class="matrix-legend-item"><span class="matrix-legend-sw" style="background:rgba(85,85,89,0.18);"></span> ○ Structural · descriptive only</span>
+        <span class="matrix-legend-item" style="margin-left:auto;color:var(--text-muted);font-size:0.72rem;">* Variable composition · explicit warning</span>
+      </div>
+    </div>
+    <p class="tbl-caption">FAD published since 1992; homogeneous pipeline series Dec-2001&ndash;today (≈290 obs). DFF since November 2015 (≈125 obs). Each pilot cell is reported aggregated and disaggregated. Source: own elaboration.</p>
+  </div>

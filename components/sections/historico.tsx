@@ -4,6 +4,8 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadPanel, type Panel } from "@/lib/data/visa-panel";
+import { useLang } from "@/components/lang-provider";
+import { tr } from "@/lib/i18n";
 
 // Recharts + TanStack live in panel-explorer; only fetched when it mounts.
 const PanelExplorer = dynamic(() => import("./panel-explorer"), {
@@ -24,6 +26,7 @@ function ExplorerSkeleton() {
 }
 
 export function Historico() {
+  const { lang } = useLang();
   const [panel, setPanel] = React.useState<Panel | null>(null);
   const [error, setError] = React.useState(false);
   const ref = React.useRef<HTMLElement | null>(null);
@@ -50,22 +53,15 @@ export function Historico() {
   return (
     <section id="historico" ref={ref} className="section section--alt">
       <div className="section-inner">
-        <span className="section-tag">Datos históricos · panel multiserie</span>
-        <h2 className="section-title">Visa Bulletin · Datos históricos</h2>
-        <p className="section-sub">
-          El corazón empírico del proyecto: el panel real{" "}
-          <em>
-            y<sub>p,c,b,t</sub>
-          </em>{" "}
-          del <em>U.S. Visa Bulletin</em>, desde dic-2001 hasta 2026. Explore la
-          evolución de las fechas de prioridad, compare países bajo el límite del
-          7&nbsp;%, observe retrogresiones e inspeccione cada serie disponible.
-          Todas las cifras provienen del CSV publicado; no hay valores inventados.
-        </p>
+        <span className="section-tag">{tr(lang, "histTag")}</span>
+        <h2 className="section-title">
+          Visa Bulletin · {lang === "en" ? "Historical data" : "Datos históricos"}
+        </h2>
+        <p className="section-sub">{tr(lang, "histSub")}</p>
 
         {error ? (
           <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
-            Datos no encontrados: no se pudo cargar visa_panel_long.csv.
+            {tr(lang, "histError")}
           </div>
         ) : !panel ? (
           <ExplorerSkeleton />

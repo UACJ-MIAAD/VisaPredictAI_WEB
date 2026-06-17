@@ -1,0 +1,82 @@
+<div class="section-inner">
+    <span class="section-tag">Chapter II</span>
+    <h2 class="section-title">Theoretical and technological framework</h2>
+    <p class="section-sub">
+      Eight theoretical-framework subsections (§2.1.1&ndash;§2.1.8) range from the U.S. immigration system to the heterogeneity of multiseries forecasting, plus five technological-framework subsections (§2.2.1&ndash;§2.2.5). Each theoretical subsection closes with an <em>Implication for this project</em> paragraph that connects the content to concrete design decisions.
+    </p>
+
+    <div class="grid grid--3">
+
+      <div class="card reveal">
+        <div class="card-icon">A</div>
+        <h3 class="card-title">Immigration system &amp; Visa Bulletin</h3>
+        <p class="card-text">
+          INA 1965 [10], annual quotas, the 7&nbsp;% <em>per-country limit</em>, <strong>Final Action Dates</strong> (FAD) and <strong>Dates for Filing</strong> (DFF) [7] calendars. Convention: <strong>F1&ndash;F4</strong> = {F1, F2A, F2B, F3, F4} (five series per chargeability country), not an exclusive range.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">B</div>
+        <h3 class="card-title">Classical time series</h3>
+        <p class="card-text">
+          Classical decomposition $Y_t = T_t + S_t + C_t + \varepsilon_t$. Box &amp; Jenkins [24], [29]; Hamilton [25]; Hyndman &amp; Athanasopoulos [26]. Stationarity tests ADF [27] and KPSS [28] (with opposite null hypotheses), AIC [30] and BIC [31] criteria. ARIMA, SARIMA, and Prophet [32] as linear reference models.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">C</div>
+        <h3 class="card-title">DL fundamentals for series</h3>
+        <p class="card-text">
+          Backpropagation [36], MLP, regularization (<em>weight decay</em>, dropout [39], recurrent dropout [40], <em>batch normalization</em> [41]) and <em>early stopping</em>. ReLU [37] and the Adam optimizer [38] as standards. Components used in the nonlinear models of the comparative framework.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">D</div>
+        <h3 class="card-title">RNN and LSTM</h3>
+        <p class="card-text">
+          Elman [42], Bengio et al. [37]: the vanishing gradient problem. Hochreiter &amp; Schmidhuber [43] introduce the LSTM with memory cells and gates. BiLSTM [44], [45] and GRU [47] variants. The LSTM constitutes the nonlinear component of the ARIMA-LSTM hybrid.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">E</div>
+        <h3 class="card-title">Hybrids and modern architectures</h3>
+        <p class="card-text">
+          Zhang [19] formalizes linear+nonlinear hybridization; ARIMA-LSTM in epidemiology [12], [21], economics [51], energy [52], and trade [20]. The M4 Competition [50] and ES-RNN [49] show that combinations dominate. <strong>DeepAR</strong> [22] (global) and <strong>XGBoost</strong> [56] (tabular) complete the compared family; TFT [54], N-BEATS [53], and PatchTST [55] only as reference.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">F</div>
+        <h3 class="card-title">Learning applied to migratory phenomena</h3>
+        <p class="card-text">
+          Vegesana [11] applies discriminative classifiers to approval forecasting; Carammia et al. [13] forecast asylum flows with machine learning and large-scale data; Pu et al. [9] review methods and sources; Hoffmann Pham &amp; Luengo-Oroz [57] on predictive modeling of refugee movements.
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">G</div>
+        <h3 class="card-title">Metrics, validation, and 95&nbsp;% intervals</h3>
+        <p class="card-text">
+          Hyndman &amp; Koehler [16]: MASE as a universal metric scaled by the seasonal naïve. Walk-forward from Tashman [58] and Bergmeir &amp; Benítez [17]. <strong>Diebold-Mariano</strong> [18] with Holm correction for the pre-registered family. 95&nbsp;% prediction intervals via three mechanisms: analytical ARIMA, MC dropout [40], and <strong>conformal prediction</strong> [59].
+        </p>
+      </div>
+
+      <div class="card reveal">
+        <div class="card-icon">H</div>
+        <h3 class="card-title">Multiseries forecasting and heterogeneity</h3>
+        <p class="card-text">
+          Local models (trained per cell), global models (DeepAR [22] over the panel), and tabular models (XGBoost [56]). The choice among regimes is an empirical question that the project answers with data, given the small-data regime per series ($\sim$400 obs FAD, $\sim$125 obs DFF).
+        </p>
+      </div>
+
+    </div>
+
+    <div class="callout mt-4">
+      <div class="callout-head">📐 Technological framework (summary)</div>
+      <p>
+        <strong>Language and libraries:</strong> Python 3.x with <code>pandas</code>, <code>numpy</code>, <code>statsmodels</code>, <code>scikit-learn</code> [62], <code>XGBoost</code> [56], <code>PyTorch</code> [63], <code>Prophet</code> [32]. <strong>Visualization:</strong> <code>matplotlib</code>, <code>seaborn</code>. <strong>Version control:</strong> Git/GitHub under an open license. <strong>Documentation:</strong> LaTeX/Overleaf. <strong>Reproducibility:</strong> version manifests (<code>requirements.txt</code>), recorded seeds, MLflow for hyperparameter logging.
+      </p>
+    </div>
+  </div>

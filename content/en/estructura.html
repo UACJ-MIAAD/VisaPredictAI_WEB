@@ -1,0 +1,92 @@
+<div class="section-inner">
+    <span class="section-tag">Repository structure</span>
+    <h2 class="section-title">Cookiecutter Data Science template</h2>
+    <p class="section-sub">
+      The repository does not organize its files at random: it adopts <strong>Cookiecutter Data Science</strong> (CCDS), the community's standard template for data science projects. Anyone who knows it finds each file where they expect it &mdash;raw data kept apart from derived data, reports and documentation in their place, and an installable package with a single source of truth for the dependencies&mdash; in the <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a> repository.
+    </p>
+
+    <!-- E.1 Árbol del repositorio -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> The tree, at a glance</h3>
+      <p>The CCDS convention separates by <strong>role</strong>, not by file type: the raw data (immutable source) is never mixed with the derived data (regenerable), and the code lives apart from the reports and documentation.</p>
+      <pre style="font-family:var(--font-mono);font-size:0.8rem;line-height:1.55;background:#fff;border:1px solid #e3e3e6;border-left:4px solid var(--azul);border-radius:10px;padding:1.1rem 1.2rem;margin-top:1rem;overflow-x:auto;color:var(--negro);">VisaPredictAI/
+├── data/
+│   ├── raw/          <span style="color:var(--gris);"># 10 CSVs per country, freshly scraped (source)</span>
+│   └── processed/    <span style="color:var(--gris);"># visa_panel_long.csv — the derived panel</span>
+├── reports/          <span style="color:var(--gris);"># generated audits (*_report.md)</span>
+├── docs/             <span style="color:var(--gris);"># documentation (DVC.md…)</span>
+├── tests/            <span style="color:var(--gris);"># pytest + offline HTML fixtures</span>
+├── config.py         <span style="color:var(--gris);"># paths and constants (RAW_DIR, PROCESSED_DIR…)</span>
+├── visa_common.py    <span style="color:var(--gris);"># shared scraping helpers</span>
+├── scrape_*.py       <span style="color:var(--gris);"># employment · family · DV + scrape_all (1 fetch, 3 sect.)</span>
+├── build_panel.py    <span style="color:var(--gris);"># consolidates raw → processed</span>
+├── pyproject.toml    <span style="color:var(--gris);"># deps + tooling + package (single source)</span>
+├── Makefile          <span style="color:var(--gris);"># single-command operation</span>
+├── LICENSE           <span style="color:var(--gris);"># MIT</span>
+└── .github/workflows/ <span style="color:var(--gris);"># code CI + data cron</span></pre>
+    </div>
+
+    <!-- E.2 Mapa plantilla → repo -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> What each piece does</h3>
+      <div class="grid grid--3 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">data/raw/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Immutable source</h4>
+          <p style="font-size:0.85rem;">The 10 CSVs per country exactly as they come out of the scrapers. Never edited by hand: if something changes, the scraper is fixed, not the data.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">data/processed/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Regenerable derived data</h4>
+          <p style="font-size:0.85rem;">The multiseries panel $y_{p,c,b,t}$ produced by <code>build_panel.py</code>. Keeping it apart from the raw data makes clear what is source and what is result.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">reports/ · docs/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Reports and docs</h4>
+          <p style="font-size:0.85rem;">The quality audits (12 dimensions) are written to <code>reports/</code>; the operational documentation (e.g. the DVC strategy) lives in <code>docs/</code>.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">tests/</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Executable contract</h4>
+          <p style="font-size:0.85rem;"><em>pytest</em> suite with HTML fixtures for offline extraction and hard panel invariants: the schema <em>is</em> the contract.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">config.py · visa_common.py</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Shared core</h4>
+          <p style="font-size:0.85rem;"><code>config.py</code> centralizes paths and constants; <code>visa_common.py</code> gathers the scraping helpers (single source, no duplicated logic across scrapers).</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">pyproject.toml</span>
+          <h4 class="card-title" style="font-size:0.98rem;">A single source of truth</h4>
+          <p style="font-size:0.85rem;">Dependencies (runtime and dev), <em>ruff/mypy/pytest</em> configuration, and packaging, all in one file: the package is installable with <code>pip install -e .</code>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- E.3 Cómo se usa -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> How it is used day to day</h3>
+      <p>The structure enables a single-command, reproducible flow: the data flows <strong>from <code>raw/</code> to <code>processed/</code></strong>, and the whole toolchain installs from a single source.</p>
+      <pre style="font-family:var(--font-mono);font-size:0.8rem;line-height:1.7;background:#fff;border:1px solid #e3e3e6;border-left:4px solid var(--amarillo-d);border-radius:10px;padding:1.1rem 1.2rem;margin-top:1rem;overflow-x:auto;color:var(--negro);">git clone https://github.com/UACJ-MIAAD/VisaPredictAI.git
+cd VisaPredictAI
+make install   <span style="color:var(--gris);"># = pip install -e ".[dev]"  (runtime + tools)</span>
+make scrape    <span style="color:var(--gris);"># writes data/raw/*.csv</span>
+make panel     <span style="color:var(--gris);"># consolidates data/processed/visa_panel_long.csv</span>
+make check     <span style="color:var(--gris);"># ruff + mypy + pytest (coverage gate)</span>
+make audit     <span style="color:var(--gris);"># audits → reports/</span></pre>
+    </div>
+
+    <!-- E.4 Adaptaciones honestas -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Honest adaptations</h3>
+      <p>CCDS is a starting point, not a dogma. What serves a <strong>data acquisition</strong> project is adopted, and what does not yet apply is deliberately left out &mdash;no filler structure.</p>
+      <div class="pill-row">
+        <span class="pill pill--green">MIT license in a public repo</span>
+        <span class="pill pill--green">installable package + flat layout (`pip install -e .`)</span>
+        <span class="pill pill--y">no `notebooks/` or `models/` yet &mdash; modeling is next semester's work (DVC already reserved)</span>
+        <span class="pill pill--y">no `.env` &mdash; the scraping is of public data, no secrets</span>
+        <span class="pill pill--y">`data/raw` and `data/processed` versioned in git (they are the open deliverable)</span>
+      </div>
+
+    </div>
+  </div>
