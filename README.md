@@ -29,6 +29,18 @@ npm run typecheck  # tsc --noEmit
 npm run lint       # eslint .
 ```
 
+## Diseño e idioma
+
+- **Sistema editorial** (dirección de arte vía v0): sin tarjetas con borde — se
+  agrupa con reglas finas, espacio en blanco y jerarquía tipográfica (serif
+  Playfair + DM Sans). Tokens semánticos claro/oscuro, azul UACJ vivo usado con
+  moderación. `app/content.css` re-tematiza el markup académico preservado.
+- **Bilingüe ES/EN**: toggle en el nav (`LangProvider` + `lib/i18n.ts`). El
+  *chrome* (nav, hero, explorar, mastheads de ruta, footer, explorador de datos)
+  es bilingüe; el texto académico permanece en español (idioma de la tesis) con
+  una nota honesta en inglés. `lib/site-map.ts` lleva etiquetas/blurbs en ambos
+  idiomas.
+
 ## Arquitectura de rutas
 
 El sitio se dividió de un monolito de scroll único a **rutas separadas por
