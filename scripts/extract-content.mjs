@@ -70,8 +70,18 @@ function themeInline(s) {
   );
 }
 
-// shared transform: disclaimers → de-box inline → KaTeX
-const transform = (inner) => renderMath(themeInline(stripDisclaimers(inner))).trim();
+// give every bare <table> a horizontal-scroll wrapper so wide tables don't
+// overflow the page on mobile (skip ones already inside .tbl-wrap/.matrix)
+function wrapTables(s) {
+  return s.replace(/<table\b[\s\S]*?<\/table>/g, (m, off) => {
+    const before = s.slice(Math.max(0, off - 60), off);
+    return /tbl-wrap|matrix/.test(before) ? m : `<div class="tbl-wrap">${m}</div>`;
+  });
+}
+
+// shared transform: disclaimers → wrap tables → de-box inline → KaTeX
+const transform = (inner) =>
+  renderMath(themeInline(wrapTables(stripDisclaimers(inner)))).trim();
 
 // ── 4. ES: extract each top-level <section id="…"> from source.html
 const sectionRe = /<section\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/section>/g;

@@ -412,6 +412,8 @@
   overflow-x: auto;
 }
 .arch svg { width: 100%; height: auto; min-width: 620px; }
+/* phones: let diagrams scale to fit instead of forcing 620px (overflows page) */
+@media (max-width: 680px) { .arch svg { min-width: 0; } }
 
 /* ── Tables (keep light structure) ── */
 .tbl-wrap, .matrix {
