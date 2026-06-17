@@ -16,8 +16,13 @@ export function SiteShell({
 }) {
   return (
     <LangProvider lang={lang}>
+      <a href="#main-content" className="skip-link">
+        {lang === "en" ? "Skip to content" : "Saltar al contenido"}
+      </a>
       <SiteNav />
-      <main className="pt-16">{children}</main>
+      <main id="main-content" tabIndex={-1} className="pt-16">
+        {children}
+      </main>
       <SiteFooter />
       <BackToTop />
       <ClientEnhancements />
