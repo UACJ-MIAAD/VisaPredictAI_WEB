@@ -11,25 +11,10 @@ import {
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpDown, Download, SlidersHorizontal } from "lucide-react";
-import { type VisaPanelRow, countryLabel } from "@/lib/data/visa-panel";
+import { type VisaPanelRow, countryLabel, movementColor } from "@/lib/data/visa-panel";
+import { StatusChip } from "@/components/ui/data-cells";
 import { tr } from "@/lib/i18n";
 import type { Lang } from "@/lib/site-map";
-
-function StatusChip({ s }: { s: string }) {
-  const color =
-    s === "F" ? "var(--color-success)"
-    : s === "U" ? "var(--color-danger)"
-    : s === "C" ? "var(--color-accent)"
-    : "var(--color-muted)";
-  return (
-    <span
-      className="inline-flex h-5 min-w-5 items-center justify-center rounded px-1 font-mono text-[0.7rem] font-bold"
-      style={{ color, background: `color-mix(in srgb, ${color} 14%, transparent)` }}
-    >
-      {s}
-    </span>
-  );
-}
 
 const makeColumns = (lang: Lang): ColumnDef<VisaPanelRow>[] => [
   { accessorKey: "country", header: tr(lang, "thPais"), cell: (c) => countryLabel(c.getValue<string>()) },
@@ -53,9 +38,8 @@ const makeColumns = (lang: Lang): ColumnDef<VisaPanelRow>[] => [
     cell: (c) => {
       const v = c.getValue<number | null>();
       if (v == null) return <span className="text-muted-foreground">—</span>;
-      const color = v > 0 ? "var(--color-success)" : v < 0 ? "var(--color-danger)" : "var(--color-muted)";
       return (
-        <span className="tabular-nums" style={{ color }}>
+        <span className="tabular-nums" style={{ color: movementColor(v) }}>
           {v > 0 ? `+${v}` : v}
         </span>
       );

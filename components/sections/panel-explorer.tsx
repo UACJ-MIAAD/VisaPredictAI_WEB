@@ -8,7 +8,7 @@ import {
   Legend, BarChart, Bar, PieChart, Pie, Cell,
 } from "recharts";
 import { PanelTable } from "@/components/tables/panel-table";
-import { countryLabel, type Panel, type VisaPanelRow } from "@/lib/data/visa-panel";
+import { countryLabel, statusColor, movementColor, type Panel, type VisaPanelRow } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
@@ -17,12 +17,6 @@ const SERIES_COLORS = [
   "var(--color-accent)", "var(--color-accent-2)", "var(--color-success)",
   "var(--color-danger)", "var(--color-muted)",
 ];
-const STATUS_COLORS: Record<string, string> = {
-  F: "var(--color-success)",
-  C: "var(--color-accent)",
-  U: "var(--color-danger)",
-  UNK: "var(--color-muted)",
-};
 const tooltipStyle = {
   background: "var(--color-surface)",
   border: "1px solid var(--color-border)",
@@ -201,7 +195,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Bar dataKey="movement" name="Δ días">
                   {movement.map((m, i) => (
-                    <Cell key={i} fill={m.movement >= 0 ? "var(--color-success)" : "var(--color-danger)"} />
+                    <Cell key={i} fill={movementColor(m.movement)} />
                   ))}
                 </Bar>
               </BarChart>
@@ -218,7 +212,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
             <PieChart>
               <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={56} outerRadius={92} paddingAngle={2}>
                 {statusData.map((d) => (
-                  <Cell key={d.name} fill={STATUS_COLORS[d.name] || "var(--color-muted)"} />
+                  <Cell key={d.name} fill={statusColor(d.name)} />
                 ))}
               </Pie>
               <Tooltip contentStyle={tooltipStyle} />
@@ -228,7 +222,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
             {statusData.map((d) => (
               <li key={d.name} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                 <span className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-sm" style={{ background: STATUS_COLORS[d.name] || "var(--color-muted)" }} />
+                  <span className="h-3 w-3 rounded-sm" style={{ background: statusColor(d.name) }} />
                   <strong className="font-mono">{d.name}</strong>
                 </span>
                 <span className="tabular-nums text-muted-foreground">

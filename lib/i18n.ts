@@ -30,7 +30,6 @@ const S: Dict = {
 
   // route header
   rhBack: { es: "← VisaPredict AI", en: "← VisaPredict AI" },
-  rhSpanishNote: { es: "", en: "" },
 
   // boletines (live feed)
   blnTag: { es: "Datos en vivo · U.S. Visa Bulletin", en: "Live data · U.S. Visa Bulletin" },

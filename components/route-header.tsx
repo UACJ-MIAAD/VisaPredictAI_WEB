@@ -9,7 +9,6 @@ import { tr } from "@/lib/i18n";
 export function RouteHeader({ path }: { path: string }) {
   const { lang } = useLang();
   const route = routeByPath(path);
-  const note = tr(lang, "rhSpanishNote");
   return (
     <header className="border-b border-border px-5 pb-8 pt-10">
       <div className="mx-auto max-w-[1140px]">
@@ -26,12 +25,7 @@ export function RouteHeader({ path }: { path: string }) {
         <p className="mt-3 max-w-[60ch] font-serif text-2xl font-bold leading-snug md:text-[2rem]">
           {rBlurb(route, lang)}
         </p>
-        {note && (
-          <p className="mt-3 max-w-[60ch] text-sm italic text-muted-foreground">
-            {note}
-          </p>
-        )}
-        <nav className="mt-5 flex flex-wrap gap-2" aria-label="Sections">
+        <nav className="mt-5 flex flex-wrap gap-2" aria-label={tr(lang, "menu")}>
           {route.sections.map((s) => (
             <a
               key={s.id}

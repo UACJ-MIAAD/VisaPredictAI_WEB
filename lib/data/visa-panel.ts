@@ -32,7 +32,11 @@ const BLOCK_ES: Record<string, string> = {
 function parseCsv(text: string): VisaPanelRow[] {
   const lines = text.split("\n");
   const header = lines[0].split(",");
-  const idx = (k: string) => header.indexOf(k);
+  const idx = (k: string) => {
+    const i = header.indexOf(k);
+    if (i === -1) throw new Error(`CSV missing column: ${k}`); // fail loud, not silent-empty
+    return i;
+  };
   const iCountry = idx("country");
   const iBlock = idx("block");
   const iCat = idx("category");
@@ -48,6 +52,8 @@ function parseCsv(text: string): VisaPanelRow[] {
     if (!line) continue;
     const c = line.split(",");
     const days = c[iDays];
+    // explicit emptiness check so a legitimate "0" survives; NaN → null
+    const n = days === "" || days == null ? NaN : Number(days);
     rows.push({
       country: c[iCountry],
       block: BLOCK_ES[c[iBlock]] || c[iBlock],
@@ -56,7 +62,7 @@ function parseCsv(text: string): VisaPanelRow[] {
       bulletinMonth: (c[iDate] || "").slice(0, 7),
       status: c[iStatus],
       priorityDate: c[iPrio] || null,
-      daysSinceBase: days ? Number(days) : null,
+      daysSinceBase: Number.isFinite(n) ? n : null,
       movement: null,
     });
   }
@@ -133,3 +139,21 @@ export const COUNTRY_LABEL: Record<string, string> = {
   row: "Resto del mundo",
 };
 export const countryLabel = (c: string) => COUNTRY_LABEL[c] || c;
+
+// Single source of truth for status/movement colors (was duplicated ×3).
+export function statusColor(s: string): string {
+  return s === "F"
+    ? "var(--color-success)"
+    : s === "U"
+      ? "var(--color-danger)"
+      : s === "C"
+        ? "var(--color-accent)"
+        : "var(--color-muted)";
+}
+export function movementColor(n: number): string {
+  return n > 0
+    ? "var(--color-success)"
+    : n < 0
+      ? "var(--color-danger)"
+      : "var(--color-muted)";
+}

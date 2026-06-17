@@ -16,10 +16,14 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     else if (navigator.language?.toLowerCase().startsWith("en")) setLangState("en");
   }, []);
 
+  // keep <html lang> in sync for screen readers + SEO, however lang was set
+  React.useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const setLang = React.useCallback((l: Lang) => {
     setLangState(l);
     localStorage.setItem("lang", l);
-    document.documentElement.lang = l;
   }, []);
 
   return (
