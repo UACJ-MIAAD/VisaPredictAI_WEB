@@ -61,6 +61,8 @@ export function SiteNav() {
   const { active, progress } = usePageState(sectionIds);
   const [open, setOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  const menuBtnRef = React.useRef<HTMLButtonElement>(null);
+  const closeBtnRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -76,11 +78,13 @@ export function SiteNav() {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    closeBtnRef.current?.focus(); // move focus into the dialog
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      menuBtnRef.current?.focus(); // restore focus to the trigger on close
     };
   }, [open]);
 
@@ -132,9 +136,11 @@ export function SiteNav() {
             <LangToggle />
             <ThemeToggle />
             <button
+              ref={menuBtnRef}
               type="button"
               aria-label={tr(lang, "openMenu")}
               aria-expanded={open}
+              aria-haspopup="dialog"
               onClick={() => setOpen(true)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-secondary"
             >
@@ -160,7 +166,7 @@ export function SiteNav() {
           "fixed inset-0 z-[60] transition-opacity",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
-        aria-hidden={!open}
+        inert={!open ? true : undefined}
       >
         <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
         <aside
@@ -169,13 +175,15 @@ export function SiteNav() {
             open ? "translate-x-0" : "translate-x-full",
           )}
           role="dialog"
-          aria-label="Navegación"
+          aria-modal="true"
+          aria-label={tr(lang, "menu")}
         >
           <div className="flex h-16 items-center justify-between border-b border-border px-5">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               {tr(lang, "menu")}
             </span>
             <button
+              ref={closeBtnRef}
               type="button"
               aria-label={tr(lang, "closeMenu")}
               onClick={() => setOpen(false)}
@@ -230,7 +238,7 @@ export function SiteNav() {
       {/* desktop scroll-spy rail for the current route (xl only) */}
       {route.sections.length > 1 && (
         <nav
-          aria-label="Secciones de la página"
+          aria-label={tr(lang, "menu")}
           className="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
         >
           <ul className="flex flex-col gap-2">

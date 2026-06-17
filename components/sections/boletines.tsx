@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusChip, Movement } from "@/components/ui/data-cells";
+import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
@@ -24,35 +26,8 @@ type Feed = {
   months: Record<string, Row[]>;
 };
 
-const COUNTRY: Record<string, string> = {
-  mexico: "México",
-  india: "India",
-  china: "China",
-  philippines: "Filipinas",
-  all_chargeability: "All Charg.",
-};
 const MES_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const MES_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const country = (c: string) => COUNTRY[c] || c;
-
-function Movement({ d }: { d: number | null }) {
-  if (d === null || d === undefined) return <span className="text-muted-foreground">—</span>;
-  if (d > 0) return <span className="text-[var(--color-success)]">▲ +{d} d</span>;
-  if (d < 0) return <span className="text-[var(--color-danger)]">▼ {d} d</span>;
-  return <span className="text-muted-foreground">= 0</span>;
-}
-
-function StatusChip({ s }: { s: string }) {
-  const color = s === "F" ? "var(--color-success)" : s === "U" ? "var(--color-danger)" : "var(--color-accent)";
-  return (
-    <span
-      className="inline-flex h-6 min-w-6 items-center justify-center rounded px-1.5 font-mono text-xs font-bold"
-      style={{ color, background: `color-mix(in srgb, ${color} 14%, transparent)` }}
-    >
-      {s}
-    </span>
-  );
-}
 
 export function Boletines() {
   const { lang } = useLang();
@@ -68,8 +43,11 @@ export function Boletines() {
     const [y, mo] = m.split("-");
     return `${MES[+mo - 1]} ${y}`;
   };
-  const block = (b: string) =>
-    b === "employment" ? tr(lang, "blockEmployment") : b === "family" ? tr(lang, "blockFamily") : b;
+  const blockLabel = React.useCallback(
+    (b: string) =>
+      b === "employment" ? tr(lang, "blockEmployment") : b === "family" ? tr(lang, "blockFamily") : b,
+    [lang],
+  );
 
   React.useEffect(() => {
     const el = ref.current;
@@ -103,19 +81,24 @@ export function Boletines() {
     if (!data) return [];
     const q = filter.trim().toLowerCase();
     return (data.months[month] || []).filter(
-      (r) => !q || `${country(r.country)} ${block(r.block)} ${r.category} ${r.table}`.toLowerCase().includes(q),
+      (r) =>
+        !q ||
+        `${countryLabel(r.country)} ${blockLabel(r.block)} ${r.category} ${r.table}`
+          .toLowerCase()
+          .includes(q),
     );
-  }, [data, month, filter, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, month, filter, blockLabel]);
 
+  // summary reflects the SELECTED month so it always matches the table below
   const news = React.useMemo(() => {
     if (!data) return null;
-    const r = data.months[data.latest_month] || [];
+    const r = data.months[month] || [];
     return {
       adv: r.filter((x) => (x.delta_days ?? 0) > 0).length,
       ret: r.filter((x) => (x.delta_days ?? 0) < 0).length,
       n: r.length,
     };
-  }, [data]);
+  }, [data, month]);
 
   const headers = [
     tr(lang, "colCountry"), tr(lang, "colBlock"), tr(lang, "colCategory"),
@@ -145,11 +128,13 @@ export function Boletines() {
         ) : (
           <>
             <div className="mb-5 border-t-2 border-[var(--color-ink)] pt-4">
-              <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-accent)]">
-                {tr(lang, "blnBadge")}
-              </span>
+              {month === data.latest_month && (
+                <span className="font-mono text-xs uppercase tracking-wider text-[var(--color-accent)]">
+                  {tr(lang, "blnBadge")}
+                </span>
+              )}
               <h3 className="mt-1 font-serif text-2xl font-bold">
-                {tr(lang, "blnOf")} {mLabel(data.latest_month)}
+                {tr(lang, "blnOf")} {mLabel(month)}
               </h3>
               <p className="mt-1 text-muted-foreground">
                 <strong className="text-foreground">{news?.adv}</strong> {tr(lang, "blnAdvanced")} ·{" "}
@@ -205,10 +190,10 @@ export function Boletines() {
                       </td>
                     </tr>
                   ) : (
-                    rows.map((r, i) => (
-                      <tr key={i} className="border-t border-border">
-                        <td className="px-3 py-2">{country(r.country)}</td>
-                        <td className="px-3 py-2">{block(r.block)}</td>
+                    rows.map((r) => (
+                      <tr key={`${r.country}-${r.block}-${r.category}-${r.table}`} className="border-t border-border">
+                        <td className="px-3 py-2">{countryLabel(r.country)}</td>
+                        <td className="px-3 py-2">{blockLabel(r.block)}</td>
                         <td className="px-3 py-2">{r.category}</td>
                         <td className="px-3 py-2">{r.table}</td>
                         <td className="px-3 py-2"><StatusChip s={r.status} /></td>
