@@ -112,17 +112,17 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        {/* Privacy-friendly, cookieless analytics. Tracks SPA route changes. */}
+        {/* Privacy-friendly analytics by Plausible (account-specific snippet).
+            Custom events use window.plausible(...) — see lib/analytics.ts. */}
+        <Script
+          async
+          src="https://plausible.io/js/pa-dIWwVEybhoUGRkq9GHkEY.js"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}",
+              "window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};plausible.init()",
           }}
-        />
-        <Script
-          defer
-          data-domain="visapredictai.com"
-          src="https://plausible.io/js/script.js"
         />
       </body>
     </html>
