@@ -11,6 +11,7 @@ import { PanelTable } from "@/components/tables/panel-table";
 import { countryLabel, statusColor, movementColor, type Panel, type VisaPanelRow } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 
 const PILOT = ["mexico", "india", "china", "philippines", "all_chargeability"];
 const SERIES_COLORS = [
@@ -141,9 +142,9 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 rounded-xl border border-border bg-card p-4">
-        <Select label={tr(lang, "selCountry")} value={country} onChange={setCountry} options={panel.countries} fmt={countryLabel} />
-        <Select label={tr(lang, "selCategoryL")} value={category} onChange={setCategory} options={cats} />
-        <Select label={tr(lang, "selTableL")} value={table} onChange={setTable} options={panel.tables} />
+        <Select label={tr(lang, "selCountry")} value={country} onChange={(v) => { track("Explorer Filter", { dim: "country" }); setCountry(v); }} options={panel.countries} fmt={countryLabel} />
+        <Select label={tr(lang, "selCategoryL")} value={category} onChange={(v) => { track("Explorer Filter", { dim: "category" }); setCategory(v); }} options={cats} />
+        <Select label={tr(lang, "selTableL")} value={table} onChange={(v) => { track("Explorer Filter", { dim: "table" }); setTable(v); }} options={panel.tables} />
       </div>
 
       <ChartCard

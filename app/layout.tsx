@@ -113,6 +113,12 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
         {/* Privacy-friendly, cookieless analytics. Tracks SPA route changes. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}",
+          }}
+        />
         <Script
           defer
           data-domain="visapredictai.com"

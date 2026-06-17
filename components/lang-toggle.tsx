@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLang } from "@/components/lang-provider";
+import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 // Switches locale by navigating to the mirrored URL (/x ↔ /en/x), so each
@@ -34,6 +35,7 @@ export function LangToggle() {
         <Link
           key={it.code}
           href={it.href}
+          onClick={() => lang !== it.code && track("Language Switch", { to: it.code })}
           aria-current={lang === it.code ? "true" : undefined}
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-[7px] uppercase transition-colors",

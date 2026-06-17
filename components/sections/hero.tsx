@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { localePath } from "@/lib/site-map";
+import { track } from "@/lib/analytics";
 
 const STATS = [
   { num: "8", key: "statModels" },
@@ -45,6 +46,7 @@ export function Hero() {
           </a>
           <a
             href={localePath("/datos-historicos", lang)}
+            onClick={() => track("Explore Historical CTA")}
             className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-3 font-medium transition-colors hover:border-[var(--color-accent-2)]"
           >
             {tr(lang, "heroCtaExplore")}

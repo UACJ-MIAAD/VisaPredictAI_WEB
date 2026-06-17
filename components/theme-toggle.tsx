@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -18,7 +19,11 @@ export function ThemeToggle() {
       type="button"
       aria-label={tr(lang, !mounted ? "toggleTheme" : isDark ? "toLight" : "toDark")}
       className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:bg-secondary"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => {
+        const next = isDark ? "light" : "dark";
+        track("Theme Toggle", { theme: next });
+        setTheme(next);
+      }}
     >
       {/* render a stable icon until mounted to avoid hydration mismatch */}
       {mounted && isDark ? (

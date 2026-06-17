@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { ROUTES, rLabel, rBlurb, sLabel, localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 
 export function Explore() {
   const { lang } = useLang();
@@ -21,6 +22,7 @@ export function Explore() {
             <Link
               key={r.path}
               href={localePath(r.path, lang)}
+              onClick={() => track("Explore Section", { part: r.path })}
               className="group border-t-2 border-[var(--color-rule)] pt-3"
             >
               <span className="font-mono text-xs text-[var(--color-accent)]">

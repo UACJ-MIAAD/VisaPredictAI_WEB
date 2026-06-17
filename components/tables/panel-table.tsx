@@ -15,6 +15,7 @@ import { type VisaPanelRow, countryLabel, movementColor } from "@/lib/data/visa-
 import { StatusChip } from "@/components/ui/data-cells";
 import { tr } from "@/lib/i18n";
 import type { Lang } from "@/lib/site-map";
+import { track } from "@/lib/analytics";
 
 const makeColumns = (lang: Lang): ColumnDef<VisaPanelRow>[] => [
   { accessorKey: "country", header: tr(lang, "thPais"), cell: (c) => countryLabel(c.getValue<string>()) },
@@ -143,7 +144,12 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
           </details>
           <button
             type="button"
-            onClick={() => exportCsv(rows)}
+            onClick={() => {
+              track("CSV Export", {
+                rows: rows.length >= 10000 ? "10k+" : rows.length >= 1000 ? "1k-10k" : "<1k",
+              });
+              exportCsv(rows);
+            }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-secondary"
           >
             <Download className="h-4 w-4" aria-hidden /> CSV
