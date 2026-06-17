@@ -65,6 +65,8 @@ function themeInline(s) {
       .replace(/background:rgba\([^)]*\)\s*;?/g, "")
       .replace(/border-left:\s*\d+px\s+solid\s+[^;"']+;?/g, "")
       .replace(/border-color:\s*#[0-9A-Fa-f]{3,6}\s*;?/g, "")
+      // root-absolute asset paths: bare srcs 404 on sub-routes (trailingSlash)
+      .replace(/src="(?!\/|https?:|data:)/g, 'src="/')
   );
 }
 
