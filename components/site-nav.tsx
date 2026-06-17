@@ -164,7 +164,7 @@ export function SiteNav() {
       {/* mobile / overlay menu: routes + current route's sections */}
       <div
         className={cn(
-          "fixed inset-0 z-[60] transition-opacity",
+          "fixed inset-0 z-[60] overflow-hidden transition-opacity",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         inert={!open ? true : undefined}
