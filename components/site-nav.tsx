@@ -6,7 +6,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ROUTES, routeByPath } from "@/lib/site-map";
+import { LangToggle } from "@/components/lang-toggle";
+import { useLang } from "@/components/lang-provider";
+import { tr } from "@/lib/i18n";
+import { ROUTES, routeByPath, rShort, rLabel, sLabel } from "@/lib/site-map";
 import { cn } from "@/lib/utils";
 
 /** Reading progress + scroll-spy over the *current route's* sections. */
@@ -49,6 +52,7 @@ function usePageState(sectionIds: string[]) {
 
 export function SiteNav() {
   const pathname = usePathname();
+  const { lang } = useLang();
   const route = routeByPath(pathname);
   const sectionIds = React.useMemo(
     () => route.sections.map((s) => s.id),
@@ -117,7 +121,7 @@ export function SiteNav() {
                       isActive && "font-medium text-[var(--color-accent)]",
                     )}
                   >
-                    {r.short}
+                    {rShort(r, lang)}
                   </Link>
                 </li>
               );
@@ -125,10 +129,11 @@ export function SiteNav() {
           </ul>
 
           <div className="ml-auto flex items-center gap-2 md:ml-2">
+            <LangToggle />
             <ThemeToggle />
             <button
               type="button"
-              aria-label="Abrir menú"
+              aria-label={tr(lang, "openMenu")}
               aria-expanded={open}
               onClick={() => setOpen(true)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-secondary"
@@ -142,7 +147,7 @@ export function SiteNav() {
           className="h-0.5 bg-[var(--color-accent)] transition-[width] duration-150"
           style={{ width: `${progress}%` }}
           role="progressbar"
-          aria-label="Progreso de lectura"
+          aria-label={tr(lang, "readingProgress")}
           aria-valuenow={Math.round(progress)}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -168,11 +173,11 @@ export function SiteNav() {
         >
           <div className="flex h-16 items-center justify-between border-b border-border px-5">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Navegación
+              {tr(lang, "menu")}
             </span>
             <button
               type="button"
-              aria-label="Cerrar menú"
+              aria-label={tr(lang, "closeMenu")}
               onClick={() => setOpen(false)}
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-secondary"
             >
@@ -193,7 +198,7 @@ export function SiteNav() {
                         : "text-foreground",
                     )}
                   >
-                    {r.label}
+                    {rLabel(r, lang)}
                   </Link>
                   {isCurrent && (
                     <ul className="ml-3 border-l border-border pl-2">
@@ -209,7 +214,7 @@ export function SiteNav() {
                                 "font-medium text-foreground",
                             )}
                           >
-                            {s.label}
+                            {sLabel(s, lang)}
                           </a>
                         </li>
                       ))}
@@ -231,7 +236,7 @@ export function SiteNav() {
           <ul className="flex flex-col gap-2">
             {route.sections.map((s) => (
               <li key={s.id}>
-                <a href={`#${s.id}`} className="group flex items-center gap-2" title={s.label}>
+                <a href={`#${s.id}`} className="group flex items-center gap-2" title={sLabel(s, lang)}>
                   <span
                     className={cn(
                       "h-1.5 w-1.5 rounded-full bg-border transition-all",
@@ -246,7 +251,7 @@ export function SiteNav() {
                         : "text-muted-foreground",
                     )}
                   >
-                    {s.label}
+                    {sLabel(s, lang)}
                   </span>
                 </a>
               </li>

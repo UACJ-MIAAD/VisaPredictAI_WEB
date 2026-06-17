@@ -1,43 +1,43 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { ROUTES } from "@/lib/site-map";
+import { ROUTES, rLabel, rBlurb, sLabel } from "@/lib/site-map";
+import { useLang } from "@/components/lang-provider";
+import { tr } from "@/lib/i18n";
 
-// Home "table of contents" — routes the reader into each part of the project.
 export function Explore() {
+  const { lang } = useLang();
   const parts = ROUTES.filter((r) => r.path !== "/");
   return (
     <section id="explorar" className="section section--alt">
       <div className="section-inner">
-        <span className="section-tag">Explorar</span>
-        <h2 className="section-title">El proyecto, en cuatro partes</h2>
-        <p className="section-sub">
-          El anteproyecto se divide para leerse con foco: el documento académico,
-          la ingeniería de datos, el explorador histórico interactivo y los
-          recursos de consulta.
-        </p>
+        <span className="section-tag">{tr(lang, "exploreKicker")}</span>
+        <h2 className="section-title">{tr(lang, "exploreTitle")}</h2>
+        <p className="section-sub">{tr(lang, "exploreSub")}</p>
 
-        <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2">
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
           {parts.map((r, i) => (
             <Link
               key={r.path}
               href={r.path}
-              className="group flex flex-col bg-card p-6 transition-colors hover:bg-secondary"
+              className="group border-t-2 border-[var(--color-ink)] pt-3"
             >
               <span className="font-mono text-xs text-[var(--color-accent)]">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <h3 className="mt-2 flex items-center gap-2 font-serif text-xl font-bold">
-                {r.label}
+              <h3 className="mt-1 flex items-center gap-2 font-serif text-2xl font-bold">
+                {rLabel(r, lang)}
                 <ArrowRight
                   className="h-4 w-4 -translate-x-1 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100"
                   aria-hidden
                 />
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {r.blurb}
+              <p className="mt-2 max-w-[46ch] text-sm leading-relaxed text-muted-foreground">
+                {rBlurb(r, lang)}
               </p>
-              <span className="mt-3 text-xs text-muted-foreground">
-                {r.sections.map((s) => s.label).join(" · ")}
+              <span className="mt-3 block text-xs text-muted-foreground">
+                {r.sections.map((s) => sLabel(s, lang)).join(" · ")}
               </span>
             </Link>
           ))}

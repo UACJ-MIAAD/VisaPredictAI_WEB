@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans, Space_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LangProvider } from "@/components/lang-provider";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { BackToTop } from "@/components/back-to-top";
@@ -60,11 +61,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SiteNav />
-          <main className="pt-16">{children}</main>
-          <SiteFooter />
-          <BackToTop />
-          <ClientEnhancements />
+          <LangProvider>
+            <SiteNav />
+            <main className="pt-16">{children}</main>
+            <SiteFooter />
+            <BackToTop />
+            <ClientEnhancements />
+          </LangProvider>
         </ThemeProvider>
       </body>
     </html>
