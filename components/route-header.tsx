@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { routeByPath, rLabel, rBlurb, sLabel } from "@/lib/site-map";
+import { routeByPath, rLabel, rBlurb, sLabel, localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
@@ -13,7 +13,7 @@ export function RouteHeader({ path }: { path: string }) {
     <header className="border-b border-border px-5 pb-8 pt-10">
       <div className="mx-auto max-w-[1140px]">
         <Link
-          href="/"
+          href={localePath("/", lang)}
           className="text-xs text-muted-foreground hover:text-[var(--color-accent)]"
         >
           {tr(lang, "rhBack")}

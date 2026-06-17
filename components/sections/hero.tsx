@@ -3,6 +3,7 @@
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { localePath } from "@/lib/site-map";
 
 const STATS = [
   { num: "8", key: "statModels" },
@@ -43,7 +44,7 @@ export function Hero() {
             {tr(lang, "heroCtaRead")} <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
           <a
-            href="/datos-historicos"
+            href={localePath("/datos-historicos", lang)}
             className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-3 font-medium transition-colors hover:border-[var(--color-accent-2)]"
           >
             {tr(lang, "heroCtaExplore")}

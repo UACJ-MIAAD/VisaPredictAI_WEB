@@ -1,28 +1,28 @@
-"use client";
-
 import { sectionHtml } from "@/lib/content/sections.generated";
 import { sectionHtmlEn } from "@/lib/content/sections.en.generated";
-import { useLang } from "@/components/lang-provider";
+import type { Lang } from "@/lib/site-map";
 
 /**
- * Renders a preserved academic section. Spanish from the source transform;
- * English from the translated set (content/en/*). Falls back to Spanish if a
- * translation is missing.
+ * Server component: renders the preserved academic section for the route's
+ * language. Because this is server-only, the (large) content maps never ship to
+ * the client — the section is plain prerendered HTML. Language is fixed by the
+ * route, so there is no flash and no client cost for content.
  */
 export function SectionHTML({
   id,
   className,
+  lang,
 }: {
   id: string;
   className?: string;
+  lang: Lang;
 }) {
-  const { lang } = useLang();
   const html = (lang === "en" && sectionHtmlEn[id]) || sectionHtml[id];
   if (!html) {
     return (
       <section id={id} className="section">
         <div className="section-inner">
-          <p className="section-sub">Contenido no encontrado: {id}.</p>
+          <p className="section-sub">Content not found: {id}.</p>
         </div>
       </section>
     );

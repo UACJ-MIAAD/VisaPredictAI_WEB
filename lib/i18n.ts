@@ -119,6 +119,8 @@ const S: Dict = {
   backToTop: { es: "Volver al inicio", en: "Back to top" },
   toLight: { es: "Activar modo claro", en: "Switch to light mode" },
   toDark: { es: "Activar modo oscuro", en: "Switch to dark mode" },
+  toggleTheme: { es: "Cambiar tema", en: "Toggle theme" },
+  tableScroll: { es: "Tabla histórica del panel, desplazable", en: "Historical panel table, scrollable" },
 
   // data explorer
   dataNotFound: { es: "Datos no encontrados.", en: "Data not found." },
@@ -126,5 +128,8 @@ const S: Dict = {
 
 export function tr(lang: Lang, key: keyof typeof S | string): string {
   const e = S[key as string];
+  if (!e && process.env.NODE_ENV !== "production") {
+    console.warn(`[i18n] missing key: ${String(key)}`);
+  }
   return e ? e[lang] : (key as string);
 }

@@ -113,3 +113,15 @@ export const rLabel = (r: Route, l: Lang) => (l === "en" ? r.labelEn : r.label);
 export const rShort = (r: Route, l: Lang) => (l === "en" ? r.shortEn : r.short);
 export const rBlurb = (r: Route, l: Lang) => (l === "en" ? r.blurbEn : r.blurb);
 export const sLabel = (s: Section, l: Lang) => (l === "en" ? s.labelEn : s.label);
+
+// Locale-aware URLs: en routes live under /en. `localePath` builds an href in
+// the active locale; `basePath` strips the /en prefix + trailing slash so the
+// site-map (which is locale-agnostic) can be looked up from any pathname.
+export const localePath = (path: string, l: Lang): string =>
+  l === "en" ? (path === "/" ? "/en" : `/en${path}`) : path;
+
+export function basePath(pathname: string): string {
+  const p = (pathname || "/").replace(/\/$/, "") || "/";
+  if (p === "/en") return "/";
+  return p.replace(/^\/en(?=\/)/, "") || "/";
+}

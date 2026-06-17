@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { ROUTES, rLabel, rBlurb, sLabel } from "@/lib/site-map";
+import { ROUTES, rLabel, rBlurb, sLabel, localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
@@ -20,7 +20,7 @@ export function Explore() {
           {parts.map((r, i) => (
             <Link
               key={r.path}
-              href={r.path}
+              href={localePath(r.path, lang)}
               className="group border-t-2 border-[var(--color-ink)] pt-3"
             >
               <span className="font-mono text-xs text-[var(--color-accent)]">

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ROUTES, rLabel, sLabel } from "@/lib/site-map";
+import { ROUTES, rLabel, sLabel, localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
@@ -34,7 +34,9 @@ export function SiteFooter() {
             <ul>
               {r.sections.map((s) => (
                 <li key={s.id}>
-                  <Link href={`${r.path}#${s.id}`}>{sLabel(s, lang)}</Link>
+                  <Link href={`${localePath(r.path, lang)}#${s.id}`}>
+                    {sLabel(s, lang)}
+                  </Link>
                 </li>
               ))}
             </ul>

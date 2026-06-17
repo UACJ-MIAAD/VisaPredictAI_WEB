@@ -157,7 +157,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted)" }} minTickGap={48} />
               <YAxis tick={{ fontSize: 11, fill: "var(--color-muted)" }} width={56} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Line type="monotone" dataKey="days" name="días-base" stroke="var(--color-accent)" dot={false} strokeWidth={2} connectNulls />
+              <Line type="monotone" dataKey="days" name="días-base" stroke="var(--color-accent)" dot={false} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
@@ -176,7 +176,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
                 {compCountries.map((c, i) => (
-                  <Line key={c} type="monotone" dataKey={c} name={countryLabel(c)} stroke={SERIES_COLORS[i % SERIES_COLORS.length]} dot={false} strokeWidth={1.6} connectNulls />
+                  <Line key={c} type="monotone" dataKey={c} name={countryLabel(c)} stroke={SERIES_COLORS[i % SERIES_COLORS.length]} dot={false} strokeWidth={1.6} />
                 ))}
               </LineChart>
             </ResponsiveContainer>

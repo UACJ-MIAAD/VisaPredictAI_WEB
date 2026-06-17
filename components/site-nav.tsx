@@ -9,7 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LangToggle } from "@/components/lang-toggle";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
-import { ROUTES, routeByPath, rShort, rLabel, sLabel } from "@/lib/site-map";
+import { ROUTES, routeByPath, rShort, rLabel, sLabel, localePath, basePath } from "@/lib/site-map";
 import { cn } from "@/lib/utils";
 
 /** Reading progress + scroll-spy over the *current route's* sections. */
@@ -53,7 +53,8 @@ function usePageState(sectionIds: string[]) {
 export function SiteNav() {
   const pathname = usePathname();
   const { lang } = useLang();
-  const route = routeByPath(pathname);
+  const base = basePath(pathname);
+  const route = routeByPath(base);
   const sectionIds = React.useMemo(
     () => route.sections.map((s) => s.id),
     [route],
@@ -98,7 +99,7 @@ export function SiteNav() {
       >
         <nav className="mx-auto flex h-16 max-w-[1140px] items-center gap-4 px-5">
           <Link
-            href="/"
+            href={localePath("/", lang)}
             className="flex items-center gap-2 font-serif text-lg font-extrabold"
           >
             <Image
@@ -114,11 +115,11 @@ export function SiteNav() {
 
           <ul className="ml-auto hidden items-center gap-1 md:flex">
             {ROUTES.filter((r) => r.path !== "/").map((r) => {
-              const isActive = pathname === r.path;
+              const isActive = base === r.path;
               return (
                 <li key={r.path}>
                   <Link
-                    href={r.path}
+                    href={localePath(r.path, lang)}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground",
@@ -194,11 +195,11 @@ export function SiteNav() {
           </div>
           <nav className="flex-1 overflow-y-auto p-3">
             {ROUTES.map((r) => {
-              const isCurrent = pathname === r.path;
+              const isCurrent = base === r.path;
               return (
                 <div key={r.path} className="mb-1">
                   <Link
-                    href={r.path}
+                    href={localePath(r.path, lang)}
                     className={cn(
                       "block rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary",
                       isCurrent

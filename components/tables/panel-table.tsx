@@ -62,11 +62,12 @@ function exportCsv(rows: VisaPanelRow[]) {
        r.priorityDate ?? "", r.daysSinceBase ?? "", r.movement ?? ""].join(","),
     )
     .join("\n");
-  const blob = new Blob([head + "\n" + body], { type: "text/csv" });
+  // ﻿ BOM so Excel reads UTF-8 (accented labels) correctly
+  const blob = new Blob(["﻿" + head + "\n" + body], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "visa_panel_filtrado.csv";
+  a.download = "visa_panel.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -74,6 +75,24 @@ function exportCsv(rows: VisaPanelRow[]) {
 export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const columns = React.useMemo(() => makeColumns(lang), [lang]);
+  const colMenuRef = React.useRef<HTMLDetailsElement>(null);
+
+  // close the column dropdown on Escape / outside-click
+  React.useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (colMenuRef.current && !colMenuRef.current.contains(e.target as Node))
+        colMenuRef.current.open = false;
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && colMenuRef.current) colMenuRef.current.open = false;
+    };
+    document.addEventListener("click", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   const table = useReactTable({
     data: rows,
@@ -105,7 +124,7 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
           {tableRows.length.toLocaleString(lang === "en" ? "en-US" : "es-MX")} {tr(lang, "rows")}
         </p>
         <div className="flex items-center gap-2">
-          <details className="relative">
+          <details ref={colMenuRef} className="relative">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-secondary">
               <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "columns")}
             </summary>
@@ -136,7 +155,7 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
         ref={parentRef}
         className="h-[560px] overflow-auto rounded-xl border border-border"
         tabIndex={0}
-        aria-label="Tabla histórica del panel, desplazable"
+        aria-label={tr(lang, "tableScroll")}
       >
         <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-secondary">
