@@ -1,0 +1,158 @@
+<div class="section-inner">
+    <span class="section-tag">Pipeline engineering</span>
+    <h2 class="section-title">MLOps practices</h2>
+    <p class="section-sub">
+      The database is not a loose script: it is a <strong>reproducible, tested, and self-protecting</strong> engineering system that runs in an automated way. This section documents each MLOps practice in production in the <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a> repository.
+    </p>
+
+    <div class="metrics">
+      <div class="metrics-inner">
+        <div class="metric reveal"><div class="metric-num">28</div><div class="metric-lbl">Automated tests</div></div>
+        <div class="metric reveal reveal--d1"><div class="metric-num">2</div><div class="metric-lbl">CI workflows</div></div>
+        <div class="metric reveal reveal--d2"><div class="metric-num">~70&nbsp;%</div><div class="metric-lbl">Coverage · gate &ge;&nbsp;65&nbsp;%</div></div>
+        <div class="metric reveal reveal--d3"><div class="metric-num">ruff+mypy</div><div class="metric-lbl">Lint · format · types</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">0</div><div class="metric-lbl">Critical audit findings</div></div>
+      </div>
+    </div>
+
+    <!-- M.1 Reproducibilidad -->
+    <div class="subsec reveal">
+      <h3><span class="num">01</span> Deterministic reproducibility</h3>
+      <p>
+        The development environment and the continuous integration environment are <strong>identical</strong>: same versions of Python and of each dependency, fixed with exact pins. Anyone reproduces the same data byte by byte.
+      </p>
+      <div class="pill-row">
+        <span class="pill pill--y">exactly pinned dependencies (`pandas==3.0.0`&hellip;)</span>
+        <span class="pill pill--y">Python 3.14 · dev = CI</span>
+        <span class="pill pill--y">`.python-version` + `requirements.txt` + `pyproject.toml`</span>
+        <span class="pill pill--green">pipeline output verified byte-identical</span>
+      </div>
+    </div>
+
+    <!-- M.2 Pruebas en 4 niveles -->
+    <div class="subsec reveal">
+      <h3><span class="num">02</span> Automated tests at four levels</h3>
+      <p>65 tests under <em>pytest</em> with an <strong>executable coverage floor</strong> (`fail_under=65`): coverage cannot erode without breaking CI.</p>
+      <div class="grid grid--4 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Level 1 · 12 cases</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Pure functions</h4>
+          <p style="font-size:0.85rem;">State classifiers (C/F/U/UNK) and category classifiers (20&nbsp;years of label drift, substring disambiguation). No I/O, deterministic.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Level 2 · 10 cases</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Offline extraction</h4>
+          <p style="font-size:0.85rem;">The actual parsing runs over <strong>4 saved HTML fixtures</strong> (format eras 2002/2007/2020/2022) <strong>with no network</strong>: fast, deterministic, covers the logic where the bugs live.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Level 3 · 12 invariants</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Panel contract</h4>
+          <p style="font-size:0.85rem;">Hard product invariants: unique key, 0 negative days, state domain, priority date only on `F`, <strong>month completeness</strong> (a month dropped by the network fails the gate and triggers the alert). Any regression blocks the commit.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Level 4 · 31 cases</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Warehouse contract</h4>
+          <p style="font-size:0.85rem;">The DuckDB star schema is loaded under live <strong>PK/FK/CHECK</strong> constraints: they verify that the panel is reconstructed without loss (<code>v_panel_long</code>), that each fact respects the contract, and that the views and marts reconcile.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- M.3 CI/CD doble pipeline -->
+    <div class="subsec reveal">
+      <h3><span class="num">03</span> Continuous integration: two pipelines</h3>
+      <p>One pipeline validates the <strong>code</strong> on every change; the other refreshes the <strong>data</strong> when a new bulletin arrives, with a quality gate before publishing.</p>
+      <div class="arch reveal mt-2">
+        <svg viewBox="0 0 960 320" xmlns="http://www.w3.org/2000/svg" aria-label="The two continuous integration pipelines">
+          <defs>
+            <linearGradient id="mlBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#003CA6"/><stop offset="100%" stop-color="#1955BF"/></linearGradient>
+            <linearGradient id="mlY" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FFD600"/><stop offset="100%" stop-color="#E6BD00"/></linearGradient>
+            <marker id="mlArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#003CA6"/></marker>
+          </defs>
+          <!-- Lane 1: code CI -->
+          <text x="20" y="32" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">Code CI · every push / PR  (ci.yml)</text>
+          <rect x="20" y="44" width="150" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="95" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">push / PR</text>
+          <text x="95" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">to main</text>
+          <rect x="210" y="44" width="170" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="295" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">ruff</text>
+          <text x="295" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">lint + format</text>
+          <rect x="420" y="44" width="150" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="495" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">mypy</text>
+          <text x="495" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">types</text>
+          <rect x="610" y="44" width="330" height="56" rx="12" fill="url(#mlBlue)" stroke="#FFD600" stroke-width="2.5"/>
+          <text x="775" y="68" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">pytest + coverage</text>
+          <text x="775" y="85" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">65 tests · gate &ge; 65 %</text>
+          <line x1="172" y1="72" x2="208" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="382" y1="72" x2="418" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="572" y1="72" x2="608" y2="72" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <!-- divider -->
+          <line x1="20" y1="128" x2="940" y2="128" stroke="#e3e3e6" stroke-width="1"/>
+          <!-- Lane 2: data cron -->
+          <text x="20" y="162" font-family="DM Sans" font-weight="700" font-size="12" fill="#231F20">Data refresh · per bulletin  (freeze_and_rebuild.yml)</text>
+          <rect x="20" y="174" width="120" height="56" rx="12" fill="url(#mlY)"/>
+          <text x="80" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#001C52">cron</text>
+          <text x="80" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#003CA6">00:00 UTC</text>
+          <rect x="170" y="174" width="120" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="230" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">scrape</text>
+          <text x="230" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">1 fetch &middot; 3 sect.</text>
+          <rect x="320" y="174" width="120" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="380" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">build panel</text>
+          <rect x="470" y="174" width="150" height="56" rx="12" fill="url(#mlBlue)" stroke="#FFD600" stroke-width="2.5"/>
+          <text x="545" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">test gate</text>
+          <text x="545" y="215" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">red = no publish</text>
+          <rect x="650" y="174" width="150" height="56" rx="12" fill="url(#mlBlue)"/>
+          <text x="725" y="198" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#fff">commit + push</text>
+          <rect x="650" y="252" width="290" height="44" rx="10" fill="#fff" stroke="#E6BD00" stroke-width="1.5"/>
+          <text x="795" y="279" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="#555559">on failure &rarr; opens/comments an alert issue</text>
+          <line x1="142" y1="202" x2="168" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="292" y1="202" x2="318" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="442" y1="202" x2="468" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="622" y1="202" x2="648" y2="202" stroke="#003CA6" stroke-width="2" marker-end="url(#mlArrow)"/>
+          <line x1="545" y1="232" x2="545" y2="274" stroke="#E6BD00" stroke-width="2"/>
+          <line x1="545" y1="274" x2="648" y2="274" stroke="#E6BD00" stroke-width="2" marker-end="url(#mlArrow)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- M.4 Robustez -->
+    <div class="subsec reveal">
+      <h3><span class="num">04</span> Robustness against the real world</h3>
+      <p>The source is 20&nbsp;years of live HTML with changing formats and transient failures. The pipeline is hardened against every observed failure mode.</p>
+      <div class="grid grid--3 mt-2">
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Network</span><h4 class="card-title" style="font-size:0.95rem;">Retry + backoff</h4><p style="font-size:0.84rem;">A transient HTTP failure (5xx, timeout) retries with increasing wait; a permanent 4xx is no longer retried. A month is no longer lost silently (previously an `except: pass` swallowed them).</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Reproducibility</span><h4 class="card-title" style="font-size:0.95rem;">Deterministic ordering</h4><p style="font-size:0.84rem;">Rows are sorted by their full key, not by an unstable sort: a dropped month no longer cascades a reorder across the rest of the file.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Integrity</span><h4 class="card-title" style="font-size:0.95rem;">Abort on mass failure</h4><p style="font-size:0.84rem;">If &gt;10 bulletins fail (source redesign/outage), the scraper aborts without writing: a degraded panel is never published.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Observability</span><h4 class="card-title" style="font-size:0.95rem;">Alerts on failure</h4><p style="font-size:0.84rem;">A red gate or a crash opens (or comments on) a tracking issue: the failure speaks up, it does not die silently in the Actions tab.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Correctness</span><h4 class="card-title" style="font-size:0.95rem;">`UNK` sentinel</h4><p style="font-size:0.84rem;">The &laquo;no data&raquo; state uses `UNK`, not `NA`: the string `"NA"` is coerced by pandas to NaN on read and erased the annotation. `UNK` is safe for any consumer.</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Detection</span><h4 class="card-title" style="font-size:0.95rem;">Caught by the tests</h4><p style="font-size:0.84rem;">The sentinel bug and a month lost to the network were <strong>caught by the tests and the failure report</strong>, not by a user: the safety net working.</p></div>
+      </div>
+    </div>
+
+    <!-- M.5 Contrato + auditorías + versionado -->
+    <div class="subsec reveal">
+      <h3><span class="num">05</span> Data contract, lineage, and versioning</h3>
+      <div class="grid grid--2 mt-2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Contract &amp; lineage</span>
+          <h4 class="card-title" style="font-size:0.98rem;">The data validates itself</h4>
+          <ul style="font-size:0.85rem;margin-top:0.4rem;">
+            <li>Hard panel invariants as executable tests (the schema <em>is</em> the contract).</li>
+            <li><strong>Cell-level lineage</strong>: `raw_value` preserves the original cell exactly as published.</li>
+            <li>Programmatic audit of <strong>12 dimensions</strong> with a PASS verdict (0 critical findings).</li>
+            <li>Pre-commit hooks: large-file blocking, end-of-line, YAML/TOML, ruff.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Versioning</span>
+          <h4 class="card-title" style="font-size:0.98rem;">Each artifact where it belongs</h4>
+          <ul style="font-size:0.85rem;margin-top:0.4rem;">
+            <li>The <strong>open CSVs live in git</strong>: directly downloadable, with no DVC or credentials (they are the deliverable).</li>
+            <li>The <strong>figures are not versioned</strong> (regenerable artifacts) so as not to bloat the history.</li>
+            <li><strong>DVC</strong> initialized and reserved for next semester's model artifacts (checkpoints, forecasts).</li>
+            <li><strong>`Makefile`</strong>: `make install · scrape · panel · test · check · all` (single-command operation).</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>

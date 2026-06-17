@@ -1,0 +1,105 @@
+<div class="section-inner">
+    <span class="section-tag">Chapter I</span>
+    <h2 class="section-title">Introduction</h2>
+    <p class="section-sub">
+      Background on the statutory regime, operational definition of the problem, objectives, justification along a triple contributory axis, research questions, and empirically verifiable qualitative hypotheses.
+    </p>
+
+    <div class="subsec reveal">
+      <h3><span class="num">1.1</span> Background</h3>
+      <p>
+        The <em>Immigration and Nationality Act</em> (INA) of 1965 [10] establishes the current system of annual quotas by category with a statutory 7&nbsp;% limit per country (<em>per-country limit</em>), which is the primary source of the severe retrogression observed in high-demand countries such as Mexico, India, China, and the Philippines [6].
+      </p>
+      <p>
+        The Department of State publishes the <em>Visa Bulletin</em> [7] monthly with two calendars: <strong>Final Action Dates</strong> (FAD, published since 1992; the pipeline's homogeneous monthly series spans Dec-2001&ndash;present, ≈290 obs), which authorizes final adjudication, and <strong>Dates for Filing</strong> (DFF, since November&nbsp;2015, ≈125 obs), which authorizes the early start of the adjustment process. Bier [60] documents that the employment-based categories of countries under an effective limit, particularly India, have experienced retrogressions of several years in recent periods.
+      </p>
+      <p>
+        Prior work: Vegesana [11] applies discriminative classifiers to approval forecasting; Jain et al. [12] propose an ARIMA-LSTM hybrid for series with complex dynamics; Carammia et al. [13] and Pu et al. [9] integrate machine learning with data at scale in migration flows.
+      </p>
+    </div>
+
+    <div class="subsec reveal">
+      <h3><span class="num">1.2</span> Problem definition</h3>
+      <p>
+        <strong>No published academic work was identified, in the preliminary review,</strong> offering an open, reproducible, and systematically evaluated predictive system over the <em>Visa&nbsp;Bulletin</em> multiseries panel with 95&nbsp;% prediction intervals. Existing commercial platforms are black boxes with no methodology, data, or evaluation protocol published in an auditable way.
+      </p>
+      <p>
+        <strong>The direct consequence</strong> is that millions of applicants must plan medium- and long-term decisions (family, professional, and financial stability) on opaque estimates or low-quality methods. Backlog figures are documented in Section&nbsp;1.1 [4], [6].
+      </p>
+      <p>
+        <strong>The need</strong> is to build a public longitudinal database of the <em>Visa&nbsp;Bulletin</em> 1992&ndash;2026 and an evaluable predictive system that turns more than three decades of data into auditable forecasts with 95&nbsp;% prediction intervals, filling a verifiable gap in the applied literature.
+      </p>
+    </div>
+
+    <div class="subsec reveal">
+      <h3><span class="num">1.3</span> Objectives</h3>
+      <h4>General objective</h4>
+      <p>
+        <strong>Develop and implement an applied predictive system</strong> for <em>Visa&nbsp;Bulletin</em> priority dates, organized as a multiseries panel $y_{p,c,b,t}$ indexed by chargeability country, immigrant category, and table type, with monthly forecasts at horizons of 1, 3, 6, and 12 months accompanied by <strong>95&nbsp;% prediction intervals</strong>, under the CRISP-DM methodology [64].
+      </p>
+      <h4>Specific objectives</h4>
+      <ol>
+        <li>Build the longitudinal database of the <em>Visa Bulletin</em> 1992&ndash;2026 structured by country&nbsp;&times;&nbsp;category&nbsp;&times;&nbsp;table&nbsp;&times;&nbsp;month, published under an open license.</li>
+        <li>Empirically characterize the historical behavior of priority dates and their administrative regimes by chargeability country or area.</li>
+        <li>Design and implement the full family of models listed in <a href="#tablas">Table&nbsp;3</a>, without privileging any architecture in advance.</li>
+        <li>Evaluate predictive performance through expanding <em>walk-forward</em> temporal validation with scaled metrics (sMAPE, MASE, MAE, RMSE) and 95&nbsp;% prediction intervals, reporting aggregate and disaggregated results by country, category, and table type.</li>
+        <li>Deliver an <strong>academic demonstration application</strong> that allows querying historical series, forecasts, and 95&nbsp;% prediction intervals with explicit warnings about the informational and non-legal nature of the estimates.</li>
+      </ol>
+    </div>
+
+    <div class="subsec reveal">
+      <h3><span class="num">1.4</span> Justification</h3>
+      <h4>Social contribution</h4>
+      <p>
+        The process of obtaining permanent residence affects millions of people in terms of family, work, and financial stability. Nearly 4&nbsp;million remain abroad awaiting a family-based visa [6], within the global USCIS backlog of 11.5&nbsp;million pending cases across all forms [4]. The project supports applicants' planning with 95&nbsp;% prediction intervals and greater transparency than the closed, non-auditable tools on the market.
+      </p>
+      <h4>Technical contribution</h4>
+      <p>
+        The system addresses observable limitations of closed commercial platforms, particularly the lack of transparency regarding data, methodology, and evaluation protocol. The integration of a complete multiseries panel (multi-country &times; multi-category &times; multi-table) under a rigorous comparative framework constitutes an applied contribution to the forecasting of migratory phenomena.
+      </p>
+      <h4>Academic contribution</h4>
+      <ul>
+        <li><strong>Open database</strong> 1992&ndash;2026 with a permissive license, pre-registered evaluability criteria, and verifiable reproducibility (R1&ndash;R7, Appendix&nbsp;A.3).</li>
+        <li><strong>Named comparative framework</strong> under CRISP-DM with a family of linear and nonlinear models evaluated without privileging architectures in advance.</li>
+        <li><strong>Uncertainty quantification</strong> with three mechanisms for the 95&nbsp;% prediction intervals: analytical ARIMA, MC dropout [40], and conformal prediction [59].</li>
+      </ul>
+    </div>
+
+    <div class="subsec reveal">
+      <h3><span class="num">1.5</span> Questions and hypotheses</h3>
+
+      <p style="margin-bottom:1rem;">
+        Consistent with the professionalizing profile of the MIAAD program, the questions are framed as <strong>open questions</strong> and the hypotheses as <strong>soft qualitative statements</strong> that will be tested empirically against the pilot data. Formal statistical rigor (Diebold-Mariano + Holm correction at $\alpha = 0.05$) is documented as a methodological decision in Chapter&nbsp;IV, not as a pre-committed threshold in the body.
+      </p>
+
+      <h4>General question</h4>
+      <p>
+        With what accuracy and with what calibration of the 95&nbsp;% prediction intervals can the future behavior of the <em>Visa&nbsp;Bulletin</em> multiseries panel be forecast under a CRISP-DM comparative framework, over the coverage of evaluable series and respecting the structural heterogeneity among country&ndash;category&ndash;table cells?
+      </p>
+
+      <h4>Specific questions</h4>
+      <ol>
+        <li><strong>Patterns.</strong> What patterns of advancement, stagnation, and retrogression do the series present by chargeability country and immigrant category, and what proportion of each series is evaluable under the pre-registered criteria?</li>
+        <li><strong>Predictive performance.</strong> Which of the implemented models &mdash;linear (ARIMA, SARIMA, Prophet) or nonlinear (LSTM, ARIMA-LSTM, DeepAR, XGBoost)&mdash; offers the best predictive performance in sMAPE and MASE over the evaluable pilot set, and with what consistency across strata?</li>
+        <li><strong>Series characteristics.</strong> What structural characteristics (effective length, frequency of retrogressions, frequency of <em>Current</em>/<em>Unavailable</em> states) explain predictive difficulty per cell?</li>
+        <li><strong>Coverage.</strong> What empirical coverage do the 95&nbsp;% prediction intervals achieve relative to their nominal level, in aggregate and by stratum?</li>
+      </ol>
+
+      <h4>Hypotheses</h4>
+      <div class="hypo">
+        <div class="hypo-label">H1 · Predictive performance · qualitative</div>
+        <h4>The best nonlinear model will improve on the strongest linear one in a material proportion of the pilot series.</h4>
+        <p>The best nonlinear model in the evaluated family {LSTM, ARIMA-LSTM, DeepAR, XGBoost} will reduce the central metrics (sMAPE, MASE) relative to the strongest linear model (ARIMA or Prophet, depending on the stratum) in a material proportion of the evaluable pilot series. The identity of the winning model is an empirical question that the experiment will answer with data.</p>
+      </div>
+
+      <div class="hypo hypo--g">
+        <div class="hypo-label">H2 · Heterogeneity and calibration · qualitative</div>
+        <h4>Predictive difficulty varies by stratum and the intervals may deviate in unstable regimes.</h4>
+        <p>Predictive difficulty &mdash;measured as MASE under the empirical winner&mdash; will show an association with the effective length of the series and with the frequency of discontinuities (retrogressions, C/U transitions). The 95&nbsp;% prediction intervals will achieve empirical coverage close to nominal in the aggregate, but may deviate in strata with an unstable administrative regime.</p>
+      </div>
+
+      <p class="mt-3" style="font-size:0.85rem;color:var(--text-muted);">
+        These hypotheses are interpreted in terms of predictive associations that are empirically verifiable with the project's data, not as causal claims about the administrative dynamics of the Department of State. Causal interpretation is explicitly out of scope.
+      </p>
+    </div>
+  </div>

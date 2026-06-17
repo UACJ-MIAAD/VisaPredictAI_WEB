@@ -1,0 +1,196 @@
+<div class="section-inner">
+    <span class="section-tag">Chapter III</span>
+    <h2 class="section-title">Expected product and validation</h2>
+    <p class="section-sub">
+      Description of the product, scope governance, and form of validation. The chapter responds strictly to &laquo;what is delivered?&raquo; and &laquo;how is it validated?&raquo;; the operational decisions (parameters, hyperparameters, testing scheme) are documented in Chapter&nbsp;IV.
+    </p>
+
+    <div class="subsec reveal">
+      <h3><span class="num">3.1</span> Description of the solution</h3>
+
+      <h4>3.1.1 · Methodological framework</h4>
+      <p>
+        A comparative framework that does not privilege architectures in advance, instrumented under <strong>CRISP-DM</strong> [64]. Three complementary families: (a)&nbsp;linear models (seasonal naïve, ARIMA, SARIMA, Prophet), (b)&nbsp;local nonlinear models (LSTM, ARIMA-LSTM), (c)&nbsp;global and tabular models (DeepAR, XGBoost). The identity of the best-performing model is an empirical question of the study.
+      </p>
+
+      <h4>3.1.2 · Tentative architecture</h4>
+      <div class="arch reveal mt-2">
+        <svg viewBox="0 0 920 360" xmlns="http://www.w3.org/2000/svg" aria-label="Tentative architecture of the experimental system">
+          <defs>
+            <linearGradient id="stageBlue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#003CA6"/>
+              <stop offset="100%" stop-color="#1955BF"/>
+            </linearGradient>
+            <linearGradient id="stageY" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FFD600"/>
+              <stop offset="100%" stop-color="#E6BD00"/>
+            </linearGradient>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#003CA6"/>
+            </marker>
+          </defs>
+
+          <!-- Heads -->
+          <text x="80"  y="40" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="11" fill="#555559">Raw data</text>
+          <text x="240" y="40" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="11" fill="#555559">ETL</text>
+          <text x="400" y="40" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="11" fill="#555559">Representation + states</text>
+          <text x="600" y="40" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="11" fill="#555559">Forecast</text>
+          <text x="800" y="40" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="11" fill="#555559">Evaluation</text>
+
+          <!-- 1 Fuente -->
+          <rect x="20" y="55" width="120" height="220" rx="14" fill="url(#stageBlue)"/>
+          <text x="80" y="95" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="14" fill="#fff">1. Source</text>
+          <text x="80" y="125" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">Visa Bulletin</text>
+          <text x="80" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">DOS / USCIS</text>
+          <text x="80" y="170" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600" font-style="italic">+ forum text</text>
+          <text x="80" y="184" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600" font-style="italic">(ext.)</text>
+
+          <!-- 2 Ingesta -->
+          <rect x="180" y="55" width="120" height="220" rx="14" fill="url(#stageBlue)"/>
+          <text x="240" y="95" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="14" fill="#fff">2. Ingest</text>
+          <text x="240" y="125" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">Scraping and</text>
+          <text x="240" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">normalization</text>
+
+          <!-- 3 Features -->
+          <rect x="340" y="55" width="120" height="220" rx="14" fill="url(#stageY)"/>
+          <text x="400" y="95" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#001C52">3. Features</text>
+          <text x="400" y="112" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#001C52">+ annotation</text>
+          <text x="400" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52">Numeric series</text>
+          <text x="400" y="158" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52">Fiscal calendar</text>
+          <text x="400" y="184" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#001C52" font-weight="700">C/U/F (descriptive)</text>
+
+          <!-- 4 Modelado -->
+          <rect x="500" y="55" width="200" height="220" rx="14" fill="url(#stageBlue)" stroke="#FFD600" stroke-width="3"/>
+          <text x="600" y="92" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="14" fill="#fff">4. Modeling</text>
+          <text x="600" y="120" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">Temporal regressor</text>
+          <text x="600" y="135" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#FFD600" font-style="italic">trained only on e = F</text>
+          <text x="600" y="165" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.92)">Comparative framework</text>
+          <text x="600" y="183" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">8 models · CRISP-DM</text>
+          <text x="600" y="208" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">linear + nonlinear +</text>
+          <text x="600" y="222" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.85)">global / tabular</text>
+
+          <!-- 5 Validación -->
+          <rect x="740" y="55" width="160" height="220" rx="14" fill="url(#stageBlue)"/>
+          <text x="820" y="95" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="14" fill="#fff">5. Validation</text>
+          <text x="820" y="125" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">Expanding</text>
+          <text x="820" y="142" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">walk-forward</text>
+          <text x="820" y="167" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">sMAPE · MASE</text>
+          <text x="820" y="184" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">MAE · RMSE</text>
+          <text x="820" y="201" text-anchor="middle" font-family="DM Sans" font-size="10" fill="rgba(255,255,255,0.85)">95% PI coverage</text>
+
+          <!-- Arrows -->
+          <line x1="142" y1="165" x2="178" y2="165" stroke="#003CA6" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="302" y1="165" x2="338" y2="165" stroke="#003CA6" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="462" y1="165" x2="498" y2="165" stroke="#003CA6" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="702" y1="165" x2="738" y2="165" stroke="#003CA6" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <!-- Resultado -->
+          <rect x="100" y="295" width="720" height="50" rx="12" fill="#fff" stroke="#003CA6" stroke-width="1.5"/>
+          <text x="120" y="320" font-family="DM Sans" font-weight="700" font-size="11" fill="#003CA6">Expected result</text>
+          <text x="120" y="335" font-family="DM Sans" font-size="10" fill="#555559">Monthly forecast by country × category × table (h = 1, 3, 6, 12 months) with 95% prediction intervals, 8 models compared, reproducible repository under an open license.</text>
+        </svg>
+      </div>
+
+      <h4>3.1.3 · Analytical coverage at three levels</h4>
+      <p>
+        The system's coverage is organized into three explicit levels:
+      </p>
+      <ul>
+        <li><strong>Structural database.</strong> Contains all combinations of country (Mexico, India, China, Philippines, <em>All Chargeability Areas Except Those Listed</em>) &times; category (family-based F1, F2A, F2B, F3, F4 and employment-based EB-1 through EB-5 with subcategories) &times; table (FAD, DFF).</li>
+        <li><strong>Evaluable coverage.</strong> Series with sufficient history, continuity, and variability for forecasting, according to the pre-registered criteria in <a href="#tablas">Table&nbsp;2</a>.</li>
+        <li><strong>Initial pilot coverage.</strong> Family-based categories F1&ndash;F4 over the high-demand countries and the residual grouping, starting with Mexico because of the severity of its backlogs.</li>
+      </ul>
+
+      <h4>3.1.4 · Predicted variable</h4>
+      <p>
+        Let $y_{p,c,b,t}$ be the priority date transformed into days since a base date, for the cell (country $p$, category $c$, table $b$) in month $t$. The variable is <strong>continuous</strong> and constitutes the target of a <strong>single temporal regressor</strong>. The system is trained exclusively on observations with state $e=F$ (specific date); <em>Current</em> and <em>Unavailable</em> observations are preserved in the database as descriptive annotation but <strong>are not a predictive target</strong>. Retrogressions within the $F$ regime are kept as legitimate observations (a genuine phenomenon of the immigration system).
+      </p>
+
+      <h4>3.1.5 · Training isolation</h4>
+      <p>
+        The regression metrics are computed exclusively on observations with a specific date. This avoids contaminating the evaluation with categorical observations (<em>Current</em>/<em>Unavailable</em>) that fall outside the system's predictive target. The descriptive characterization of the C/U/F regimes lives in the exploration report (Ch.&nbsp;IV, Phase&nbsp;2), not in the operational metrics.
+      </p>
+    </div>
+
+    <div class="subsec reveal">
+      <h3><span class="num">3.2</span> Delimitations, limitations, and governance</h3>
+      <p>The scope is bounded through an explicit set of <strong>delimitations</strong> (sovereign decisions of the researcher), while the constraints imposed by external factors are acknowledged as <strong>limitations</strong>.</p>
+
+      <div class="grid grid--2">
+        <div class="card">
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Delimitations · 7</span>
+          <h4 class="card-title" style="font-size:1rem;">Researcher decisions</h4>
+          <ul style="margin-top:0.4rem;">
+            <li><strong>Geography:</strong> MX · IN · CN · PH · All Charg.</li>
+            <li><strong>Tables:</strong> FAD &amp; DFF (evaluated separately)</li>
+            <li><strong>Horizons:</strong> h = 1, 3, 6, 12 months</li>
+            <li><strong>Models:</strong> 8 compared (linear + nonlinear)</li>
+            <li><strong>Metrics:</strong> sMAPE · MASE · MAE · RMSE</li>
+            <li><strong>Validation:</strong> expanding walk-forward</li>
+            <li><strong>Application:</strong> academic demonstration from a repository</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Limitations · 5</span>
+          <h4 class="card-title" style="font-size:1rem;">External factors</h4>
+          <ul style="margin-top:0.4rem;">
+            <li><strong>Data:</strong> $\sim$400 obs FAD, $\sim$125 obs DFF per series</li>
+            <li><strong>Structural discontinuities</strong> in the regulatory framework</li>
+            <li><strong>Variable composition</strong> of <em>All Chargeability</em></li>
+            <li><strong>Academic computational resources</strong> (not production-grade)</li>
+            <li><strong>Regulatory volatility</strong> with no observed impact in the period (e.g., recent policy announcements [3])</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4>Scope governance</h4>
+      <div class="grid grid--2">
+        <div class="card" style="border-left:5px solid var(--azul);">
+          <strong style="color:var(--azul);">Scientific product</strong>
+          <p class="card-text mt-2">
+            (i)&nbsp;Reproducible longitudinal CSV database under an open license; (ii)&nbsp;protocol of <em>evaluable series</em> (<a href="#tablas">Table&nbsp;2</a>); (iii)&nbsp;implementation of the complete family (<a href="#tablas">Table&nbsp;3</a>) under a single temporal regressor trained on $e=F$ observations over the pilot coverage; (iv)&nbsp;walk-forward with regression metrics and calibration of the 95&nbsp;% prediction intervals.
+          </p>
+        </div>
+        <div class="card" style="border-left:5px solid var(--amarillo-d);">
+          <strong style="color:var(--amarillo-d);">Demonstrative product</strong>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="subsec reveal">
+      <h3><span class="num">3.3</span> Form of validation</h3>
+
+      <p style="margin-bottom:1rem;">
+        Chapter&nbsp;III describes <em>what is validated</em> and <em>at what level success is reported</em>. The operational decisions (walk-forward parameters, confirmatory testing scheme, family-wise error control) are documented in Chapter&nbsp;IV.
+      </p>
+
+      <div class="steps">
+        <div class="step"><span class="step-num">01</span><h4>Expanding walk-forward</h4><p>Temporal validation with a training set that advances one month at a time, respecting causality. Reporting by horizon ($h = 1, 3, 6, 12$ months).</p></div>
+        <div class="step"><span class="step-num">02</span><h4>Scaled metrics</h4><p>sMAPE, MASE, MAE, and RMSE formally defined in §2.1.7. MAPE only as a complement. Calibration: empirical coverage of the 95&nbsp;% prediction intervals vs. nominal.</p></div>
+        <div class="step"><span class="step-num">03</span><h4>Statistical comparison</h4><p>Formal comparison between the best nonlinear model and the strongest linear one over the pre-registered family of pilot cells (specific instrumentation in Ch.&nbsp;IV §4.4).</p></div>
+        <div class="step"><span class="step-num">04</span><h4>95&nbsp;% prediction intervals</h4><p>Three complementary mechanisms: analytic ARIMA under Gaussian assumptions, MC dropout [40] for neural networks, and conformal prediction [59] as a model-agnostic reference.</p></div>
+        <div class="step"><span class="step-num">05</span><h4>Qualitative validation</h4><p>Case studies on critical cells and bounded retrospective validation over bulletins published after the training cutoff; a readable interpretation for end users with a disclaimer.</p></div>
+        <div class="step"><span class="step-num">06</span><h4>Threats to validity</h4><p>Internal validity (<em>data leakage</em>), external (generalization), construct (proxies of difficulty), and statistical (sample size, preliminary power).</p></div>
+      </div>
+
+      <h4>Success levels</h4>
+      <div class="levels">
+        <div class="level level--min">
+          <span class="level-tag">Minimum</span>
+          <h4>Honest report of the experiment</h4>
+          <p>Reproducible construction of the dataset, complete execution of the walk-forward over the pilot coverage, reporting of scaled metrics and 95&nbsp;% prediction intervals. <strong>It does not require</strong> any nonlinear model to outperform the linear ones: reporting a null result also satisfies the minimum level.</p>
+        </div>
+        <div class="level level--sat">
+          <span class="level-tag">Satisfactory</span>
+          <h4>Material and verifiable improvement</h4>
+          <p>The best nonlinear model in the family {LSTM, ARIMA-LSTM, DeepAR, XGBoost} improves on the strongest linear ones in a material proportion of the pilot series, with a verifiable magnitude in sMAPE/MASE. The specific statistical instrumentation lives in Ch.&nbsp;IV §4.4.</p>
+        </div>
+        <div class="level level--ideal">
+          <span class="level-tag">Ideal ★</span>
+          <h4>Calibration + stable log</h4>
+          <p>The 95&nbsp;% prediction intervals achieve empirical coverage close to nominal in the aggregate. Retrospective log over at least 6 monthly bulletin cycles following the training cutoff. Functional demonstration application with a disclaimer.</p>
+        </div>
+      </div>
+    </div>
+  </div>

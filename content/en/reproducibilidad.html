@@ -1,0 +1,24 @@
+<div class="section-inner">
+    <span class="section-tag">Appendix A.3</span>
+    <h2 class="section-title">Reproducibility annex</h2>
+    <p class="section-sub">
+      In line with the commitment stated in Section 3.2, the public repository includes the following seven components verifiable by third parties. Obtaining the <strong>academic DOI</strong> is <em>conditional</em>, not a commitment of the minimum deliverable.
+    </p>
+
+    <div class="repro-grid">
+      <div class="repro-card reveal"><span class="repro-card-num">R1</span><div class="repro-card-title">Academic DOI (conditional)</div><p class="repro-card-text">If the author decides to request it, archived in Zenodo or equivalent, with a persistent unique identifier linked to the <em>commit hash</em> frozen on the defense date. Publication under an open license (MIT or equivalent) is indeed a firm commitment.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R2</span><div class="repro-card-title">Dependency manifest</div><p class="repro-card-text"><code>requirements.txt</code> with pinned versions (==), optionally complemented with <code>environment.yml</code> for Conda.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R3</span><div class="repro-card-title">Random seeds</div><p class="repro-card-text">Each experiment documents the seed(s) used for NumPy, PyTorch, and Scikit-learn at the start of each notebook or script.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R4</span><div class="repro-card-title">Hardware specification</div><p class="repro-card-text">Memory, CPU model, presence/absence of a GPU, operating system, and architecture (Apple Silicon, x86_64) in <code>REPRODUCIBILITY.md</code>.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R5</span><div class="repro-card-title">Execution times</div><p class="repro-card-text">Times per pipeline stage (ingestion, features, training, walk-forward, evaluation) reported as indicative information.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R6</span><div class="repro-card-title">Data integrity</div><p class="repro-card-text">SHA-256 <em>checksums</em> published for raw (<code>data/raw/</code>) and processed (<code>data/processed/</code>) data; bit-by-bit verification.</p></div>
+      <div class="repro-card reveal"><span class="repro-card-num">R7</span><div class="repro-card-title">Hyperparameter log</div><p class="repro-card-text">Complete record of explored configurations and finally selected configurations per model and per stratum (MLflow or equivalent).</p></div>
+    </div>
+
+    <div class="callout mt-4">
+      <div class="callout-head">📁 Repository structure</div>
+      <p>
+        <code>src/</code> · <code>data/raw/</code> · <code>data/processed/</code> · <code>notebooks/</code> · <code>models/</code> · <code>tests/</code> · <code>docs/</code> · <code>README.md</code> with step-by-step instructions to reproduce every figure and table in the manuscript from scratch, together with <code>REPRODUCIBILITY.md</code> consolidating R1–R7 and <code>docs/disclaimer_academico.txt</code>, which is automatically injected into every output of the academic demonstrator.
+      </p>
+    </div>
+  </div>

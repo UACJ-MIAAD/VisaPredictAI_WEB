@@ -1,0 +1,52 @@
+<div class="section-inner">
+    <span class="section-tag">Chapter IV</span>
+    <h2 class="section-title">CRISP-DM methodology</h2>
+    <p class="section-sub">
+      The project is implemented under <strong>CRISP-DM</strong> (<em>Cross-Industry Standard Process for Data Mining</em>) [64], an established methodology since 2000 that has become the <em>de facto</em> standard for data mining and applied machine learning projects. Its six canonical phases map to the project's five operational phases.
+    </p>
+
+    <div class="grid grid--2">
+      <div class="card reveal">
+        <span class="card-tag">Phase 1 · CRISP-DM 1+2</span>
+        <h3 class="card-title">Business &amp; data understanding</h3>
+        <p class="card-text">
+          Addressed in Chapters&nbsp;I and II of the proposal. It defines the problem, the affected stakeholders (millions of applicants), the backlog figures, the INA 1965 statutory regime, the structure of the <em>Visa Bulletin</em>, and the high-level methodological decisions.
+        </p>
+      </div>
+      <div class="card reveal reveal--d1">
+        <span class="card-tag">Phase 2 · CRISP-DM 2</span>
+        <h3 class="card-title">Exploratory analysis</h3>
+        <p class="card-text">
+          Characterization of the historical behavior per evaluable series: STL decomposition, ADF&nbsp;[27] and KPSS&nbsp;[28] tests, quantitative identification of retrogressions and C/U periods, application of the exclusion criteria from <a href="#tablas">Table&nbsp;2</a>.
+        </p>
+      </div>
+      <div class="card reveal reveal--d2">
+        <span class="card-tag">Phase 3 · CRISP-DM 3+4</span>
+        <h3 class="card-title">Preparation &amp; modeling</h3>
+        <p class="card-text">
+          Construction of the multiseries panel $y_{p,c,b,t}$ and training of the 8 models in <a href="#tablas">Table&nbsp;3</a>: linear (naïve, ARIMA, SARIMA, Prophet), nonlinear local (LSTM, ARIMA-LSTM), and global/tabular (DeepAR, XGBoost). Hyperparameter selection without <em>data leakage</em>; generation of 95&nbsp;% prediction intervals via three mechanisms.
+        </p>
+      </div>
+      <div class="card reveal reveal--d3">
+        <span class="card-tag">Phase 4 · CRISP-DM 5</span>
+        <h3 class="card-title">Evaluation</h3>
+        <p class="card-text">
+          Expanding walk-forward with scaled metrics (sMAPE, MASE, MAE, RMSE) by horizon and aggregated. Computation of empirical coverage of the 95&nbsp;% intervals. Formal statistical comparison with Diebold-Mariano [18] over the pre-registered family of comparisons, with Holm correction at familywise $\alpha = 0.05$. Diagnosis of <em>overfitting</em> and <em>leakage</em>, threats to validity.
+        </p>
+      </div>
+      <div class="card reveal reveal--d4" style="grid-column:1/-1;">
+        <span class="card-tag">Phase 5 · CRISP-DM 6</span>
+        <h3 class="card-title">Deployment</h3>
+        <p class="card-text">
+          Publication of the dataset under an open license, freezing of the repository (R1&ndash;R7), an academic demonstration application with usage warnings (the disclaimer in Appendix&nbsp;A.5), and a comprehensive final report. There is <strong>no</strong> commitment to a permanent public service: the system is academic, evaluated, and reproducible, not operational.
+        </p>
+      </div>
+    </div>
+
+    <div class="callout mt-4">
+      <div class="callout-head">⏱️ Schedule August 2026 &ndash; May 2027</div>
+      <p>
+        The five phases are distributed over 10 months with weekly granularity (40 active weeks + the December 2026 academic recess), aligned with the MIAAD program's PI-I (Aug&ndash;Nov 2026) and PI-II (Jan&ndash;May 2027) periods. Verifiable milestones at each phase close, with review of the deliverable document and assessment by the thesis director.
+      </p>
+    </div>
+  </div>

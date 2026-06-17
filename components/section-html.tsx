@@ -1,9 +1,13 @@
+"use client";
+
 import { sectionHtml } from "@/lib/content/sections.generated";
+import { sectionHtmlEn } from "@/lib/content/sections.en.generated";
+import { useLang } from "@/components/lang-provider";
 
 /**
- * Renders a preserved academic section verbatim. Content comes from the
- * build-time transform of index.html (disclaimers stripped, KaTeX rendered).
- * `extraClass` lets a section opt into special wrappers (e.g. ER diagram).
+ * Renders a preserved academic section. Spanish from the source transform;
+ * English from the translated set (content/en/*). Falls back to Spanish if a
+ * translation is missing.
  */
 export function SectionHTML({
   id,
@@ -12,7 +16,8 @@ export function SectionHTML({
   id: string;
   className?: string;
 }) {
-  const html = sectionHtml[id];
+  const { lang } = useLang();
+  const html = (lang === "en" && sectionHtmlEn[id]) || sectionHtml[id];
   if (!html) {
     return (
       <section id={id} className="section">
@@ -22,7 +27,6 @@ export function SectionHTML({
       </section>
     );
   }
-  // The original markup already includes <div class="section-inner">…
   return (
     <section
       id={id}

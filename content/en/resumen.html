@@ -1,0 +1,38 @@
+<div class="section-inner">
+    <span class="section-tag">Abstract</span>
+    <h2 class="section-title">Synthetic overview of the project</h2>
+    <p class="section-sub">
+      The project will develop an <strong>applied predictive system</strong> for <em>Visa&nbsp;Bulletin</em> priority dates, organized as a multiseries panel indexed by chargeability country, immigrant category, and table type, under the <strong>CRISP-DM</strong> methodology (Chapman et al. 2000). Linear and nonlinear models will be compared empirically without privileging architectures in advance.
+    </p>
+
+    <div class="grid grid--2">
+      <div class="card reveal">
+        <span class="card-tag">Problem</span>
+        <h3 class="card-title">Transparent forecasting of the Visa Bulletin</h3>
+        <p class="card-text">
+          The U.S.&nbsp;Department of State's monthly bulletin publishes priority dates by chargeability country and immigrant category. More than three decades of public data (1992&ndash;2026) without open, systematically evaluated predictive models that report <strong>95&nbsp;% prediction intervals</strong>. Nearly 4&nbsp;million people are awaiting a family-based visa [6], within a global USCIS backlog of 11.5&nbsp;million cases across all forms [4].
+        </p>
+      </div>
+      <div class="card reveal reveal--d1">
+        <span class="card-tag">Unit of analysis</span>
+        <h3 class="card-title">Multiseries panel y<sub>p,c,b,t</sub></h3>
+        <p class="card-text">
+          Each cell combines a chargeability country or area <code>p</code>, an immigrant category <code>c</code>, a table type <code>b</code> (FAD or DFF), and a calendar month <code>t</code>. The predicted variable is continuous: days since a base date. The system is trained exclusively on observations with a specific date; <em>Current</em> and <em>Unavailable</em> cells are kept as descriptive annotation.
+        </p>
+      </div>
+      <div class="card reveal reveal--d2">
+        <span class="card-tag">Strategy</span>
+        <h3 class="card-title">Comparative framework under CRISP-DM</h3>
+        <p class="card-text">
+          Three complementary families: <strong>linear</strong> (seasonal naïve, ARIMA, SARIMA, Prophet), <strong>local nonlinear</strong> (pure LSTM, ARIMA-LSTM), and <strong>global/tabular</strong> (DeepAR, XGBoost). Expanding <em>walk-forward</em> validation with scaled metrics (sMAPE, MASE, MAE, RMSE) and 95&nbsp;% prediction intervals via three mechanisms (analytical ARIMA, MC dropout, conformal prediction).
+        </p>
+      </div>
+      <div class="card reveal reveal--d3">
+        <span class="card-tag">Tangible deliverables</span>
+        <h3 class="card-title">Dataset, system, and application</h3>
+        <p class="card-text">
+          (1)&nbsp;A reproducible longitudinal database of the <em>Visa Bulletin</em> 1992&ndash;2026 published under an open license; (2)&nbsp;a reproducible predictive system with code and version manifests; (3)&nbsp;an academic demonstration application with explicit warnings about the informational and non-legal nature of the estimates.
+        </p>
+      </div>
+    </div>
+  </div>
