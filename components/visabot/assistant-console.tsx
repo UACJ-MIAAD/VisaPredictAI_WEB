@@ -295,10 +295,10 @@ export function AssistantConsole() {
                         {m.chart && <VisaChart spec={m.chart} />}
                         {m.extractive && m.content && <p className="mt-2 text-[0.68rem] italic text-[var(--color-muted)]">{tr(lang, "vbExtractiveNote")}</p>}
                       </div>
-                      {m.sources && m.sources.length > 0 && (
+                      {m.sources && m.sources.some((s) => m.content.includes(`[${s.n}]`)) && (
                         <div className="flex flex-wrap items-center gap-1.5 pl-1">
                           <span className="text-[0.62rem] uppercase tracking-wide text-[var(--color-muted)]">{tr(lang, "vbSources")}:</span>
-                          {m.sources.map((s) => (
+                          {m.sources.filter((s) => m.content.includes(`[${s.n}]`)).map((s) => (
                             <a key={s.n} href={s.url} onClick={() => track("VisaBot Source Click", { lang, source: s.source })} className="vb-chip" title={`${s.source}${s.title ? " — " + s.title : ""}`}>[{s.n}] {s.source}</a>
                           ))}
                         </div>
