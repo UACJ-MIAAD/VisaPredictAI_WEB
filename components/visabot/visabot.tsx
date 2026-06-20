@@ -370,13 +370,13 @@ export function VisaBot() {
                       )}
                     </div>
 
-                    {/* sources */}
-                    {m.sources && m.sources.length > 0 && (
+                    {/* sources — only the ones the answer actually cites */}
+                    {m.sources && m.sources.some((s) => m.content.includes(`[${s.n}]`)) && (
                       <div className="flex flex-wrap items-center gap-1.5 pl-1">
                         <span className="text-[0.62rem] uppercase tracking-wide text-[var(--color-muted)]">
                           {tr(lang, "vbSources")}:
                         </span>
-                        {m.sources.map((s) => (
+                        {m.sources.filter((s) => m.content.includes(`[${s.n}]`)).map((s) => (
                           <a
                             key={s.n}
                             href={s.url}
