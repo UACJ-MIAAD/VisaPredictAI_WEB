@@ -10,6 +10,7 @@ export type Chunk = {
   title: string;
   text: string;
   kind: "academic" | "glossary" | "reference" | "docs" | "data" | "fact";
+  embedCtx?: string; // structural context prefixed before embedding/BM25 (Contextual Retrieval)
 };
 
 export type Source = {

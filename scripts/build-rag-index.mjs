@@ -306,7 +306,14 @@ async function embedAll() {
   const vecs = new Float32Array(chunks.length * EMBED_DIM);
   const BATCH = 32;
   for (let i = 0; i < chunks.length; i += BATCH) {
-    const batch = chunks.slice(i, i + BATCH).map((c) => `passage: ${c.text}`);
+    // Contextual Retrieval (structural, Época 1.1): prepend the chunk's source/
+    // section ONLY to fragmented chunks (academic/docs) so they're situated in
+    // their document. Glossary/reference/fact/data are self-contained — prefixing
+    // them measurably dilutes retrieval, so they're left as-is.
+    const batch = chunks.slice(i, i + BATCH).map((c) => {
+      c.embedCtx = (!process.env.VB_NO_CTX && (c.kind === "academic" || c.kind === "docs")) ? c.source : "";
+      return `passage: ${c.embedCtx ? c.embedCtx + ". " : ""}${c.text}`;
+    });
     const out = await extractor(batch, { pooling: "mean", normalize: true });
     const data = out.data; // Float32Array length batch*dim
     vecs.set(data.subarray ? data.subarray(0, batch.length * EMBED_DIM) : data, i * EMBED_DIM);
@@ -428,7 +435,7 @@ function copyOrtWasm() {
       model: EMBED_MODEL,
       dim: EMBED_DIM,
       built: new Date().toISOString(),
-      chunks: chunks.map(({ id, lang, source, sourceId, url, title, text, kind }) => ({ id, lang, source, sourceId, url, title, text, kind })),
+      chunks: chunks.map(({ id, lang, source, sourceId, url, title, text, kind, embedCtx }) => ({ id, lang, source, sourceId, url, title, text, kind, embedCtx })),
       vectors: vectorsB64,
     }),
   );
