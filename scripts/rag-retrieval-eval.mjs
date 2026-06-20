@@ -86,3 +86,13 @@ for (const p of ACAD) {
 }
 console.log(`ACADEMIC/fragment probes (${ACAD.length}, where contextual helps):`);
 console.log(`  source-hit@6: ${Math.round((aHit / ACAD.length) * 100)}% (${aHit}/${ACAD.length})  mean best-rank: ${(aRankSum / ACAD.length).toFixed(1)}`);
+
+// Época 5 — CI gate: with --gate, fail (exit 1) if any metric regresses below
+// the frozen baseline thresholds. Keeps deploys from silently degrading retrieval.
+if (process.argv.includes("--gate")) {
+  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85 };
+  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length };
+  const fails = Object.entries(T).filter(([k, t]) => m[k] < t).map(([k, t]) => `${k} ${m[k].toFixed(3)} < ${t}`);
+  if (fails.length) { console.error(`\n✗ RAG GATE FAILED:\n  ${fails.join("\n  ")}`); process.exit(1); }
+  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}).`);
+}
