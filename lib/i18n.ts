@@ -241,6 +241,7 @@ const S: Dict = {
   acHereRace: { es: "Carrera de fechas de prioridad entre países:", en: "Priority-date race across countries:" },
   acHereHeat: { es: "Mapa de calor de la espera por país y categoría:", en: "Heatmap of wait by country and category:" },
   acHereRadar: { es: "Huella de espera de cada país por categoría:", en: "Each country's wait fingerprint by category:" },
+  acPanelToggle: { es: "Panel", en: "Panel" },
 };
 
 export function tr(lang: Lang, key: keyof typeof S | string): string {
