@@ -6,7 +6,7 @@ import {
   Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, RotateCcw, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
-  Lightbulb, Database, Cpu, Quote, CalendarDays,
+  Lightbulb, Database, Cpu, Quote, CalendarDays, AreaChart as ForecastIcon,
 } from "lucide-react";
 
 type PromptCat = { icon: string; cat: string; items: string[] };
@@ -22,8 +22,8 @@ import type { ChatMessage, ChartPayload, Source } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import {
   detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
-  buildHeatmap, buildRadar, buildPanorama, buildMonthTable, parseMonth, monthTableText,
-  monthLabel, type Kpi, type ChartSpec,
+  buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
+  monthTableText, chartContextNote, monthLabel, type Kpi, type ChartSpec,
 } from "@/lib/visabot/analytics";
 
 const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
@@ -41,6 +41,10 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en"): ChartPayload
     const m = parseMonth(q, panel);
     if (m) return buildMonthTable(panel, m, t, lang);
   }
+  // forecast: "predicción/pronóstico/forecast de F2A …" → fan-chart projection.
+  // The core purpose of the project — defaults to México (the pilot) if no country.
+  if (/predic|pron[oó]stic|forecast|proyec|predict|futuro|estimaci[oó]n a/i.test(q) && e.category)
+    return buildForecast(panel, e.country || "mexico", e.category, t, lang);
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
   if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
@@ -142,6 +146,13 @@ export function AssistantConsole() {
       const ml = monthLabel(chart.month, lang);
       sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: lang === "en" ? "VisaPredict AI panel (2001–2026)" : "Panel VisaPredict AI (2001–2026)", url: "/#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
+    } else if (chart) {
+      // Tell the LLM a chart is rendered alongside its answer so it interprets
+      // it instead of replying "I can't show graphs" (esp. forecasts).
+      const note = chartContextNote(chart, lang);
+      if (note)
+        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: "/asistente/", text: note },
+          ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     }
     const ctrl = new AbortController(); abortRef.current = ctrl;
     try {
@@ -159,12 +170,13 @@ export function AssistantConsole() {
   const newChat = () => { stop(); setMessages([]); inputRef.current?.focus(); };
   const copy = (i: number, text: string) => { navigator.clipboard?.writeText(text); setCopied(i); setTimeout(() => setCopied((c) => (c === i ? null : c)), 1600); };
 
-  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table") => {
+  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table" | "forecast") => {
     if (!panel) return;
     track("VisaBot Tool", { lang, tool: kind });
     setNavOpen(false);
     let chart: ChartPayload | null = null, lead = "";
     if (kind === "table") { chart = buildMonthTable(panel, month || months[0], table, lang); lead = tr(lang, "acHereTable"); }
+    else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang); lead = tr(lang, "acHereForecast"); }
     else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
     else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
@@ -178,6 +190,7 @@ export function AssistantConsole() {
 
   const kpis: Kpi[] = panel ? buildPanorama(panel, lang) : [];
   const tools = [
+    { k: "forecast" as const, icon: ForecastIcon, label: tr(lang, "toolForecast") },
     { k: "evol" as const, icon: TrendingUp, label: tr(lang, "toolEvol") },
     { k: "compare" as const, icon: BarChart3, label: tr(lang, "toolCompare") },
     { k: "move" as const, icon: ArrowUpDown, label: tr(lang, "toolMove") },
