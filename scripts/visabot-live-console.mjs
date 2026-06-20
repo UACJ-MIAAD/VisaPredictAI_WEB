@@ -6,7 +6,7 @@ const URL_LIVE = process.argv[2] || "https://visapredictai.com/asistente/";
 const cdp = (ws, m, p = {}, id) => new Promise((r) => { const on = (e) => { const x = JSON.parse(e.data); if (x.id === id) { ws.removeEventListener("message", on); r(x.result); } }; ws.addEventListener("message", on); ws.send(JSON.stringify({ id, method: m, params: p })); });
 
 const chrome = spawn("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  ["--headless=new", "--disable-gpu", "--no-first-run", "--remote-debugging-port=9337", "--user-data-dir=/tmp/vbchrome5", URL_LIVE], { stdio: "ignore" });
+  ["--headless=new", "--disable-gpu", "--no-first-run", "--remote-debugging-port=9337", "--window-size=1440,900", "--user-data-dir=/tmp/vbchrome5", URL_LIVE], { stdio: "ignore" });
 
 let result = { ok: false };
 try {
@@ -25,7 +25,7 @@ try {
     if(tool)tool.click();
     let toolChart=false;
     for(let i=0;i<30;i++){await sleep(500);if(document.querySelector('.vb-bot svg.recharts-surface')){toolChart=true;break;}}
-    const ta=document.querySelector('.vb-console textarea');
+    const ta=document.querySelector('textarea');
     if(ta){const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(ta,'¿Cómo ha evolucionado la fecha de prioridad de México F3?');ta.dispatchEvent(new Event('input',{bubbles:true}));await sleep(100);ta.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}
     let chips=0,charts=0,answer='',extractive=true;
     for(let i=0;i<60;i++){await sleep(1000);chips=document.querySelectorAll('.vb-chip').length;charts=document.querySelectorAll('.vb-bot svg.recharts-surface').length;const b=[...document.querySelectorAll('.vb-bot')];answer=b.length?b[b.length-1].innerText:'';extractive=/asistente en vivo no disponible|live assistant offline/i.test(answer);if(chips>0&&charts>=2&&answer.length>40&&!extractive)break;}
