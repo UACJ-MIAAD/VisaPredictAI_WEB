@@ -3,6 +3,7 @@ import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { BackToTop } from "@/components/back-to-top";
 import { ClientEnhancements } from "@/components/client-enhancements";
+import { VisaBot } from "@/components/visabot/visabot";
 import type { Lang } from "@/lib/site-map";
 
 // Per-locale shell: fixes the language for everything inside (chrome + content),
@@ -26,6 +27,7 @@ export function SiteShell({
       <SiteFooter />
       <BackToTop />
       <ClientEnhancements />
+      <VisaBot />
     </LangProvider>
   );
 }

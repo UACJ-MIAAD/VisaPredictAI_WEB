@@ -124,6 +124,51 @@ const S: Dict = {
 
   // data explorer
   dataNotFound: { es: "Datos no encontrados.", en: "Data not found." },
+
+  // ── VisaBot
+  vbName: { es: "VisaBot", en: "VisaBot" },
+  vbOpen: { es: "Abrir el asistente VisaBot", en: "Open the VisaBot assistant" },
+  vbClose: { es: "Cerrar el asistente", en: "Close the assistant" },
+  vbTagline: {
+    es: "Asistente del proyecto · respuestas citadas desde la documentación",
+    en: "Project assistant · answers cited from the documentation",
+  },
+  vbLauncher: { es: "Pregúntale a VisaBot", en: "Ask VisaBot" },
+  vbWelcome: {
+    es: "Hola 👋 Soy **VisaBot**. Respondo sobre el Visa Bulletin, el panel de datos y la metodología del proyecto, **citando** las fuentes. Prueba una pregunta:",
+    en: "Hi 👋 I'm **VisaBot**. I answer about the Visa Bulletin, the data panel and the project's methodology, **citing** the sources. Try a question:",
+  },
+  vbPlaceholder: { es: "Escribe tu pregunta…", en: "Type your question…" },
+  vbSend: { es: "Enviar", en: "Send" },
+  vbStop: { es: "Detener", en: "Stop" },
+  vbThinking: { es: "Consultando la documentación…", en: "Searching the documentation…" },
+  vbNewChat: { es: "Nueva conversación", en: "New chat" },
+  vbCopy: { es: "Copiar", en: "Copy" },
+  vbCopied: { es: "Copiado", en: "Copied" },
+  vbSources: { es: "Fuentes", en: "Sources" },
+  vbScrollDown: { es: "Ir al final", en: "Scroll to bottom" },
+  vbLoadingEngine: { es: "Cargando el motor semántico…", en: "Loading the semantic engine…" },
+  vbEngineReady: { es: "Motor semántico activo", en: "Semantic engine active" },
+  vbLexicalOnly: { es: "Búsqueda léxica (el motor semántico sigue cargando)", en: "Lexical search (semantic engine still loading)" },
+  vbError: {
+    es: "Algo falló al responder. Intenta de nuevo.",
+    en: "Something went wrong. Please try again.",
+  },
+  vbNoIndex: {
+    es: "La base de conocimiento aún no está disponible. Vuelve a intentar en un momento.",
+    en: "The knowledge base isn't available yet. Please try again shortly.",
+  },
+  vbExtractiveNote: {
+    es: "Respuesta compuesta directamente desde las fuentes (sin el modelo generativo).",
+    en: "Answer composed directly from the sources (without the generative model).",
+  },
+  vbMic: { es: "Dictar por voz", en: "Dictate by voice" },
+  vbMicStop: { es: "Detener dictado", en: "Stop dictation" },
+  vbSpeak: { es: "Leer en voz alta", en: "Read aloud" },
+  vbDisclaimer: {
+    es: "VisaBot describe el proyecto; no es asesoría legal migratoria.",
+    en: "VisaBot describes the project; it is not immigration legal advice.",
+  },
 };
 
 export function tr(lang: Lang, key: keyof typeof S | string): string {

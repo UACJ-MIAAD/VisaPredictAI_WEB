@@ -83,3 +83,8 @@ next-env.d.ts
 .v0/
 *.tsbuildinfo
 out/
+
+# VisaBot RAG artifacts (regenerated each build by scripts/build-rag-index.mjs)
+public/rag/
+public/models/
+public/ort/
