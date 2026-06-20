@@ -119,8 +119,13 @@ export function AssistantConsole() {
     track("VisaBot Query", { lang, surface: "console" });
     const history = messages.map((m) => ({ role: m.role, content: m.content }));
     setMessages((m) => [...m, { role: "user", content: q }, { role: "assistant", content: "" }]);
+    // Época 3.1: history-aware retrieval — augment clear follow-ups ("¿y India?")
+    // with the previous user turn; fresh questions (>3 words, no marker) untouched.
+    const isFollowUp = /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) || q.split(/\s+/).length <= 3;
+    const prevUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+    const rq = isFollowUp && prevUser ? `${prevUser} ${q}` : q;
     let sources: Source[] = [];
-    try { sources = await retrieve(q, lang, 6); } catch { /* conversational */ }
+    try { sources = await retrieve(rq, lang, 6); } catch { /* conversational */ }
     const chart = panel ? chartForQuery(q, panel, lang) : null;
     const ctrl = new AbortController(); abortRef.current = ctrl;
     try {

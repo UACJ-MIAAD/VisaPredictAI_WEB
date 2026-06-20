@@ -7,6 +7,8 @@
     "build:rag": "node scripts/build-rag-index.mjs",
     "rag:check": "node scripts/rag-selfcheck.mjs",
     "rag:smoke": "node scripts/visabot-smoke.mjs",
+    "rag:retr": "node scripts/rag-retrieval-eval.mjs",
+    "rag:gate": "node scripts/rag-retrieval-eval.mjs --gate",
     "prebuild": "node scripts/extract-content.mjs && node scripts/build-rag-index.mjs",
     "predev": "node scripts/extract-content.mjs",
     "dev": "next dev",

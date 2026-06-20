@@ -129,3 +129,21 @@ Estos quedan documentados como *futuro lejano* solo si el corpus crece 10–100�
 1. **Época 0** (medir) → 2. **Época 1.1** (contextual barato, gratis) → 3. **Época 3.1** (reescritura de follow-ups, gana en conversación) → 4. **Época 2.1** (LLM-reranker) → 5. **Época 4** (CRAG-lite + routing) → 6. **Época 5** (gate CI). E1.2/E3.2/E3.3 solo si Época 0 muestra que la baseline lo amerita.
 
 Las dos de mayor ROI inmediato — **Contextual Retrieval (build, gratis)** y **medición RAGAS** — se pueden empezar ya sin tocar runtime ni costos.
+
+---
+
+## Resultados medidos (implementación 20-jun-2026)
+
+Se ejecutó el orden recomendado **validando cada paso contra la medición de la Época 0**. La decisión de qué enviar a producción se tomó con datos, no por completitud.
+
+| Época | Estado | Evidencia medida |
+|---|---|---|
+| **0 — medición** | ✅ enviado | `npm run rag:retr`. Baseline: gloss recall@6 **100%**, recall@1 95%, MRR **0.976**, nDCG@10 0.982; académico source-hit@6 **88%**. |
+| **1.1 — Contextual Retrieval** | ✅ enviado | Prefijo estructural **selectivo** (solo `academic`/`docs`; en glosario auto-contenido **diluía** 95→94%). Académico subió de ~75% a **88%** source-hit@6 sin tocar glosario. A/B validado. |
+| **3.1 — reescritura de follow-ups** | ✅ enviado | Heurística cliente (gratis): solo aumenta seguimientos claros (`¿y India?`, ≤3 palabras) con el turno previo; preguntas nuevas intactas. En `assistant-console.tsx` y `visabot.tsx`. |
+| **5 — gate de CI** | ✅ enviado | `npm run rag:gate` → exit 1 si recall@6 < 1.0, MRR < 0.95, gloss@1 < 0.92, o académico@6 < 0.85. Pasa hoy. |
+| **2 — reranking (cross-encoder/LLM)** | ⏸️ diferido con evidencia | recall@6 ya es **100%**: no hay headroom de recuperación que reordenar. La selección de citas en generación ya descarta lo irrelevante (chips solo muestran `[n]` citado). Reactivar si el corpus crece 10×. |
+| **4 — CRAG-lite (gate de confianza)** | ⏸️ diferido con evidencia | El rango de cosenos de e5 es comprimido (relevante ~0.85 vs off-topic ~0.80) → umbral fijo frágil, arriesga descartar contexto válido. El grounding actual **ya abstiene** (off-topic refusal 100%, adversarial 28/28). Sin headroom. |
+| **3.2/3.3 — multi-query / HyDE** | ⏸️ diferido | Round-trips extra de LLM para ganar recall que ya está al 100%. Sin ROI a esta escala. |
+
+**Conclusión de ingeniería:** a 600 chunks con recall@6=100% y defensa adversarial 28/28, los upgrades de alto ROI son los **baratos de build/cliente** (contextual selectivo, follow-ups, gate de CI). El reranking y las transformaciones de query son *overkill* hoy; quedan documentados y listos para reactivar con crecimiento del corpus.

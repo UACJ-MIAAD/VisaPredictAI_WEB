@@ -130,9 +130,13 @@ export function VisaBot() {
       const history = messages.map((m) => ({ role: m.role, content: m.content }));
       setMessages((m) => [...m, { role: "user", content: q }, { role: "assistant", content: "" }]);
 
+      // Época 3.1: history-aware retrieval for follow-ups
+      const isFollowUp = /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) || q.split(/\s+/).length <= 3;
+      const prevUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+      const rq = isFollowUp && prevUser ? `${prevUser} ${q}` : q;
       let sources: Source[] = [];
       try {
-        sources = await retrieve(q, lang, 6);
+        sources = await retrieve(rq, lang, 6);
       } catch {
         setMessages((m) => {
           const c = [...m];
