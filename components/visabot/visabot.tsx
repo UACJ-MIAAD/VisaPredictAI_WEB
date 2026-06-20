@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {
-  Sparkles, X, Send, Square, Plus, Copy, Check, ArrowDown, Mic,
+  Sparkles, X, Send, Square, RotateCcw, Copy, Check, ArrowDown, Mic,
   Volume2, Loader2, BookOpen,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -298,14 +298,16 @@ export function VisaBot() {
                 </div>
                 <p className="truncate text-xs text-[var(--color-muted)]">{tr(lang, "vbTagline")}</p>
               </div>
-              <button
-                onClick={newChat}
-                aria-label={tr(lang, "vbNewChat")}
-                title={tr(lang, "vbNewChat")}
-                className="vb-iconbtn"
-              >
-                <Plus className="h-4 w-4" aria-hidden />
-              </button>
+              {messages.length > 0 && (
+                <button
+                  onClick={newChat}
+                  aria-label={tr(lang, "vbNewChat")}
+                  title={tr(lang, "vbNewChat")}
+                  className="vb-clearbtn"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              )}
               <button
                 onClick={() => setOpen(false)}
                 aria-label={tr(lang, "vbClose")}

@@ -320,3 +320,23 @@ main:focus {
 @media (prefers-reduced-motion: reduce) {
   .vb-suggest:hover { transform: none; }
 }
+
+/* VisaBot — elegant "clear / new chat" button */
+.vb-clearbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 1.9rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-muted);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.vb-clearbtn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
