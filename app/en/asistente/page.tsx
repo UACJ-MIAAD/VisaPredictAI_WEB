@@ -1,5 +1,4 @@
 import { pageMeta } from "@/lib/seo";
-import { RouteHeader } from "@/components/route-header";
 import { AssistantConsole } from "@/components/visabot/assistant-console";
 
 export const metadata = pageMeta({
@@ -7,14 +6,9 @@ export const metadata = pageMeta({
   lang: "en",
   title: "Assistant",
   description:
-    "VisaBot: a retrieval-augmented (RAG) conversational assistant over the project documentation, with cited answers.",
+    "VisaBot: a retrieval-augmented (RAG) conversational console over the project documentation, with real-data charts and cited answers.",
 });
 
 export default function Page() {
-  return (
-    <>
-      <RouteHeader path="/asistente" />
-      <AssistantConsole />
-    </>
-  );
+  return <AssistantConsole />;
 }
