@@ -3,7 +3,7 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import {
-  Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, Plus, BookOpen,
+  Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, RotateCcw, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
   Lightbulb, Database, Cpu, Quote,
@@ -238,7 +238,9 @@ export function AssistantConsole() {
           <Info className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "acHowTitle")}
         </button>
         {messages.length > 0 && (
-          <button onClick={newChat} className="vb-iconbtn" aria-label={tr(lang, "vbNewChat")} title={tr(lang, "vbNewChat")}><Plus className="h-4 w-4" aria-hidden /></button>
+          <button onClick={newChat} className="vb-clearbtn" aria-label={tr(lang, "vbNewChat")} title={tr(lang, "vbNewChat")}>
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden /> <span className="hidden sm:inline">{tr(lang, "vbNewChat")}</span>
+          </button>
         )}
       </header>
 
