@@ -6,17 +6,43 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# VisaBot generation runs as a serverless function (Claude proxy).
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Persist the on-device embedding model (~129 MB) + ORT wasm across builds so
+# each deploy doesn't re-download them (the index is still re-embedded fresh).
+[[plugins]]
+  package = "netlify-plugin-cache"
+  [plugins.inputs]
+    paths = ["public/models", "public/ort"]
+
 # Security headers (best-practice baseline). CSP allows our own inline scripts/
 # styles, self-hosted fonts, data: images, and the GitHub feed (connect-src).
+# VisaBot additions: 'wasm-unsafe-eval' for the on-device embedding model
+# (onnxruntime-web, self-hosted at /ort/ and /models/, run on the MAIN THREAD —
+# no worker, so no worker-src needed) and microphone=(self) for optional voice
+# input. The chat function and all model/index assets are same-origin → 'self'.
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    Permissions-Policy = "camera=(), microphone=(self), geolocation=(), browsing-topics=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://raw.githubusercontent.com https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://raw.githubusercontent.com https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+# The on-device model + WASM are large and immutable — cache them hard.
+[[headers]]
+  for = "/models/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+[[headers]]
+  for = "/ort/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
 # Long-cache the immutable build assets
 [[headers]]
