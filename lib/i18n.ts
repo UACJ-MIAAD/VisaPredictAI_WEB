@@ -214,6 +214,27 @@ const S: Dict = {
     es: "Cada cita [n] es un enlace profundo a la sección de origen del sitio, para que puedas verificar la respuesta en la fuente.",
     en: "Each [n] citation is a deep link to its source section on the site, so you can verify the answer against the source.",
   },
+
+  // ── console command center
+  acPanorama: { es: "Panorama en vivo", en: "Live panorama" },
+  acContext: { es: "Contexto", en: "Context" },
+  acTools: { es: "Herramientas", en: "Tools" },
+  acQuick: { es: "Consultas rápidas", en: "Quick queries" },
+  acConversation: { es: "Conversación", en: "Conversation" },
+  acSelCountry: { es: "País / área", en: "Country / area" },
+  acSelCategory: { es: "Categoría", en: "Category" },
+  acSelTable: { es: "Tabla", en: "Table" },
+  acLoadingData: { es: "Cargando el panel de datos…", en: "Loading the data panel…" },
+  acDataError: { es: "No se pudo cargar el panel de datos.", en: "Could not load the data panel." },
+  acNoData: { es: "No hay datos suficientes para esa combinación.", en: "Not enough data for that combination." },
+  toolEvol: { es: "Evolución de fechas", en: "Date evolution" },
+  toolCompare: { es: "Comparar países", en: "Compare countries" },
+  toolMove: { es: "Movimiento mensual", en: "Monthly movement" },
+  toolStatus: { es: "Mezcla C/F/U", en: "C/F/U mix" },
+  acHereEvol: { es: "Evolución de la fecha de prioridad para tu selección:", en: "Priority-date evolution for your selection:" },
+  acHereCompare: { es: "Comparación de espera entre países o áreas:", en: "Wait-time comparison across countries / areas:" },
+  acHereMove: { es: "Movimiento mes a mes (avances y retrocesos):", en: "Month-to-month movement (advances and retrogressions):" },
+  acHereStatus: { es: "Cómo se reparten las observaciones por régimen:", en: "How observations split across regimes:" },
 };
 
 export function tr(lang: Lang, key: keyof typeof S | string): string {

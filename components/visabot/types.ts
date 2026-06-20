@@ -20,9 +20,13 @@ export type Source = {
   text: string;
 };
 
+// chart payload attached to a bot message (rendered below the text)
+export type ChartPayload = import("@/lib/visabot/analytics").ChartSpec;
+
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   sources?: Source[];
   extractive?: boolean; // answered without the LLM (no key / offline)
+  chart?: ChartPayload; // data visualization generated from the panel
 };

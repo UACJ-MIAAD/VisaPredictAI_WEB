@@ -8,8 +8,15 @@ import type { Source } from "./types";
 marked.setOptions({ gfm: true, breaks: true });
 
 // Render streamed markdown safely, turning [n] into deep-linked citation chips.
+// DOMPurify needs a DOM, so we only sanitize after mount (the server/static
+// export and the first client render show plain text → no SSR crash, no
+// hydration mismatch); the effect then swaps in the sanitized HTML.
 export function Markdown({ text, sources }: { text: string; sources?: Source[] }) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
   const html = React.useMemo(() => {
+    if (!mounted) return "";
     let out = marked.parse(text, { async: false }) as string;
     if (sources?.length) {
       const byN = new Map(sources.map((s) => [s.n, s]));
@@ -30,8 +37,9 @@ export function Markdown({ text, sources }: { text: string; sources?: Source[] }
       ALLOWED_ATTR: ["href", "title", "class", "target", "rel"],
       ADD_ATTR: ["target", "rel"],
     });
-  }, [text, sources]);
+  }, [text, sources, mounted]);
 
+  if (!mounted) return <div className="vb-md" style={{ whiteSpace: "pre-wrap" }}>{text}</div>;
   return <div className="vb-md" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
