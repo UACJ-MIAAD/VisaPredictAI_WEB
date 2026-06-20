@@ -50,6 +50,8 @@ export type ChartSpec =
   | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[] }
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
+  | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string;
+      data: { month: string; hist: number | null; fc: number | null; band80: [number, number] | null; band95: [number, number] | null; date: string | null }[] }
   | { kind: "table"; title: string; subtitle: string; month: string; tableType: string;
       countries: string[];
       sections: { block: string; rows: { cat: string; cells: ({ status: string; date: string | null })[] }[] }[] };
@@ -125,6 +127,89 @@ export function buildMovement(panel: Panel, country: string, category: string, t
     subtitle: lang === "en" ? "Δ days vs the previous month (green = advance, red = retrogression)" : "Δ días vs el mes anterior (verde = avance, rojo = retroceso)",
     data,
   };
+}
+
+// ── forecast (the project's whole point) ────────────────────────────────────
+// In-browser baseline: local-drift trend over the recent Final-status window,
+// with a random-walk prediction interval that widens with the horizon. This is
+// one of the project's own reference models (naïve drift / Theta family); the
+// full evaluation also compares SARIMA, ETS and deep models. Real data only,
+// no fabricated cutoffs — clearly labelled as an illustrative projection.
+const Z80 = 1.2816, Z95 = 1.96, DAYS_Y = 365.25;
+const nextMonth = (m: string) => { const [y, mo] = m.split("-").map(Number); const d = new Date(Date.UTC(y, mo, 1)); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`; };
+const epochToYear = (e: number) => 1970 + e / DAYS_Y;
+const epochToDate = (e: number) => { const d = new Date(e * 86400000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`; };
+
+export function buildForecast(panel: Panel, country: string, category: string, table: string, lang: Lang, horizon = 12, window = 48): ChartSpec | null {
+  const series = panel.rows
+    .filter((r) => r.country === country && r.category === category && r.table === table)
+    .sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+  const fobs = series.filter((r) => r.status === "F" && r.daysSinceBase != null && r.priorityDate);
+  if (fobs.length < 8) return null; // too short to fit an honest trend
+
+  const win = fobs.slice(-Math.max(window, 12));
+  const xs = win.map((_, i) => i);
+  const ys = win.map((r) => r.daysSinceBase as number);
+  // OLS local-linear fit (x in months)
+  const n = xs.length, mx = (n - 1) / 2, my = ys.reduce((a, b) => a + b, 0) / n;
+  let sxx = 0, sxy = 0;
+  for (let i = 0; i < n; i++) { sxx += (xs[i] - mx) ** 2; sxy += (xs[i] - mx) * (ys[i] - my); }
+  const slope = sxx ? sxy / sxx : 0; // days of priority-date advance per month
+  const intercept = my - slope * mx;
+  let ss = 0; for (let i = 0; i < n; i++) ss += (ys[i] - (intercept + slope * xs[i])) ** 2;
+  const sigma = Math.sqrt(ss / Math.max(1, n - 2)); // residual σ in days
+
+  const last = win[win.length - 1];
+  const baseEpoch = isoDays(last.priorityDate as string) - (last.daysSinceBase as number); // days(1970)→base epoch
+  const anchorDays = last.daysSinceBase as number;
+  const data: Extract<ChartSpec, { kind: "forecast" }>["data"] = win.map((r) => ({
+    month: r.bulletinMonth, hist: pdYear(r.priorityDate as string), fc: null, band80: null, band95: null, date: r.priorityDate,
+  }));
+  // seed the forecast line at the split so it connects to history
+  data[data.length - 1].fc = data[data.length - 1].hist;
+  data[data.length - 1].band80 = [data[data.length - 1].hist as number, data[data.length - 1].hist as number];
+  data[data.length - 1].band95 = data[data.length - 1].band80;
+  let m = last.bulletinMonth;
+  for (let h = 1; h <= horizon; h++) {
+    m = nextMonth(m);
+    const fcDays = anchorDays + slope * h;
+    const half = sigma * Math.sqrt(h); // RW-style growth
+    const yr = (d: number) => epochToYear(baseEpoch + d);
+    data.push({ month: m, hist: null, fc: yr(fcDays), date: epochToDate(baseEpoch + fcDays),
+      band80: [yr(fcDays - Z80 * half), yr(fcDays + Z80 * half)],
+      band95: [yr(fcDays - Z95 * half), yr(fcDays + Z95 * half)] });
+  }
+  const perYear = slope * 12; // days/yr
+  const dir = lang === "en" ? (perYear >= 0 ? "advancing" : "retrogressing") : (perYear >= 0 ? "avanzando" : "retrocediendo");
+  return {
+    kind: "forecast", splitMonth: last.bulletinMonth,
+    title: lang === "en" ? `Forecast · ${seriesTitle({ country, category, table })}` : `Pronóstico · ${seriesTitle({ country, category, table })}`,
+    subtitle: lang === "en"
+      ? `Illustrative ${horizon}-month projection (local-drift baseline, ${dir} ~${Math.abs(Math.round(perYear))} days/yr) with 80 % / 95 % prediction bands`
+      : `Proyección ilustrativa a ${horizon} meses (línea base de deriva local, ${dir} ~${Math.abs(Math.round(perYear))} días/año) con bandas de predicción al 80 % / 95 %`,
+    yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
+    data,
+  };
+}
+
+// Grounding text so the LLM references the rendered forecast instead of denying
+// it can show charts. Carries the real numbers it can quote.
+export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lang: Lang): string {
+  const lastHist = [...spec.data].filter((d) => d.hist != null).pop();
+  const end = spec.data[spec.data.length - 1];
+  const fmt = (yr: number) => (yr).toFixed(1);
+  return lang === "en"
+    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${spec.data.length - spec.data.findIndex((d) => d.month === spec.splitMonth) - 1}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95 % band [${fmt((end.band95 as [number, number])[0])}, ${fmt((end.band95 as [number, number])[1])}]. Make clear this is an illustrative in-browser baseline projection (the full system compares SARIMA, ETS, Theta and deep models), not legal advice.`
+    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${spec.data.length - spec.data.findIndex((d) => d.month === spec.splitMonth) - 1} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt((end.band95 as [number, number])[0])}, ${fmt((end.band95 as [number, number])[1])}]. Aclara que es una proyección ilustrativa calculada en el navegador (el sistema completo compara SARIMA, ETS, Theta y modelos profundos), no asesoría legal.`;
+}
+
+// Generic note for the non-table charts so the LLM complements the visual.
+export function chartContextNote(chart: ChartSpec, lang: Lang): string | null {
+  if (chart.kind === "forecast") return forecastText(chart, lang);
+  if (chart.kind === "table") return null; // handled by monthTableText (richer)
+  return lang === "en"
+    ? `A chart titled "${chart.title}" is being rendered to the user from the real data panel — reference and interpret it; do NOT say you cannot show charts.`
+    : `Se está mostrando al usuario un gráfico titulado «${chart.title}» generado con el panel de datos real — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos.`;
 }
 
 // status distribution (C/F/U/UNK) — overall or for a slice

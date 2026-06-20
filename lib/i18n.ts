@@ -227,6 +227,8 @@ const S: Dict = {
   acLoadingData: { es: "Cargando el panel de datos…", en: "Loading the data panel…" },
   acDataError: { es: "No se pudo cargar el panel de datos.", en: "Could not load the data panel." },
   acNoData: { es: "No hay datos suficientes para esa combinación.", en: "Not enough data for that combination." },
+  toolForecast: { es: "Pronóstico (zoom)", en: "Forecast (zoom)" },
+  acHereForecast: { es: "Pronóstico de la fecha de prioridad para tu selección (proyección ilustrativa con bandas al 80 % / 95 %):", en: "Priority-date forecast for your selection (illustrative projection with 80 % / 95 % bands):" },
   toolEvol: { es: "Evolución de fechas", en: "Date evolution" },
   toolCompare: { es: "Comparar países", en: "Compare countries" },
   toolMove: { es: "Movimiento mensual", en: "Monthly movement" },

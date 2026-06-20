@@ -5,7 +5,7 @@
 import * as React from "react";
 import {
   ResponsiveContainer, LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ComposedChart, ReferenceLine,
   XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Legend,
 } from "recharts";
 import type { ChartSpec } from "@/lib/visabot/analytics";
@@ -67,6 +67,39 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             ))}
           </LineChart>
         </ResponsiveContainer>
+      )}
+
+      {spec.kind === "forecast" && (
+        <>
+        <ResponsiveContainer width="100%" height={280}>
+          <ComposedChart data={spec.data} margin={{ top: 6, right: 14, bottom: 0, left: -8 }}>
+            <CartesianGrid stroke={GRID} vertical={false} />
+            <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => String(m).slice(0, 7)} minTickGap={40} />
+            <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
+            <Tooltip
+              contentStyle={tip}
+              labelFormatter={(m) => String(m)}
+              formatter={(value, name, item) => {
+                if (name === "band95" || name === "band80") return [null, null] as unknown as [string, string];
+                const p = item?.payload;
+                const isF = p?.fc != null && p?.hist == null;
+                return [p?.date ?? "—", isF ? (lang === "en" ? "Forecast cutoff" : "Corte pronosticado") : (lang === "en" ? "Priority date" : "Fecha prioridad")];
+              }}
+            />
+            {/* prediction bands (outer 95 %, inner 80 %) */}
+            <Area dataKey="band95" stroke="none" fill="var(--color-accent)" fillOpacity={0.1} isAnimationActive={false} connectNulls />
+            <Area dataKey="band80" stroke="none" fill="var(--color-accent)" fillOpacity={0.2} isAnimationActive={false} connectNulls />
+            <Line dataKey="hist" name="hist" stroke="var(--color-accent)" strokeWidth={2.4} dot={false} connectNulls isAnimationActive={false} />
+            <Line dataKey="fc" name="fc" stroke="var(--color-accent-2)" strokeWidth={2.4} strokeDasharray="5 4" dot={false} connectNulls isAnimationActive={false} />
+            <ReferenceLine x={spec.splitMonth} stroke="var(--color-muted)" strokeDasharray="3 3" />
+          </ComposedChart>
+        </ResponsiveContainer>
+        <div className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[0.7rem] text-[var(--color-muted)]">
+          <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4" style={{ background: "var(--color-accent)" }} />{lang === "en" ? "History" : "Histórico"}</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4 border-t-2 border-dashed" style={{ borderColor: "var(--color-accent-2)" }} />{lang === "en" ? "Forecast" : "Pronóstico"}</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-4 rounded-sm" style={{ background: "color-mix(in srgb, var(--color-accent) 20%, transparent)" }} />{lang === "en" ? "80 % / 95 % band" : "Banda 80 % / 95 %"}</span>
+        </div>
+        </>
       )}
 
       {spec.kind === "radar" && (

@@ -341,12 +341,14 @@ function buildSuggestions() {
   const monthEs = latestMonth ? monthLabel(latestMonth, "es") : null;
   const monthEn = latestMonth ? monthLabel(latestMonth, "en") : null;
   const es = [
+    "Muéstrame el pronóstico de México F2A",
     monthEs ? `¿Qué cambió en el boletín de ${monthEs}?` : "¿Cómo funciona el Visa Bulletin?",
     ...gl.map((t) => `¿Qué es ${t}?`),
     "¿Qué modelos compara el proyecto y cuál gana?",
     "¿Cómo está estructurado el panel multiserie y_{p,c,b,t}?",
   ].slice(0, 6);
   const en = [
+    "Show the forecast for Mexico F2A",
     monthEn ? `What changed in the ${monthEn} bulletin?` : "How does the Visa Bulletin work?",
     ...glEn.map((t) => `What is ${t}?`),
     "Which models does the project compare and which one wins?",
@@ -385,6 +387,10 @@ function buildPrompts() {
         items: en
           ? ["Which models does the project compare and which one wins?", "Do neural networks beat the simple models?", "What methodology does the project follow?", "What error metrics does it use?", "How is the forecast validated without leakage?"]
           : ["¿Qué modelos compara el proyecto y cuál gana?", "¿Las redes neuronales superan a los modelos simples?", "¿Qué metodología sigue el proyecto?", "¿Qué métricas de error usa?", "¿Cómo se valida el pronóstico sin fuga de datos?"] },
+      { icon: "models", cat: en ? "Forecasts" : "Pronósticos",
+        items: en
+          ? ["Show the forecast for Mexico F2A", "Forecast for India EB2", "Predict Philippines F4 (DFF)", "Projection for China EB3"]
+          : ["Muéstrame el pronóstico de México F2A", "Pronóstico de India EB2", "Predice Filipinas F4 (DFF)", "Proyección de China EB3"] },
       { icon: "charts", cat: en ? "Charts (data viz)" : "Gráficos (visualizaciones)",
         items: en
           ? [m ? `Show the ${m} bulletin table` : "Show the latest bulletin table", "Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement"]
