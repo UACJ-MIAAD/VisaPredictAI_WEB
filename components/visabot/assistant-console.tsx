@@ -178,7 +178,6 @@ export function AssistantConsole() {
 
   const kpis: Kpi[] = panel ? buildPanorama(panel, lang) : [];
   const tools = [
-    { k: "table" as const, icon: CalendarDays, label: tr(lang, "toolTable") },
     { k: "evol" as const, icon: TrendingUp, label: tr(lang, "toolEvol") },
     { k: "compare" as const, icon: BarChart3, label: tr(lang, "toolCompare") },
     { k: "move" as const, icon: ArrowUpDown, label: tr(lang, "toolMove") },
@@ -208,6 +207,9 @@ export function AssistantConsole() {
           <Select label={tr(lang, "acSelCategory")} value={category} onChange={setCategory} options={panel?.categories ?? [category]} />
           <Select label={tr(lang, "acSelTable")} value={table} onChange={setTable} options={panel?.tables ?? [table]} />
           <Select label={tr(lang, "acSelMonth")} value={month} onChange={setMonth} options={months.length ? months : [month]} fmt={(m) => (m ? monthLabel(m, lang) : "—")} />
+          <button onClick={() => runTool("table")} disabled={!panel} className="mt-0.5 flex items-center justify-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50">
+            <CalendarDays className="h-4 w-4 shrink-0" aria-hidden /> {tr(lang, "acViewTable")}
+          </button>
         </div>
       </div>
       <div>
