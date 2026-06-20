@@ -63,7 +63,7 @@ async function loadIndex(): Promise<Loaded> {
     const docLen: number[] = [];
     const df = new Map<string, number>();
     for (const c of json.chunks) {
-      const toks = tokenize(`${c.title} ${c.text}`);
+      const toks = tokenize(`${c.embedCtx ? c.embedCtx + " " : ""}${c.title} ${c.text}`);
       const tf = new Map<string, number>();
       for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
       for (const t of tf.keys()) df.set(t, (df.get(t) || 0) + 1);
