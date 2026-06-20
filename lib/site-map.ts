@@ -96,6 +96,21 @@ export const ROUTES: Route[] = [
       { id: "referencias", label: "Referencias IEEE", labelEn: "IEEE references" },
     ],
   },
+  {
+    path: "/asistente",
+    label: "Asistente",
+    labelEn: "Assistant",
+    short: "Asistente",
+    shortEn: "Assistant",
+    blurb:
+      "VisaBot: asistente conversacional con recuperación aumentada (RAG) sobre toda la documentación del proyecto, con respuestas citadas.",
+    blurbEn:
+      "VisaBot: a retrieval-augmented (RAG) conversational assistant over the whole project documentation, with cited answers.",
+    sections: [
+      { id: "asistente", label: "VisaBot", labelEn: "VisaBot" },
+      { id: "como-funciona", label: "Cómo funciona", labelEn: "How it works" },
+    ],
+  },
 ];
 
 export const routeByPath = (path: string) =>

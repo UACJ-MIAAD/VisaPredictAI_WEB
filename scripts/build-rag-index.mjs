@@ -390,8 +390,25 @@ function copyOrtWasm() {
     }),
   );
   writeFileSync(join(outDir, "suggestions.json"), JSON.stringify(suggestions, null, 0));
+
+  // compact stats for the assistant console (avoids downloading the 1.5 MB index just for counts)
+  const byKind = {};
+  for (const c of chunks) byKind[c.kind] = (byKind[c.kind] || 0) + 1;
+  writeFileSync(
+    join(outDir, "meta.json"),
+    JSON.stringify({
+      built: new Date().toISOString(),
+      model: EMBED_MODEL,
+      dim: EMBED_DIM,
+      chunks: chunks.length,
+      sources: new Set(chunks.map((c) => c.source)).size,
+      langs: [...new Set(chunks.map((c) => c.lang))],
+      byKind,
+      latestMonth,
+    }),
+  );
   console.log(`✓ wrote public/rag/index.json (${chunks.length} chunks, ${EMBED_DIM}-d)`);
-  console.log(`✓ wrote public/rag/suggestions.json`);
+  console.log(`✓ wrote public/rag/suggestions.json + meta.json`);
   if (!existsSync(join(root, "public", "models", EMBED_MODEL)))
     console.warn("  ! model dir not found under public/models — runtime will need it");
 })().catch((e) => {

@@ -5,7 +5,9 @@ import {
   Sparkles, X, Send, Square, Plus, Copy, Check, ArrowDown, Mic,
   Volume2, Loader2, BookOpen,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useLang } from "@/components/lang-provider";
+import { basePath } from "@/lib/site-map";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
@@ -27,6 +29,7 @@ function getSR(): (new () => SR) | null {
 
 export function VisaBot() {
   const { lang } = useLang();
+  const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState("");
@@ -232,6 +235,10 @@ export function VisaBot() {
     setListening(true);
     track("VisaBot Voice", { lang });
   };
+
+  // hide the floating launcher on the dedicated /asistente page (the inline
+  // console is the surface there). All hooks above run unconditionally.
+  if (basePath(pathname || "/") === "/asistente") return null;
 
   const statusLabel = ready
     ? tr(lang, "vbEngineReady")
