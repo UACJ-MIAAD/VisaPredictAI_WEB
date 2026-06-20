@@ -109,7 +109,7 @@ env.allowRemoteModels = false;
 const extractor = await pipeline("feature-extraction", idxJson.model, { dtype: "q8" });
 const embed = async (t) => (await extractor([`query: ${t}`], { pooling: "mean", normalize: true })).data;
 
-const REFUSE_RE = /no encuentro|no.*encontr|no.*dispong|no.*relacion|fuera de|can.?t find|couldn.?t find|not.*find|no.*documentaci|not.*documentation|no puedo ayudar|cannot help|no tengo informaci|don.?t have|solo puedo|s[oó]lo.*ayud|only help|only assist|specialized assistant|asistente especializ|i'?m visabot|soy.*visabot/i;
+const REFUSE_RE = /no encuentro|no.*encontr|no.*dispong|no.*relacion|fuera de|out of scope|outside my (domain|scope|area)|can.?t find|couldn.?t find|not.*find|no.*documentaci|not.*documentation|no puedo (ayudar|responder)|can.?t help|cannot help|no tengo informaci|don.?t have|solo (puedo|habla)|s[oó]lo.*ayud|mi dominio|i'?m here to help|here to (help|answer)|only help|only assist|specialized assistant|asistente especializ|i'?m visabot|soy.*visabot/i;
 const results = [];
 console.log(`Running ${set.length} questions against ${FN} …\n`);
 
