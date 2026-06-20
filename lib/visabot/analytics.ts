@@ -49,7 +49,10 @@ export type ChartSpec =
   | { kind: "status"; title: string; subtitle: string; data: { name: string; value: number; color: string }[] }
   | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[] }
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
-  | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] };
+  | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
+  | { kind: "table"; title: string; subtitle: string; month: string; tableType: string;
+      countries: string[];
+      sections: { block: string; rows: { cat: string; cells: ({ status: string; date: string | null })[] }[] }[] };
 
 function latestWaitYears(panel: Panel, country: string, category: string, table: string): { years: number | null; date: string | null } {
   const rows = panel.rows
@@ -203,6 +206,68 @@ export function buildRadar(panel: Panel, table: string, lang: Lang): ChartSpec |
     subtitle: lang === "en" ? "Years of wait across family preferences (latest month)" : "Años de espera por preferencia familiar (último mes)",
     names, data,
   };
+}
+
+// ── monthly bulletin table (full 291-month history, any month) ──────────────
+const MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const MONTHS_EN = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const MON_ABBR: Record<string, number> = { ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7, ago: 8, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dic: 12, dec: 12 };
+export const monthLabel = (m: string, lang: Lang) => { const [y, mo] = m.split("-").map(Number); return `${(lang === "en" ? MONTHS_EN : MONTHS_ES)[mo - 1]} ${y}`; };
+
+// Parse a bulletin month from free text → "YYYY-MM" present in the panel, else null.
+// Handles "julio 2026", "March 2020", "2026-07", "jul 2010", "3/2018".
+export function parseMonth(q: string, panel: Panel): string | null {
+  const have = new Set(panel.rows.map((r) => r.bulletinMonth));
+  const pick = (y: number, mo: number) => { const s = `${y}-${String(mo).padStart(2, "0")}`; return have.has(s) ? s : null; };
+  const t = q.toLowerCase();
+  let mo: number | null = null, yr: number | null = null;
+  const iso = t.match(/(20\d{2})[-/](0?[1-9]|1[0-2])\b/);
+  if (iso) return pick(+iso[1], +iso[2]);
+  const ym = t.match(/\b(0?[1-9]|1[0-2])[-/](20\d{2})\b/);
+  if (ym) return pick(+ym[2], +ym[1]);
+  const names = MONTHS_ES.concat(MONTHS_EN);
+  for (let i = 0; i < names.length; i++) if (t.includes(names[i])) { mo = (i % 12) + 1; break; }
+  if (mo === null) { const a = t.match(/\b(ene|jan|feb|mar|abr|apr|may|jun|jul|ago|aug|sept?|oct|nov|dic|dec)\b/); if (a) mo = MON_ABBR[a[1]]; }
+  const ym2 = t.match(/\b(19|20)\d{2}\b/);
+  if (ym2) yr = +ym2[0];
+  if (mo && yr) return pick(yr, mo);
+  // bare year + table intent → latest available month of that year
+  if (yr && !mo) { const ms = [...have].filter((s) => s.startsWith(`${yr}-`)).sort(); return ms[ms.length - 1] || null; }
+  return null;
+}
+
+// Beautiful monthly snapshot: categories × pilot countries for one table (FAD/DFF).
+export function buildMonthTable(panel: Panel, month: string, tableType: string, lang: Lang): ChartSpec | null {
+  const rows = panel.rows.filter((r) => r.bulletinMonth === month && r.table === tableType);
+  if (!rows.length) return null;
+  const countries = PILOT.filter((c) => rows.some((r) => r.country === c));
+  const order = [...FAM, "EB1", "EB2", "EB3", "EB3_OW", "EB4", "EB4_RW", "EB4_TRANS", "EB5", "EB5_UNRESERVED", "EB5_RURAL", "EB5_HIGHUNEMP", "EB5_INFRA", "EB5_NONRC", "EB5_TEA", "EB5_PILOT", "EB5_RC"];
+  const present = [...new Set(rows.map((r) => r.category))].sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+  const cell = (cat: string, country: string) => { const r = rows.find((x) => x.category === cat && x.country === country); return { status: r?.status ?? "", date: r?.priorityDate ?? null }; };
+  const mk = (cats: string[]) => cats.map((cat) => ({ cat, cells: countries.map((c) => cell(cat, c)) }));
+  const fam = present.filter((c) => /^F/.test(c)), emp = present.filter((c) => /^EB/.test(c));
+  const sections: { block: string; rows: { cat: string; cells: ({ status: string; date: string | null })[] }[] }[] = [];
+  if (fam.length) sections.push({ block: lang === "en" ? "Family-sponsored" : "Familiar", rows: mk(fam) });
+  if (emp.length) sections.push({ block: lang === "en" ? "Employment-based" : "Empleo", rows: mk(emp) });
+  return {
+    kind: "table", month, tableType, countries,
+    title: lang === "en" ? `Visa Bulletin · ${monthLabel(month, lang)} · ${tableType}` : `Visa Bulletin · ${monthLabel(month, lang)} · ${tableType}`,
+    subtitle: lang === "en"
+      ? "Priority-date cutoff per category × country. C = current, U = unavailable."
+      : "Fecha de corte por categoría × país. C = al corriente (current), U = no disponible.",
+    sections,
+  };
+}
+
+// Compact real-data summary of a month table → grounding source so the LLM can
+// answer any cell and never looks "limited to recent years".
+export function monthTableText(spec: Extract<ChartSpec, { kind: "table" }>, lang: Lang): string {
+  const head = spec.countries.map(countryLabel).join(" / ");
+  const lines = spec.sections.flatMap((s) => s.rows.map((r) =>
+    `${r.cat}: ${r.cells.map((c, i) => `${countryLabel(spec.countries[i])} ${c.status === "C" ? "C" : c.status === "U" ? "U" : c.date || "—"}`).join("; ")}`));
+  return (lang === "en"
+    ? `U.S. Visa Bulletin ${monthLabel(spec.month, lang)}, ${spec.tableType} (columns: ${head}). C = current, U = unavailable, otherwise the priority-date cutoff:\n`
+    : `Visa Bulletin de EE. UU. ${monthLabel(spec.month, lang)}, ${spec.tableType} (columnas: ${head}). C = al corriente, U = no disponible, en otro caso la fecha de corte:\n`) + lines.join("\n");
 }
 
 // ── KPI panorama (computed once from the panel) ─────────────────────────────

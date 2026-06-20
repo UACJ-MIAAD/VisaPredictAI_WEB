@@ -9,7 +9,11 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Legend,
 } from "recharts";
 import type { ChartSpec } from "@/lib/visabot/analytics";
+import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
+
+const MON_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const fmtDate = (d: string) => { const [y, m, da] = d.split("-").map(Number); return `${String(da || 1).padStart(2, "0")} ${MON_ABBR[m - 1]} ${y}`; };
 
 const AXIS = { fontSize: 11, fill: "var(--color-muted)" };
 const SERIES = ["var(--color-accent)", "var(--color-accent-2)", "var(--color-success)", "var(--color-danger)", "var(--color-muted)"];
@@ -104,6 +108,48 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
               </React.Fragment>
             ))}
           </div>
+        </div>
+      )}
+
+      {spec.kind === "table" && (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-[0.74rem]">
+            <thead>
+              <tr>
+                <th className="sticky left-0 z-10 bg-[var(--color-bg)] px-2 py-1.5 text-left font-semibold text-[var(--color-muted)]">{lang === "en" ? "Category" : "Categoría"}</th>
+                {spec.countries.map((c) => (
+                  <th key={c} className="px-2 py-1.5 text-center font-semibold text-[var(--color-ink)] whitespace-nowrap">{countryLabel(c)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {spec.sections.map((sec) => (
+                <React.Fragment key={sec.block}>
+                  <tr>
+                    <td colSpan={spec.countries.length + 1} className="bg-[var(--color-surface-soft)] px-2 py-1 text-[0.62rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">{sec.block}</td>
+                  </tr>
+                  {sec.rows.map((r) => (
+                    <tr key={r.cat} className="border-t border-border">
+                      <td className="sticky left-0 z-10 bg-[var(--color-bg)] px-2 py-1.5 font-semibold text-[var(--color-ink)] whitespace-nowrap">{r.cat}</td>
+                      {r.cells.map((cell, ci) => (
+                        <td key={ci} className="px-2 py-1.5 text-center">
+                          {cell.status === "C" ? (
+                            <span className="inline-block rounded px-1.5 py-0.5 text-[0.66rem] font-bold" style={{ background: "color-mix(in srgb, var(--color-success) 18%, transparent)", color: "var(--color-success)" }} title={lang === "en" ? "Current" : "Al corriente"}>C</span>
+                          ) : cell.status === "U" ? (
+                            <span className="text-[var(--color-muted)]" title={lang === "en" ? "Unavailable" : "No disponible"}>U</span>
+                          ) : cell.date ? (
+                            <span className="font-mono tabular-nums text-[var(--color-ink)]">{fmtDate(cell.date)}</span>
+                          ) : (
+                            <span className="text-[var(--color-muted)]">—</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
