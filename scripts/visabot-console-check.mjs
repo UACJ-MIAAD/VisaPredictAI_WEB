@@ -57,11 +57,20 @@ try {
     if(ta){const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(ta,'¿Cómo ha evolucionado la fecha de México F3?');ta.dispatchEvent(new Event('input',{bubbles:true}));await sleep(100);ta.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}
     let chips=0,charts=0,answer='';
     for(let i=0;i<50;i++){await sleep(500);chips=document.querySelectorAll('.vb-chip').length;charts=document.querySelectorAll('.vb-bot svg.recharts-surface').length;const b=[...document.querySelectorAll('.vb-bot')];answer=b.length?b[b.length-1].innerText:'';if(chips>0&&charts>=2)break;}
-    const kpi=document.querySelector('aside .font-serif')?.innerText||'';
-    return {hasConsole,panelLoaded,toolChart,chips,charts,kpi,sections:[...document.querySelectorAll('section[id]')].map(s=>s.id),answer:answer.slice(0,100)};
+    // prompt library (help menu) — open it, then fire a chart prompt from it
+    const ej=[...document.querySelectorAll('button')].find(b=>/ejemplos/i.test(b.textContent||'')||/ejemplos/i.test(b.getAttribute('aria-label')||''));
+    if(ej)ej.click(); await sleep(700);
+    const dlg=[...document.querySelectorAll('[role=dialog]')].find(d=>/preguntar|ask/i.test(d.innerText));
+    const promptCats=dlg?dlg.querySelectorAll('h3').length:0;
+    const promptChips=dlg?dlg.querySelectorAll('button.vb-suggest').length:0;
+    const hp=dlg?[...dlg.querySelectorAll('button.vb-suggest')].find(b=>/mapa de calor/i.test(b.innerText)):null;
+    if(hp)hp.click();
+    let promptChart=false;
+    for(let i=0;i<25;i++){await sleep(500);const bb=[...document.querySelectorAll('.vb-bot')];const b=bb[bb.length-1];if(b&&/\\d\\.\\d/.test(b.innerText)&&b.innerText.includes('F4')){promptChart=true;break;}}
+    return {hasConsole,panelLoaded,toolChart,chips,charts,promptCats,promptChips,promptChart,answer:answer.slice(0,100)};
   })()`, awaitPromise: true, returnByValue: true }, 4);
   const v = drv?.result?.value || {};
-  result = { ok: v.hasConsole && v.panelLoaded && v.toolChart && v.chips > 0 && v.charts >= 1, ...v, logs: [...new Set(logs)].slice(0, 6) };
+  result = { ok: v.hasConsole && v.panelLoaded && v.toolChart && v.chips > 0 && v.charts >= 1 && v.promptCats >= 4 && v.promptChart, ...v, logs: [...new Set(logs)].slice(0, 6) };
   ws.close();
 } catch (e) { result = { ok: false, error: String(e) }; }
 finally { chrome.kill("SIGKILL"); server.close(); }

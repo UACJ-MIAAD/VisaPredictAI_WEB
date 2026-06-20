@@ -242,6 +242,12 @@ const S: Dict = {
   acHereHeat: { es: "Mapa de calor de la espera por país y categoría:", en: "Heatmap of wait by country and category:" },
   acHereRadar: { es: "Huella de espera de cada país por categoría:", en: "Each country's wait fingerprint by category:" },
   acPanelToggle: { es: "Panel", en: "Panel" },
+  acExamples: { es: "Ejemplos", en: "Examples" },
+  acExamplesTitle: { es: "¿Qué puedes preguntar?", en: "What can you ask?" },
+  acExamplesLead: {
+    es: "Prompts listos por categoría — toca uno para enviarlo. Los de “Gráficos” generan visualizaciones de datos reales.",
+    en: "Ready-made prompts by category — tap one to send it. The “Charts” ones generate real-data visualizations.",
+  },
 };
 
 export function tr(lang: Lang, key: keyof typeof S | string): string {

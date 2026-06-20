@@ -348,6 +348,49 @@ function buildSuggestions() {
   return { es, en };
 }
 
+// Categorized, curated prompt library (à la EpiBot's prompt menu) — a help/
+// onboarding surface. Prompts are derived from the glossary + latest bulletin
+// so they stay fresh; chart prompts trigger the data visualizations.
+function buildPrompts() {
+  const glTerms = (lang, wanted, n) => {
+    const terms = chunks.filter((c) => c.kind === "glossary" && c.lang === lang);
+    const out = [];
+    for (const w of wanted) {
+      const t = terms.find((x) => x.title.toLowerCase().includes(w) || x.text.toLowerCase().includes(w));
+      if (t && !out.includes(t.title)) out.push(t.title);
+      if (out.length >= n) break;
+    }
+    return out;
+  };
+  const glWanted = ["final action", "dates for filing", "retrogres", "per-country", "chargeab", "cargab", "priority", "prioridad", "mase", "smape", "crisp", "conform", "walk", "arima", "deepar", "prophet"];
+  const mk = (lang) => {
+    const en = lang === "en";
+    const gl = glTerms(lang, glWanted, 7);
+    const m = latestMonth ? monthLabel(latestMonth, lang) : null;
+    return [
+      { icon: "glossary", cat: en ? "Glossary" : "Glosario",
+        items: gl.map((t) => (en ? `What is ${t}?` : `¿Qué es ${t}?`)) },
+      { icon: "data", cat: en ? "Data & bulletin" : "Datos y boletín",
+        items: en
+          ? [m ? `What changed in the ${m} bulletin?` : "How does the Visa Bulletin work?", "How is the multi-series panel y_{p,c,b,t} structured?", "What do the statuses C, F and U mean?", "What is the base date for the data?", "Which countries and categories are covered?"]
+          : [m ? `¿Qué cambió en el boletín de ${m}?` : "¿Cómo funciona el Visa Bulletin?", "¿Cómo está estructurado el panel multiserie y_{p,c,b,t}?", "¿Qué significan los estados C, F y U?", "¿Cuál es la fecha base de los datos?", "¿Qué países y categorías cubre?"] },
+      { icon: "models", cat: en ? "Models & methodology" : "Modelos y metodología",
+        items: en
+          ? ["Which models does the project compare and which one wins?", "Do neural networks beat the simple models?", "What methodology does the project follow?", "What error metrics does it use?", "How is the forecast validated without leakage?"]
+          : ["¿Qué modelos compara el proyecto y cuál gana?", "¿Las redes neuronales superan a los modelos simples?", "¿Qué metodología sigue el proyecto?", "¿Qué métricas de error usa?", "¿Cómo se valida el pronóstico sin fuga de datos?"] },
+      { icon: "charts", cat: en ? "Charts (data viz)" : "Gráficos (visualizaciones)",
+        items: en
+          ? ["Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement"]
+          : ["Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2"] },
+      { icon: "refs", cat: en ? "References" : "Referencias",
+        items: en
+          ? ["Which reference backs CRISP-DM?", "What reference introduces the MASE metric?", "What reference is Prophet based on?"]
+          : ["¿Qué referencia respalda CRISP-DM?", "¿Qué referencia introduce la métrica MASE?", "¿En qué referencia se basa Prophet?"] },
+    ];
+  };
+  return { es: mk("es"), en: mk("en") };
+}
+
 // ── self-host the ONNX-runtime wasm (CSP-clean; Transformers.js defaults to a
 //    CDN). Copy the single-thread JSEP build the browser loads from /ort/. ─────
 function copyOrtWasm() {
@@ -390,6 +433,7 @@ function copyOrtWasm() {
     }),
   );
   writeFileSync(join(outDir, "suggestions.json"), JSON.stringify(suggestions, null, 0));
+  writeFileSync(join(outDir, "prompts.json"), JSON.stringify(buildPrompts(), null, 0));
 
   // compact stats for the assistant console (avoids downloading the 1.5 MB index just for counts)
   const byKind = {};
