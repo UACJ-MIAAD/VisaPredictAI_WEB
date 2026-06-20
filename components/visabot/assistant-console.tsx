@@ -6,7 +6,7 @@ import {
   Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, RotateCcw, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
-  Lightbulb, Database, Cpu, Quote,
+  Lightbulb, Database, Cpu, Quote, CalendarDays,
 } from "lucide-react";
 
 type PromptCat = { icon: string; cat: string; items: string[] };
@@ -22,7 +22,8 @@ import type { ChatMessage, ChartPayload, Source } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import {
   detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
-  buildHeatmap, buildRadar, buildPanorama, type Kpi,
+  buildHeatmap, buildRadar, buildPanorama, buildMonthTable, parseMonth, monthTableText,
+  monthLabel, type Kpi, type ChartSpec,
 } from "@/lib/visabot/analytics";
 
 const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
@@ -35,6 +36,11 @@ const VisaChart = dynamic(() => import("./visa-chart"), {
 function chartForQuery(q: string, panel: Panel, lang: "es" | "en"): ChartPayload | null {
   const e = detectEntities(q, panel);
   const t = e.table || "FAD";
+  // monthly bulletin table: "tabla/boletín de <mes>" → full-history snapshot
+  if (/\btabla\b|\bbolet[ií]n\b|\bbulletin\b|\btable\b|snapshot/i.test(q)) {
+    const m = parseMonth(q, panel);
+    if (m) return buildMonthTable(panel, m, t, lang);
+  }
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
   if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
@@ -82,6 +88,8 @@ export function AssistantConsole() {
   const [country, setCountry] = React.useState("mexico");
   const [category, setCategory] = React.useState("F3");
   const [table, setTable] = React.useState("FAD");
+  const [month, setMonth] = React.useState("");
+  const months = React.useMemo(() => panel ? [...new Set(panel.rows.map((r) => r.bulletinMonth))].sort().reverse() : [], [panel]);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
@@ -101,6 +109,7 @@ export function AssistantConsole() {
     if (!panel.countries.includes(country)) setCountry(panel.countries.includes("mexico") ? "mexico" : panel.countries[0]);
     if (!panel.categories.includes(category)) setCategory(panel.categories.includes("F3") ? "F3" : panel.categories[0]);
     if (!panel.tables.includes(table)) setTable(panel.tables.includes("FAD") ? "FAD" : panel.tables[0]);
+    if (!month && months.length) setMonth(months[0]);
   }, [panel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => { if (atBottom) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, atBottom]);
@@ -127,6 +136,13 @@ export function AssistantConsole() {
     let sources: Source[] = [];
     try { sources = await retrieve(rq, lang, 6); } catch { /* conversational */ }
     const chart = panel ? chartForQuery(q, panel, lang) : null;
+    // Ground the LLM in the real month data so it answers any cell and never
+    // looks "limited to recent years" — the table covers the full 2001→2026 panel.
+    if (chart?.kind === "table") {
+      const ml = monthLabel(chart.month, lang);
+      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: lang === "en" ? "VisaPredict AI panel (2001–2026)" : "Panel VisaPredict AI (2001–2026)", url: "/#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
+        ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
+    }
     const ctrl = new AbortController(); abortRef.current = ctrl;
     try {
       const res = await generate(q, history, sources, lang,
@@ -143,12 +159,13 @@ export function AssistantConsole() {
   const newChat = () => { stop(); setMessages([]); inputRef.current?.focus(); };
   const copy = (i: number, text: string) => { navigator.clipboard?.writeText(text); setCopied(i); setTimeout(() => setCopied((c) => (c === i ? null : c)), 1600); };
 
-  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar") => {
+  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table") => {
     if (!panel) return;
     track("VisaBot Tool", { lang, tool: kind });
     setNavOpen(false);
     let chart: ChartPayload | null = null, lead = "";
-    if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
+    if (kind === "table") { chart = buildMonthTable(panel, month || months[0], table, lang); lead = tr(lang, "acHereTable"); }
+    else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
     else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
     else if (kind === "race") { chart = buildMultiLine(panel, category, table, lang); lead = tr(lang, "acHereRace"); }
@@ -161,6 +178,7 @@ export function AssistantConsole() {
 
   const kpis: Kpi[] = panel ? buildPanorama(panel, lang) : [];
   const tools = [
+    { k: "table" as const, icon: CalendarDays, label: tr(lang, "toolTable") },
     { k: "evol" as const, icon: TrendingUp, label: tr(lang, "toolEvol") },
     { k: "compare" as const, icon: BarChart3, label: tr(lang, "toolCompare") },
     { k: "move" as const, icon: ArrowUpDown, label: tr(lang, "toolMove") },
@@ -189,6 +207,7 @@ export function AssistantConsole() {
           <Select label={tr(lang, "acSelCountry")} value={country} onChange={setCountry} options={panel?.countries ?? [country]} fmt={countryLabel} />
           <Select label={tr(lang, "acSelCategory")} value={category} onChange={setCategory} options={panel?.categories ?? [category]} />
           <Select label={tr(lang, "acSelTable")} value={table} onChange={setTable} options={panel?.tables ?? [table]} />
+          <Select label={tr(lang, "acSelMonth")} value={month} onChange={setMonth} options={months.length ? months : [month]} fmt={(m) => (m ? monthLabel(m, lang) : "—")} />
         </div>
       </div>
       <div>

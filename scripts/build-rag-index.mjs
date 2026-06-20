@@ -387,8 +387,8 @@ function buildPrompts() {
           : ["¿Qué modelos compara el proyecto y cuál gana?", "¿Las redes neuronales superan a los modelos simples?", "¿Qué metodología sigue el proyecto?", "¿Qué métricas de error usa?", "¿Cómo se valida el pronóstico sin fuga de datos?"] },
       { icon: "charts", cat: en ? "Charts (data viz)" : "Gráficos (visualizaciones)",
         items: en
-          ? ["Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement"]
-          : ["Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2"] },
+          ? [m ? `Show the ${m} bulletin table` : "Show the latest bulletin table", "Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement"]
+          : [m ? `Muéstrame la tabla del boletín de ${m}` : "Muéstrame la tabla del último boletín", "Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2"] },
       { icon: "refs", cat: en ? "References" : "Referencias",
         items: en
           ? ["Which reference backs CRISP-DM?", "What reference introduces the MASE metric?", "What reference is Prophet based on?"]
