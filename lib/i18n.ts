@@ -243,6 +243,7 @@ const S: Dict = {
   acHereRadar: { es: "Huella de espera de cada país por categoría:", en: "Each country's wait fingerprint by category:" },
   toolTable: { es: "Tabla del mes", en: "Month table" },
   acViewTable: { es: "Ver tabla de este mes", en: "View this month's table" },
+  acTableSwipe: { es: "Desliza horizontalmente para ver todos los países", en: "Swipe horizontally to see all countries" },
   acHereTable: { es: "Tabla del Visa Bulletin para el mes seleccionado:", en: "Visa Bulletin table for the selected month:" },
   acSelMonth: { es: "Mes", en: "Month" },
   acPanelToggle: { es: "Panel", en: "Panel" },
