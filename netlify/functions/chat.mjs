@@ -113,64 +113,75 @@ export default async (req) => {
     { role: "user", content: query },
   ];
 
-  let upstream;
-  try {
-    upstream = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_OUTPUT,
-        system: systemPrompt(lang, context),
-        messages,
-        stream: true,
-      }),
-    });
-  } catch {
-    return errStream("server");
-  }
-  if (!upstream.ok || !upstream.body) {
-    return errStream("server");
-  }
-
-  // transform Anthropic SSE → our minimal protocol
-  const reader = upstream.body.getReader();
-  const decoder = new TextDecoder();
   const encoder = new TextEncoder();
-  let buf = "";
+  const decoder = new TextDecoder();
+  const send = (controller, obj) => controller.enqueue(encoder.encode(sse(obj)));
 
+  // Do the Anthropic fetch INSIDE the stream and emit an immediate heartbeat,
+  // so Netlify's edge gets bytes right away and doesn't 504 on cold-start /
+  // first-token latency (a comment line `:` is ignored by the SSE client).
   const stream = new ReadableStream({
-    async pull(controller) {
-      const { done, value } = await reader.read();
-      if (done) {
-        controller.enqueue(encoder.encode(sse({ t: "done" })));
+    async start(controller) {
+      controller.enqueue(encoder.encode(": ok\n\n"));
+      let upstream;
+      try {
+        upstream = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            max_tokens: MAX_OUTPUT,
+            system: systemPrompt(lang, context),
+            messages,
+            stream: true,
+          }),
+        });
+      } catch {
+        send(controller, { t: "error", code: "server" });
+        send(controller, { t: "done" });
         controller.close();
         return;
       }
-      buf += decoder.decode(value, { stream: true });
-      const events = buf.split("\n\n");
-      buf = events.pop() || "";
-      for (const ev of events) {
-        const line = ev.split("\n").find((l) => l.startsWith("data:"));
-        if (!line) continue;
-        try {
-          const data = JSON.parse(line.slice(5).trim());
-          if (data.type === "content_block_delta" && data.delta?.type === "text_delta") {
-            controller.enqueue(encoder.encode(sse({ t: "delta", text: data.delta.text })));
-          } else if (data.type === "error") {
-            controller.enqueue(encoder.encode(sse({ t: "error", code: "server" })));
-          }
-        } catch {
-          /* ignore keep-alive/ping lines */
-        }
+      if (!upstream.ok || !upstream.body) {
+        send(controller, { t: "error", code: "server" });
+        send(controller, { t: "done" });
+        controller.close();
+        return;
       }
-    },
-    cancel() {
-      reader.cancel();
+
+      const reader = upstream.body.getReader();
+      let buf = "";
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const events = buf.split("\n\n");
+          buf = events.pop() || "";
+          for (const ev of events) {
+            const line = ev.split("\n").find((l) => l.startsWith("data:"));
+            if (!line) continue;
+            try {
+              const data = JSON.parse(line.slice(5).trim());
+              if (data.type === "content_block_delta" && data.delta?.type === "text_delta") {
+                send(controller, { t: "delta", text: data.delta.text });
+              } else if (data.type === "error") {
+                send(controller, { t: "error", code: "server" });
+              }
+            } catch {
+              /* ignore ping / keep-alive lines */
+            }
+          }
+        }
+      } catch {
+        send(controller, { t: "error", code: "server" });
+      }
+      send(controller, { t: "done" });
+      controller.close();
     },
   });
 
