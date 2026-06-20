@@ -53,31 +53,34 @@ const errStream = (code) =>
   });
 
 function systemPrompt(lang, context) {
+  const hasSources = context.length > 0;
   const sources = context
     .map((c) => `[${c.n}] (${c.source}${c.title ? " — " + c.title : ""})\n${c.text}`)
     .join("\n\n");
   const es = `Eres VisaBot, el asistente del proyecto académico VisaPredict AI (anteproyecto MIAAD, UACJ): un sistema que pronostica fechas de prioridad del U.S. Visa Bulletin por país o área de cargabilidad, categoría migratoria y tipo de tabla.
 
 REGLAS:
-- Responde ÚNICAMENTE con base en las FUENTES numeradas de abajo. No inventes datos, cifras ni fechas.
-- Cita las fuentes que uses con su número entre corchetes, p. ej. [1], [3]. Cita al final de la frase relevante.
-- Si la respuesta no está en las fuentes, dilo con claridad: "No encuentro eso en la documentación del proyecto" y, si aplica, sugiere una sección a consultar.
-- No das asesoría legal migratoria; describes el proyecto y sus datos/metodología.
+- No inventes datos, cifras ni fechas. No das asesoría legal migratoria; describes el proyecto, sus datos y su metodología.
 - Sé claro y conciso. Usa markdown (listas, **negritas**, tablas pequeñas) cuando ayude. Responde en español.
+${hasSources
+  ? `- Responde con base en las FUENTES numeradas de abajo y cita las que uses con su número entre corchetes, p. ej. [1], [3], al final de la frase relevante.
+- Si la respuesta no está en las fuentes, dilo con claridad y sugiere una sección a consultar.
 
 FUENTES:
-${sources}`;
+${sources}`
+  : `- No se recuperaron fuentes para esta consulta. Si es un saludo o charla breve, preséntate como VisaBot en una o dos frases y sugiere 2-3 temas que puedes responder (el U.S. Visa Bulletin, el panel multiserie de datos, los modelos y la metodología CRISP-DM). Si es una pregunta concreta, indica que no encontraste información específica y pide reformularla o ser más específico. No cites fuentes (no hay).`}`;
   const en = `You are VisaBot, the assistant for the VisaPredict AI academic project (MIAAD thesis proposal, UACJ): a system that forecasts U.S. Visa Bulletin priority dates by country or chargeability area, immigration category and table type.
 
 RULES:
-- Answer ONLY from the numbered SOURCES below. Never invent data, figures or dates.
-- Cite the sources you use with bracketed numbers, e.g. [1], [3], at the end of the relevant sentence.
-- If the answer is not in the sources, say so clearly: "I can't find that in the project's documentation" and suggest a section to check if relevant.
-- You do not give immigration legal advice; you describe the project and its data/methodology.
+- Never invent data, figures or dates. You do not give immigration legal advice; you describe the project, its data and methodology.
 - Be clear and concise. Use markdown (lists, **bold**, small tables) when helpful. Answer in English.
+${hasSources
+  ? `- Answer from the numbered SOURCES below and cite the ones you use with bracketed numbers, e.g. [1], [3], at the end of the relevant sentence.
+- If the answer is not in the sources, say so clearly and suggest a section to check.
 
 SOURCES:
-${sources}`;
+${sources}`
+  : `- No sources were retrieved for this query. If it's a greeting or brief chit-chat, introduce yourself as VisaBot in one or two sentences and suggest 2-3 topics you can answer (the U.S. Visa Bulletin, the multi-series data panel, the models and the CRISP-DM methodology). If it's a specific question, say you couldn't find specific information and ask the user to rephrase or be more specific. Do not cite sources (there are none).`}`;
   return lang === "en" ? en : es;
 }
 
@@ -101,7 +104,7 @@ export default async (req) => {
   const query = typeof body?.query === "string" ? body.query.slice(0, MAX_QUERY).trim() : "";
   const context = Array.isArray(body?.context) ? body.context.slice(0, MAX_CTX) : [];
   const history = Array.isArray(body?.history) ? body.history.slice(-MAX_HISTORY) : [];
-  if (!query || context.length === 0) return errStream("bad_request");
+  if (!query) return errStream("bad_request"); // empty context is OK (greetings / chit-chat)
 
   const messages = [
     ...history

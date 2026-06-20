@@ -276,8 +276,8 @@ export async function generate(
 export function extractive(context: Source[], lang: Lang): string {
   if (!context.length)
     return lang === "en"
-      ? "I can't find that in the project's documentation."
-      : "No encuentro eso en la documentación del proyecto.";
+      ? "Hi — I'm **VisaBot**. Ask me about the U.S. Visa Bulletin, the multi-series data panel, or the models and CRISP-DM methodology."
+      : "Hola — soy **VisaBot**. Pregúntame sobre el U.S. Visa Bulletin, el panel multiserie de datos, o los modelos y la metodología CRISP-DM.";
   const intro =
     lang === "en"
       ? "_Answering from the project's documentation (live assistant offline):_"
