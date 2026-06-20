@@ -26,7 +26,7 @@ const cdp = (ws, m, p = {}, id) => new Promise((r) => { const on = (e) => { cons
 
 await new Promise((r) => server.listen(PORT, r));
 const chrome = spawn("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  ["--headless=new", "--disable-gpu", "--no-first-run", "--remote-debugging-port=9336", "--user-data-dir=/tmp/vbchrome4", `http://localhost:${PORT}/asistente/`], { stdio: "ignore" });
+  ["--headless=new", "--disable-gpu", "--no-first-run", "--window-size=1440,900", "--remote-debugging-port=9336", "--user-data-dir=/tmp/vbchrome4", `http://localhost:${PORT}/asistente/`], { stdio: "ignore" });
 
 let result = { ok: false };
 try {
@@ -43,7 +43,7 @@ try {
   await new Promise((r) => setTimeout(r, 3000));
   const drv = await cdp(ws, "Runtime.evaluate", { expression: `(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-    const hasConsole=!!document.querySelector('.vb-console textarea');
+    const hasConsole=!!document.querySelector('textarea');
     // wait for the panel to load (selectors get populated)
     let panelLoaded=false;
     for(let i=0;i<30;i++){await sleep(500);const sel=document.querySelector('aside select');if(sel&&sel.options.length>1){panelLoaded=true;break;}}
@@ -53,7 +53,7 @@ try {
     let toolChart=false;
     for(let i=0;i<30;i++){await sleep(500);if(document.querySelector('.vb-bot svg.recharts-surface')){toolChart=true;break;}}
     // ask a chartable question -> expect cited answer + a chart
-    const ta=document.querySelector('.vb-console textarea');
+    const ta=document.querySelector('textarea');
     if(ta){const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(ta,'¿Cómo ha evolucionado la fecha de México F3?');ta.dispatchEvent(new Event('input',{bubbles:true}));await sleep(100);ta.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}
     let chips=0,charts=0,answer='';
     for(let i=0;i<50;i++){await sleep(500);chips=document.querySelectorAll('.vb-chip').length;charts=document.querySelectorAll('.vb-bot svg.recharts-surface').length;const b=[...document.querySelectorAll('.vb-bot')];answer=b.length?b[b.length-1].innerText:'';if(chips>0&&charts>=2)break;}

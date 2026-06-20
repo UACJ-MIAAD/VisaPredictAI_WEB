@@ -106,10 +106,7 @@ export const ROUTES: Route[] = [
       "VisaBot: asistente conversacional con recuperación aumentada (RAG) sobre toda la documentación del proyecto, con respuestas citadas.",
     blurbEn:
       "VisaBot: a retrieval-augmented (RAG) conversational assistant over the whole project documentation, with cited answers.",
-    sections: [
-      { id: "asistente", label: "VisaBot", labelEn: "VisaBot" },
-      { id: "como-funciona", label: "Cómo funciona", labelEn: "How it works" },
-    ],
+    sections: [{ id: "asistente", label: "VisaBot", labelEn: "VisaBot" }],
   },
 ];
 
