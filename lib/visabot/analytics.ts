@@ -46,7 +46,22 @@ export type ChartSpec =
   | { kind: "line"; title: string; subtitle: string; yLabel: string; data: { month: string; year: number | null; date: string | null }[] }
   | { kind: "compare"; title: string; subtitle: string; data: { country: string; label: string; years: number | null; date: string | null }[] }
   | { kind: "movement"; title: string; subtitle: string; data: { month: string; movement: number }[] }
-  | { kind: "status"; title: string; subtitle: string; data: { name: string; value: number; color: string }[] };
+  | { kind: "status"; title: string; subtitle: string; data: { name: string; value: number; color: string }[] }
+  | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[] }
+  | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
+  | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] };
+
+function latestWaitYears(panel: Panel, country: string, category: string, table: string): { years: number | null; date: string | null } {
+  const rows = panel.rows
+    .filter((r) => r.country === country && r.category === category && r.table === table && r.status === "F" && r.priorityDate)
+    .sort((a, b) => b.bulletinMonth.localeCompare(a.bulletinMonth));
+  const latest = rows[0];
+  if (!latest || !latest.priorityDate) return { years: null, date: null };
+  return { years: Math.max(0, (monthDays(latest.bulletinMonth) - isoDays(latest.priorityDate)) / 365.25), date: latest.priorityDate };
+}
+
+const FAM = ["F1", "F2A", "F2B", "F3", "F4"];
+const EMP = ["EB1", "EB2", "EB3", "EB4", "EB5"];
 
 const monthDays = (m: string) => { const [y, mo] = m.split("-").map(Number); return Date.UTC(y, mo - 1, 1) / 86400000; };
 const isoDays = (d: string) => { const [y, mo, da] = d.split("-").map(Number); return Date.UTC(y, mo - 1, da || 1) / 86400000; };
@@ -128,6 +143,65 @@ export function buildStatus(panel: Panel, lang: Lang, filter?: Partial<Pick<Visa
     title: lang === "en" ? `Status mix · ${scope}` : `Mezcla de estado · ${scope}`,
     subtitle: lang === "en" ? "How observations split across regimes" : "Cómo se reparten las observaciones por régimen",
     data,
+  };
+}
+
+// multi-country priority-date race for a category/table (one line per country)
+export function buildMultiLine(panel: Panel, category: string, table: string, lang: Lang): ChartSpec | null {
+  const byMonth = new Map<string, Record<string, number | string | null>>();
+  const present = new Set<string>();
+  for (const r of panel.rows) {
+    if (r.category !== category || r.table !== table || !PILOT.includes(r.country) || !r.priorityDate) continue;
+    let row = byMonth.get(r.bulletinMonth);
+    if (!row) { row = { month: r.bulletinMonth }; byMonth.set(r.bulletinMonth, row); }
+    row[r.country] = pdYear(r.priorityDate);
+    present.add(r.country);
+  }
+  const series = PILOT.filter((c) => present.has(c)).map((c) => ({ key: c, label: countryLabel(c) }));
+  if (series.length < 2) return null;
+  const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  return {
+    kind: "multiline",
+    title: lang === "en" ? `Priority-date race · ${category} · ${table}` : `Carrera de fechas · ${category} · ${table}`,
+    subtitle: lang === "en" ? "Each line is a country's priority date over time — who advances fastest" : "Cada línea es la fecha de prioridad de un país en el tiempo — quién avanza más rápido",
+    yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
+    series, data,
+  };
+}
+
+// country × category matrix of current wait (years) — the brutal heat grid
+export function buildHeatmap(panel: Panel, block: string, table: string, lang: Lang): ChartSpec | null {
+  const cols = (block === "empleo" ? EMP : FAM).filter((c) => panel.categories.includes(c));
+  const rows = PILOT.filter((c) => panel.countries.includes(c));
+  if (!cols.length || !rows.length) return null;
+  let max = 0;
+  const m = rows.map((country) =>
+    cols.map((cat) => { const w = latestWaitYears(panel, country, cat, table); if (w.years != null) max = Math.max(max, w.years); return { value: w.years, date: w.date }; }),
+  );
+  return {
+    kind: "heatmap",
+    title: lang === "en" ? `Wait heatmap · ${block === "empleo" ? "employment" : "family"} · ${table}` : `Mapa de calor de espera · ${block === "empleo" ? "empleo" : "familia"} · ${table}`,
+    subtitle: lang === "en" ? "Years of wait by country × category (latest month; redder = longer)" : "Años de espera por país × categoría (último mes; más rojo = más larga)",
+    rows: rows.map(countryLabel), cols, m, max: max || 1, unit: lang === "en" ? "y" : "a",
+  };
+}
+
+// per-country wait fingerprint across family preferences — radar
+export function buildRadar(panel: Panel, table: string, lang: Lang): ChartSpec | null {
+  const cats = FAM.filter((c) => panel.categories.includes(c));
+  const countries = PILOT.filter((c) => panel.countries.includes(c));
+  if (cats.length < 3) return null;
+  const names = countries.map(countryLabel);
+  const data = cats.map((cat) => {
+    const o: Record<string, number | string | null> = { cat };
+    countries.forEach((c) => { o[countryLabel(c)] = Math.round((latestWaitYears(panel, c, cat, table).years ?? 0) * 10) / 10; });
+    return o;
+  });
+  return {
+    kind: "radar",
+    title: lang === "en" ? `Wait fingerprint by country · ${table}` : `Huella de espera por país · ${table}`,
+    subtitle: lang === "en" ? "Years of wait across family preferences (latest month)" : "Años de espera por preferencia familiar (último mes)",
+    names, data,
   };
 }
 

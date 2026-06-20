@@ -235,6 +235,12 @@ const S: Dict = {
   acHereCompare: { es: "Comparación de espera entre países o áreas:", en: "Wait-time comparison across countries / areas:" },
   acHereMove: { es: "Movimiento mes a mes (avances y retrocesos):", en: "Month-to-month movement (advances and retrogressions):" },
   acHereStatus: { es: "Cómo se reparten las observaciones por régimen:", en: "How observations split across regimes:" },
+  toolRace: { es: "Carrera de países", en: "Country race" },
+  toolHeat: { es: "Mapa de calor", en: "Heatmap" },
+  toolRadar: { es: "Radar de espera", en: "Wait radar" },
+  acHereRace: { es: "Carrera de fechas de prioridad entre países:", en: "Priority-date race across countries:" },
+  acHereHeat: { es: "Mapa de calor de la espera por país y categoría:", en: "Heatmap of wait by country and category:" },
+  acHereRadar: { es: "Huella de espera de cada país por categoría:", en: "Each country's wait fingerprint by category:" },
 };
 
 export function tr(lang: Lang, key: keyof typeof S | string): string {

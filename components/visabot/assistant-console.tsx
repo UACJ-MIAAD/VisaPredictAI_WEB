@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import {
   Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, Plus, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, Menu, X, Info,
+  LineChart as LineIcon, Grid3x3, Radar as RadarIcon,
 } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
@@ -14,8 +15,11 @@ import { retrieve, generate, warmUp, isModelReady } from "./engine";
 import type { ChatMessage, ChartPayload, Source } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import {
-  detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildPanorama, type Kpi,
+  detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
+  buildHeatmap, buildRadar, buildPanorama, type Kpi,
 } from "@/lib/visabot/analytics";
+
+const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
 
 const VisaChart = dynamic(() => import("./visa-chart"), {
   ssr: false,
@@ -27,6 +31,9 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en"): ChartPayload
   const t = e.table || "FAD";
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
+  if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
+  if (/radar|huella|fingerprint/i.test(q)) return buildRadar(panel, t, lang);
+  if (/carrera|todos los pa[ií]s|all countr|cada pa[ií]s|\brace\b/i.test(q) && e.category) return buildMultiLine(panel, e.category, t, lang);
   if (e.country && e.category) {
     if (move) return buildMovement(panel, e.country, e.category, t, lang);
     if (status) return buildStatus(panel, lang, { country: e.country, category: e.category, table: t });
@@ -122,7 +129,7 @@ export function AssistantConsole() {
   const newChat = () => { stop(); setMessages([]); inputRef.current?.focus(); };
   const copy = (i: number, text: string) => { navigator.clipboard?.writeText(text); setCopied(i); setTimeout(() => setCopied((c) => (c === i ? null : c)), 1600); };
 
-  const runTool = (kind: "evol" | "compare" | "move" | "status") => {
+  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar") => {
     if (!panel) return;
     track("VisaBot Tool", { lang, tool: kind });
     setNavOpen(false);
@@ -130,6 +137,9 @@ export function AssistantConsole() {
     if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
     else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
+    else if (kind === "race") { chart = buildMultiLine(panel, category, table, lang); lead = tr(lang, "acHereRace"); }
+    else if (kind === "heat") { chart = buildHeatmap(panel, blockOf(category), table, lang); lead = tr(lang, "acHereHeat"); }
+    else if (kind === "radar") { chart = buildRadar(panel, table, lang); lead = tr(lang, "acHereRadar"); }
     else { chart = buildStatus(panel, lang, { country, category, table }); lead = tr(lang, "acHereStatus"); }
     setMessages((m) => [...m, chart ? { role: "assistant", content: lead, chart } : { role: "assistant", content: tr(lang, "acNoData") }]);
     setAtBottom(true);
@@ -141,6 +151,9 @@ export function AssistantConsole() {
     { k: "compare" as const, icon: BarChart3, label: tr(lang, "toolCompare") },
     { k: "move" as const, icon: ArrowUpDown, label: tr(lang, "toolMove") },
     { k: "status" as const, icon: PieIcon, label: tr(lang, "toolStatus") },
+    { k: "race" as const, icon: LineIcon, label: tr(lang, "toolRace") },
+    { k: "heat" as const, icon: Grid3x3, label: tr(lang, "toolHeat") },
+    { k: "radar" as const, icon: RadarIcon, label: tr(lang, "toolRadar") },
   ];
 
   const Sidebar = (
