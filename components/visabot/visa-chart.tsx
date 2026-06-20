@@ -11,6 +11,7 @@ import {
 import type { ChartSpec } from "@/lib/visabot/analytics";
 import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
+import { tr } from "@/lib/i18n";
 
 const MON_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const fmtDate = (d: string) => { const [y, m, da] = d.split("-").map(Number); return `${String(da || 1).padStart(2, "0")} ${MON_ABBR[m - 1]} ${y}`; };
@@ -31,7 +32,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
   const yr = lang === "en" ? "y" : "a";
 
   return (
-    <figure className="mt-2 rounded-xl border border-border bg-[var(--color-bg)] p-3">
+    <figure className="mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3">
       <figcaption className="mb-0.5 font-serif text-sm font-bold text-[var(--color-ink)]">{spec.title}</figcaption>
       <p className="mb-2 text-[0.72rem] text-[var(--color-muted)]">{spec.subtitle}</p>
 
@@ -112,11 +113,13 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
       )}
 
       {spec.kind === "table" && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[0.74rem]">
+        <>
+        <div className="relative">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[34rem] border-collapse text-[0.74rem]">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 bg-[var(--color-bg)] px-2 py-1.5 text-left font-semibold text-[var(--color-muted)]">{lang === "en" ? "Category" : "Categoría"}</th>
+                <th className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 text-left font-semibold text-[var(--color-muted)]">{lang === "en" ? "Category" : "Categoría"}</th>
                 {spec.countries.map((c) => (
                   <th key={c} className="px-2 py-1.5 text-center font-semibold text-[var(--color-ink)] whitespace-nowrap">{countryLabel(c)}</th>
                 ))}
@@ -130,7 +133,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
                   </tr>
                   {sec.rows.map((r) => (
                     <tr key={r.cat} className="border-t border-border">
-                      <td className="sticky left-0 z-10 bg-[var(--color-bg)] px-2 py-1.5 font-semibold text-[var(--color-ink)] whitespace-nowrap">{r.cat}</td>
+                      <td className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 font-semibold text-[var(--color-ink)] whitespace-nowrap">{r.cat}</td>
                       {r.cells.map((cell, ci) => (
                         <td key={ci} className="px-2 py-1.5 text-center">
                           {cell.status === "C" ? (
@@ -138,7 +141,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
                           ) : cell.status === "U" ? (
                             <span className="text-[var(--color-muted)]" title={lang === "en" ? "Unavailable" : "No disponible"}>U</span>
                           ) : cell.date ? (
-                            <span className="font-mono tabular-nums text-[var(--color-ink)]">{fmtDate(cell.date)}</span>
+                            <span className="whitespace-nowrap font-mono tabular-nums text-[var(--color-ink)]">{fmtDate(cell.date)}</span>
                           ) : (
                             <span className="text-[var(--color-muted)]">—</span>
                           )}
@@ -150,7 +153,13 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
               ))}
             </tbody>
           </table>
+          </div>
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-7 bg-gradient-to-l from-[var(--color-bg)] to-transparent sm:hidden" aria-hidden />
         </div>
+        <p className="mt-1.5 flex items-center gap-1 text-[0.66rem] text-[var(--color-muted)] sm:hidden">
+          <span aria-hidden>↔</span> {tr(lang, "acTableSwipe")}
+        </p>
+        </>
       )}
 
       {spec.kind === "compare" && (

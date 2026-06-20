@@ -289,10 +289,11 @@ export function AssistantConsole() {
           </>
         )}
 
-        {/* chat column */}
-        <div className="relative flex min-h-0 flex-1 flex-col">
-          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 py-5 sm:px-6" role="log" aria-live="polite" aria-relevant="additions text">
-            <div className="mx-auto max-w-[820px] space-y-4">
+        {/* chat column — min-w-0 lets it shrink below the table's min-width so the
+            table scrolls inside its own box instead of widening the whole column */}
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6" role="log" aria-live="polite" aria-relevant="additions text">
+            <div className="mx-auto min-w-0 max-w-[820px] space-y-4">
               {messages.length === 0 ? (
                 <div className="flex min-h-[40vh] flex-col items-start justify-center gap-3">
                   <Markdown text={tr(lang, "vbWelcome")} />
@@ -313,8 +314,8 @@ export function AssistantConsole() {
                   m.role === "user" ? (
                     <div key={i} className="flex justify-end"><div className="vb-bubble vb-user">{m.content}</div></div>
                   ) : (
-                    <div key={i} className="group/msg space-y-2">
-                      <div className="vb-bubble vb-bot" style={{ maxWidth: "100%" }}>
+                    <div key={i} className="group/msg min-w-0 space-y-2">
+                      <div className="vb-bubble vb-bot min-w-0 max-w-full overflow-hidden">
                         {m.content ? <Markdown text={m.content} sources={m.sources} /> : (
                           <span className="flex items-center gap-2 text-[var(--color-muted)]"><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{tr(lang, "vbThinking")}</span>
                         )}
