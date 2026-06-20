@@ -43,17 +43,25 @@ try {
   await new Promise((r) => setTimeout(r, 3000));
   const drv = await cdp(ws, "Runtime.evaluate", { expression: `(async()=>{
     const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-    const txt=document.body.innerText;
     const hasConsole=!!document.querySelector('.vb-console textarea');
-    const statChunks=/\\b587\\b/.test(txt);
+    // wait for the panel to load (selectors get populated)
+    let panelLoaded=false;
+    for(let i=0;i<30;i++){await sleep(500);const sel=document.querySelector('aside select');if(sel&&sel.options.length>1){panelLoaded=true;break;}}
+    // click the first tool button -> expect a recharts chart in the chat
+    const tool=[...document.querySelectorAll('aside button')].find(b=>/evoluci|evolution/i.test(b.innerText));
+    if(tool)tool.click();
+    let toolChart=false;
+    for(let i=0;i<30;i++){await sleep(500);if(document.querySelector('.vb-bot svg.recharts-surface')){toolChart=true;break;}}
+    // ask a chartable question -> expect cited answer + a chart
     const ta=document.querySelector('.vb-console textarea');
-    if(ta){const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(ta,'¿Qué es Final Action Dates?');ta.dispatchEvent(new Event('input',{bubbles:true}));await sleep(100);ta.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}
-    let answer='',chips=0;
-    for(let i=0;i<40;i++){await sleep(500);const b=[...document.querySelectorAll('.vb-bot')];const l=b[b.length-1];answer=l?l.innerText:'';chips=document.querySelectorAll('.vb-chip').length;if(answer&&answer.length>30&&chips>0)break;}
-    return {hasConsole,statChunks,sections:[...document.querySelectorAll('section[id]')].map(s=>s.id),chips,answer:answer.slice(0,120)};
+    if(ta){const set=Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype,'value').set;set.call(ta,'¿Cómo ha evolucionado la fecha de México F3?');ta.dispatchEvent(new Event('input',{bubbles:true}));await sleep(100);ta.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));}
+    let chips=0,charts=0,answer='';
+    for(let i=0;i<50;i++){await sleep(500);chips=document.querySelectorAll('.vb-chip').length;charts=document.querySelectorAll('.vb-bot svg.recharts-surface').length;const b=[...document.querySelectorAll('.vb-bot')];answer=b.length?b[b.length-1].innerText:'';if(chips>0&&charts>=2)break;}
+    const kpi=document.querySelector('aside .font-serif')?.innerText||'';
+    return {hasConsole,panelLoaded,toolChart,chips,charts,kpi,sections:[...document.querySelectorAll('section[id]')].map(s=>s.id),answer:answer.slice(0,100)};
   })()`, awaitPromise: true, returnByValue: true }, 4);
   const v = drv?.result?.value || {};
-  result = { ok: v.hasConsole && v.statChunks && v.chips > 0, ...v, logs: [...new Set(logs)].slice(0, 6) };
+  result = { ok: v.hasConsole && v.panelLoaded && v.toolChart && v.chips > 0 && v.charts >= 1, ...v, logs: [...new Set(logs)].slice(0, 6) };
   ws.close();
 } catch (e) { result = { ok: false, error: String(e) }; }
 finally { chrome.kill("SIGKILL"); server.close(); }
