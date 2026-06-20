@@ -4,8 +4,8 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import {
   Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, Plus, BookOpen,
-  TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, Menu, X, Info,
-  LineChart as LineIcon, Grid3x3, Radar as RadarIcon,
+  TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
+  LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
 } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
@@ -210,7 +210,9 @@ export function AssistantConsole() {
     <div id="asistente" className="flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden border-t border-border bg-[var(--color-bg)]">
       {/* console topbar */}
       <header className="flex items-center gap-2 border-b border-border bg-[var(--color-surface)] px-3 py-2.5 sm:px-4">
-        <button className="vb-iconbtn lg:hidden" onClick={() => setNavOpen(true)} aria-label={tr(lang, "acTools")}><Menu className="h-5 w-5" aria-hidden /></button>
+        <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] lg:hidden" onClick={() => setNavOpen(true)} aria-label={tr(lang, "acTools")}>
+          <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "acPanelToggle")}
+        </button>
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent)] text-white"><Sparkles className="h-4.5 w-4.5" aria-hidden /></span>
         <div className="min-w-0">
           <div className="font-serif text-sm font-bold leading-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</div>
