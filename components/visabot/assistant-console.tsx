@@ -6,7 +6,13 @@ import {
   Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, Plus, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
+  Lightbulb, Database, Cpu, Quote,
 } from "lucide-react";
+
+type PromptCat = { icon: string; cat: string; items: string[] };
+const PROMPT_ICON: Record<string, typeof BookOpen> = {
+  glossary: BookOpen, data: Database, models: Cpu, charts: BarChart3, refs: Quote,
+};
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
@@ -70,6 +76,8 @@ export function AssistantConsole() {
   const [atBottom, setAtBottom] = React.useState(true);
   const [navOpen, setNavOpen] = React.useState(false); // mobile sidebar drawer
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
+  const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
+  const [prompts, setPrompts] = React.useState<PromptCat[]>([]);
 
   const [country, setCountry] = React.useState("mexico");
   const [category, setCategory] = React.useState("F3");
@@ -83,6 +91,7 @@ export function AssistantConsole() {
     warmUp();
     loadPanel().then(setPanel).catch(() => setPanelErr(true));
     fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions(d[lang] || [])).catch(() => {});
+    fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts(d[lang] || [])).catch(() => {});
     const iv = setInterval(() => { if (isModelReady()) { setReady(true); clearInterval(iv); } }, 600);
     return () => clearInterval(iv);
   }, [lang]);
@@ -96,7 +105,7 @@ export function AssistantConsole() {
 
   React.useEffect(() => { if (atBottom) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, atBottom]);
   React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setNavOpen(false); setHowOpen(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setNavOpen(false); setHowOpen(false); setPromptsOpen(false); } };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
@@ -222,6 +231,9 @@ export function AssistantConsole() {
           </div>
         </div>
         <div className="flex-1" />
+        <button onClick={() => setPromptsOpen(true)} className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:px-2.5" aria-label={tr(lang, "acExamples")}>
+          <Lightbulb className="h-3.5 w-3.5" aria-hidden /> <span className="hidden sm:inline">{tr(lang, "acExamples")}</span>
+        </button>
         <button onClick={() => setHowOpen(true)} className="hidden items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:flex">
           <Info className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "acHowTitle")}
         </button>
@@ -262,6 +274,11 @@ export function AssistantConsole() {
                       <button key={s} onClick={() => send(s)} className="vb-suggest text-[0.8rem]">{s}</button>
                     ))}
                   </div>
+                  {prompts.length > 0 && (
+                    <button onClick={() => setPromptsOpen(true)} className="mt-1 flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] hover:underline">
+                      <Lightbulb className="h-4 w-4" aria-hidden /> {tr(lang, "acExamplesTitle")}
+                    </button>
+                  )}
                 </div>
               ) : (
                 messages.map((m, i) =>
@@ -341,6 +358,38 @@ export function AssistantConsole() {
                   <p className="mt-1.5 text-[0.9rem] leading-relaxed text-[var(--color-muted)]">{tr(lang, `acStep${n}B`)}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* prompt-library modal (help / curated prompts) */}
+      {promptsOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={tr(lang, "acExamplesTitle")}>
+          <div className="absolute inset-0 bg-black/50" onClick={() => setPromptsOpen(false)} aria-hidden />
+          <div className="relative max-h-[85vh] w-full max-w-[760px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <span className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]"><Lightbulb className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "acExamples")}</span>
+                <h2 className="font-serif text-2xl font-bold text-[var(--color-ink)]">{tr(lang, "acExamplesTitle")}</h2>
+                <p className="mt-1 max-w-[60ch] text-sm text-[var(--color-muted)]">{tr(lang, "acExamplesLead")}</p>
+              </div>
+              <button className="vb-iconbtn shrink-0" onClick={() => setPromptsOpen(false)} aria-label={tr(lang, "vbClose")}><X className="h-5 w-5" aria-hidden /></button>
+            </div>
+            <div className="space-y-5">
+              {prompts.map((p) => {
+                const Icon = PROMPT_ICON[p.icon] || BookOpen;
+                return (
+                  <div key={p.cat}>
+                    <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--color-ink)]"><Icon className="h-4 w-4 text-[var(--color-accent)]" aria-hidden /> {p.cat}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {p.items.map((q) => (
+                        <button key={q} onClick={() => { setPromptsOpen(false); send(q); }} className="vb-suggest text-[0.82rem]">{q}</button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
