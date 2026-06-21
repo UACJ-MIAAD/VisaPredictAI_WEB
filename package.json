@@ -15,7 +15,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "guard:test": "node scripts/test-code-guard.mjs"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
