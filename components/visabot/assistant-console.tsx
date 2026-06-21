@@ -29,6 +29,17 @@ import {
 
 const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
 
+// Fisher-Yates shuffle + take n — gives a fresh random pick each time the prompt
+// library opens, drawn from a larger pool.
+const sample = <T,>(arr: T[], n: number): T[] => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, n);
+};
+
 const VisaChart = dynamic(() => import("./visa-chart"), {
   ssr: false,
   loading: () => <div className="mt-2 h-[250px] animate-pulse rounded-xl border border-border bg-[var(--color-surface-soft)]" />,
@@ -90,6 +101,11 @@ export function AssistantConsole() {
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
   const [prompts, setPrompts] = React.useState<PromptCat[]>([]);
+  const [promptsView, setPromptsView] = React.useState<PromptCat[]>([]); // shuffled subset shown in the modal
+  const openPrompts = () => {
+    setPromptsView(prompts.map((p) => ({ ...p, items: sample(p.items, 6) }))); // 6 random per category, fresh each open
+    setPromptsOpen(true);
+  };
 
   const [country, setCountry] = React.useState("mexico");
   const [category, setCategory] = React.useState("F3");
@@ -275,7 +291,7 @@ export function AssistantConsole() {
           </div>
         </div>
         <div className="flex-1" />
-        <button onClick={() => setPromptsOpen(true)} className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:px-2.5" aria-label={tr(lang, "acExamples")}>
+        <button onClick={openPrompts} className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:px-2.5" aria-label={tr(lang, "acExamples")}>
           <Lightbulb className="h-3.5 w-3.5" aria-hidden /> <span className="hidden sm:inline">{tr(lang, "acExamples")}</span>
         </button>
         <button onClick={() => setHowOpen(true)} className="hidden items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:flex">
@@ -324,7 +340,7 @@ export function AssistantConsole() {
                     ))}
                   </div>
                   {prompts.length > 0 && (
-                    <button onClick={() => setPromptsOpen(true)} className="mt-1 flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] hover:underline">
+                    <button onClick={openPrompts} className="mt-1 flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] hover:underline">
                       <Lightbulb className="h-4 w-4" aria-hidden /> {tr(lang, "acExamplesTitle")}
                     </button>
                   )}
@@ -426,7 +442,7 @@ export function AssistantConsole() {
               <button className="vb-iconbtn shrink-0" onClick={() => setPromptsOpen(false)} aria-label={tr(lang, "vbClose")}><X className="h-5 w-5" aria-hidden /></button>
             </div>
             <div className="space-y-5">
-              {prompts.map((p) => {
+              {promptsView.map((p) => {
                 const Icon = PROMPT_ICON[p.icon] || BookOpen;
                 return (
                   <div key={p.cat}>

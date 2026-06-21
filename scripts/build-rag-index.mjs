@@ -371,34 +371,34 @@ function buildPrompts() {
     }
     return out;
   };
-  const glWanted = ["final action", "dates for filing", "retrogres", "per-country", "chargeab", "cargab", "priority", "prioridad", "mase", "smape", "crisp", "conform", "walk", "arima", "deepar", "prophet"];
+  const glWanted = ["final action", "dates for filing", "retrogres", "per-country", "chargeab", "cargab", "priority", "prioridad", "mase", "smape", "crisp", "conform", "walk", "arima", "sarima", "deepar", "prophet", "theta", "ets", "msis", "crps", "ensemble", "ina"];
   const mk = (lang) => {
     const en = lang === "en";
-    const gl = glTerms(lang, glWanted, 7);
+    const gl = glTerms(lang, glWanted, 12);
     const m = latestMonth ? monthLabel(latestMonth, lang) : null;
     return [
       { icon: "glossary", cat: en ? "Glossary" : "Glosario",
         items: gl.map((t) => (en ? `What is ${t}?` : `¿Qué es ${t}?`)) },
       { icon: "data", cat: en ? "Data & bulletin" : "Datos y boletín",
         items: en
-          ? [m ? `What changed in the ${m} bulletin?` : "How does the Visa Bulletin work?", "How is the multi-series panel y_{p,c,b,t} structured?", "What do the statuses C, F and U mean?", "What is the base date for the data?", "Which countries and categories are covered?"]
-          : [m ? `¿Qué cambió en el boletín de ${m}?` : "¿Cómo funciona el Visa Bulletin?", "¿Cómo está estructurado el panel multiserie y_{p,c,b,t}?", "¿Qué significan los estados C, F y U?", "¿Cuál es la fecha base de los datos?", "¿Qué países y categorías cubre?"] },
+          ? [m ? `What changed in the ${m} bulletin?` : "How does the Visa Bulletin work?", "How is the multi-series panel y_{p,c,b,t} structured?", "What do the statuses C, F and U mean?", "What is the base date for the data?", "Which countries and categories are covered?", "How many observations does the panel have?", "Why is Mexico the pilot country?", "What's the difference between FAD and DFF?", "How far back does the data go?", "What is a chargeability area?", "How is the data scraped and updated?", "What share of the panel is predictable (F)?"]
+          : [m ? `¿Qué cambió en el boletín de ${m}?` : "¿Cómo funciona el Visa Bulletin?", "¿Cómo está estructurado el panel multiserie y_{p,c,b,t}?", "¿Qué significan los estados C, F y U?", "¿Cuál es la fecha base de los datos?", "¿Qué países y categorías cubre?", "¿Cuántas observaciones tiene el panel?", "¿Por qué México es el país piloto?", "¿Cuál es la diferencia entre FAD y DFF?", "¿Hasta qué año llegan los datos?", "¿Qué es un área de cargabilidad?", "¿Cómo se extraen y actualizan los datos?", "¿Qué porcentaje del panel es predecible (F)?"] },
       { icon: "models", cat: en ? "Models & methodology" : "Modelos y metodología",
         items: en
-          ? ["Which models does the project compare and which one wins?", "Do neural networks beat the simple models?", "What methodology does the project follow?", "What error metrics does it use?", "How is the forecast validated without leakage?"]
-          : ["¿Qué modelos compara el proyecto y cuál gana?", "¿Las redes neuronales superan a los modelos simples?", "¿Qué metodología sigue el proyecto?", "¿Qué métricas de error usa?", "¿Cómo se valida el pronóstico sin fuga de datos?"] },
-      { icon: "models", cat: en ? "Forecasts" : "Pronósticos",
+          ? ["Which models does the project compare and which one wins?", "Do neural networks beat the simple models?", "What methodology does the project follow?", "What error metrics does it use?", "How is the forecast validated without leakage?", "What is walk-forward validation?", "How are the 95% prediction intervals built?", "Why does SARIMA win on DFF?", "What is conformal prediction?", "How many models are in the comparison pool?", "What is the CRISP-DM methodology?", "How are models compared statistically?"]
+          : ["¿Qué modelos compara el proyecto y cuál gana?", "¿Las redes neuronales superan a los modelos simples?", "¿Qué metodología sigue el proyecto?", "¿Qué métricas de error usa?", "¿Cómo se valida el pronóstico sin fuga de datos?", "¿Qué es la validación walk-forward?", "¿Cómo se construyen los intervalos de predicción al 95 %?", "¿Por qué SARIMA gana en DFF?", "¿Qué es la predicción conforme?", "¿Cuántos modelos hay en el pool de comparación?", "¿Qué es la metodología CRISP-DM?", "¿Cómo se comparan los modelos estadísticamente?"] },
+      { icon: "models", cat: en ? "Forecasts (zoom)" : "Pronósticos (zoom)",
         items: en
-          ? ["Show the forecast for Mexico F2A", "Forecast for India EB2", "Predict Philippines F4 (DFF)", "Projection for China EB3"]
-          : ["Muéstrame el pronóstico de México F2A", "Pronóstico de India EB2", "Predice Filipinas F4 (DFF)", "Proyección de China EB3"] },
+          ? ["Show the forecast for Mexico F2A", "Forecast for India EB2", "Predict Philippines F4 (DFF)", "Projection for China EB3", "Zoom into Mexico F3 forecast", "Forecast India F1 (FAD)", "Forecast All Chargeability F4", "Predict Mexico EB3 (DFF)", "Forecast China F4", "Zoom Philippines F1", "Forecast India F2B", "Projection for Mexico F1 (DFF)"]
+          : ["Muéstrame el pronóstico de México F2A", "Pronóstico de India EB2", "Predice Filipinas F4 (DFF)", "Proyección de China EB3", "Zoom al pronóstico de México F3", "Pronóstico India F1 (FAD)", "Pronóstico de All Chargeability F4", "Predice México EB3 (DFF)", "Pronóstico de China F4", "Zoom Filipinas F1", "Pronóstico India F2B", "Proyección de México F1 (DFF)"] },
       { icon: "charts", cat: en ? "Charts (data viz)" : "Gráficos (visualizaciones)",
         items: en
-          ? [m ? `Show the ${m} bulletin table` : "Show the latest bulletin table", "Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement"]
-          : [m ? `Muéstrame la tabla del boletín de ${m}` : "Muéstrame la tabla del último boletín", "Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2"] },
+          ? [m ? `Show the ${m} bulletin table` : "Show the latest bulletin table", "Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement", "Mexico F4 backlog vs the world", "Status mix (C/F/U) for India F1", "Employment heatmap (DFF)", "China F4 priority-date evolution", "Compare the wait for F2A across countries", "Monthly movement of Philippines F4", "Country race for F4 (DFF)"]
+          : [m ? `Muéstrame la tabla del boletín de ${m}` : "Muéstrame la tabla del último boletín", "Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2", "Backlog de México F4 vs el mundo", "Mezcla de estado (C/F/U) de India F1", "Mapa de calor de empleo (DFF)", "Evolución de la fecha de China F4", "Compara la espera de F2A entre países", "Movimiento mensual de Filipinas F4", "Carrera de países en F4 (DFF)"] },
       { icon: "refs", cat: en ? "References" : "Referencias",
         items: en
-          ? ["Which reference backs CRISP-DM?", "What reference introduces the MASE metric?", "What reference is Prophet based on?"]
-          : ["¿Qué referencia respalda CRISP-DM?", "¿Qué referencia introduce la métrica MASE?", "¿En qué referencia se basa Prophet?"] },
+          ? ["Which reference backs CRISP-DM?", "What reference introduces the MASE metric?", "What reference is Prophet based on?", "Which paper proposes DeepAR?", "What reference covers conformal prediction?", "Which reference is behind walk-forward validation?"]
+          : ["¿Qué referencia respalda CRISP-DM?", "¿Qué referencia introduce la métrica MASE?", "¿En qué referencia se basa Prophet?", "¿Qué artículo propone DeepAR?", "¿Qué referencia cubre la predicción conforme?", "¿Qué referencia respalda la validación walk-forward?"] },
     ];
   };
   return { es: mk("es"), en: mk("en") };
