@@ -20,6 +20,7 @@ import { Markdown } from "./markdown";
 import { retrieve, generate, warmUp, isModelReady } from "./engine";
 import type { ChatMessage, ChartPayload, Source } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
+import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import {
   detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
   buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
@@ -33,7 +34,7 @@ const VisaChart = dynamic(() => import("./visa-chart"), {
   loading: () => <div className="mt-2 h-[250px] animate-pulse rounded-xl border border-border bg-[var(--color-surface-soft)]" />,
 });
 
-function chartForQuery(q: string, panel: Panel, lang: "es" | "en"): ChartPayload | null {
+function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartPayload | null {
   const e = detectEntities(q, panel);
   const t = e.table || "FAD";
   // monthly bulletin table: "tabla/boletín de <mes>" → full-history snapshot
@@ -44,7 +45,7 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en"): ChartPayload
   // forecast: "predicción/pronóstico/forecast de F2A …" → fan-chart projection.
   // The core purpose of the project — defaults to México (the pilot) if no country.
   if (/predic|pron[oó]stic|forecast|proyec|predict|futuro|estimaci[oó]n a/i.test(q) && e.category)
-    return buildForecast(panel, e.country || "mexico", e.category, t, lang);
+    return buildForecast(panel, e.country || "mexico", e.category, t, lang, 12, 48, forecasts);
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
   if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
@@ -76,6 +77,7 @@ function Select({ label, value, onChange, options, fmt }: {
 export function AssistantConsole() {
   const { lang } = useLang();
   const [panel, setPanel] = React.useState<Panel | null>(null);
+  const [forecasts, setForecasts] = React.useState<ForecastStore | null>(null);
   const [panelErr, setPanelErr] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
@@ -102,6 +104,7 @@ export function AssistantConsole() {
   React.useEffect(() => {
     warmUp();
     loadPanel().then(setPanel).catch(() => setPanelErr(true));
+    loadForecasts().then(setForecasts).catch(() => {}); // real model forecasts (fallback handled inside buildForecast)
     fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions(d[lang] || [])).catch(() => {});
     fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts(d[lang] || [])).catch(() => {});
     const iv = setInterval(() => { if (isModelReady()) { setReady(true); clearInterval(iv); } }, 600);
@@ -139,7 +142,7 @@ export function AssistantConsole() {
     const rq = isFollowUp && prevUser ? `${prevUser} ${q}` : q;
     let sources: Source[] = [];
     try { sources = await retrieve(rq, lang, 6); } catch { /* conversational */ }
-    const chart = panel ? chartForQuery(q, panel, lang) : null;
+    const chart = panel ? chartForQuery(q, panel, lang, forecasts) : null;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full 2001→2026 panel.
     if (chart?.kind === "table") {
@@ -164,7 +167,7 @@ export function AssistantConsole() {
     } catch {
       setMessages((m) => { const c = [...m]; const l = c[c.length - 1]; c[c.length - 1] = { ...l, content: l.content || tr(lang, "vbError"), chart: chart || undefined }; return c; });
     } finally { setBusy(false); abortRef.current = null; }
-  }, [busy, lang, messages, panel]);
+  }, [busy, lang, messages, panel, forecasts]);
 
   const stop = () => { abortRef.current?.abort(); abortRef.current = null; setBusy(false); };
   const newChat = () => { stop(); setMessages([]); inputRef.current?.focus(); };
@@ -176,7 +179,7 @@ export function AssistantConsole() {
     setNavOpen(false);
     let chart: ChartPayload | null = null, lead = "";
     if (kind === "table") { chart = buildMonthTable(panel, month || months[0], table, lang); lead = tr(lang, "acHereTable"); }
-    else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang); lead = tr(lang, "acHereForecast"); }
+    else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang, 12, 48, forecasts); lead = tr(lang, "acHereForecast"); }
     else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
     else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
