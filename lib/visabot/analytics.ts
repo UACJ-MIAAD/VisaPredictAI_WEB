@@ -3,6 +3,7 @@
 // "engineering" layer EpiBot had — turning a query (or a tool click) into a
 // chart spec backed by actual Visa Bulletin data. No fabricated numbers.
 import { type Panel, type VisaPanelRow, countryLabel, statusColor } from "@/lib/data/visa-panel";
+import { type ForecastStore, forecastFor, forecastMetaFor } from "@/lib/data/forecasts";
 
 export type Lang = "es" | "en";
 export const PILOT = ["mexico", "india", "china", "philippines", "all_chargeability"];
@@ -140,28 +141,17 @@ const nextMonth = (m: string) => { const [y, mo] = m.split("-").map(Number); con
 const epochToYear = (e: number) => 1970 + e / DAYS_Y;
 const epochToDate = (e: number) => { const d = new Date(e * 86400000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`; };
 
-export function buildForecast(panel: Panel, country: string, category: string, table: string, lang: Lang, horizon = 12, window = 48): ChartSpec | null {
+export function buildForecast(panel: Panel, country: string, category: string, table: string, lang: Lang, horizon = 12, window = 48, forecasts?: ForecastStore | null): ChartSpec | null {
   const series = panel.rows
     .filter((r) => r.country === country && r.category === category && r.table === table)
     .sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
   const fobs = series.filter((r) => r.status === "F" && r.daysSinceBase != null && r.priorityDate);
-  if (fobs.length < 8) return null; // too short to fit an honest trend
+  if (fobs.length < 8) return null; // too short to anchor an honest forecast
 
   const win = fobs.slice(-Math.max(window, 12));
-  const xs = win.map((_, i) => i);
-  const ys = win.map((r) => r.daysSinceBase as number);
-  // OLS local-linear fit (x in months)
-  const n = xs.length, mx = (n - 1) / 2, my = ys.reduce((a, b) => a + b, 0) / n;
-  let sxx = 0, sxy = 0;
-  for (let i = 0; i < n; i++) { sxx += (xs[i] - mx) ** 2; sxy += (xs[i] - mx) * (ys[i] - my); }
-  const slope = sxx ? sxy / sxx : 0; // days of priority-date advance per month
-  const intercept = my - slope * mx;
-  let ss = 0; for (let i = 0; i < n; i++) ss += (ys[i] - (intercept + slope * xs[i])) ** 2;
-  const sigma = Math.sqrt(ss / Math.max(1, n - 2)); // residual σ in days
-
   const last = win[win.length - 1];
-  const baseEpoch = isoDays(last.priorityDate as string) - (last.daysSinceBase as number); // days(1970)→base epoch
-  const anchorDays = last.daysSinceBase as number;
+  const baseEpoch = isoDays(last.priorityDate as string) - (last.daysSinceBase as number); // → base epoch (days since 1970)
+  const yr = (d: number) => epochToYear(baseEpoch + d);
   const data: Extract<ChartSpec, { kind: "forecast" }>["data"] = win.map((r) => ({
     month: r.bulletinMonth, hist: pdYear(r.priorityDate as string), fc: null, band80: null, band95: null, date: r.priorityDate,
   }));
@@ -169,24 +159,47 @@ export function buildForecast(panel: Panel, country: string, category: string, t
   data[data.length - 1].fc = data[data.length - 1].hist;
   data[data.length - 1].band80 = [data[data.length - 1].hist as number, data[data.length - 1].hist as number];
   data[data.length - 1].band95 = data[data.length - 1].band80;
-  let m = last.bulletinMonth;
-  for (let h = 1; h <= horizon; h++) {
-    m = nextMonth(m);
-    const fcDays = anchorDays + slope * h;
-    const half = sigma * Math.sqrt(h); // RW-style growth
-    const yr = (d: number) => epochToYear(baseEpoch + d);
-    data.push({ month: m, hist: null, fc: yr(fcDays), date: epochToDate(baseEpoch + fcDays),
-      band80: [yr(fcDays - Z80 * half), yr(fcDays + Z80 * half)],
-      band95: [yr(fcDays - Z95 * half), yr(fcDays + Z95 * half)] });
+
+  // 1) Real production-model forecast (pre-generated). 2) drift baseline fallback.
+  const real = forecastFor(forecasts ?? null, country, category, table);
+  let subtitle: string;
+  if (real && real.length) {
+    for (const p of real)
+      data.push({ month: p.date.slice(0, 7), hist: null, fc: yr(p.days), date: epochToDate(baseEpoch + p.days),
+        band80: [yr(p.lo80), yr(p.hi80)], band95: [yr(p.lo95), yr(p.hi95)] });
+    const meta = forecastMetaFor(forecasts ?? null, country, category, table);
+    const mlabel = meta?.models?.length ? meta.models.join("+") : (table === "DFF" ? "SARIMA" : "Theta+ETS+SARIMA");
+    const mase = meta && Number.isFinite(meta.mase) ? (lang === "en" ? ` · hold-out MASE ${meta.mase}` : ` · MASE hold-out ${meta.mase}`) : "";
+    subtitle = lang === "en"
+      ? `Production-model forecast (${mlabel}) with split-conformal 80 % / 95 % bands${mase}`
+      : `Pronóstico del modelo de producción (${mlabel}) con bandas conformes al 80 % / 95 %${mase}`;
+  } else {
+    const xs = win.map((_, i) => i), ys = win.map((r) => r.daysSinceBase as number);
+    const n = xs.length, mx = (n - 1) / 2, my = ys.reduce((a, b) => a + b, 0) / n;
+    let sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++) { sxx += (xs[i] - mx) ** 2; sxy += (xs[i] - mx) * (ys[i] - my); }
+    const slope = sxx ? sxy / sxx : 0, intercept = my - slope * mx;
+    let ss = 0; for (let i = 0; i < n; i++) ss += (ys[i] - (intercept + slope * xs[i])) ** 2;
+    const sigma = Math.sqrt(ss / Math.max(1, n - 2));
+    const anchorDays = last.daysSinceBase as number;
+    let m = last.bulletinMonth;
+    for (let h = 1; h <= horizon; h++) {
+      m = nextMonth(m);
+      const fcDays = anchorDays + slope * h, half = sigma * Math.sqrt(h);
+      data.push({ month: m, hist: null, fc: yr(fcDays), date: epochToDate(baseEpoch + fcDays),
+        band80: [yr(fcDays - Z80 * half), yr(fcDays + Z80 * half)],
+        band95: [yr(fcDays - Z95 * half), yr(fcDays + Z95 * half)] });
+    }
+    const perYear = slope * 12;
+    const dir = lang === "en" ? (perYear >= 0 ? "advancing" : "retrogressing") : (perYear >= 0 ? "avanzando" : "retrocediendo");
+    subtitle = lang === "en"
+      ? `Illustrative ${horizon}-month projection (in-browser drift baseline, ${dir} ~${Math.abs(Math.round(perYear))} days/yr) with 80 % / 95 % bands`
+      : `Proyección ilustrativa a ${horizon} meses (línea base de deriva en el navegador, ${dir} ~${Math.abs(Math.round(perYear))} días/año) con bandas al 80 % / 95 %`;
   }
-  const perYear = slope * 12; // days/yr
-  const dir = lang === "en" ? (perYear >= 0 ? "advancing" : "retrogressing") : (perYear >= 0 ? "avanzando" : "retrocediendo");
   return {
     kind: "forecast", splitMonth: last.bulletinMonth,
     title: lang === "en" ? `Forecast · ${seriesTitle({ country, category, table })}` : `Pronóstico · ${seriesTitle({ country, category, table })}`,
-    subtitle: lang === "en"
-      ? `Illustrative ${horizon}-month projection (local-drift baseline, ${dir} ~${Math.abs(Math.round(perYear))} days/yr) with 80 % / 95 % prediction bands`
-      : `Proyección ilustrativa a ${horizon} meses (línea base de deriva local, ${dir} ~${Math.abs(Math.round(perYear))} días/año) con bandas de predicción al 80 % / 95 %`,
+    subtitle,
     yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
     data,
   };
