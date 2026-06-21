@@ -316,7 +316,9 @@ export function AssistantConsole() {
                 <div className="flex min-h-[40vh] flex-col items-start justify-center gap-3">
                   <Markdown text={tr(lang, "vbWelcome")} />
                   <p className="text-sm text-[var(--color-muted)]">{tr(lang, "acStartHint")}</p>
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  {/* suggestion chips are noisy on small screens — hide on mobile,
+                      keep the blue "¿Qué puedes preguntar?" button below as the entry point */}
+                  <div className="hidden flex-wrap gap-2 pt-1 sm:flex">
                     {suggestions.slice(0, 4).map((s) => (
                       <button key={s} onClick={() => send(s)} className="vb-suggest text-[0.8rem]">{s}</button>
                     ))}
