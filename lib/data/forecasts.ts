@@ -7,10 +7,17 @@
 
 export type ForecastPoint = { date: string; days: number; lo80: number; hi80: number; lo95: number; hi95: number };
 export type SeriesMeta = { models: string[]; mase: number; last_month: string };
+export type HorizonScore = { mae_days: number; mase: number; cov95: number };
+export type Scorecard = {
+  n_scored: number;
+  overall: { mae_days: number; mase: number; cov80: number; cov95: number };
+  by_horizon: Record<string, HorizonScore>;
+};
 export type ForecastStore = {
   method: Record<string, string>; // table -> human method description
   series: Map<string, ForecastPoint[]>; // "country|category|table" -> 12 future points
   meta: Map<string, SeriesMeta>;
+  scorecard: Scorecard | null; // prospective real-world accuracy (frozen vs realized)
 };
 
 const key = (country: string, category: string, table: string) => `${country}|${category}|${table}`;
@@ -20,19 +27,23 @@ let cache: Promise<ForecastStore> | null = null;
 export function loadForecasts(): Promise<ForecastStore> {
   if (cache) return cache;
   cache = (async () => {
-    const empty: ForecastStore = { method: {}, series: new Map(), meta: new Map() };
-    let csv: string, metaJson: { method?: Record<string, string>; series?: Record<string, SeriesMeta> };
+    const empty: ForecastStore = { method: {}, series: new Map(), meta: new Map(), scorecard: null };
+    let csv: string,
+      metaJson: { method?: Record<string, string>; series?: Record<string, SeriesMeta> },
+      scorecard: Scorecard | null = null;
     try {
-      const [c, m] = await Promise.all([
+      const [c, m, sc] = await Promise.all([
         fetch("/data/forecasts.csv").then((r) => (r.ok ? r.text() : Promise.reject(new Error(`csv ${r.status}`)))),
         fetch("/data/forecasts_meta.json").then((r) => (r.ok ? r.json() : {})),
+        fetch("/data/forecast_scorecard.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
       csv = c;
       metaJson = m;
+      scorecard = sc && sc.n_scored > 0 ? (sc as Scorecard) : null;
     } catch {
       return empty; // no forecasts shipped → callers fall back to the drift baseline
     }
-    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map() };
+    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map(), scorecard };
     const lines = csv.split("\n");
     const h = lines[0].split(",");
     const ix = (k: string) => h.indexOf(k);
@@ -46,7 +57,7 @@ export function loadForecasts(): Promise<ForecastStore> {
     }
     if (metaJson.series) for (const [k, v] of Object.entries(metaJson.series)) store.meta.set(k.replace(/\//g, "|"), v);
     return store;
-  })().catch(() => ({ method: {}, series: new Map(), meta: new Map() }));
+  })().catch(() => ({ method: {}, series: new Map(), meta: new Map(), scorecard: null }));
   return cache;
 }
 

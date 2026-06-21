@@ -51,7 +51,7 @@ export type ChartSpec =
   | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[] }
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
-  | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string;
+  | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string;
       data: { month: string; hist: number | null; fc: number | null; band80: [number, number] | null; band95: [number, number] | null; date: string | null }[] }
   | { kind: "table"; title: string; subtitle: string; month: string; tableType: string;
       countries: string[];
@@ -163,6 +163,7 @@ export function buildForecast(panel: Panel, country: string, category: string, t
   // 1) Real production-model forecast (pre-generated). 2) drift baseline fallback.
   const real = forecastFor(forecasts ?? null, country, category, table);
   let subtitle: string;
+  let note: string | undefined;
   if (real && real.length) {
     for (const p of real)
       data.push({ month: p.date.slice(0, 7), hist: null, fc: yr(p.days), date: epochToDate(baseEpoch + p.days),
@@ -173,6 +174,15 @@ export function buildForecast(panel: Panel, country: string, category: string, t
     subtitle = lang === "en"
       ? `Production-model forecast (${mlabel}) with split-conformal 80 % / 95 % bands${mase}`
       : `Pronóstico del modelo de producción (${mlabel}) con bandas conformes al 80 % / 95 %${mase}`;
+    // Prospective track record (real frozen forecasts vs realized cutoffs) — global.
+    const sc = (forecasts ?? null)?.scorecard;
+    if (sc) {
+      const mae = (k: number) => Math.round(sc.by_horizon[String(k)]?.mae_days ?? NaN);
+      const cov = Math.round(sc.overall.cov95 * 100);
+      note = lang === "en"
+        ? `Real-world accuracy (${sc.n_scored} forecasts scored vs already-published cutoffs): typical error ±${mae(3)} d at 3 mo · ±${mae(6)} d at 6 mo · ±${mae(12)} d at 12 mo. The 95 % band held in ${cov} % of cases.`
+        : `Precisión real (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos.`;
+    }
   } else {
     const xs = win.map((_, i) => i), ys = win.map((r) => r.daysSinceBase as number);
     const n = xs.length, mx = (n - 1) / 2, my = ys.reduce((a, b) => a + b, 0) / n;
@@ -197,7 +207,7 @@ export function buildForecast(panel: Panel, country: string, category: string, t
       : `Proyección ilustrativa a ${horizon} meses (línea base de deriva en el navegador, ${dir} ~${Math.abs(Math.round(perYear))} días/año) con bandas al 80 % / 95 %`;
   }
   return {
-    kind: "forecast", splitMonth: last.bulletinMonth,
+    kind: "forecast", splitMonth: last.bulletinMonth, note,
     title: lang === "en" ? `Forecast · ${seriesTitle({ country, category, table })}` : `Pronóstico · ${seriesTitle({ country, category, table })}`,
     subtitle,
     yLabel: lang === "en" ? "Priority year" : "Año de prioridad",

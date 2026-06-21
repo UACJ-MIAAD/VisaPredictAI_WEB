@@ -99,6 +99,11 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
           <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4 border-t-2 border-dashed" style={{ borderColor: "var(--color-accent-2)" }} />{lang === "en" ? "Forecast" : "Pronóstico"}</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-4 rounded-sm" style={{ background: "color-mix(in srgb, var(--color-accent) 20%, transparent)" }} />{lang === "en" ? "80 % / 95 % band" : "Banda 80 % / 95 %"}</span>
         </div>
+        {spec.note && (
+          <p className="mt-2 rounded-lg border border-border bg-[var(--color-surface-soft)] px-3 py-2 text-[0.7rem] leading-relaxed text-[var(--color-muted)]">
+            <span className="font-semibold text-[var(--color-ink)]">{lang === "en" ? "Track record · " : "Historial · "}</span>{spec.note}
+          </p>
+        )}
         </>
       )}
 

@@ -14,6 +14,7 @@ const FILES = [
   { url: `${RAW}/data/processed/visa_panel_long.csv`, out: "visa_panel_long.csv", critical: true },
   { url: `${RAW}/reports/web_forecasts.csv`, out: "forecasts.csv", critical: false },
   { url: `${RAW}/reports/web_forecasts_meta.json`, out: "forecasts_meta.json", critical: false },
+  { url: `${RAW}/reports/forecast_scorecard_meta.json`, out: "forecast_scorecard.json", critical: false },
 ];
 
 const exists = async (p) => access(p).then(() => true).catch(() => false);
