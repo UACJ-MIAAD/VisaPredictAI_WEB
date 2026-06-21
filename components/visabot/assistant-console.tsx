@@ -44,7 +44,7 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
   }
   // forecast: "predicción/pronóstico/forecast de F2A …" → fan-chart projection.
   // The core purpose of the project — defaults to México (the pilot) if no country.
-  if (/predic|pron[oó]stic|forecast|proyec|predict|futuro|estimaci[oó]n a/i.test(q) && e.category)
+  if (/predic|pron[oó]stic|forecast|proyec|predict|futuro|zoom|abanico|fan[ -]?chart|estimaci[oó]n a/i.test(q) && e.category)
     return buildForecast(panel, e.country || "mexico", e.category, t, lang, 12, 48, forecasts);
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
@@ -142,7 +142,9 @@ export function AssistantConsole() {
     const rq = isFollowUp && prevUser ? `${prevUser} ${q}` : q;
     let sources: Source[] = [];
     try { sources = await retrieve(rq, lang, 6); } catch { /* conversational */ }
-    const chart = panel ? chartForQuery(q, panel, lang, forecasts) : null;
+    // use the follow-up-augmented query (rq) so "FAD" after "zoom india F1" still
+    // resolves country+category+intent for the chart, not just the bare word.
+    const chart = panel ? chartForQuery(rq, panel, lang, forecasts) : null;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full 2001→2026 panel.
     if (chart?.kind === "table") {
