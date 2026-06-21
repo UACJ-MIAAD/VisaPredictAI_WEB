@@ -252,8 +252,8 @@ const S: Dict = {
   acExamples: { es: "Ejemplos", en: "Examples" },
   acExamplesTitle: { es: "¿Qué puedes preguntar?", en: "What can you ask?" },
   acExamplesLead: {
-    es: "Prompts listos por categoría — toca uno para enviarlo. Los de “Gráficos” generan visualizaciones de datos reales.",
-    en: "Ready-made prompts by category — tap one to send it. The “Charts” ones generate real-data visualizations.",
+    es: "Una selección al azar por categoría — vuelve a abrir para ver otras. Toca una para enviarla; las de “Gráficos” y “Pronósticos” generan visualizaciones de datos reales.",
+    en: "A random pick per category — reopen for more. Tap one to send it; “Charts” and “Forecasts” ones generate real-data visualizations.",
   },
 };
 
