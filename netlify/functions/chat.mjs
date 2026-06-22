@@ -14,14 +14,18 @@ const MODEL = process.env.VISABOT_MODEL || "claude-haiku-4-5";
 const MAX_QUERY = 2000;
 const MAX_CTX = 12;
 const MAX_HISTORY = 12;
-const MAX_OUTPUT = 1536;
+const MAX_OUTPUT = 1024;
 
-// Origin allowlist — the function is public, so gate it to our own site to curb
-// off-site abuse that would burn Anthropic credits. Override via env
-// VISABOT_ALLOWED_ORIGINS (comma-separated hosts). Netlify deploy previews
-// (*.netlify.app) and localhost are always allowed.
+// Origin allowlist — BEST-EFFORT only: Origin/Referer are client-controlled and
+// trivially spoofable, so this just deters casual browser abuse, NOT a determined
+// attacker. The real cost guard is the rate limit below + the Anthropic budget cap.
+// Override the hosts via VISABOT_ALLOWED_ORIGINS (comma-separated). Netlify deploy
+// previews are NOT blanket-allowed (any *.netlify.app could call us); set
+// VISABOT_PREVIEW_SUFFIX (e.g. "--visapredictai.netlify.app") to allow only THIS
+// site's previews. localhost stays allowed for dev.
 const ALLOWED = (process.env.VISABOT_ALLOWED_ORIGINS || "visapredictai.com,www.visapredictai.com")
   .split(",").map((s) => s.trim()).filter(Boolean);
+const PREVIEW_SUFFIX = (process.env.VISABOT_PREVIEW_SUFFIX || "").trim();
 export function originAllowed(req) {
   const ref = req.headers.get("origin") || req.headers.get("referer");
   let host;
@@ -30,13 +34,18 @@ export function originAllowed(req) {
   } catch {
     return false; // no parseable Origin/Referer → not a real browser request
   }
-  return ALLOWED.includes(host) || host.endsWith(".netlify.app") || host === "localhost" || host === "127.0.0.1";
+  if (host === "localhost" || host === "127.0.0.1") return true;
+  if (PREVIEW_SUFFIX && host.endsWith(PREVIEW_SUFFIX)) return true;
+  return ALLOWED.includes(host);
 }
 
-// best-effort per-instance rate limit (ponytail: in-memory, resets on cold
-// start — upgrade to a shared store only if abuse is observed)
+// best-effort per-instance rate limit. ⚠️ In-memory + per cold-start instance:
+// Netlify runs many instances so this is NOT a global cap — it only blunts a single
+// hot instance. The real fix for a wide-open public demo is a SHARED rate store
+// (Netlify Blobs / Upstash Redis keyed by IP); see docs. Until then, keep MAX_OUTPUT
+// low and rely on the Anthropic spend cap as the hard ceiling.
 const hits = new Map();
-const RATE = { windowMs: 60_000, max: 20 };
+const RATE = { windowMs: 60_000, max: 12 };
 function limited(ip) {
   const now = Date.now();
   const arr = (hits.get(ip) || []).filter((t) => now - t < RATE.windowMs);
@@ -104,20 +113,32 @@ export function guardText(lang) {
 // backticks (inline `F2A`) pass through untouched.
 export function makeCodeGuard(lang) {
   const refusal = guardText(lang);
+  const FENCES = ["```", "~~~"]; // markdown code fences (backtick AND tilde)
+  const HTML = ["<pre", "<code"]; // raw-HTML code blocks (case-insensitive)
+  const HOLD = 4; // = longest marker ("<code") − 1, so a marker split across deltas is caught
   let hold = "";
   let blocked = false;
+  const firstMarker = (chunk) => {
+    let idx = -1;
+    const low = chunk.toLowerCase();
+    for (const m of [...FENCES, ...HTML]) {
+      const j = (m[0] === "<" ? low : chunk).indexOf(m);
+      if (j !== -1 && (idx === -1 || j < idx)) idx = j;
+    }
+    return idx;
+  };
   return {
     push(text) {
       if (blocked) return "";
       const chunk = hold + text;
-      const i = chunk.indexOf("```");
+      const i = firstMarker(chunk);
       if (i !== -1) {
         blocked = true;
         hold = "";
         return chunk.slice(0, i) + refusal;
       }
-      hold = chunk.slice(-2);
-      return chunk.slice(0, -2);
+      hold = chunk.slice(-HOLD);
+      return chunk.slice(0, -HOLD);
     },
     flush() {
       const t = blocked ? "" : hold;
@@ -200,8 +221,10 @@ export default async (req) => {
       }
 
       // Deterministic code-block guard (defense-in-depth over the system prompt):
-      // VisaBot must never emit programming code. If a fenced block (```) appears
-      // in the stream it is cut and replaced with a refusal. See makeCodeGuard.
+      // VisaBot must never emit programming code. If a code marker (``` or ~~~ fence,
+      // or <pre>/<code> HTML) appears, the stream is cut + refused. See makeCodeGuard.
+      // Residual: 4-space-indented code has no marker — neutralized at render by
+      // dropping `pre` from the markdown sanitizer (markdown.tsx) so it can't form a block.
       const guard = makeCodeGuard(lang);
       const relay = (text) => {
         const out = guard.push(text);

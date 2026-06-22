@@ -172,16 +172,16 @@ export function buildForecast(panel: Panel, country: string, category: string, t
     const mlabel = meta?.models?.length ? meta.models.join("+") : (table === "DFF" ? "SARIMA" : "Theta+ETS+SARIMA");
     const mase = meta && Number.isFinite(meta.mase) ? (lang === "en" ? ` · hold-out MASE ${meta.mase}` : ` · MASE hold-out ${meta.mase}`) : "";
     subtitle = lang === "en"
-      ? `Production-model forecast (${mlabel}) with split-conformal 80 % / 95 % bands${mase}`
-      : `Pronóstico del modelo de producción (${mlabel}) con bandas conformes al 80 % / 95 %${mase}`;
+      ? `Production-model forecast (${mlabel}) · 80 % / 95 % bands (1-step conformal · √h)${mase}`
+      : `Pronóstico del modelo de producción (${mlabel}) · bandas 80 % / 95 % (conforme 1-paso · √h)${mase}`;
     // Prospective track record (real frozen forecasts vs realized cutoffs) — global.
     const sc = (forecasts ?? null)?.scorecard;
     if (sc) {
       const mae = (k: number) => Math.round(sc.by_horizon[String(k)]?.mae_days ?? NaN);
       const cov = Math.round(sc.overall.cov95 * 100);
       note = lang === "en"
-        ? `Real-world accuracy (${sc.n_scored} forecasts scored vs already-published cutoffs): typical error ±${mae(3)} d at 3 mo · ±${mae(6)} d at 6 mo · ±${mae(12)} d at 12 mo. The 95 % band held in ${cov} % of cases.`
-        : `Precisión real (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos.`;
+        ? `Real-world accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs): typical error ±${mae(3)} d at 3 mo · ±${mae(6)} d at 6 mo · ±${mae(12)} d at 12 mo. The 95 % band held in ${cov} % of cases.`
+        : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos.`;
     }
   } else {
     const xs = win.map((_, i) => i), ys = win.map((r) => r.daysSinceBase as number);
