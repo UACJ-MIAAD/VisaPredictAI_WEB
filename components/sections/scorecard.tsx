@@ -127,6 +127,7 @@ export function Scorecard() {
       <figure className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <figcaption className="mb-1 font-serif text-lg font-bold text-[var(--color-ink)]">{t.chartTitle}</figcaption>
         <p className="mb-3 text-sm text-[var(--color-muted)]">{t.chartDesc}</p>
+        <div role="img" aria-label={`${t.chartTitle}. ${t.chartDesc}`}>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={byH} margin={{ left: 4, right: 12, top: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -140,9 +141,10 @@ export function Scorecard() {
             <Bar dataKey="mae" name={t.maeAxis} fill="var(--color-accent)" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+        </div>
       </figure>
 
-      <p className="mt-3 text-xs text-[var(--color-muted)]">{sc.caveat ?? t.caveatFallback}</p>
+      <p className="mt-3 text-xs text-[var(--color-muted)]">{t.caveatFallback}</p>
     </section>
   );
 }

@@ -180,8 +180,8 @@ export function buildForecast(panel: Panel, country: string, category: string, t
       const mae = (k: number) => Math.round(sc.by_horizon[String(k)]?.mae_days ?? NaN);
       const cov = Math.round(sc.overall.cov95 * 100);
       note = lang === "en"
-        ? `Real-world accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs): typical error ±${mae(3)} d at 3 mo · ±${mae(6)} d at 6 mo · ±${mae(12)} d at 12 mo. The 95 % band held in ${cov} % of cases.`
-        : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos.`;
+        ? `Real-world accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs): typical error ±${mae(3)} d at 3 mo · ±${mae(6)} d at 6 mo · ±${mae(12)} d at 12 mo. The 95 % band held in ${cov} % of cases overall (lower at the longest horizons).`
+        : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos en conjunto (menor a los horizontes más largos).`;
     }
   } else {
     const xs = win.map((_, i) => i), ys = win.map((r) => r.daysSinceBase as number);
