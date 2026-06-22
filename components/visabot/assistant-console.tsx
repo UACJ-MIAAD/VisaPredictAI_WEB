@@ -48,15 +48,22 @@ const VisaChart = dynamic(() => import("./visa-chart"), {
 function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartPayload | null {
   const e = detectEntities(q, panel);
   const t = e.table || "FAD";
-  // monthly bulletin table: "tabla/boletín de <mes>" → full-history snapshot
-  if (/\btabla\b|\bbolet[ií]n\b|\bbulletin\b|\btable\b|snapshot/i.test(q)) {
+  // Forecast intent — the CORE purpose of the project. Catches the explicit words AND the
+  // NATURAL way people ask for a prediction ("¿cuándo llega mi turno?", "en qué mes/año",
+  // "cuánto falta", "when will I be current?"), incl. when the user states their priority
+  // date. Checked FIRST so "tabla de asignación" in such a question doesn't hijack it.
+  const wantsForecast =
+    /predic|pron[oó]stic|forecast|proyec|predict|futuro|zoom|abanico|fan[ -]?chart|estimaci[oó]n/i.test(q) ||
+    /cu[aá]ndo|cu[aá]nto\s+(falta|tiempo|tardar|me)|qu[eé]\s+(mes|a[ñn]o|fecha)|mi\s+turno|me\s+toca|llegar[aá]?|alcanz|ponerse al d[ií]a|al corriente/i.test(q) ||
+    /when|how long|my turn|be current|get current|catch up|reach my|my priority date/i.test(q);
+  if (wantsForecast && e.category)
+    return buildForecast(panel, e.country || "mexico", e.category, t, lang, 12, 48, forecasts);
+  // Monthly bulletin snapshot: "tabla/boletín de <mes>" → full-history snapshot. Only when
+  // it is NOT a forecast question (guarded above), so the word "tabla" can't hijack it.
+  if (!wantsForecast && /\btabla\b|\bbolet[ií]n\b|\bbulletin\b|\btable\b|snapshot/i.test(q)) {
     const m = parseMonth(q, panel);
     if (m) return buildMonthTable(panel, m, t, lang);
   }
-  // forecast: "predicción/pronóstico/forecast de F2A …" → fan-chart projection.
-  // The core purpose of the project — defaults to México (the pilot) if no country.
-  if (/predic|pron[oó]stic|forecast|proyec|predict|futuro|zoom|abanico|fan[ -]?chart|estimaci[oó]n a/i.test(q) && e.category)
-    return buildForecast(panel, e.country || "mexico", e.category, t, lang, 12, 48, forecasts);
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
   if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
