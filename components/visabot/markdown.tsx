@@ -29,9 +29,12 @@ export function Markdown({ text, sources }: { text: string; sources?: Source[] }
       });
     }
     return DOMPurify.sanitize(out, {
+      // `pre` is intentionally NOT allowed: it strips code BLOCKS (incl. 4-space
+      // indented blocks the stream guard can't see) down to plain text — backstop
+      // to "VisaBot never shows code". Inline `code` is kept for terms like `F2A`.
       ALLOWED_TAGS: [
         "a", "b", "strong", "i", "em", "p", "br", "ul", "ol", "li", "h1", "h2",
-        "h3", "h4", "blockquote", "code", "pre", "table", "thead", "tbody", "tr",
+        "h3", "h4", "blockquote", "code", "table", "thead", "tbody", "tr",
         "th", "td", "hr", "span",
       ],
       ALLOWED_ATTR: ["href", "title", "class", "target", "rel"],

@@ -49,4 +49,39 @@ const run = (deltas, lang = "es") => {
   assert.ok(!out.includes("alert"), "drops code when the fence completes at the boundary");
 }
 
-console.log("✓ code-guard: 5/5 passed");
+// 6) TILDE fence (~~~) — the audit bypass — is now caught
+{
+  const { out, blocked } = run(["sure:\n", "~~~python\nimport os\n~~~"]);
+  assert.equal(blocked, true);
+  assert.ok(out.startsWith("sure:\n") && !out.includes("import os"), "drops ~~~ tilde-fenced code");
+}
+
+// 7) raw HTML <pre><code> — the audit bypass — is now caught (case-insensitive)
+{
+  const { out, blocked } = run(["here ", "<PRE><code>alert(2)</code></pre>"]);
+  assert.equal(blocked, true);
+  assert.ok(!out.includes("alert"), "drops <pre> HTML code block");
+}
+
+// 8) bare <code> HTML is caught
+{
+  const { out, blocked } = run(["x <code>danger()</code>"]);
+  assert.equal(blocked, true);
+  assert.ok(!out.includes("danger"), "drops <code> HTML");
+}
+
+// 9) the <code marker split across deltas (`<co` + `de>`) is still caught
+{
+  const { out, blocked } = run(["a <co", "de>boom()</code>"]);
+  assert.equal(blocked, true);
+  assert.ok(!out.includes("boom"), "catches <code split across deltas");
+}
+
+// 10) prose that merely MENTIONS code words (no fence/marker) passes untouched
+{
+  const { out, blocked } = run(["El método ", "SARIMA ajusta la serie."]);
+  assert.equal(blocked, false);
+  assert.equal(out, "El método SARIMA ajusta la serie.");
+}
+
+console.log("✓ code-guard: 10/10 passed");
