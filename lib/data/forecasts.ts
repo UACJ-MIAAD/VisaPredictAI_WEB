@@ -12,6 +12,10 @@ export type Scorecard = {
   n_scored: number;
   overall: { mae_days: number; mase: number; cov80: number; cov95: number };
   by_horizon: Record<string, HorizonScore>;
+  // present in the source JSON; optional here so older fixtures still type-check
+  caveat?: string;
+  n_vintages_effective?: number;
+  band80_calibration?: { cov80_heldout?: number };
 };
 export type ForecastStore = {
   method: Record<string, string>; // table -> human method description
