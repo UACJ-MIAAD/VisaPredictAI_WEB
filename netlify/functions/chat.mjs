@@ -113,39 +113,90 @@ export function guardText(lang) {
 // it returns the clean prefix + a refusal and swallows everything after. `hold`
 // keeps a 2-char tail so a fence split across deltas is still caught. Single
 // backticks (inline `F2A`) pass through untouched.
+// Streaming guard that stops code from reaching the user. Two layers, because a hostile
+// user can strip the obvious markers (the original guard only caught ``` / ~~~ / <pre / <code,
+// so inline-backtick, 4-space-indented and "line-by-line" code walked straight through):
+//   1) MARKER  — fenced / raw-HTML code blocks → hard block on sight.
+//   2) HEURISTIC — markerless code: a line is "code-like" (indentation, code keywords +
+//      punctuation, operators, html tags, shell/shebang); TWO consecutive code-like lines
+//      trip the block. Lines are held one behind (lookahead) so neither offending line leaks.
+// It is best-effort by nature (perfect markerless detection is undecidable); the system prompt
+// and the render layer (markdown.tsx no longer renders <code>) are the other two layers.
 export function makeCodeGuard(lang) {
   const refusal = guardText(lang);
-  const FENCES = ["```", "~~~"]; // markdown code fences (backtick AND tilde)
-  const HTML = ["<pre", "<code"]; // raw-HTML code blocks (case-insensitive)
-  const HOLD = 4; // = longest marker ("<code") − 1, so a marker split across deltas is caught
-  let hold = "";
-  let blocked = false;
-  const firstMarker = (chunk) => {
-    let idx = -1;
-    const low = chunk.toLowerCase();
-    for (const m of [...FENCES, ...HTML]) {
-      const j = (m[0] === "<" ? low : chunk).indexOf(m);
-      if (j !== -1 && (idx === -1 || j < idx)) idx = j;
-    }
-    return idx;
+  const MARKER = /```|~~~|<pre|<code/i;
+
+  const isCodeLine = (raw) => {
+    const s = raw.replace(/^\s*\d+[.)]\s*/, ""); // ignore "1. " / "1) " list prefix when judging
+    if (/^(\t| {4,})\S/.test(raw)) return true; // indented code block
+    // lowercase code keyword at line start (case-sensitive, so sentence-initial "Class"/"Return"
+    // in ordinary prose — which capitalizes — does not false-positive). Catches token-per-line
+    // dumps like "import os" / "return x" that carry no punctuation.
+    if (/^(import|from|def|class|return|const|let|var|func|fn|public|private|package|using|async|await|export|require|print)\b/.test(s.trimStart())) return true;
+    if (/<\/?[a-zA-Z][^>]*>/.test(s)) return true; // html / xml / jsx tag
+    if (/[;{}]\s*$/.test(s.trim())) return true; // line ends in ; { }
+    if (/=>|->|::|&&|\|\||!=|==|\+=|\bconsole\.|\bSystem\.|printf?\(/.test(s)) return true; // operators / calls
+    if (
+      /\b(def|class|function|import|from|return|const|let|var|public|private|void|static|SELECT|INSERT|UPDATE|DELETE|CREATE|FROM|WHERE|while|elif|async|await|lambda|func|fn)\b/.test(s) &&
+      /[(){}\[\]=;:]/.test(s)
+    )
+      return true; // code keyword + code punctuation
+    if (/^\s*[#$>]\s*\S+.*[/|;()=]/.test(raw)) return true; // shell prompt line
+    if (/^\s*(#!\/|<\?php|<!DOCTYPE)/i.test(raw)) return true; // shebang / php / doctype
+    return false;
   };
+
+  let buf = ""; // un-emitted tail: incomplete line + (via `pending`) one line of lookahead
+  let pending = null; // { text, code } held back one line so an offending pair never leaks
+  let blocked = false;
+
+  function consume(flush) {
+    let out = "";
+    const mi = buf.search(MARKER);
+    if (mi !== -1) {
+      blocked = true;
+      out += (pending ? pending.text : "") + buf.slice(0, mi) + refusal;
+      buf = "";
+      pending = null;
+      return out;
+    }
+    let nl;
+    while ((nl = buf.indexOf("\n")) !== -1) {
+      const line = buf.slice(0, nl + 1);
+      buf = buf.slice(nl + 1);
+      const code = isCodeLine(line);
+      if (pending) {
+        if (pending.code && code) {
+          blocked = true;
+          return out + refusal;
+        } // two consecutive code lines → block, neither emitted
+        out += pending.text;
+      }
+      pending = { text: line, code };
+    }
+    if (flush) {
+      const tailCode = buf ? isCodeLine(buf) : false;
+      if (pending && pending.code && buf && tailCode) {
+        blocked = true;
+        return out + refusal;
+      }
+      if (pending) out += pending.text;
+      out += buf;
+      buf = "";
+      pending = null;
+    }
+    return out;
+  }
+
   return {
     push(text) {
       if (blocked) return "";
-      const chunk = hold + text;
-      const i = firstMarker(chunk);
-      if (i !== -1) {
-        blocked = true;
-        hold = "";
-        return chunk.slice(0, i) + refusal;
-      }
-      hold = chunk.slice(-HOLD);
-      return chunk.slice(0, -HOLD);
+      buf += text;
+      return consume(false);
     },
     flush() {
-      const t = blocked ? "" : hold;
-      hold = "";
-      return t;
+      if (blocked) return "";
+      return consume(true);
     },
     get blocked() {
       return blocked;

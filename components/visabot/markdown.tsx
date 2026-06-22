@@ -29,12 +29,15 @@ export function Markdown({ text, sources }: { text: string; sources?: Source[] }
       });
     }
     return DOMPurify.sanitize(out, {
-      // `pre` is intentionally NOT allowed: it strips code BLOCKS (incl. 4-space
-      // indented blocks the stream guard can't see) down to plain text — backstop
-      // to "VisaBot never shows code". Inline `code` is kept for terms like `F2A`.
+      // Neither `pre` NOR `code` is allowed: DOMPurify drops the tag but (KEEP_CONTENT
+      // default) unwraps the inner text to PLAIN — so a fenced block, a 4-space-indented
+      // block, or an inline `snippet` all render as ordinary prose, never as formatted
+      // code. Backstop to "VisaBot never shows code" that holds even when the stream
+      // guard's heuristic misses a markerless case. (Markdown like `F2A` simply renders
+      // as F2A, which is fine — categories don't need monospace.)
       ALLOWED_TAGS: [
         "a", "b", "strong", "i", "em", "p", "br", "ul", "ol", "li", "h1", "h2",
-        "h3", "h4", "blockquote", "code", "table", "thead", "tbody", "tr",
+        "h3", "h4", "blockquote", "table", "thead", "tbody", "tr",
         "th", "td", "hr", "span",
       ],
       ALLOWED_ATTR: ["href", "title", "class", "target", "rel"],

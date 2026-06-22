@@ -84,4 +84,45 @@ const run = (deltas, lang = "es") => {
   assert.equal(out, "El método SARIMA ajusta la serie.");
 }
 
-console.log("✓ code-guard: 10/10 passed");
+// --- markerless code (the audit-found bypasses: no fence, no <pre>/<code>) ---
+
+// 11) a 4-space-indented code block (no fence) is now caught, neither line leaks
+{
+  const { out, blocked } = run(["Mira:\n", "    def hack():\n        return 1\nfin"]);
+  assert.equal(blocked, true);
+  assert.ok(out.startsWith("Mira:\n"), "keeps clean prefix");
+  assert.ok(!out.includes("def hack") && !out.includes("return 1"), "drops indented code");
+  assert.ok(out.includes(guardText("es")), "appends refusal");
+}
+
+// 12) a markerless def/class block (code keyword + punctuation) is caught
+{
+  const { out, blocked } = run(["claro\n", "function f(x) {\n  return x * 2;\n}"]);
+  assert.equal(blocked, true);
+  assert.ok(!out.includes("return x") && !out.includes("function f"), "drops markerless code");
+}
+
+// 13) a numbered list whose items are code lines is caught
+{
+  const { out, blocked } = run(["1. import os\n2. def f(x):\n3. return x\n"]);
+  assert.equal(blocked, true);
+  assert.ok(!out.includes("def f"), "drops line-by-line code disguised as a list");
+}
+
+// 14) a REAL markdown table is NOT a false positive
+{
+  const md = "Estado:\n| Cat | MX |\n| --- | --- |\n| F2A | C |\n";
+  const { out, blocked } = run([md]);
+  assert.equal(blocked, false, "markdown table must not trip the heuristic");
+  assert.ok(out.includes("| F2A | C |"), "table survives");
+}
+
+// 15) a normal bullet/prose answer with parentheses is NOT a false positive
+{
+  const md = "Para México (F2A):\n- La fecha avanza.\n- Consulta el boletín oficial.\n";
+  const { out, blocked } = run([md]);
+  assert.equal(blocked, false, "ordinary prose with () must pass");
+  assert.ok(out.includes("Consulta el boletín oficial."), "prose survives");
+}
+
+console.log("✓ code-guard: 15/15 passed");
