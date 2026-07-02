@@ -13,8 +13,11 @@ import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
-const MON_ABBR = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const fmtDate = (d: string) => { const [y, m, da] = d.split("-").map(Number); return `${String(da || 1).padStart(2, "0")} ${MON_ABBR[m - 1]} ${y}`; };
+const MON_ABBR: Record<string, string[]> = {
+  es: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
+const fmtDate = (d: string, lang = "es") => { const [y, m, da] = d.split("-").map(Number); return `${String(da || 1).padStart(2, "0")} ${(MON_ABBR[lang] || MON_ABBR.es)[m - 1]} ${y}`; };
 
 const AXIS = { fontSize: 11, fill: "var(--color-muted)" };
 const SERIES = ["var(--color-accent)", "var(--color-accent-2)", "var(--color-success)", "var(--color-danger)", "var(--color-muted)"];
@@ -179,7 +182,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
                           ) : cell.status === "U" ? (
                             <span className="text-[var(--color-muted)]" title={lang === "en" ? "Unavailable" : "No disponible"}>U</span>
                           ) : cell.date ? (
-                            <span className="whitespace-nowrap font-mono tabular-nums text-[var(--color-ink)]">{fmtDate(cell.date)}</span>
+                            <span className="whitespace-nowrap font-mono tabular-nums text-[var(--color-ink)]">{fmtDate(cell.date, lang)}</span>
                           ) : (
                             <span className="text-[var(--color-muted)]">—</span>
                           )}

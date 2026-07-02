@@ -260,8 +260,8 @@ async function collectFacts() {
     if (!r.ok) throw new Error(`${r.status}`);
     const feed = await r.json();
     latestMonth = feed.latest_month;
-    const url = "/datos-historicos#boletines";
     for (const lang of ["es", "en"]) {
+      const url = localePath("/datos-historicos", lang) + "#boletines";
       const rows = feed.months[feed.latest_month] || [];
       const adv = rows.filter((x) => (x.delta_days ?? 0) > 0);
       const ret = rows.filter((x) => (x.delta_days ?? 0) < 0);

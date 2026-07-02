@@ -14,6 +14,7 @@ const PROMPT_ICON: Record<string, typeof BookOpen> = {
   glossary: BookOpen, data: Database, models: Cpu, charts: BarChart3, refs: Quote,
 };
 import { useLang } from "@/components/lang-provider";
+import { localePath } from "@/lib/site-map";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
@@ -172,14 +173,14 @@ export function AssistantConsole() {
     // looks "limited to recent years" — the table covers the full 2001→2026 panel.
     if (chart?.kind === "table") {
       const ml = monthLabel(chart.month, lang);
-      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: lang === "en" ? "VisaPredict AI panel (2001–2026)" : "Panel VisaPredict AI (2001–2026)", url: "/#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
+      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: lang === "en" ? "VisaPredict AI panel (2001–2026)" : "Panel VisaPredict AI (2001–2026)", url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart) {
       // Tell the LLM a chart is rendered alongside its answer so it interprets
       // it instead of replying "I can't show graphs" (esp. forecasts).
       const note = chartContextNote(chart, lang);
       if (note)
-        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: "/asistente/", text: note },
+        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: localePath("/asistente", lang), text: note },
           ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     }
     const ctrl = new AbortController(); abortRef.current = ctrl;

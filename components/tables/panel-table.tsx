@@ -11,15 +11,15 @@ import {
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpDown, Download, SlidersHorizontal } from "lucide-react";
-import { type VisaPanelRow, countryLabel, movementColor } from "@/lib/data/visa-panel";
+import { type VisaPanelRow, blockLabel, countryLabel, movementColor } from "@/lib/data/visa-panel";
 import { StatusChip } from "@/components/ui/data-cells";
 import { tr } from "@/lib/i18n";
 import type { Lang } from "@/lib/site-map";
 import { track } from "@/lib/analytics";
 
 const makeColumns = (lang: Lang): ColumnDef<VisaPanelRow>[] => [
-  { accessorKey: "country", header: tr(lang, "thPais"), cell: (c) => countryLabel(c.getValue<string>()) },
-  { accessorKey: "block", header: tr(lang, "thBloque") },
+  { accessorKey: "country", header: tr(lang, "thPais"), cell: (c) => countryLabel(c.getValue<string>(), lang) },
+  { accessorKey: "block", header: tr(lang, "thBloque"), cell: (c) => blockLabel(c.getValue<string>(), lang) },
   { accessorKey: "category", header: tr(lang, "thCategoria") },
   { accessorKey: "table", header: tr(lang, "thTabla") },
   { accessorKey: "bulletinMonth", header: tr(lang, "thMes") },
