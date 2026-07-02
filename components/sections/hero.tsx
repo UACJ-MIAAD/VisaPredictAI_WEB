@@ -9,7 +9,7 @@ import { track } from "@/lib/analytics";
 const STATS = [
   { num: "8", key: "statModels" },
   { num: "5", key: "statCountries" },
-  { num: "27,277", key: "statObs" },
+  { num: "27,289", key: "statObs" },
   { num: "64", key: "statRefs" },
   { num: "CRISP-DM", key: "statMethod" },
 ];
