@@ -142,14 +142,14 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 rounded-xl border border-border bg-card p-4">
-        <Select label={tr(lang, "selCountry")} value={country} onChange={(v) => { track("Explorer Filter", { dim: "country" }); setCountry(v); }} options={panel.countries} fmt={countryLabel} />
+        <Select label={tr(lang, "selCountry")} value={country} onChange={(v) => { track("Explorer Filter", { dim: "country" }); setCountry(v); }} options={panel.countries} fmt={(v) => countryLabel(v, lang)} />
         <Select label={tr(lang, "selCategoryL")} value={category} onChange={(v) => { track("Explorer Filter", { dim: "category" }); setCategory(v); }} options={cats} />
         <Select label={tr(lang, "selTableL")} value={table} onChange={(v) => { track("Explorer Filter", { dim: "table" }); setTable(v); }} options={panel.tables} />
       </div>
 
       <ChartCard
         title={tr(lang, "chart1Title")}
-        desc={`${countryLabel(country)} · ${category} · ${table}. ${tr(lang, "chart1Desc")}`}
+        desc={`${countryLabel(country, lang)} · ${category} · ${table}. ${tr(lang, "chart1Desc")}`}
       >
         {hasSeries ? (
           <ResponsiveContainer width="100%" height={320}>
@@ -158,7 +158,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted)" }} minTickGap={48} />
               <YAxis tick={{ fontSize: 11, fill: "var(--color-muted)" }} width={56} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Line type="monotone" dataKey="days" name="días-base" stroke="var(--color-accent)" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="days" name={tr(lang, "seriesDays")} stroke="var(--color-accent)" dot={false} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         ) : (
@@ -177,7 +177,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
                 <Tooltip contentStyle={tooltipStyle} />
                 <Legend wrapperStyle={{ fontSize: "0.75rem" }} />
                 {compCountries.map((c, i) => (
-                  <Line key={c} type="monotone" dataKey={c} name={countryLabel(c)} stroke={SERIES_COLORS[i % SERIES_COLORS.length]} dot={false} strokeWidth={1.6} />
+                  <Line key={c} type="monotone" dataKey={c} name={countryLabel(c, lang)} stroke={SERIES_COLORS[i % SERIES_COLORS.length]} dot={false} strokeWidth={1.6} />
                 ))}
               </LineChart>
             </ResponsiveContainer>
@@ -186,7 +186,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
           )}
         </ChartCard>
 
-        <ChartCard title={tr(lang, "chart3Title")} desc={`${countryLabel(country)} · ${category} · ${table}. ${tr(lang, "chart3Desc")}`}>
+        <ChartCard title={tr(lang, "chart3Title")} desc={`${countryLabel(country, lang)} · ${category} · ${table}. ${tr(lang, "chart3Desc")}`}>
           {hasMovement ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={movement} margin={{ left: 4, right: 12, top: 8 }}>
@@ -194,7 +194,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted)" }} minTickGap={48} />
                 <YAxis tick={{ fontSize: 11, fill: "var(--color-muted)" }} width={56} />
                 <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="movement" name="Δ días">
+                <Bar dataKey="movement" name={tr(lang, "seriesDelta")}>
                   {movement.map((m, i) => (
                     <Cell key={i} fill={movementColor(m.movement)} />
                   ))}
@@ -227,7 +227,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
                   <strong className="font-mono">{d.name}</strong>
                 </span>
                 <span className="tabular-nums text-muted-foreground">
-                  {d.value.toLocaleString("es-MX")} · {d.pct}%
+                  {d.value.toLocaleString(lang === "en" ? "en-US" : "es-MX")} · {d.pct}%
                 </span>
               </li>
             ))}
@@ -242,7 +242,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
           {tr(lang, "tableDescA")}
         </p>
         <div className="mb-3 flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4">
-          <Select label={tr(lang, "selCountry")} value={fCountry} onChange={setFCountry} options={["todos", ...panel.countries]} fmt={(v) => (v === "todos" ? tr(lang, "optAll") : countryLabel(v))} />
+          <Select label={tr(lang, "selCountry")} value={fCountry} onChange={setFCountry} options={["todos", ...panel.countries]} fmt={(v) => (v === "todos" ? tr(lang, "optAll") : countryLabel(v, lang))} />
           <Select label={tr(lang, "selCategoryL")} value={fCategory} onChange={setFCategory} options={["todos", ...cats]} fmt={(v) => (v === "todos" ? tr(lang, "optAllF") : v)} />
           <Select label={tr(lang, "selTableL")} value={fTable} onChange={setFTable} options={["todos", ...panel.tables]} fmt={(v) => (v === "todos" ? tr(lang, "optAllF") : v)} />
           <Select label={tr(lang, "selStatusL")} value={fStatus} onChange={setFStatus} options={["todos", ...statuses]} fmt={(v) => (v === "todos" ? tr(lang, "optAll") : v)} />

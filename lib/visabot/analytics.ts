@@ -298,7 +298,7 @@ export function buildHeatmap(panel: Panel, block: string, table: string, lang: L
     kind: "heatmap",
     title: lang === "en" ? `Wait heatmap · ${block === "empleo" ? "employment" : "family"} · ${table}` : `Mapa de calor de espera · ${block === "empleo" ? "empleo" : "familia"} · ${table}`,
     subtitle: lang === "en" ? "Years of wait by country × category (latest month; redder = longer)" : "Años de espera por país × categoría (último mes; más rojo = más larga)",
-    rows: rows.map(countryLabel), cols, m, max: max || 1, unit: lang === "en" ? "y" : "a",
+    rows: rows.map((c) => countryLabel(c)), cols, m, max: max || 1, unit: lang === "en" ? "y" : "a",
   };
 }
 
@@ -307,7 +307,7 @@ export function buildRadar(panel: Panel, table: string, lang: Lang): ChartSpec |
   const cats = FAM.filter((c) => panel.categories.includes(c));
   const countries = PILOT.filter((c) => panel.countries.includes(c));
   if (cats.length < 3) return null;
-  const names = countries.map(countryLabel);
+  const names = countries.map((c) => countryLabel(c));
   const data = cats.map((cat) => {
     const o: Record<string, number | string | null> = { cat };
     countries.forEach((c) => { o[countryLabel(c)] = Math.round((latestWaitYears(panel, c, cat, table).years ?? 0) * 10) / 10; });
@@ -375,7 +375,7 @@ export function buildMonthTable(panel: Panel, month: string, tableType: string, 
 // Compact real-data summary of a month table → grounding source so the LLM can
 // answer any cell and never looks "limited to recent years".
 export function monthTableText(spec: Extract<ChartSpec, { kind: "table" }>, lang: Lang): string {
-  const head = spec.countries.map(countryLabel).join(" / ");
+  const head = spec.countries.map((c) => countryLabel(c)).join(" / ");
   const lines = spec.sections.flatMap((s) => s.rows.map((r) =>
     `${r.cat}: ${r.cells.map((c, i) => `${countryLabel(spec.countries[i])} ${c.status === "C" ? "C" : c.status === "U" ? "U" : c.date || "—"}`).join("; ")}`));
   return (lang === "en"

@@ -85,6 +85,8 @@ const S: Dict = {
   chart2Desc: { es: "Disparidad de rezago por el límite del 7 % anual.", en: "Backlog disparity from the 7% annual limit." },
   chart2Empty: { es: "Sin datos para esta categoría/tabla.", en: "No data for this category/table." },
   chart3Title: { es: "Movimiento mes a mes", en: "Month-to-month movement" },
+  seriesDays: { es: "días-base", en: "days-base" },
+  seriesDelta: { es: "Δ días", en: "Δ days" },
   chart3Desc: { es: "Verde avanza, rojo retrocede.", en: "Green advances, red retreats." },
   chart3Empty: { es: "Sin movimientos calculables para esta serie.", en: "No computable movements for this series." },
   chart4Title: { es: "Distribución de estado administrativo C / F / U", en: "Administrative status distribution C / F / U" },

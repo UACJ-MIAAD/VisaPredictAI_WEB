@@ -138,7 +138,20 @@ export const COUNTRY_LABEL: Record<string, string> = {
   all_chargeability: "All Chargeability",
   row: "Resto del mundo",
 };
-export const countryLabel = (c: string) => COUNTRY_LABEL[c] || c;
+const COUNTRY_LABEL_EN: Record<string, string> = {
+  mexico: "Mexico",
+  india: "India",
+  china: "China",
+  philippines: "Philippines",
+  all_chargeability: "All Chargeability",
+  row: "Rest of the world",
+};
+// G3: lang opcional para no tocar a los llamadores ES; la versión EN traduce al render.
+export const countryLabel = (c: string, lang?: string) =>
+  (lang === "en" ? COUNTRY_LABEL_EN[c] : COUNTRY_LABEL[c]) || c;
+// El parseo guarda block en ES ("empleo"/"familia"); traducir SOLO al mostrar.
+const BLOCK_EN: Record<string, string> = { empleo: "employment", familia: "family" };
+export const blockLabel = (b: string, lang?: string) => (lang === "en" ? BLOCK_EN[b] || b : b);
 
 // Single source of truth for status/movement colors (was duplicated ×3).
 export function statusColor(s: string): string {

@@ -21,7 +21,9 @@ export function BackToTop() {
       type="button"
       aria-label={tr(lang, "backToTop")}
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="fixed bottom-6 right-6 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-colors hover:bg-secondary"
+      // G2: bottom-20 — el launcher de VisaBot vive en bottom-5 right-5 z-[60] y tapaba
+      // este botón (z-40) en toda página con scroll >700px; apilados verticalmente.
+      className="fixed bottom-20 right-6 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg transition-colors hover:bg-secondary"
     >
       <ArrowUp className="h-5 w-5" aria-hidden />
     </button>

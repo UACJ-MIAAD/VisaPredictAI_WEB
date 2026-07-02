@@ -64,10 +64,15 @@ export default function RootLayout({
         className={`${playfair.variable} ${dmSans.variable} ${spaceMono.variable} antialiased`}
       >
         {/* Progressive enhancement: mark JS-on synchronously so reveal
-            animations only hide content when JS is actually running. */}
+            animations only hide content when JS is actually running.
+            G1: same sync script fixes <html lang> for /en/* BEFORE paint —
+            the static export hardcodes lang="es" and the LangProvider effect
+            only corrected it post-hydration (screen readers announced English
+            content as Spanish). hreflang/canonical cover no-JS crawlers. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: "document.documentElement.classList.add('js')",
+            __html:
+              "document.documentElement.classList.add('js');if(location.pathname==='/en'||location.pathname.indexOf('/en/')===0)document.documentElement.lang='en'",
           }}
         />
         {/* Structured data for rich results */}
