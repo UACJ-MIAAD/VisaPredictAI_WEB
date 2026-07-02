@@ -144,7 +144,7 @@ export function Scorecard() {
         </div>
       </figure>
 
-      <p className="mt-3 text-xs text-[var(--color-muted)]">{t.caveatFallback}</p>
+      <p className="mt-3 text-xs text-[var(--color-muted)]">{sc.caveat ?? t.caveatFallback}</p>
     </section>
   );
 }

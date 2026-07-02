@@ -223,13 +223,14 @@ export async function generate(
   lang: Lang,
   onDelta: (t: string) => void,
   signal?: AbortSignal,
+  surface: "widget" | "console" = "widget",
 ): Promise<GenResult> {
   let res: Response;
   try {
     res = await fetch("/.netlify/functions/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ lang, query, history, context }),
+      body: JSON.stringify({ lang, query, history, context, surface }),
       signal,
     });
   } catch {

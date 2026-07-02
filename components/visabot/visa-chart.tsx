@@ -35,7 +35,14 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
   const yr = lang === "en" ? "y" : "a";
 
   return (
-    <figure className="mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3">
+    // G5: los charts SVG no exponen nada a lectores de pantalla; role="img" + aria-label
+    // (título + subtítulo) los anuncia. La variante "table" es contenido tabular real
+    // (mantiene su semántica nativa, sin role).
+    <figure
+      role={spec.kind === "table" ? undefined : "img"}
+      aria-label={spec.kind === "table" ? undefined : `${spec.title}. ${spec.subtitle}`}
+      className="mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3"
+    >
       <figcaption className="mb-0.5 font-serif text-sm font-bold text-[var(--color-ink)]">{spec.title}</figcaption>
       <p className="mb-2 text-[0.72rem] text-[var(--color-muted)]">{spec.subtitle}</p>
 

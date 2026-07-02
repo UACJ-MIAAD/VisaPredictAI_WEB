@@ -187,7 +187,7 @@ export function AssistantConsole() {
     try {
       const res = await generate(q, history, sources, lang,
         (delta) => setMessages((m) => { const c = [...m]; const l = c[c.length - 1]; c[c.length - 1] = { ...l, content: l.content + delta }; return c; }),
-        ctrl.signal);
+        ctrl.signal, "console");
       setMessages((m) => { const c = [...m]; c[c.length - 1] = { role: "assistant", content: res.text, sources, extractive: res.extractive, chart: chart || undefined }; return c; });
       if (res.extractive) track("VisaBot Fallback", { lang, surface: "console" });
     } catch {
