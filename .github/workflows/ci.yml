@@ -1,0 +1,37 @@
+name: CI
+
+# G4: gate mínimo del portal — antes Netlify deployaba `main` sin ninguna validación.
+# No construye el sitio (eso lo hace Netlify); valida tipos, lint y el guard anti-código
+# del bot. El índice RAG y su gate corren en el build de Netlify (necesitan el modelo).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: VisaBot code-guard suite
+        run: |
+          # test-code-guard importa chat.mjs, que requiere el hash allowlist generado
+          # en build; para el gate basta un stub vacío (el guard no usa los hashes).
+          [ -f netlify/functions/rag-hashes.json ] || echo '[]' > netlify/functions/rag-hashes.json
+          node scripts/test-code-guard.mjs
