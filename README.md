@@ -54,7 +54,7 @@ flowchart TD
     end
 
     subgraph DATA["📊 Datos reales"]
-        CSV["public/data/visa_panel_long.csv<br/>27,277 filas"]
+        CSV["public/data/visa_panel_long.csv<br/>27,289 filas"]
         FEED["raw.githubusercontent.com<br/>bulletins.json (feed vivo)"]
         LOAD["lib/data/visa-panel.ts"]
         CSV --> LOAD --> EXP["panel-explorer (Recharts, lazy)<br/>4 gráficas + tabla virtualizada"]
