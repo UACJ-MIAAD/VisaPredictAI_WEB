@@ -86,5 +86,6 @@ out/
 
 # VisaBot RAG artifacts (regenerated each build by scripts/build-rag-index.mjs)
 public/rag/
+netlify/functions/rag-hashes.json
 public/models/
 public/ort/

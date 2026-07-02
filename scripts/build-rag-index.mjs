@@ -464,6 +464,16 @@ function copyOrtWasm() {
       latestMonth,
     }),
   );
+  // F3: allowlist de hashes para netlify/functions/chat.mjs — el server solo acepta
+  // como FUENTES texto publicado en este índice (o los 2 sintéticos del console).
+  const { createHash } = await import("node:crypto");
+  const fnDir = join(root, "netlify", "functions");
+  mkdirSync(fnDir, { recursive: true });
+  writeFileSync(
+    join(fnDir, "rag-hashes.json"),
+    JSON.stringify(chunks.map((c) => createHash("sha256").update(c.text, "utf8").digest("hex"))),
+  );
+  console.log(`✓ wrote netlify/functions/rag-hashes.json (${chunks.length} hashes)`);
   console.log(`✓ wrote public/rag/index.json (${chunks.length} chunks, ${EMBED_DIM}-d)`);
   console.log(`✓ wrote public/rag/suggestions.json + meta.json`);
   if (!existsSync(join(root, "public", "models", EMBED_MODEL)))
