@@ -68,7 +68,7 @@ con `VISABOT_MODEL`.
 - **A2** · Como sistema, **leo el contenido académico local** (`content/source.html` ES + `content/en/*.html`) y lo troceo, para que TODO el anteproyecto sea consultable.
   - *AC*: chunks con `lang`, `source`, `sourceId`, `url` (deep-link a la sección vía site-map), `title`, `kind`.
 - **A3** · Como sistema, **troceo el glosario atómicamente** (`.gloss-item[data-k]` → término + acrónimo + definición) y **las referencias** (`li.ref-item[data-n]`), para citas precisas.
-- **A4** · Como sistema, **traigo documentación del repo de datos** por GitHub raw (`docs/data_dictionary.md`, `schema.sql`, `README.md`, `docs/example_queries.sql`, `reports/mega_audit_report.md`) y la troceo, para explicar el modelo de datos y la calidad. Cada fuente se salta con warning si 404.
+- **A4** · Como sistema, **traigo documentación del repo de datos** por GitHub raw (`docs/data_dictionary.md`, `schema.sql`, `README.md`, `docs/example_queries.sql`, `reports/governance/mega_audit_report.md`) y la troceo, para explicar el modelo de datos y la calidad. Cada fuente se salta con warning si 404.
 - **A5** · Como sistema, **traigo hechos vivos** de `data/processed/bulletins.json` (último mes, avances/retrocesos por serie) y genero chunks-hecho, para responder "¿qué cambió este mes?".
 - **A6** · Como sistema, **computo embeddings densos** (e5-small, prefijo `passage:`) y los serializo compactos (base64 Float32) en `public/rag/index.json`.
 - **A7** · Como sistema, **derivo *suggested prompts*** (de términos del glosario, títulos de sección y último boletín) a `public/rag/suggestions.json` — **no** se escriben a mano.
