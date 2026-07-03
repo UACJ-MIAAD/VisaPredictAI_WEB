@@ -77,19 +77,38 @@ export function originAllowed(req) {
   return ALLOWED.includes(host);
 }
 
-// best-effort per-instance rate limit. ⚠️ In-memory + per cold-start instance:
-// Netlify runs many instances so this is NOT a global cap — it only blunts a single
-// hot instance. The real fix for a wide-open public demo is a SHARED rate store
-// (Netlify Blobs / Upstash Redis keyed by IP); see docs. Until then, keep MAX_OUTPUT
-// low and rely on the Anthropic spend cap as the hard ceiling.
+// Two-tier rate limit keyed by IP.
+// Tier 1 (in-memory): free and instant, but per-instance — it only blunts a hot
+// instance. Tier 2 (Netlify Blobs): SHARED across instances, so the cap is global.
+// The Blobs read-modify-write is not atomic (two instances can race a token), so
+// this is a best-effort global cap, not a hard one — the hard ceiling remains the
+// Anthropic spend cap + MAX_OUTPUT. If Blobs is unavailable (local dev), tier 2
+// degrades silently to tier-1-only.
 const hits = new Map();
 const RATE = { windowMs: 60_000, max: 12 };
-function limited(ip) {
+function limitedLocal(ip) {
   const now = Date.now();
   const arr = (hits.get(ip) || []).filter((t) => now - t < RATE.windowMs);
   arr.push(now);
   hits.set(ip, arr);
   return arr.length > RATE.max;
+}
+async function limitedShared(ip) {
+  try {
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore("visabot-rate");
+    const windowStart = Math.floor(Date.now() / RATE.windowMs); // fixed window id
+    const key = `${ip}:${windowStart}`;
+    const count = ((await store.get(key, { type: "json" })) ?? 0) + 1;
+    await store.setJSON(key, count);
+    return count > RATE.max;
+  } catch {
+    return false; // sin Blobs (dev local / fallo transitorio): decide el tier 1
+  }
+}
+async function limited(ip) {
+  if (limitedLocal(ip)) return true;
+  return limitedShared(ip);
 }
 
 const sse = (obj) => `data: ${JSON.stringify(obj)}\n\n`;
@@ -252,7 +271,7 @@ export default async (req) => {
   if (!key) return errStream("no_key");
 
   const ip = req.headers.get("x-nf-client-connection-ip") || req.headers.get("x-forwarded-for") || "anon";
-  if (limited(ip)) return errStream("rate");
+  if (await limited(ip)) return errStream("rate");
 
   let body;
   try {

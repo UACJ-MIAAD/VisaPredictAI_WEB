@@ -16,6 +16,7 @@ const PROMPT_ICON: Record<string, typeof BookOpen> = {
 import { useLang } from "@/components/lang-provider";
 import { localePath } from "@/lib/site-map";
 import { tr } from "@/lib/i18n";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
 import { retrieve, generate, warmUp, isModelReady } from "./engine";
@@ -108,6 +109,8 @@ export function AssistantConsole() {
   const [navOpen, setNavOpen] = React.useState(false); // mobile sidebar drawer
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
+  const howTrapRef = useFocusTrap<HTMLDivElement>(howOpen);
+  const promptsTrapRef = useFocusTrap<HTMLDivElement>(promptsOpen);
   const [prompts, setPrompts] = React.useState<PromptCat[]>([]);
   const [promptsView, setPromptsView] = React.useState<PromptCat[]>([]); // shuffled subset shown in the modal
   const openPrompts = () => {
@@ -415,7 +418,7 @@ export function AssistantConsole() {
       {howOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={tr(lang, "acHowTitle")}>
           <div className="absolute inset-0 bg-black/50" onClick={() => setHowOpen(false)} aria-hidden />
-          <div className="relative max-h-[85vh] w-full max-w-[680px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
+          <div ref={howTrapRef} className="relative max-h-[85vh] w-full max-w-[680px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <span className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">{tr(lang, "acHowTag")}</span>
@@ -440,7 +443,7 @@ export function AssistantConsole() {
       {promptsOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={tr(lang, "acExamplesTitle")}>
           <div className="absolute inset-0 bg-black/50" onClick={() => setPromptsOpen(false)} aria-hidden />
-          <div className="relative max-h-[85vh] w-full max-w-[760px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
+          <div ref={promptsTrapRef} className="relative max-h-[85vh] w-full max-w-[760px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <span className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]"><Lightbulb className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "acExamples")}</span>
