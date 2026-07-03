@@ -9,11 +9,13 @@ export const dynamic = "force-static";
 export default function sitemap(): MetadataRoute.Sitemap {
   return ROUTES.flatMap((r) => {
     const p = r.path === "/" ? "" : r.path;
-    const esUrl = `${SITE_URL}${p}`;
-    const enUrl = `${SITE_URL}/en${p}`;
+    // trailing slash: Netlify sirve la versión con `/` (301 desde la desnuda);
+    // el sitemap debe listar la URL final, no la redirigida.
+    const esUrl = `${SITE_URL}${p}/`;
+    const enUrl = `${SITE_URL}/en${p}/`;
     const shared = {
       changeFrequency: "monthly" as const,
-      alternates: { languages: { es: esUrl, en: enUrl } },
+      alternates: { languages: { es: esUrl, en: enUrl, "x-default": esUrl } },
     };
     return [
       { url: esUrl, priority: r.path === "/" ? 1 : 0.8, ...shared },
