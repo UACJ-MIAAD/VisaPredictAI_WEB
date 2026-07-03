@@ -21,6 +21,9 @@
   --color-rule: #14181f; /* strong editorial module rule (= ink in light) */
   --color-danger: #b32424;
   --color-success: #1f7a4d;
+  /* soft light plate for white-background raster figures (EDA gallery); stays
+     light in dark mode on purpose — same precedent as the ER diagram card */
+  --color-figure-plate: #f6f5f1;
   --radius: 0.5rem;
 }
 
