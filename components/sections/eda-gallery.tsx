@@ -1,12 +1,16 @@
 "use client";
 
-// Annotated gallery of the 11 EDA figures (public/data/eda/*.png, 300 dpi,
-// refreshed with every bulletin by the data repo's Action). Editorial layout:
-// numbered kicker + headline + short reading, then the figure on a light plate
-// (--color-figure-plate) so the white-background PNGs look intentional in dark
-// mode — same precedent as the ER diagram card. Images are lazy and CLS-safe
-// (intrinsic width/height via next/image; export is unoptimized so it emits a
-// plain <img>).
+// Annotated gallery of the 11 EDA figures, refreshed with every bulletin by the
+// data repo's Action. Each figure ships in TWO true renders: light
+// (public/data/eda/*.png, white surface, on the --color-figure-plate) and dark
+// (public/data/eda/dark/*.png, charcoal #12161B surface from the data repo's
+// vp_model/palette.py DARK theme, on --color-figure-plate-dark). Both <img>s are
+// in the DOM and CSS-toggled via Tailwind's `dark:` variant (wired to the .dark
+// class next-themes stamps on <html> pre-paint) — no hydration flash, and the
+// full-size link always points at the visible variant. Images are lazy and
+// CLS-safe (per-variant intrinsic width/height via next/image; export is
+// unoptimized so it emits a plain <img>; a display:none lazy image is not
+// fetched until its theme becomes active).
 
 import * as React from "react";
 import Image from "next/image";
@@ -14,21 +18,25 @@ import { useLang } from "@/components/lang-provider";
 
 type FigCopy = { tag: string; headline: string; body: string; alt: string };
 
-type Fig = { id: string; w: number; h: number };
+type Dim = { w: number; h: number };
+type Fig = { id: string; light: Dim; dark: Dim };
 
-// Display order is the narrative order (not the file numbering).
+// Display order is the narrative order (not the file numbering). Dimensions
+// measured per variant from the actual PNGs (sips); they currently coincide
+// because both themes render from the same figure code, but each variant keeps
+// its own record in case a regeneration drifts.
 const FIGS: Fig[] = [
-  { id: "g01_panel", w: 2979, h: 3444 },
-  { id: "g11_completitud", w: 3397, h: 2235 },
-  { id: "g02_trayectorias", w: 2750, h: 1757 },
-  { id: "g03_backlog", w: 2823, h: 1843 },
-  { id: "g08_congelados", w: 2867, h: 1904 },
-  { id: "g04_retros", w: 2861, h: 1714 },
-  { id: "g05_brecha", w: 2675, h: 2045 },
-  { id: "g06_pulso_fiscal", w: 3819, h: 2004 },
-  { id: "g09_estacionariedad", w: 3151, h: 1638 },
-  { id: "g07_leadlag", w: 3286, h: 1823 },
-  { id: "g10_dv", w: 3567, h: 1774 },
+  { id: "g01_panel", light: { w: 2652, h: 3509 }, dark: { w: 2652, h: 3509 } },
+  { id: "g11_completitud", light: { w: 2764, h: 2300 }, dark: { w: 2764, h: 2300 } },
+  { id: "g02_trayectorias", light: { w: 2588, h: 1822 }, dark: { w: 2588, h: 1822 } },
+  { id: "g03_backlog", light: { w: 2823, h: 1908 }, dark: { w: 2823, h: 1908 } },
+  { id: "g08_congelados", light: { w: 2294, h: 2034 }, dark: { w: 2294, h: 2034 } },
+  { id: "g04_retros", light: { w: 2588, h: 1779 }, dark: { w: 2588, h: 1779 } },
+  { id: "g05_brecha", light: { w: 2412, h: 2109 }, dark: { w: 2412, h: 2109 } },
+  { id: "g06_pulso_fiscal", light: { w: 2176, h: 2190 }, dark: { w: 2176, h: 2190 } },
+  { id: "g09_estacionariedad", light: { w: 2118, h: 1703 }, dark: { w: 2118, h: 1703 } },
+  { id: "g07_leadlag", light: { w: 1803, h: 2059 }, dark: { w: 1803, h: 2059 } },
+  { id: "g10_dv", light: { w: 2588, h: 1838 }, dark: { w: 2588, h: 1838 } },
 ];
 
 const T: Record<
@@ -193,6 +201,49 @@ const T: Record<
   },
 };
 
+// One theme's variant: full <a><img/></a> block, shown/hidden purely via CSS
+// (`dark:` variant) so the visible full-size link always matches the visible
+// image and there is no client-side theme branching (no hydration flash).
+function FigureLink({
+  src,
+  dim,
+  alt,
+  ariaLabel,
+  hint,
+  toggle,
+  plate,
+}: {
+  src: string;
+  dim: Dim;
+  alt: string;
+  ariaLabel: string;
+  hint: string;
+  toggle: string; // "block dark:hidden" | "hidden dark:block"
+  plate: string; // plate background class for this variant
+}) {
+  return (
+    <a
+      href={src}
+      target="_blank"
+      rel="noopener"
+      aria-label={ariaLabel}
+      className={`group mt-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-accent)] ${toggle}`}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        width={dim.w}
+        height={dim.h}
+        loading="lazy"
+        className={`h-auto w-full rounded-xl border border-[var(--color-border)] p-2 sm:p-3 ${plate}`}
+      />
+      <span className="mt-2 inline-block text-xs text-[var(--color-muted)] underline-offset-2 transition-colors group-hover:text-[var(--color-accent)] group-hover:underline group-focus-visible:text-[var(--color-accent)]">
+        {hint} ↗
+      </span>
+    </a>
+  );
+}
+
 export function EdaGallery() {
   const { lang } = useLang();
   const t = T[lang];
@@ -208,7 +259,7 @@ export function EdaGallery() {
       <div className="mt-10 space-y-16">
         {FIGS.map((f, i) => {
           const c = t.figs[f.id];
-          const src = `/data/eda/${f.id}.png`;
+          const ariaLabel = `${c.headline} — ${t.fullSize}`;
           return (
             // sin m-0 en el figure: anulaba el space-y-16 del contenedor (misma
             // especificidad que la utilidad space-y de Tailwind v4; el orden gana)
@@ -222,25 +273,24 @@ export function EdaGallery() {
                 </h4>
                 <p className="mt-2 max-w-3xl leading-relaxed text-[var(--color-muted)]">{c.body}</p>
               </figcaption>
-              <a
-                href={src}
-                target="_blank"
-                rel="noopener"
-                aria-label={`${c.headline} — ${t.fullSize}`}
-                className="group mt-5 block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-accent)]"
-              >
-                <Image
-                  src={src}
-                  alt={c.alt}
-                  width={f.w}
-                  height={f.h}
-                  loading="lazy"
-                  className="h-auto w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-figure-plate)] p-2 sm:p-3"
-                />
-                <span className="mt-2 inline-block text-xs text-[var(--color-muted)] underline-offset-2 transition-colors group-hover:text-[var(--color-accent)] group-hover:underline group-focus-visible:text-[var(--color-accent)]">
-                  {t.fullSize} ↗
-                </span>
-              </a>
+              <FigureLink
+                src={`/data/eda/${f.id}.png`}
+                dim={f.light}
+                alt={c.alt}
+                ariaLabel={ariaLabel}
+                hint={t.fullSize}
+                toggle="block dark:hidden"
+                plate="bg-[var(--color-figure-plate)]"
+              />
+              <FigureLink
+                src={`/data/eda/dark/${f.id}.png`}
+                dim={f.dark}
+                alt={c.alt}
+                ariaLabel={ariaLabel}
+                hint={t.fullSize}
+                toggle="hidden dark:block"
+                plate="bg-[var(--color-figure-plate-dark)]"
+              />
             </figure>
           );
         })}

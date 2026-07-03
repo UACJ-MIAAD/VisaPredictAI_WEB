@@ -20,6 +20,8 @@ const FILES = [
 ];
 // EDA gallery figures (committed fallbacks in public/data/eda/, refreshed with
 // every new bulletin by the data repo's Action — same non-critical contract).
+// Each figure ships in two variants: light (gallery/) and a true dark-theme
+// render (gallery/dark/, charcoal surface from vp_model/palette.py's DARK theme).
 const GALLERY = [
   "g01_panel", "g02_trayectorias", "g03_backlog", "g04_retros", "g05_brecha",
   "g06_pulso_fiscal", "g07_leadlag", "g08_congelados", "g09_estacionariedad",
@@ -27,8 +29,9 @@ const GALLERY = [
 ];
 for (const g of GALLERY) {
   FILES.push({ url: `${RAW}/reports/eda/gallery/${g}.png`, out: join("eda", `${g}.png`), critical: false });
+  FILES.push({ url: `${RAW}/reports/eda/gallery/dark/${g}.png`, out: join("eda", "dark", `${g}.png`), critical: false });
 }
-await mkdir(join(OUT, "eda"), { recursive: true });
+await mkdir(join(OUT, "eda", "dark"), { recursive: true });
 
 const exists = async (p) => access(p).then(() => true).catch(() => false);
 
