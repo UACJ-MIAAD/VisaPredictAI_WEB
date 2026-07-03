@@ -214,7 +214,7 @@ const REPO_DOCS = [
   ["schema.sql", "Esquema estrella (DDL)"],
   ["README.md", "README del repositorio"],
   ["docs/example_queries.sql", "Consultas de ejemplo"],
-  ["reports/mega_audit_report.md", "Auditoría de calidad"],
+  ["reports/governance/mega_audit_report.md", "Auditoría de calidad"],
   ["docs/ROADMAP.md", "Roadmap"],
 ];
 async function collectRepoDocs() {
