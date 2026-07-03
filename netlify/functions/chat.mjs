@@ -87,6 +87,7 @@ export function originAllowed(req) {
 const hits = new Map();
 const RATE = { windowMs: 60_000, max: 12 };
 function limitedLocal(ip) {
+  if (hits.size > 5000) hits.clear(); // IPs únicas acumuladas en la vida de la instancia
   const now = Date.now();
   const arr = (hits.get(ip) || []).filter((t) => now - t < RATE.windowMs);
   arr.push(now);
@@ -101,6 +102,7 @@ async function limitedShared(ip) {
     const key = `${ip}:${windowStart}`;
     const count = ((await store.get(key, { type: "json" })) ?? 0) + 1;
     await store.setJSON(key, count);
+    store.delete(`${ip}:${windowStart - 1}`).catch(() => {}); // poda la ventana anterior (sin TTL nativo)
     return count > RATE.max;
   } catch {
     return false; // sin Blobs (dev local / fallo transitorio): decide el tier 1
