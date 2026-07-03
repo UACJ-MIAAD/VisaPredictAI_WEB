@@ -2232,10 +2232,8 @@
 ├── reports/          <span style="color:var(--gris);"># auditorías generadas (*_report.md)</span>
 ├── docs/             <span style="color:var(--gris);"># documentación (DVC.md…)</span>
 ├── tests/            <span style="color:var(--gris);"># pytest + fixtures HTML offline</span>
-├── config.py         <span style="color:var(--gris);"># rutas y constantes (RAW_DIR, PROCESSED_DIR…)</span>
-├── visa_common.py    <span style="color:var(--gris);"># helpers compartidos de scraping</span>
-├── scrape_*.py       <span style="color:var(--gris);"># empleo · familiar · DV + scrape_all (1 fetch, 3 secc.)</span>
-├── build_panel.py    <span style="color:var(--gris);"># consolida raw → processed</span>
+├── vp_data/          <span style="color:var(--gris);"># paquete núcleo: config · visa_common · tracking</span>
+├── pipeline/         <span style="color:var(--gris);"># DAG: freeze → scrape_* (empleo · familiar · DV) → build_panel → build_database → mega_audit</span>
 ├── pyproject.toml    <span style="color:var(--gris);"># deps + tooling + paquete (fuente única)</span>
 ├── Makefile          <span style="color:var(--gris);"># operación de un comando</span>
 ├── LICENSE           <span style="color:var(--gris);"># MIT</span>
@@ -2254,7 +2252,7 @@
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">data/processed/</span>
           <h4 class="card-title" style="font-size:0.98rem;">Derivado regenerable</h4>
-          <p style="font-size:0.85rem;">El panel multiserie $y_{p,c,b,t}$ que produce <code>build_panel.py</code>. Separarlo del crudo deja claro qué es fuente y qué es resultado.</p>
+          <p style="font-size:0.85rem;">El panel multiserie $y_{p,c,b,t}$ que produce <code>pipeline/build_panel.py</code>. Separarlo del crudo deja claro qué es fuente y qué es resultado.</p>
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">reports/ · docs/</span>
@@ -2267,9 +2265,9 @@
           <p style="font-size:0.85rem;">Suite <em>pytest</em> con fixtures HTML para extracción offline e invariantes duras del panel: el esquema <em>es</em> el contrato.</p>
         </div>
         <div class="card">
-          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">config.py · visa_common.py</span>
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">vp_data/ · pipeline/</span>
           <h4 class="card-title" style="font-size:0.98rem;">Núcleo compartido</h4>
-          <p style="font-size:0.85rem;"><code>config.py</code> centraliza rutas y constantes; <code>visa_common.py</code> reúne los helpers de scraping (fuente única, sin duplicar lógica entre scrapers).</p>
+          <p style="font-size:0.85rem;">El paquete <code>vp_data/</code> centraliza rutas, constantes y helpers de scraping (fuente única); <code>pipeline/</code> encadena los pasos del DAG de datos, cada uno invocable como <code>python -m pipeline.&lt;módulo&gt;</code>.</p>
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">pyproject.toml</span>
