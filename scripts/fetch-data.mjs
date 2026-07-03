@@ -5,7 +5,7 @@
 //
 // The committed files in public/data/ are the fallback: if GitHub raw hiccups,
 // we keep whatever is already there (the panel is critical; forecasts optional).
-import { writeFile, access } from "node:fs/promises";
+import { writeFile, access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const RAW = "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main";
@@ -18,6 +18,17 @@ const FILES = [
   { url: `${RAW}/reports/eda/eda_facts.json`, out: "eda_facts.json", critical: false },
   { url: `${RAW}/reports/eda/eda_report.pdf`, out: "eda_report.pdf", critical: false },
 ];
+// EDA gallery figures (committed fallbacks in public/data/eda/, refreshed with
+// every new bulletin by the data repo's Action — same non-critical contract).
+const GALLERY = [
+  "g01_panel", "g02_trayectorias", "g03_backlog", "g04_retros", "g05_brecha",
+  "g06_pulso_fiscal", "g07_leadlag", "g08_congelados", "g09_estacionariedad",
+  "g10_dv", "g11_completitud",
+];
+for (const g of GALLERY) {
+  FILES.push({ url: `${RAW}/reports/eda/gallery/${g}.png`, out: join("eda", `${g}.png`), critical: false });
+}
+await mkdir(join(OUT, "eda"), { recursive: true });
 
 const exists = async (p) => access(p).then(() => true).catch(() => false);
 

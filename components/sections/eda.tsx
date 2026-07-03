@@ -10,6 +10,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
+import { EdaGallery } from "@/components/sections/eda-gallery";
 import { loadEdaFacts, type EdaFacts } from "@/lib/data/eda";
 
 // Recharts lives in eda-charts; only fetched when this section mounts.
@@ -120,7 +121,9 @@ export function Eda() {
 
       <EdaCharts facts={facts} />
 
-      <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+      <EdaGallery />
+
+      <div className="mt-12 flex flex-wrap items-center gap-x-5 gap-y-3">
         <a
           href="/data/eda_report.pdf"
           target="_blank"
