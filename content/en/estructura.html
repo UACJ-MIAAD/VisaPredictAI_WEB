@@ -16,10 +16,8 @@
 ├── reports/          <span style="color:var(--gris);"># generated audits (*_report.md)</span>
 ├── docs/             <span style="color:var(--gris);"># documentation (DVC.md…)</span>
 ├── tests/            <span style="color:var(--gris);"># pytest + offline HTML fixtures</span>
-├── config.py         <span style="color:var(--gris);"># paths and constants (RAW_DIR, PROCESSED_DIR…)</span>
-├── visa_common.py    <span style="color:var(--gris);"># shared scraping helpers</span>
-├── scrape_*.py       <span style="color:var(--gris);"># employment · family · DV + scrape_all (1 fetch, 3 sect.)</span>
-├── build_panel.py    <span style="color:var(--gris);"># consolidates raw → processed</span>
+├── vp_data/          <span style="color:var(--gris);"># core package: config · visa_common · tracking</span>
+├── pipeline/         <span style="color:var(--gris);"># data DAG: freeze → scrape_* (employment · family · DV) → build_panel → build_database → mega_audit</span>
 ├── pyproject.toml    <span style="color:var(--gris);"># deps + tooling + package (single source)</span>
 ├── Makefile          <span style="color:var(--gris);"># single-command operation</span>
 ├── LICENSE           <span style="color:var(--gris);"># MIT</span>
@@ -38,7 +36,7 @@
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">data/processed/</span>
           <h4 class="card-title" style="font-size:0.98rem;">Regenerable derived data</h4>
-          <p style="font-size:0.85rem;">The multiseries panel $y_{p,c,b,t}$ produced by <code>build_panel.py</code>. Keeping it apart from the raw data makes clear what is source and what is result.</p>
+          <p style="font-size:0.85rem;">The multiseries panel $y_{p,c,b,t}$ produced by <code>pipeline/build_panel.py</code>. Keeping it apart from the raw data makes clear what is source and what is result.</p>
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">reports/ · docs/</span>
@@ -51,9 +49,9 @@
           <p style="font-size:0.85rem;"><em>pytest</em> suite with HTML fixtures for offline extraction and hard panel invariants: the schema <em>is</em> the contract.</p>
         </div>
         <div class="card">
-          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">config.py · visa_common.py</span>
+          <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">vp_data/ · pipeline/</span>
           <h4 class="card-title" style="font-size:0.98rem;">Shared core</h4>
-          <p style="font-size:0.85rem;"><code>config.py</code> centralizes paths and constants; <code>visa_common.py</code> gathers the scraping helpers (single source, no duplicated logic across scrapers).</p>
+          <p style="font-size:0.85rem;">The <code>vp_data/</code> package centralizes paths, constants and scraping helpers (single source); <code>pipeline/</code> chains the data-DAG steps, each invocable as <code>python -m pipeline.&lt;module&gt;</code>.</p>
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">pyproject.toml</span>
