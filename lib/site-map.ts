@@ -80,6 +80,7 @@ export const ROUTES: Route[] = [
       "The empirical heart: a live bulletin feed and the interactive explorer over the real Visa Bulletin panel.",
     sections: [
       { id: "boletines", label: "Boletines en vivo", labelEn: "Live bulletins" },
+      { id: "eda", label: "Análisis exploratorio", labelEn: "Exploratory analysis" },
       { id: "historico", label: "Explorador histórico", labelEn: "Historical explorer" },
     ],
   },
