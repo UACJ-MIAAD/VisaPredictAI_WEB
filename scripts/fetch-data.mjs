@@ -23,7 +23,11 @@ let fresh = 0;
 for (const f of FILES) {
   const dest = join(OUT, f.out);
   try {
-    const r = await fetch(f.url, { redirect: "follow" });
+    // L5: cache-buster — raw.githubusercontent sits behind a ~5-min CDN and the
+    // Netlify hook fires seconds after the data repo's push, so a build could
+    // bake the PRE-push panel and stay a month stale until the next bulletin.
+    // A unique query string forces a cache miss (the CDN keys on the full URL).
+    const r = await fetch(`${f.url}?nocache=${Date.now()}`, { redirect: "follow" });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const body = Buffer.from(await r.arrayBuffer());
     if (body.length < 32) throw new Error(`suspiciously small (${body.length}B)`);
