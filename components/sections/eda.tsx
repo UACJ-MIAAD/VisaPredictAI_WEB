@@ -30,7 +30,7 @@ const T = {
     evaluable: "evaluables",
     bulletins: "boletines completos",
     trainable: "celdas con fecha específica (F)",
-    download: "Descargar el reporte EDA (PDF, 14 páginas)",
+    download: "Descargar el reporte EDA (PDF)",
     vintageNote:
       "Reporte generado automáticamente ({vintage}); se regenera con cada boletín nuevo del Visa Bulletin.",
     asOf: "corte",
@@ -45,7 +45,7 @@ const T = {
     evaluable: "evaluable",
     bulletins: "complete bulletins",
     trainable: "cells with a specific date (F)",
-    download: "Download the EDA report (PDF, 14 pages)",
+    download: "Download the EDA report (PDF)",
     vintageNote:
       "Report generated automatically ({vintage}); it regenerates with every new Visa Bulletin.",
     asOf: "as of",
@@ -121,7 +121,7 @@ export function Eda() {
 
       <EdaCharts facts={facts} />
 
-      <EdaGallery />
+      <EdaGallery facts={facts} />
 
       <div className="mt-12 flex flex-wrap items-center gap-x-5 gap-y-3">
         <a
