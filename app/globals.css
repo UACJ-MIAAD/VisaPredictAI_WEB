@@ -22,8 +22,11 @@
   --color-danger: #b32424;
   --color-success: #1f7a4d;
   /* soft light plate for white-background raster figures (EDA gallery); stays
-     light in dark mode on purpose — same precedent as the ER diagram card */
+     light in dark mode on purpose — same precedent as the ER diagram card.
+     The dark plate matches the dark gallery variants' own charcoal surface
+     (#12161B, vp_model/palette.py DARK theme) so the padding blends seamlessly. */
   --color-figure-plate: #f6f5f1;
+  --color-figure-plate-dark: #12161b;
   --radius: 0.5rem;
 }
 
