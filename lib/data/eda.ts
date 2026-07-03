@@ -37,13 +37,42 @@ export type EdaRetroEvent = {
   days: number;
 };
 
+// Per-series census record (only the fields the UI derives from).
+export type EdaSeriesRecord = {
+  country: string;
+  block: string;
+  category: string;
+  table: string;
+  n_F: number;
+  pct_frozen: number;
+};
+
+export type EdaGapEntry = {
+  country: string;
+  block: string;
+  category: string;
+  date: string; // "YYYY-MM"
+  gap_days: number;
+};
+
+export type EdaDv = {
+  n_rows: number;
+  n_regions?: number;
+  date_first?: string;
+  date_last?: string;
+};
+
 export type EdaFacts = {
   vintage: string; // "YYYY-MM"
   panel: EdaPanel;
   regime: EdaRegime;
   stationarity_summary?: Record<string, number>;
+  series: EdaSeriesRecord[];
   retro_events: EdaRetroEvent[];
+  fad_dff_gap: EdaGapEntry[];
   backlog_today: EdaBacklogEntry[];
+  monthly_advance_median: Record<string, number>;
+  dv: EdaDv;
 };
 
 let cache: Promise<EdaFacts | null> | null = null;
