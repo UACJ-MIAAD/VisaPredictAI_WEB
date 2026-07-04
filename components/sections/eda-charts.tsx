@@ -25,7 +25,7 @@ import type { EdaFacts } from "@/lib/data/eda";
 
 const T = {
   es: {
-    backlogTitle: "¿Cuántos años de fila?",
+    backlogTitle: "La fila hoy, serie por serie",
     backlogDesc:
       "Rezago acumulado hoy por serie familiar (tabla Final Action Dates): años entre la fecha de prioridad publicada y el boletín vigente. Las series de México van resaltadas.",
     backlogAxis: "Años de fila",
@@ -40,12 +40,12 @@ const T = {
     obsUnit: "celdas",
     retroTitle: "Cronología de retrogresiones",
     retroDesc:
-      "{n} eventos de retroceso —{pct} % de las observaciones— agrupados por año: la fila no siempre avanza.",
+      "{n} eventos de retroceso —{pct} % de los movimientos mensuales observados— agrupados por año: la fila no siempre avanza.",
     retroAxis: "Retrogresiones",
     retroUnit: "eventos",
   },
   en: {
-    backlogTitle: "How many years in line?",
+    backlogTitle: "Today\u2019s line, series by series",
     backlogDesc:
       "Backlog accumulated today per family series (Final Action Dates table): years between the published priority date and the current bulletin. Mexico's series are highlighted.",
     backlogAxis: "Years in line",
@@ -60,7 +60,7 @@ const T = {
     obsUnit: "cells",
     retroTitle: "Retrogression chronology",
     retroDesc:
-      "{n} retrogression events —{pct}% of observations— grouped by year: the line does not always move forward.",
+      "{n} retrogression events —{pct}% of observed monthly movements— grouped by year: the line does not always move forward.",
     retroAxis: "Retrogressions",
     retroUnit: "events",
   },
@@ -112,8 +112,10 @@ export default function EdaCharts({ facts }: { facts: EdaFacts }) {
 
   // ── b. Regime composition ───────────────────────────────────────────────────
   const regime = [
-    { key: "F", name: t.regF, value: facts.regime.F, fill: "var(--color-accent)" },
-    { key: "C", name: t.regC, value: facts.regime.C, fill: "var(--color-success)" },
+    // audit M5: same semantic mapping as statusColor (panel explorer, same page):
+    // F=success (trainable/good), C=accent, U=danger, UNK=muted.
+    { key: "F", name: t.regF, value: facts.regime.F, fill: "var(--color-success)" },
+    { key: "C", name: t.regC, value: facts.regime.C, fill: "var(--color-accent)" },
     { key: "U", name: t.regU, value: facts.regime.U, fill: "var(--color-danger)" },
     { key: "UNK", name: t.regUNK, value: facts.regime.UNK, fill: "var(--color-muted)" },
   ].filter((d) => d.value > 0);
@@ -141,7 +143,7 @@ export default function EdaCharts({ facts }: { facts: EdaFacts }) {
   }
   const retroDesc = t.retroDesc
     .replace("{n}", fmt(facts.retro_events.length, lang))
-    .replace("{pct}", String(facts.panel.pct_retro));
+    .replace("{pct}", facts.panel.pct_retro.toFixed(1));
 
   return (
     <>

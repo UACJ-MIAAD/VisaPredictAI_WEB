@@ -95,10 +95,22 @@ export function Eda() {
     };
   }, []);
 
-  if (!loaded) return <Skeleton className="h-64 w-full" />;
-  if (!facts) return null; // census not shipped -> render nothing
+  // audit M3: the #eda anchor must exist even while loading / on failure —
+  // the prose deep-link, the RAG link and the nav TOC all target it.
+  if (!loaded)
+    return (
+      <section id="eda" className="mx-auto w-full max-w-5xl px-4 py-12">
+        <Skeleton className="h-64 w-full" />
+      </section>
+    );
+  if (!facts) return <section id="eda" aria-hidden="true" />; // census not shipped
 
   const p = facts.panel;
+  // audit L3: the completeness tile's denominator is the EXPECTED span from the
+  // census dates — n_months/n_months could never show a hole.
+  const [y0, m0] = p.date_first.split("-").map(Number);
+  const [y1, m1] = p.date_last.split("-").map(Number);
+  const expectedMonths = y0 && y1 ? (y1 - y0) * 12 + (m1 - m0) + 1 : p.n_months;
 
   return (
     <section id="eda" className="mx-auto w-full max-w-5xl px-4 py-12" aria-labelledby="eda-title">
@@ -115,7 +127,7 @@ export function Eda() {
           sub={`${p.n_series_evaluable} ${t.evaluable}`}
           label={t.series}
         />
-        <Stat value={`${p.n_months}/${p.n_months}`} label={t.bulletins} />
+        <Stat value={`${p.n_months}/${expectedMonths}`} label={t.bulletins} />
         <Stat value={`${p.pct_trainable_F}%`} label={t.trainable} />
       </div>
 
