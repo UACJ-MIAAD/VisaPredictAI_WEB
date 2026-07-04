@@ -17,6 +17,7 @@ const FILES = [
   { url: `${RAW}/reports/prospective/forecast_scorecard_meta.json`, out: "forecast_scorecard.json", critical: false },
   { url: `${RAW}/reports/eda/eda_facts.json`, out: "eda_facts.json", critical: false },
   { url: `${RAW}/reports/eda/eda_report.pdf`, out: "eda_report.pdf", critical: false },
+  { url: `${RAW}/reports/eda/en/eda_report.pdf`, out: "eda_report_en.pdf", critical: false },
   // FE (feature engineering): census of the cleaning/FE master decisions + the
   // standalone report. The English report is a REAL translation (unlike the EDA
   // one, still Spanish-only) and ships under its own name.

@@ -45,8 +45,7 @@ const T = {
     evaluable: "evaluable",
     bulletins: "complete bulletins",
     trainable: "cells with a specific date (F)",
-    // the EDA report has no English variant yet (registered pendiente) — say so
-    download: "Download the EDA report (PDF, in Spanish)",
+    download: "Download the EDA report (PDF)",
     vintageNote:
       "Report generated automatically ({vintage}); it regenerates with every new Visa Bulletin.",
     asOf: "as of",
@@ -138,7 +137,7 @@ export function Eda() {
 
       <div className="mt-12 flex flex-wrap items-center gap-x-5 gap-y-3">
         <a
-          href="/data/eda_report.pdf"
+          href={lang === "en" ? "/data/eda_report_en.pdf" : "/data/eda_report.pdf"}
           target="_blank"
           rel="noopener"
           className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-[var(--color-bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
