@@ -1,11 +1,14 @@
 "use client";
 
 // Annotated gallery of the 11 EDA figures, refreshed with every bulletin by the
-// data repo's Action. Each figure ships in TWO true renders: light
-// (public/data/eda/*.png, white surface, on the --color-figure-plate) and dark
-// (public/data/eda/dark/*.png, charcoal #12161B surface from the data repo's
-// vp_model/palette.py DARK theme, on --color-figure-plate-dark). Both <img>s are
-// in the DOM and CSS-toggled via Tailwind's `dark:` variant (wired to the .dark
+// data repo's Action. Each figure ships in FOUR true renders (language × theme):
+// public/data/eda/*.png (Spanish light, on the --color-figure-plate),
+// eda/dark/*.png (Spanish dark, charcoal #12161B surface from the data repo's
+// vp_model/palette.py DARK theme, on --color-figure-plate-dark), and their
+// English counterparts under eda/en/ and eda/en/dark/ (the /en/* pages used to
+// serve PNGs with rasterized Spanish headlines). The language is picked at
+// render time (route-driven, so it is server-stable); both THEME <img>s are in
+// the DOM and CSS-toggled via Tailwind's `dark:` variant (wired to the .dark
 // class next-themes stamps on <html> pre-paint) — no hydration flash, and the
 // full-size link always points at the visible variant. Images are lazy and
 // CLS-safe (per-variant intrinsic width/height via next/image; export is
@@ -27,24 +30,27 @@ import { countryLabel } from "@/lib/data/visa-panel";
 import type { EdaFacts } from "@/lib/data/eda";
 
 type Dim = { w: number; h: number };
-type Fig = { id: string; light: Dim; dark: Dim };
+type LangDims = { light: Dim; dark: Dim };
+type Fig = { id: string; es: LangDims; en: LangDims };
 
 // Display order is the narrative order (not the file numbering). Dimensions
-// measured per variant from the actual PNGs (sips); they currently coincide
-// because both themes render from the same figure code, but each variant keeps
-// its own record in case a regeneration drifts.
+// measured per language from the actual PNGs (sips); they differ between
+// languages (the header textwrap re-flows with the translated copy) but
+// coincide across themes, which render from the same figure code — each
+// language keeps light/dark records in case a regeneration drifts.
+const dims = (w: number, h: number): LangDims => ({ light: { w, h }, dark: { w, h } });
 const FIGS: Fig[] = [
-  { id: "g01_panel", light: { w: 2652, h: 3509 }, dark: { w: 2652, h: 3509 } },
-  { id: "g11_completitud", light: { w: 2764, h: 2300 }, dark: { w: 2764, h: 2300 } },
-  { id: "g02_trayectorias", light: { w: 2588, h: 1822 }, dark: { w: 2588, h: 1822 } },
-  { id: "g03_backlog", light: { w: 2823, h: 1908 }, dark: { w: 2823, h: 1908 } },
-  { id: "g08_congelados", light: { w: 2294, h: 2034 }, dark: { w: 2294, h: 2034 } },
-  { id: "g04_retros", light: { w: 2588, h: 1779 }, dark: { w: 2588, h: 1779 } },
-  { id: "g05_brecha", light: { w: 2412, h: 2109 }, dark: { w: 2412, h: 2109 } },
-  { id: "g06_pulso_fiscal", light: { w: 2176, h: 2190 }, dark: { w: 2176, h: 2190 } },
-  { id: "g09_estacionariedad", light: { w: 2118, h: 1703 }, dark: { w: 2118, h: 1703 } },
-  { id: "g07_leadlag", light: { w: 1803, h: 2059 }, dark: { w: 1803, h: 2059 } },
-  { id: "g10_dv", light: { w: 2588, h: 1838 }, dark: { w: 2588, h: 1838 } },
+  { id: "g01_panel", es: dims(2652, 3509), en: dims(2679, 3509) },
+  { id: "g11_completitud", es: dims(2764, 2300), en: dims(2764, 2298) },
+  { id: "g02_trayectorias", es: dims(2588, 1822), en: dims(2588, 1822) },
+  { id: "g03_backlog", es: dims(2823, 1908), en: dims(2823, 1906) },
+  { id: "g08_congelados", es: dims(2294, 2034), en: dims(2294, 2032) },
+  { id: "g04_retros", es: dims(2588, 1779), en: dims(2588, 1841) },
+  { id: "g05_brecha", es: dims(2412, 2109), en: dims(2412, 2175) },
+  { id: "g06_pulso_fiscal", es: dims(2176, 2190), en: dims(2176, 2186) },
+  { id: "g09_estacionariedad", es: dims(2118, 1703), en: dims(2118, 1701) },
+  { id: "g07_leadlag", es: dims(1803, 2059), en: dims(1745, 1991) },
+  { id: "g10_dv", es: dims(2588, 1838), en: dims(2588, 1839) },
 ];
 
 // ── Derived census values (computed once per facts+lang via useMemo; every
@@ -307,7 +313,6 @@ const T: Record<
   en: {
     title: "Annotated gallery",
     sub: "Eleven figures from the EDA report, each with its finding. They regenerate with every bulletin.",
-    note: "Figure labels are in Spanish.",
     figura: "Figure",
     fullSize: "View full size",
     figs: {
@@ -457,6 +462,8 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
           const c = t.figs[f.id];
           const headline = c.headline(d);
           const ariaLabel = `${headline} — ${t.fullSize}`;
+          const prefix = lang === "en" ? "/data/eda/en" : "/data/eda";
+          const dim = f[lang];
           return (
             // sin m-0 en el figure: anulaba el space-y-16 del contenedor (misma
             // especificidad que la utilidad space-y de Tailwind v4; el orden gana)
@@ -471,8 +478,8 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 <p className="mt-2 max-w-3xl leading-relaxed text-[var(--color-muted)]">{c.body(d)}</p>
               </figcaption>
               <FigureLink
-                src={`/data/eda/${f.id}.png`}
-                dim={f.light}
+                src={`${prefix}/${f.id}.png`}
+                dim={dim.light}
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
@@ -480,8 +487,8 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 plate="bg-[var(--color-figure-plate)]"
               />
               <FigureLink
-                src={`/data/eda/dark/${f.id}.png`}
-                dim={f.dark}
+                src={`${prefix}/dark/${f.id}.png`}
+                dim={dim.dark}
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
