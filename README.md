@@ -56,14 +56,17 @@ flowchart TD
     subgraph DATA["📊 Datos reales"]
         CSV["public/data/visa_panel_long.csv<br/>27,611 filas"]
         FEED["raw.githubusercontent.com<br/>bulletins.json (feed vivo)"]
-        EDA["public/data/eda_facts.json + eda_report.pdf<br/>galería G1–G11 · 44 PNG (ES/EN × claro/oscuro)"]
+        EDA["public/data/eda_facts.json + eda_report.pdf ES/EN<br/>galería G1–G11 · 44 PNG (ES/EN × claro/oscuro)"]
+        FE["public/data/fe_facts.json + fe_report.pdf ES/EN<br/>galería f01–f07 · 28 PNG · fig_dims.json medido en build"]
         LOAD["lib/data/visa-panel.ts"]
         CSV --> LOAD --> EXP["panel-explorer (Recharts, lazy)<br/>4 gráficas + tabla virtualizada"]
         FEED --> BOL["Boletines (feed)"]
         EDA --> EDASEC["Sección #eda<br/>censo + galería por idioma"]
+        FE --> FESEC["Sección #fe<br/>decisiones magistrales + galería + PDF"]
         EXP --> DAT
         BOL --> DAT
         EDASEC --> DAT
+        FESEC --> DAT
     end
 
     subgraph CROSS["🔁 Transversal"]
