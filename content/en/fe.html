@@ -1,0 +1,15 @@
+<div class="section-inner">
+    <span class="section-tag">Feature engineering · Master decisions</span>
+    <h2 class="section-title">Cleaning and feature engineering (FE)</h2>
+    <p class="section-sub">
+      An automatic census of the pipeline&rsquo;s master decisions &mdash;12 cleaning and 8 feature-construction decisions&mdash;, each documented with its real module and its why. On the cleaning side: the C/F/U/UNK administrative regime is preserved as annotation and only cells with a specific date (status F) are the predictive target (F-only mask); a UNK sentinel instead of the literal NA; a century pivot with an epoch guard (t<sub>0</sub>&nbsp;=&nbsp;1975-01-01); a parser tolerant to footnotes and typos that never corrects silently (the raw cell is always kept in raw_value); deduplication preferring F&gt;C&gt;U&gt;UNK; gaps of up to 3 months interpolated linearly and long ones never invented (Kalman smoothing for the EDA only); retrogressions and extreme jumps are signal &mdash;they are counted, never trimmed&mdash;; and the contract is re-verified with declarative CHECKs in the star-schema warehouse.
+    </p>
+    <p class="section-sub">
+      On the feature side: the target is days since the fixed epoch (status F only); a regular monthly grid; the trees predict the first difference and the forecast is reintegrated causally, because a tree cannot extrapolate the level; the fiscal calendar is encoded cyclically with sine/cosine (it starts in October: December and January are neighbors); 24 monthly lags as memory; scaling fitted only on the training window (no leakage from the future into the past); an explicit covariate policy per model family; and a FRESH selection (with Benjamini-Yekutieli FDR correction) plus mRMR de-redundancy that collapses the characterization catalog down to a single non-redundant representative (44&nbsp;&rarr;&nbsp;1 in the current cut). An annotated gallery of seven figures illustrates the decisions &mdash;from the tolerant parser and the F-only mask to differencing and the cyclic calendar. The full report is a downloadable PDF &mdash;in Spanish and in English&mdash; regenerated with every new bulletin.
+    </p>
+    <p>
+      <a href="/en/datos-historicos/#fe">See the interactive feature engineering &rarr;</a> &middot;
+      <a href="/data/fe_report_en.pdf" target="_blank" rel="noopener">Download the FE report (PDF)</a> &middot;
+      <a href="/data/fe_report.pdf" target="_blank" rel="noopener">FE report (PDF, Spanish)</a>
+    </p>
+  </div>

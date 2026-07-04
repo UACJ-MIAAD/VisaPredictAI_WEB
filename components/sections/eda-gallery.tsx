@@ -20,24 +20,22 @@
 // with every bulletin and the data repo's consistency guardian does not scan
 // React components, so no census number may live here as a literal. Only stable
 // structural facts stay literal (Dec-2001 panel start, Oct-2015 DFF start, the
-// 25 family-FAD structural series, the ±6-month lead–lag window, qualitative
-// claims taken from the report).
+// ±6-month lead–lag window, qualitative claims taken from the report).
 
 import * as React from "react";
 import Image from "next/image";
 import { useLang } from "@/components/lang-provider";
-import { countryLabel } from "@/lib/data/visa-panel";
-import type { EdaFacts } from "@/lib/data/eda";
+import { seriesLabel, type EdaFacts } from "@/lib/data/eda";
+import { figDim, type Dim } from "@/lib/data/fig-dims";
 
-type Dim = { w: number; h: number };
 type LangDims = { light: Dim; dark: Dim };
 type Fig = { id: string; es: LangDims; en: LangDims };
 
-// Display order is the narrative order (not the file numbering). Dimensions
-// measured per language from the actual PNGs (sips); they differ between
-// languages (the header textwrap re-flows with the translated copy) but
-// coincide across themes, which render from the same figure code — each
-// language keeps light/dark records in case a regeneration drifts.
+// Display order is the narrative order (not the file numbering). Rendered
+// dimensions come from /data/fig_dims.json — measured per variant from the
+// PNGs actually shipped (audit B1) — and these constants are only the fallback
+// for figures missing from that map. They were measured per language (the
+// header textwrap re-flows with the translated copy).
 const dims = (w: number, h: number): LangDims => ({ light: { w, h }, dark: { w, h } });
 const FIGS: Fig[] = [
   { id: "g01_panel", es: dims(2652, 3509), en: dims(2679, 3509) },
@@ -60,6 +58,7 @@ type Derived = {
   nSeries: number; // 194
   nWithF: number; // 136
   nEval: number; // 74
+  nFamFad: number; // 25 family-FAD structural series (derived, audit B2)
   pctF: number; // 58
   pctFrozen: number; // 45 (panel-wide, round 0)
   pctRetro: string; // "2.4" (1 decimal)
@@ -81,19 +80,12 @@ type Derived = {
   nDiff: number; // 71
   nMixed: number; // 3
   nLevel: number; // 0 (stationary in level)
+  hasStationarity: boolean; // census present → g09 caption is derivable
   advMin: number; // 0
   advMax: number; // 21
+  hasAdvance: boolean; // advance map present → g06 caption is derivable
   dvRows: string; // "1,647" (locale)
 };
-
-const catLabel = (c: string) =>
-  c
-    .replace(/^EB(\d)/, "EB-$1")
-    .replace(/_/g, " ")
-    .replace(/ ([A-Z]{3,})/g, (m) => m.charAt(0) + m.slice(1, 2) + m.slice(2).toLowerCase());
-
-const seriesLabel = (country: string, category: string, lang: "es" | "en") =>
-  `${countryLabel(country, lang)} · ${catLabel(category)}`;
 
 // "2006-08" -> "agosto de 2006" / "August 2006" (UTC-pinned).
 function monthYear(ym: string, lang: "es" | "en"): string {
@@ -166,6 +158,7 @@ function derive(facts: EdaFacts, lang: "es" | "en"): Derived {
 
   const nDiff = facts.stationarity_summary?.difference ?? 0;
   const nMixed = facts.stationarity_summary?.mixed ?? 0;
+  const nLevel = facts.stationarity_summary?.stationary ?? 0;
 
   const advances = Object.values(facts.monthly_advance_median ?? {});
 
@@ -174,6 +167,8 @@ function derive(facts: EdaFacts, lang: "es" | "en"): Derived {
     nSeries: p.n_series_structural,
     nWithF: p.n_series_with_F,
     nEval: p.n_series_evaluable,
+    // derived, not literal: a 26th family-FAD series must update the caption
+    nFamFad: (facts.series ?? []).filter((s) => s.block === "family" && s.table === "FAD").length,
     pctF: p.pct_trainable_F,
     pctFrozen: Math.round(p.pct_frozen),
     pctRetro: p.pct_retro.toFixed(1),
@@ -196,9 +191,14 @@ function derive(facts: EdaFacts, lang: "es" | "en"): Derived {
     nMixed,
     // "stationary" viene del summary; NO por resta (un veredicto centinela
     // "failed" del censo inflaría la resta y mentiría "N estacionarias").
-    nLevel: facts.stationarity_summary?.stationary ?? 0,
+    nLevel,
+    // audit B3: with an empty/missing census the g09 caption would read
+    // "0 de 74" — hide the figure instead of asserting a confident lie.
+    hasStationarity: nDiff + nMixed + nLevel > 0,
     advMin: advances.length ? Math.round(Math.min(...advances)) : 0,
     advMax: advances.length ? Math.round(Math.max(...advances)) : 0,
+    // same guard for g06's "entre 0 y 0"
+    hasAdvance: advances.length > 0 && advances.some((a) => a !== 0),
     dvRows: (facts.dv?.n_rows ?? 0).toLocaleString(locale),
   };
 }
@@ -245,7 +245,7 @@ const T: Record<
         tag: "Trayectorias",
         headline: () => "Un cuarto de siglo de fila, serie por serie",
         body: (d) =>
-          `Las 25 series familiares (FAD) avanzan con pendientes muy distintas por país. La línea punteada marca ${d.aggMonth}, cuando ${d.aggCount} series retrocedieron ${d.aggYears} años acumulados en un solo boletín; la banda gris, el congelamiento de la pandemia.`,
+          `Las ${d.nFamFad} series familiares (FAD) avanzan con pendientes muy distintas por país. La línea punteada marca ${d.aggMonth}, cuando ${d.aggCount} series retrocedieron ${d.aggYears} años acumulados en un solo boletín; la banda gris, el congelamiento de la pandemia.`,
         alt: "Trayectorias de las series familiares FAD desde 2001, con la mayor retrogresión colectiva y la banda de la pandemia marcadas.",
       },
       g03_backlog: {
@@ -334,7 +334,7 @@ const T: Record<
         tag: "Trajectories",
         headline: () => "A quarter century in line, series by series",
         body: (d) =>
-          `The 25 family series (FAD) advance with very different slopes by country. The dotted line marks ${d.aggMonth}, when ${d.aggCount} series retrogressed ${d.aggYears} accumulated years in a single bulletin; the gray band, the pandemic freeze.`,
+          `The ${d.nFamFad} family series (FAD) advance with very different slopes by country. The dotted line marks ${d.aggMonth}, when ${d.aggCount} series retrogressed ${d.aggYears} accumulated years in a single bulletin; the gray band, the pandemic freeze.`,
         alt: "Trajectories of the family FAD series since 2001, with the largest collective retrogression and the pandemic band marked.",
       },
       g03_backlog: {
@@ -404,7 +404,7 @@ const T: Record<
 // One theme's variant: full <a><img/></a> block, shown/hidden purely via CSS
 // (`dark:` variant) so the visible full-size link always matches the visible
 // image and there is no client-side theme branching (no hydration flash).
-function FigureLink({
+export function FigureLink({
   src,
   dim,
   alt,
@@ -412,6 +412,7 @@ function FigureLink({
   hint,
   toggle,
   plate,
+  imgAriaHidden,
 }: {
   src: string;
   dim: Dim;
@@ -420,6 +421,7 @@ function FigureLink({
   hint: string;
   toggle: string; // "block dark:hidden" | "hidden dark:block"
   plate: string; // plate background class for this variant
+  imgAriaHidden?: boolean; // audit B5: the theme duplicate must not double-announce
 }) {
   return (
     <a
@@ -432,6 +434,7 @@ function FigureLink({
       <Image
         src={src}
         alt={alt}
+        aria-hidden={imgAriaHidden || undefined}
         width={dim.w}
         height={dim.h}
         loading="lazy"
@@ -458,12 +461,18 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
       </p>
 
       <div className="mt-10 space-y-16">
-        {FIGS.map((f, i) => {
+        {FIGS.filter(
+          // audit B3: a figure whose caption numbers are not derivable from the
+          // census hides itself rather than rendering "0 de 74" / "entre 0 y 0"
+          (f) =>
+            (f.id !== "g09_estacionariedad" || d.hasStationarity) &&
+            (f.id !== "g06_pulso_fiscal" || d.hasAdvance),
+        ).map((f, i) => {
           const c = t.figs[f.id];
           const headline = c.headline(d);
           const ariaLabel = `${headline} — ${t.fullSize}`;
-          const prefix = lang === "en" ? "/data/eda/en" : "/data/eda";
-          const dim = f[lang];
+          const prefix = lang === "en" ? "eda/en" : "eda";
+          const fallback = f[lang];
           return (
             // sin m-0 en el figure: anulaba el space-y-16 del contenedor (misma
             // especificidad que la utilidad space-y de Tailwind v4; el orden gana)
@@ -478,8 +487,8 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 <p className="mt-2 max-w-3xl leading-relaxed text-[var(--color-muted)]">{c.body(d)}</p>
               </figcaption>
               <FigureLink
-                src={`${prefix}/${f.id}.png`}
-                dim={dim.light}
+                src={`/data/${prefix}/${f.id}.png`}
+                dim={figDim(`${prefix}/${f.id}.png`, fallback.light)}
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
@@ -487,13 +496,14 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 plate="bg-[var(--color-figure-plate)]"
               />
               <FigureLink
-                src={`${prefix}/dark/${f.id}.png`}
-                dim={dim.dark}
+                src={`/data/${prefix}/dark/${f.id}.png`}
+                dim={figDim(`${prefix}/dark/${f.id}.png`, fallback.dark)}
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
                 toggle="hidden dark:block"
                 plate="bg-[var(--color-figure-plate-dark)]"
+                imgAriaHidden
               />
             </figure>
           );
