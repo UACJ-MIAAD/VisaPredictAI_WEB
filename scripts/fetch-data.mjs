@@ -20,18 +20,26 @@ const FILES = [
 ];
 // EDA gallery figures (committed fallbacks in public/data/eda/, refreshed with
 // every new bulletin by the data repo's Action — same non-critical contract).
-// Each figure ships in two variants: light (gallery/) and a true dark-theme
-// render (gallery/dark/, charcoal surface from vp_model/palette.py's DARK theme).
+// Each figure ships in four true renders (language × theme): light (gallery/),
+// dark (gallery/dark/, charcoal surface from vp_model/palette.py's DARK theme),
+// and their English counterparts (gallery/en/, gallery/en/dark/ — the /en/*
+// pages used to serve PNGs with rasterized Spanish text).
 const GALLERY = [
   "g01_panel", "g02_trayectorias", "g03_backlog", "g04_retros", "g05_brecha",
   "g06_pulso_fiscal", "g07_leadlag", "g08_congelados", "g09_estacionariedad",
   "g10_dv", "g11_completitud",
 ];
 for (const g of GALLERY) {
-  FILES.push({ url: `${RAW}/reports/eda/gallery/${g}.png`, out: join("eda", `${g}.png`), critical: false });
-  FILES.push({ url: `${RAW}/reports/eda/gallery/dark/${g}.png`, out: join("eda", "dark", `${g}.png`), critical: false });
+  for (const sub of ["", "dark", "en", "en/dark"]) {
+    FILES.push({
+      url: `${RAW}/reports/eda/gallery/${sub ? `${sub}/` : ""}${g}.png`,
+      out: join("eda", ...sub.split("/").filter(Boolean), `${g}.png`),
+      critical: false,
+    });
+  }
 }
 await mkdir(join(OUT, "eda", "dark"), { recursive: true });
+await mkdir(join(OUT, "eda", "en", "dark"), { recursive: true });
 
 const exists = async (p) => access(p).then(() => true).catch(() => false);
 
