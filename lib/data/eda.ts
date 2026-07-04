@@ -75,12 +75,45 @@ export type EdaFacts = {
   dv: EdaDv;
 };
 
+// Structural check (audit 3-jul M4): a truncated/old JSON must degrade to the
+// section hiding itself (null), never to a render crash that blanks the page.
+function isEdaFacts(x: unknown): x is EdaFacts {
+  if (!x || typeof x !== "object") return false;
+  const f = x as Record<string, unknown>;
+  const p = f.panel as Record<string, unknown> | undefined;
+  return (
+    typeof f.vintage === "string" &&
+    !!p &&
+    typeof p.n_obs === "number" &&
+    typeof p.pct_retro === "number" &&
+    !!f.regime &&
+    typeof (f.regime as Record<string, unknown>).F === "number" &&
+    Array.isArray(f.series) &&
+    f.series.length > 0 &&
+    Array.isArray(f.retro_events) &&
+    Array.isArray(f.fad_dff_gap) &&
+    Array.isArray(f.backlog_today) &&
+    !!f.monthly_advance_median &&
+    typeof (f.dv as Record<string, unknown> | undefined)?.n_rows === "number"
+  );
+}
+
 let cache: Promise<EdaFacts | null> | null = null;
 
 export function loadEdaFacts(): Promise<EdaFacts | null> {
   if (cache) return cache;
-  cache = fetch("/data/eda_facts.json")
-    .then((r) => (r.ok ? (r.json() as Promise<EdaFacts>) : null))
-    .catch(() => null);
-  return cache;
+  const p = fetch("/data/eda_facts.json")
+    .then(async (r) => {
+      if (!r.ok) return null;
+      const j: unknown = await r.json();
+      return isEdaFacts(j) ? j : null;
+    })
+    .catch(() => null)
+    .then((f) => {
+      // audit L5: a failed load must not be cached forever — allow retry
+      if (!f) cache = null;
+      return f;
+    });
+  cache = p;
+  return p;
 }

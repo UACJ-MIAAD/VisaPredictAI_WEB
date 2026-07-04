@@ -47,6 +47,11 @@ for (const f of FILES) {
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const body = Buffer.from(await r.arrayBuffer());
     if (body.length < 32) throw new Error(`suspiciously small (${body.length}B)`);
+    // audit L1: a 200-but-corrupt body must NOT overwrite the good committed
+    // fallback — probe by content type before writing.
+    if (dest.endsWith(".json")) JSON.parse(body.toString("utf8"));
+    if (dest.endsWith(".png") && !(body[0] === 0x89 && body[1] === 0x50)) throw new Error("not a PNG");
+    if (dest.endsWith(".pdf") && body.subarray(0, 5).toString() !== "%PDF-") throw new Error("not a PDF");
     await writeFile(dest, body);
     fresh++;
     console.log(`  ✓ ${f.out} ← data repo (${(body.length / 1024).toFixed(0)} kB)`);

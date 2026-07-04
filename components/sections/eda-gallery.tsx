@@ -80,7 +80,11 @@ type Derived = {
   dvRows: string; // "1,647" (locale)
 };
 
-const catLabel = (c: string) => c.replace(/^EB(\d)/, "EB-$1");
+const catLabel = (c: string) =>
+  c
+    .replace(/^EB(\d)/, "EB-$1")
+    .replace(/_/g, " ")
+    .replace(/ ([A-Z]{3,})/g, (m) => m.charAt(0) + m.slice(1, 2) + m.slice(2).toLowerCase());
 
 const seriesLabel = (country: string, category: string, lang: "es" | "en") =>
   `${countryLabel(country, lang)} · ${catLabel(category)}`;
@@ -184,7 +188,9 @@ function derive(facts: EdaFacts, lang: "es" | "en"): Derived {
     gapMaxLabel: gapMax ? seriesLabel(gapMax.country, gapMax.category, lang) : "",
     nDiff,
     nMixed,
-    nLevel: Math.max(0, p.n_series_evaluable - nDiff - nMixed),
+    // "stationary" viene del summary; NO por resta (un veredicto centinela
+    // "failed" del censo inflaría la resta y mentiría "N estacionarias").
+    nLevel: facts.stationarity_summary?.stationary ?? 0,
     advMin: advances.length ? Math.round(Math.min(...advances)) : 0,
     advMax: advances.length ? Math.round(Math.max(...advances)) : 0,
     dvRows: (facts.dv?.n_rows ?? 0).toLocaleString(locale),
@@ -254,7 +260,7 @@ const T: Record<
         tag: "Retrogresiones",
         headline: (d) => `${d.nRetro} veces la fila retrocedió`,
         body: (d) =>
-          `Cada punto es un mes en que alguna serie retrocedió (el ${d.pctRetro} % de los avances observados); el tamaño es proporcional a la magnitud. Los terremotos están anotados: hasta −${d.worstYears} años en un solo mes (${d.worstLabel}, ${d.worstMonth}).`,
+          `Cada punto es un mes en que alguna serie retrocedió (el ${d.pctRetro} % de los movimientos mensuales observados); el tamaño es proporcional a la magnitud. Los terremotos están anotados: hasta −${d.worstYears} años en un solo mes (${d.worstLabel}, ${d.worstMonth}).`,
         alt: "Dispersión temporal de las retrogresiones históricas, con el tamaño según su magnitud y los mayores retrocesos anotados.",
       },
       g05_brecha: {
@@ -286,7 +292,7 @@ const T: Record<
         tag: "Lead–lag",
         headline: () => "Nadie anticipa a nadie",
         body: () =>
-          "La mejor correlación cruzada entre áreas (retardos de ±6 meses) ocurre siempre en el retardo cero: solo 5 parejas se mueven de la mano (India–China–Resto del mundo) y el co-movimiento es contemporáneo. No hay indicadores adelantados entre países.",
+          "La mejor correlación cruzada entre áreas (retardos de ±6 meses) ocurre siempre en el retardo cero: solo unas cuantas parejas se mueven de la mano —ninguna de ellas con México— y el co-movimiento es contemporáneo. No hay indicadores adelantados entre países.",
         alt: "Correlaciones cruzadas entre áreas con retardos de ±6 meses; el máximo ocurre siempre en el retardo cero.",
       },
       g10_dv: {
@@ -376,7 +382,7 @@ const T: Record<
         tag: "Lead–lag",
         headline: () => "No one leads anyone",
         body: () =>
-          "The best cross-correlation between areas (lags of ±6 months) always occurs at lag zero: only 5 pairs move hand in hand (India–China–Rest of the world) and the co-movement is contemporaneous. There are no leading indicators across countries.",
+          "The best cross-correlation between areas (lags of ±6 months) always occurs at lag zero: only a handful of pairs move hand in hand — none of them involving Mexico — and the co-movement is contemporaneous. There are no leading indicators across countries.",
         alt: "Cross-correlations between areas at lags of ±6 months; the maximum always occurs at lag zero.",
       },
       g10_dv: {
