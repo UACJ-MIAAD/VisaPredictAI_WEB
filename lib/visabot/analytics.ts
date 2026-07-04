@@ -172,8 +172,8 @@ export function buildForecast(panel: Panel, country: string, category: string, t
     const mlabel = meta?.models?.length ? meta.models.join("+") : (table === "DFF" ? "SARIMA" : "Theta+ETS+SARIMA");
     const mase = meta && Number.isFinite(meta.mase) ? (lang === "en" ? ` · hold-out MASE ${meta.mase}` : ` · MASE hold-out ${meta.mase}`) : "";
     subtitle = lang === "en"
-      ? `Production-model forecast (${mlabel}) · 80 % / 95 % bands (1-step conformal · √h)${mase}`
-      : `Pronóstico del modelo de producción (${mlabel}) · bandas 80 % / 95 % (conforme 1-paso · √h)${mase}`;
+      ? `Production-model forecast (${mlabel}) · 80 % / 95 % bands (conformal · per-horizon empirical quantiles)${mase}`
+      : `Pronóstico del modelo de producción (${mlabel}) · bandas 80 % / 95 % (conformes · cuantiles empíricos por horizonte)${mase}`;
     // Prospective track record (real frozen forecasts vs realized cutoffs) — global.
     const sc = (forecasts ?? null)?.scorecard;
     if (sc) {
