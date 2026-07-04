@@ -5,7 +5,7 @@
 //
 // The committed files in public/data/ are the fallback: if GitHub raw hiccups,
 // we keep whatever is already there (the panel is critical; forecasts optional).
-import { writeFile, access, mkdir } from "node:fs/promises";
+import { writeFile, readFile, access, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const RAW = "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main";
@@ -17,6 +17,12 @@ const FILES = [
   { url: `${RAW}/reports/prospective/forecast_scorecard_meta.json`, out: "forecast_scorecard.json", critical: false },
   { url: `${RAW}/reports/eda/eda_facts.json`, out: "eda_facts.json", critical: false },
   { url: `${RAW}/reports/eda/eda_report.pdf`, out: "eda_report.pdf", critical: false },
+  // FE (feature engineering): census of the cleaning/FE master decisions + the
+  // standalone report. The English report is a REAL translation (unlike the EDA
+  // one, still Spanish-only) and ships under its own name.
+  { url: `${RAW}/reports/fe/fe_facts.json`, out: "fe_facts.json", critical: false },
+  { url: `${RAW}/reports/fe/fe_report.pdf`, out: "fe_report.pdf", critical: false },
+  { url: `${RAW}/reports/fe/en/fe_report.pdf`, out: "fe_report_en.pdf", critical: false },
 ];
 // EDA gallery figures (committed fallbacks in public/data/eda/, refreshed with
 // every new bulletin by the data repo's Action — same non-critical contract).
@@ -29,17 +35,27 @@ const GALLERY = [
   "g06_pulso_fiscal", "g07_leadlag", "g08_congelados", "g09_estacionariedad",
   "g10_dv", "g11_completitud",
 ];
-for (const g of GALLERY) {
-  for (const sub of ["", "dark", "en", "en/dark"]) {
-    FILES.push({
-      url: `${RAW}/reports/eda/gallery/${sub ? `${sub}/` : ""}${g}.png`,
-      out: join("eda", ...sub.split("/").filter(Boolean), `${g}.png`),
-      critical: false,
-    });
+// FE gallery: same four-variant contract (language × theme), 7 figures.
+const FE_GALLERY = [
+  "f01_differencing", "f02_calendar", "f03_importance", "f04_gaps",
+  "f05_regime", "f06_parser", "f07_pipeline",
+];
+const galleryPaths = []; // public/data-relative PNG paths (for the dims probe)
+for (const [dir, names] of [["eda", GALLERY], ["fe", FE_GALLERY]]) {
+  for (const g of names) {
+    for (const sub of ["", "dark", "en", "en/dark"]) {
+      const out = join(dir, ...sub.split("/").filter(Boolean), `${g}.png`);
+      galleryPaths.push(out);
+      FILES.push({
+        url: `${RAW}/reports/${dir}/gallery/${sub ? `${sub}/` : ""}${g}.png`,
+        out,
+        critical: false,
+      });
+    }
   }
+  await mkdir(join(OUT, dir, "dark"), { recursive: true });
+  await mkdir(join(OUT, dir, "en", "dark"), { recursive: true });
 }
-await mkdir(join(OUT, "eda", "dark"), { recursive: true });
-await mkdir(join(OUT, "eda", "en", "dark"), { recursive: true });
 
 const exists = async (p) => access(p).then(() => true).catch(() => false);
 
@@ -75,3 +91,25 @@ for (const f of FILES) {
   }
 }
 console.log(`fetch-data: ${fresh}/${FILES.length} refreshed from the data repo`);
+
+// ── figure dimensions (audit: stop trusting hardcoded pixel dims) ───────────
+// Probe every gallery PNG actually on disk (fresh fetch or committed fallback)
+// and emit public/data/fig_dims.json — the galleries import it at build time so
+// each of the four variants (language × theme) renders with its own MEASURED
+// intrinsic size; the components' constants remain only as a fallback for
+// files missing from this map. Width/height live in the PNG IHDR chunk, which
+// always starts at byte 16 (two big-endian uint32s).
+const dims = {};
+for (const rel of galleryPaths) {
+  try {
+    const buf = await readFile(join(OUT, rel));
+    if (!(buf[0] === 0x89 && buf[1] === 0x50) || buf.length < 24) continue;
+    const w = buf.readUInt32BE(16);
+    const h = buf.readUInt32BE(20);
+    if (w > 0 && h > 0) dims[rel.split("\\").join("/")] = { w, h };
+  } catch {
+    // missing file (fetch failed and no fallback) → the component fallback dims apply
+  }
+}
+await writeFile(join(OUT, "fig_dims.json"), JSON.stringify(dims, null, 1) + "\n");
+console.log(`fetch-data: fig_dims.json → ${Object.keys(dims).length} figures measured`);

@@ -2058,9 +2058,31 @@
     <p class="section-sub">
       Censo automático, serie por serie, del panel completo: 27,611 observaciones en 194 series estructurales (136 con al menos una fecha específica y 74 evaluables), sobre 296/296 boletines desde diciembre de 2001. El 58&nbsp;% del panel es entrenable (15,931 obs entrenables, estado F); el censo documenta además 382 retrogresiones históricas y las 1,647 filas del sorteo de visas de diversidad (DV). Las pruebas de estacionariedad ADF, KPSS y DF-GLS indican que 71 de las 74 series evaluables exigen diferenciación. Una galería comentada de once figuras acompaña el censo &mdash;del mapa de régimen del panel completo a las trayectorias familiares, la brecha FAD&ndash;DFF y el pulso del año fiscal&mdash;. El reporte completo es un PDF descargable que se regenera automáticamente con cada boletín nuevo.
     </p>
+    <p class="section-sub">
+      Los hallazgos anotados de la galería: en cerca de la mitad de los meses con fecha la fila no se mueve &mdash;la razón de que el pronóstico ingenuo sea tan difícil de vencer&mdash;; las retrogresiones son terremotos administrativos capaces de borrar más de una década en un solo boletín (el peor episodio: México&nbsp;&middot;&nbsp;F3, agosto de 2006); los atrasos vigentes más profundos superan el cuarto de siglo en el bloque familiar (México&nbsp;&middot;&nbsp;F4) y la década en el de empleo (India); el calendario de presentación (DFF) siempre antecede a la acción final (FAD) por meses; el año fiscal apenas late &mdash;sin estacionalidad explotable: un hallazgo, no una carencia&mdash;; ninguna área anticipa a otra (la mejor correlación cruzada entre países ocurre en el retardo cero, sin indicadores adelantados); y ninguna serie evaluable es estacionaria en nivel: el panel es integrado de orden&nbsp;1.
+    </p>
     <p>
       <a href="/datos-historicos/#eda">Ver el análisis exploratorio interactivo &rarr;</a> &middot;
       <a href="/data/eda_report.pdf" target="_blank" rel="noopener">Descargar el reporte EDA (PDF)</a>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════ FE / LIMPIEZA E INGENIERÍA DE CARACTERÍSTICAS ═══════════════ -->
+<section class="section" id="fe">
+  <div class="section-inner">
+    <span class="section-tag">Ingeniería de características · Decisiones magistrales</span>
+    <h2 class="section-title">Limpieza e ingeniería de características (FE)</h2>
+    <p class="section-sub">
+      Censo automático de las decisiones magistrales del pipeline &mdash;12 de limpieza y 8 de construcción de características&mdash;, cada una documentada con su módulo real y su porqué. En la limpieza: el régimen administrativo C/F/U/UNK se conserva como anotación y solo las celdas con fecha específica (estado F) son objetivo predictivo (máscara F-only); centinela UNK en vez del literal NA; pivote de siglo con guardia de época (t<sub>0</sub>&nbsp;=&nbsp;1975-01-01); parser tolerante a footnotes y erratas que jamás corrige en silencio (la celda cruda se conserva siempre en raw_value); deduplicación con preferencia F&gt;C&gt;U&gt;UNK; huecos de hasta 3 meses interpolados linealmente y los largos jamás inventados (suavizado de Kalman solo para el EDA); las retrogresiones y los saltos extremos son señal &mdash;se cuentan, nunca se recortan&mdash;; y el contrato se re-verifica con CHECKs declarativos en el almacén estrella.
+    </p>
+    <p class="section-sub">
+      En las características: el objetivo es días desde la época fija (solo estado F); rejilla mensual regular; los árboles predicen la primera diferencia y el pronóstico se reintegra de forma causal, porque un árbol no extrapola el nivel; el calendario fiscal se codifica cíclicamente con seno/coseno (arranca en octubre: diciembre y enero son vecinos); 24 rezagos mensuales como memoria; escalado ajustado solo en la ventana de entrenamiento (sin fuga del futuro al pasado); política de covariables explícita por familia de modelo; y una selección FRESH (con corrección FDR de Benjamini-Yekutieli) más des-redundancia mRMR que colapsa el catálogo de caracterización hasta una sola representante no redundante (44&nbsp;&rarr;&nbsp;1 en el corte vigente). Una galería comentada de siete figuras ilustra las decisiones &mdash;del parser tolerante y la máscara F-only a la diferenciación y el calendario cíclico&mdash;. El reporte completo es un PDF descargable &mdash;en español y en inglés&mdash; que se regenera con cada boletín nuevo.
+    </p>
+    <p>
+      <a href="/datos-historicos/#fe">Ver la ingeniería de características interactiva &rarr;</a> &middot;
+      <a href="/data/fe_report.pdf" target="_blank" rel="noopener">Descargar el reporte FE (PDF)</a> &middot;
+      <a href="/data/fe_report_en.pdf" target="_blank" rel="noopener">FE report (PDF, English)</a>
     </p>
   </div>
 </section>

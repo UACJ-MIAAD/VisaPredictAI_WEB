@@ -81,6 +81,7 @@ export const ROUTES: Route[] = [
     sections: [
       { id: "boletines", label: "Boletines en vivo", labelEn: "Live bulletins" },
       { id: "eda", label: "Análisis exploratorio", labelEn: "Exploratory analysis" },
+      { id: "fe", label: "Ingeniería de características", labelEn: "Feature engineering" },
       { id: "historico", label: "Explorador histórico", labelEn: "Historical explorer" },
     ],
   },

@@ -1,6 +1,7 @@
 import { RouteHeader } from "@/components/route-header";
 import { Boletines } from "@/components/sections/boletines";
 import { Eda } from "@/components/sections/eda";
+import { Fe } from "@/components/sections/fe";
 import { Historico } from "@/components/sections/historico";
 import { Scorecard } from "@/components/sections/scorecard";
 
@@ -12,6 +13,7 @@ export function DatosPage() {
       <Boletines />
       <Scorecard />
       <Eda />
+      <Fe />
       <Historico />
     </>
   );

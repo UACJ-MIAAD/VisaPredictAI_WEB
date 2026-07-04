@@ -3,6 +3,8 @@
 // into /data/eda_facts.json by scripts/fetch-data.mjs. Every number the EDA section
 // renders comes from here — nothing is hardcoded in the component.
 
+import { countryLabel } from "@/lib/data/visa-panel";
+
 export type EdaPanel = {
   n_obs: number;
   n_series_structural: number;
@@ -66,7 +68,9 @@ export type EdaFacts = {
   vintage: string; // "YYYY-MM"
   panel: EdaPanel;
   regime: EdaRegime;
-  stationarity_summary?: Record<string, number>;
+  // verdict -> count over the evaluable series (e.g. {difference: 71, mixed: 3});
+  // "stationary" only appears when some series is stationary in level.
+  stationarity_summary: Record<string, number>;
   series: EdaSeriesRecord[];
   retro_events: EdaRetroEvent[];
   fad_dff_gap: EdaGapEntry[];
@@ -77,6 +81,15 @@ export type EdaFacts = {
 
 // Structural check (audit 3-jul M4): a truncated/old JSON must degrade to the
 // section hiding itself (null), never to a render crash that blanks the page.
+// non-empty object whose every value is a finite number (the shape both the
+// stationarity census and the monthly-advance map must have for the captions
+// that quote them to be derivable rather than a confident "0 de 74" lie)
+function isNumericRecord(x: unknown): x is Record<string, number> {
+  if (!x || typeof x !== "object" || Array.isArray(x)) return false;
+  const vals = Object.values(x as Record<string, unknown>);
+  return vals.length > 0 && vals.every((v) => typeof v === "number" && Number.isFinite(v));
+}
+
 function isEdaFacts(x: unknown): x is EdaFacts {
   if (!x || typeof x !== "object") return false;
   const f = x as Record<string, unknown>;
@@ -88,15 +101,31 @@ function isEdaFacts(x: unknown): x is EdaFacts {
     typeof p.pct_retro === "number" &&
     !!f.regime &&
     typeof (f.regime as Record<string, unknown>).F === "number" &&
+    // audit B3: the summaries feed derived caption numbers — validate them
+    // instead of letting a truncated JSON render "0 de 74" / "entre 0 y 0"
+    isNumericRecord(f.stationarity_summary) &&
+    isNumericRecord(f.monthly_advance_median) &&
     Array.isArray(f.series) &&
     f.series.length > 0 &&
     Array.isArray(f.retro_events) &&
     Array.isArray(f.fad_dff_gap) &&
     Array.isArray(f.backlog_today) &&
-    !!f.monthly_advance_median &&
     typeof (f.dv as Record<string, unknown> | undefined)?.n_rows === "number"
   );
 }
+
+// ── shared series-label normalization (audit B4) ───────────────────────────
+// Both the gallery captions and the Recharts axes must print the SAME label
+// for the same series ("EB4_RW" → "EB-4 Rw", "México · F2A"), so the helpers
+// live here instead of being re-implemented per component.
+export const catLabel = (c: string) =>
+  c
+    .replace(/^EB(\d)/, "EB-$1")
+    .replace(/_/g, " ")
+    .replace(/ ([A-Z]{3,})/g, (m) => m.charAt(0) + m.slice(1, 2) + m.slice(2).toLowerCase());
+
+export const seriesLabel = (country: string, category: string, lang: "es" | "en") =>
+  `${countryLabel(country, lang)} · ${catLabel(category)}`;
 
 let cache: Promise<EdaFacts | null> | null = null;
 

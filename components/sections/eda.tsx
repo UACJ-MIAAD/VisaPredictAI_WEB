@@ -45,7 +45,8 @@ const T = {
     evaluable: "evaluable",
     bulletins: "complete bulletins",
     trainable: "cells with a specific date (F)",
-    download: "Download the EDA report (PDF)",
+    // the EDA report has no English variant yet (registered pendiente) — say so
+    download: "Download the EDA report (PDF, in Spanish)",
     vintageNote:
       "Report generated automatically ({vintage}); it regenerates with every new Visa Bulletin.",
     asOf: "as of",

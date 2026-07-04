@@ -20,8 +20,7 @@ import {
   Pie,
 } from "recharts";
 import { useLang } from "@/components/lang-provider";
-import { countryLabel } from "@/lib/data/visa-panel";
-import type { EdaFacts } from "@/lib/data/eda";
+import { seriesLabel, type EdaFacts } from "@/lib/data/eda";
 
 const T = {
   es: {
@@ -104,7 +103,9 @@ export default function EdaCharts({ facts }: { facts: EdaFacts }) {
   const backlog = facts.backlog_today
     .filter((b) => b.block === "family" && b.table === "FAD")
     .map((b) => ({
-      name: `${countryLabel(b.country, lang)} · ${b.category}`,
+      // audit B4: same normalized label as the gallery captions, so one series
+      // reads identically across the whole page
+      name: seriesLabel(b.country, b.category, lang),
       years: b.backlog_years,
       mexico: b.country === "mexico",
     }))
