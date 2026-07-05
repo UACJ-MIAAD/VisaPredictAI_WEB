@@ -62,18 +62,14 @@
   [headers.values]
     Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
 
-# The generated OG images have no file extension — serve them as PNG so social
-# scrapers accept them. BA7 added per-route variants (/x/opengraph-image and
-# /en/x/opengraph-image); :seg matches exactly one path segment.
+# OG-image Content-Type rules live in out/_headers (emitted per exact file by
+# scripts/build-csp.mjs postbuild): Next suffixes segment OG images with a
+# content hash that :seg patterns can't match — the toml rules served the ES
+# cards as text/plain (audit A1). Do NOT re-add pattern rules here.
+
+# Chrome tolerates application/octet-stream for the manifest; other browsers'
+# installability checks don't (audit M3).
 [[headers]]
-  for = "/opengraph-image"
+  for = "/manifest.webmanifest"
   [headers.values]
-    Content-Type = "image/png"
-[[headers]]
-  for = "/:seg/opengraph-image"
-  [headers.values]
-    Content-Type = "image/png"
-[[headers]]
-  for = "/en/:seg/opengraph-image"
-  [headers.values]
-    Content-Type = "image/png"
+    Content-Type = "application/manifest+json"

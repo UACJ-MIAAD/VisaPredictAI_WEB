@@ -109,6 +109,13 @@
   line-height: 1.55;
   margin: 0 0 2.5rem;
 }
+/* CSS ch = width of "0": 64ch renders ~85 real characters per line, which only
+   reads long at ultrawide sizes (audit) - tighten just there. */
+@media (min-width: 1920px) {
+  .section-sub {
+    max-width: 56ch;
+  }
+}
 .section-inner.center .section-sub {
   margin-left: auto;
   margin-right: auto;

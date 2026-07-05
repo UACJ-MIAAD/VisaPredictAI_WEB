@@ -216,6 +216,11 @@ const REPO_DOCS = [
   ["docs/example_queries.sql", "Consultas de ejemplo"],
   ["reports/governance/mega_audit_report.md", "Auditoría de calidad"],
   ["docs/ROADMAP.md", "Roadmap"],
+  // Audit (post-plan): the seeded suggestion "which model wins?" answered from
+  // the frozen May-2026 proposal (8 candidates) because no indexed source
+  // carried the current campaign results - the model card is their canonical,
+  // auto-regenerated home (MCS, champion, prospective scorecard).
+  ["reports/governance/MODEL_CARD.md", "Model card del modelo desplegado"],
 ];
 async function collectRepoDocs() {
   let ok = 0;

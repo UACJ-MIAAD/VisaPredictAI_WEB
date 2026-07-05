@@ -12,8 +12,8 @@
 //   - "inicio":    the home hero is a React component (components/sections/hero.tsx)
 //   - "boletines": /datos-historicos renders the live feed component
 //                  (components/sections/boletines.tsx), not the static HTML
-//   - "eda":       /datos-historicos renders components/sections/eda-gallery.tsx
-//   - "fe":        /datos-historicos renders the live FE section component
+//   - "eda":       /ingenieria renders the live EDA section (moved there in AW2)
+//   - "fe":        /ingenieria renders the live FE section (moved there in AW2)
 // (The EN side never had "inicio"/"boletines" — pruning also removes the
 //  silent ES/EN asymmetry.) If a new SectionHTML consumer appears, remove the
 // key from EXCLUDED_KEYS and re-run this script.

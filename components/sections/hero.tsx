@@ -57,7 +57,7 @@ export function Hero() {
 
         <div className="mt-7 flex flex-wrap gap-3">
           <a
-            href={`${localePath("/datos-historicos", lang)}#pronostico`}
+            href={`${localePath("/datos-historicos", lang)}/#pronostico`}
             onClick={() => track("Forecast CTA")}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
           >

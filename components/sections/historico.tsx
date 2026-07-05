@@ -33,14 +33,24 @@ export function Historico() {
   const started = React.useRef(false);
 
   React.useEffect(() => {
+    const start = () => {
+      if (started.current) return;
+      started.current = true;
+      loadPanel().then(setPanel).catch(() => setError(true));
+    };
+    // A #historico deep link may never intersect (anchor scroll fires before
+    // async sections above expand the layout) — start eagerly on hash.
+    if (window.location.hash === "#historico") {
+      start();
+      return;
+    }
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
       (es) =>
         es.forEach((e) => {
-          if (e.isIntersecting && !started.current) {
-            started.current = true;
-            loadPanel().then(setPanel).catch(() => setError(true));
+          if (e.isIntersecting) {
+            start();
             io.disconnect();
           }
         }),
