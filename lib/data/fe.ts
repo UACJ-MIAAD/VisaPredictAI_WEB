@@ -16,12 +16,16 @@ export type FeConstants = {
 };
 
 // One master decision (cleaning or FE): title + module path + rationale, all
-// authored in the data repo (Spanish source of truth, mirrored by the report).
+// authored in the data repo (Spanish source of truth). The EN fields are the
+// data repo's own translation (vp_data/decisions_i18n.py), emitted into
+// fe_facts.json — the web no longer keeps a parallel English dict (AT5).
 export type FeDecision = {
   id: string;
   title: string;
   module: string;
   rationale: string;
+  title_en?: string | null;
+  rationale_en?: string | null;
 };
 
 export type FeCleaningLedger = {
