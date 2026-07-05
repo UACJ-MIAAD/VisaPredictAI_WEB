@@ -247,6 +247,19 @@ async function collectRepoDocs() {
           "prospectiva del pronóstico. Model comparison: which model wins, deployed " +
           "champion, challenger, prospective forecast evaluation.\n\n";
         addMarkdown(name, kw + txt, url, ["es", "en"]);
+        // Lexical-only retrieval (pre-consent BM25) needs the VERDICT and the
+        // query terms in the SAME chunk: a synthetic chunk pairs the keywords
+        // with the card's evaluation section VERBATIM (no hand-typed claims —
+        // regla #0: the numbers travel with the auto-regenerated card).
+        const evalSec = txt.match(/##\s*5\.[^\n]*\n([\s\S]*?)(?=\n##\s|$)/);
+        if (evalSec) {
+          const evalText = (kw + evalSec[1]).replace(/[*_`>#|]/g, " ").replace(/[ \t]+/g, " ").trim();
+          for (const lang of ["es", "en"])
+            add({ lang, kind: "docs", source: `Repo · ${name}`, sourceId: "ingenieria", url,
+                  title: "Evaluación — qué modelo gana / which model wins", text: evalText });
+        } else {
+          console.warn("  ! MODEL_CARD: sección 5 (Evaluación) no encontrada — chunk sintético omitido");
+        }
       } else {
         addMarkdown(name, txt, url);
       }
