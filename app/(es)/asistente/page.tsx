@@ -4,7 +4,7 @@ import { AssistantConsole } from "@/components/visabot/assistant-console";
 export const metadata = pageMeta({
   path: "/asistente",
   lang: "es",
-  title: "Asistente",
+  title: "Asistente del Visa Bulletin (VisaBot)",
   description:
     "VisaBot: consola conversacional con recuperación aumentada (RAG) sobre la documentación del proyecto, gráficos de datos reales y respuestas citadas.",
 });

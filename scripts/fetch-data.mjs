@@ -12,6 +12,9 @@ const RAW = "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main";
 const OUT = join(process.cwd(), "public", "data");
 const FILES = [
   { url: `${RAW}/data/processed/visa_panel_long.csv`, out: "visa_panel_long.csv", critical: true },
+  // AZ8b — the live-bulletins feed, mirrored at build time so the Boletines
+  // section has a same-origin fallback when the remote raw host is blocked.
+  { url: `${RAW}/data/processed/bulletins.json`, out: "bulletins.json", critical: false },
   { url: `${RAW}/reports/prospective/web_forecasts.csv`, out: "forecasts.csv", critical: false },
   { url: `${RAW}/reports/prospective/web_forecasts_meta.json`, out: "forecasts_meta.json", critical: false },
   { url: `${RAW}/reports/prospective/forecast_scorecard_meta.json`, out: "forecast_scorecard.json", critical: false },
@@ -60,6 +63,11 @@ for (const [dir, names] of [["eda", GALLERY], ["fe", FE_GALLERY]]) {
 
 const exists = async (p) => access(p).then(() => true).catch(() => false);
 
+// AZ3a — track which gallery PNGs actually changed bytes this run, so the
+// AVIF/WebP derivation below only re-encodes what moved (or what has no
+// variants yet — first run over the committed fallbacks).
+const pngChanged = new Set();
+
 let fresh = 0;
 for (const f of FILES) {
   const dest = join(OUT, f.out);
@@ -77,6 +85,10 @@ for (const f of FILES) {
     if (dest.endsWith(".json")) JSON.parse(body.toString("utf8"));
     if (dest.endsWith(".png") && !(body[0] === 0x89 && body[1] === 0x50)) throw new Error("not a PNG");
     if (dest.endsWith(".pdf") && body.subarray(0, 5).toString() !== "%PDF-") throw new Error("not a PDF");
+    if (dest.endsWith(".png")) {
+      const prev = await readFile(dest).catch(() => null);
+      if (!prev || !prev.equals(body)) pngChanged.add(f.out);
+    }
     await writeFile(dest, body);
     fresh++;
     console.log(`  ✓ ${f.out} ← data repo (${(body.length / 1024).toFixed(0)} kB)`);
@@ -114,3 +126,51 @@ for (const rel of galleryPaths) {
 }
 await writeFile(join(OUT, "fig_dims.json"), JSON.stringify(dims, null, 1) + "\n");
 console.log(`fetch-data: fig_dims.json → ${Object.keys(dims).length} figures measured`);
+
+// ── AZ3a: modern image variants (AVIF + WebP) next to every gallery PNG ─────
+// Naming contract for the <picture> phase: for each `<name>.png` there is a
+// `<name>.avif` and a `<name>.webp` IN THE SAME DIRECTORY (all four
+// language × theme variants included). Variants of the committed fallbacks are
+// committed too; fresh fetches re-encode only the PNGs whose bytes changed.
+// sharp is a devDependency of the build — if it is ever unavailable the build
+// still succeeds and the PNGs simply ship alone.
+let sharp = null;
+try {
+  sharp = (await import("sharp")).default;
+} catch {
+  console.warn("fetch-data: sharp unavailable — skipping AVIF/WebP variants");
+}
+if (sharp) {
+  const jobs = [];
+  for (const rel of galleryPaths) {
+    const png = join(OUT, rel);
+    if (!(await exists(png))) continue; // fetch failed and no fallback
+    const avif = png.replace(/\.png$/, ".avif");
+    const webp = png.replace(/\.png$/, ".webp");
+    const changed = pngChanged.has(rel);
+    const missing = !(await exists(avif)) || !(await exists(webp));
+    if (!changed && !missing) continue;
+    jobs.push(async () => {
+      const src = sharp(png);
+      await Promise.all([
+        src.clone().avif({ quality: 55, effort: 4 }).toFile(avif),
+        src.clone().webp({ quality: 78 }).toFile(webp),
+      ]);
+    });
+  }
+  // small pool — AVIF encoding is CPU-bound; 4-wide keeps CI times sane.
+  let converted = 0;
+  const queue = [...jobs];
+  await Promise.all(
+    Array.from({ length: 4 }, async () => {
+      for (let job = queue.shift(); job; job = queue.shift()) {
+        await job();
+        converted++;
+      }
+    }),
+  );
+  console.log(
+    `fetch-data: image variants → ${converted} PNGs (re)encoded to AVIF+WebP, ` +
+      `${galleryPaths.length - converted} already current`,
+  );
+}
