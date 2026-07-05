@@ -16,7 +16,7 @@
 // Network failures degrade gracefully (local content always yields an index).
 // Run: npm run build:rag   (also runs in `prebuild`)
 // ─────────────────────────────────────────────────────────────────────────
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -405,16 +405,29 @@ function buildPrompts() {
 }
 
 // ── self-host the ONNX-runtime wasm (CSP-clean; Transformers.js defaults to a
-//    CDN). Copy the single-thread JSEP build the browser loads from /ort/. ─────
+//    CDN). Copy ONLY the asyncify build: transformers.js imports
+//    `onnxruntime-web/webgpu`, whose loader requests
+//    ort-wasm-simd-threaded.asyncify.{mjs,wasm} from env.wasm.wasmPaths
+//    ("/ort/", see components/visabot/engine.ts). The jsep build was ~26 MB of
+//    dead weight the runtime never fetched (AZ2). Stale files are pruned so
+//    the Netlify build cache (netlify-plugin-cache persists public/ort) can't
+//    resurrect them. ──────────────────────────────────────────────────────────
 function copyOrtWasm() {
   const src = join(root, "node_modules", "onnxruntime-web", "dist");
   const dst = join(root, "public", "ort");
+  const KEEP = /^ort-wasm-simd-threaded\.asyncify\.(wasm|mjs)$/;
   mkdirSync(dst, { recursive: true });
   let n = 0;
   for (const f of readdirSync(src)) {
-    if (/^ort-wasm-simd-threaded\.(jsep|asyncify)\.(wasm|mjs)$/.test(f)) {
+    if (KEEP.test(f)) {
       copyFileSync(join(src, f), join(dst, f));
       n++;
+    }
+  }
+  for (const f of readdirSync(dst)) {
+    if (!KEEP.test(f)) {
+      unlinkSync(join(dst, f));
+      console.log(`  ort wasm: pruned stale ${f}`);
     }
   }
   console.log(`  ort wasm: ${n} files → public/ort/`);

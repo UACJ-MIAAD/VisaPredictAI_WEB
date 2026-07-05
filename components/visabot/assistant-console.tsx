@@ -1,9 +1,18 @@
 "use client";
 
+// Full-page VisaBot console (/asistente). Chat state lives in the shared
+// useVisabotChat hook and the thread rendering in <ChatThread/> (BB1); this
+// file keeps the console's own UI: sidebar (KPIs, context selects, chart
+// tools), modals, and the chart pipeline. Intentional divergences vs the
+// floating widget:
+//   • charts ARE rendered here (surface "console" — the proxy prompt allows
+//     it) and every query goes through chartForQuery via the hook's prepare;
+//   • analytics events carry surface: "console";
+//   • retrieval failures don't abort the answer (a chart can still ground it).
 import * as React from "react";
 import dynamic from "next/dynamic";
 import {
-  Sparkles, Send, Square, Copy, Check, Loader2, ArrowDown, RotateCcw, BookOpen,
+  Sparkles, Send, Square, ArrowDown, RotateCcw, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
   Lightbulb, Database, Cpu, Quote, CalendarDays, AreaChart as ForecastIcon,
@@ -19,8 +28,10 @@ import { tr } from "@/lib/i18n";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
-import { retrieve, generate, warmUp, isModelReady } from "./engine";
-import type { ChatMessage, ChartPayload, Source } from "./types";
+import { ChatThread } from "./chat-thread";
+import { SemanticConsent } from "./semantic-consent";
+import { useVisabotChat } from "./use-visabot-chat";
+import type { ChartPayload, Source } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import {
@@ -100,12 +111,6 @@ export function AssistantConsole() {
   const [forecasts, setForecasts] = React.useState<ForecastStore | null>(null);
   const [panelErr, setPanelErr] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
-  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
-  const [input, setInput] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [ready, setReady] = React.useState(false);
-  const [copied, setCopied] = React.useState<number | null>(null);
-  const [atBottom, setAtBottom] = React.useState(true);
   const [navOpen, setNavOpen] = React.useState(false); // mobile sidebar drawer
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
@@ -124,53 +129,9 @@ export function AssistantConsole() {
   const [month, setMonth] = React.useState("");
   const months = React.useMemo(() => panel ? [...new Set(panel.rows.map((r) => r.bulletinMonth))].sort().reverse() : [], [panel]);
 
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLTextAreaElement>(null);
-  const abortRef = React.useRef<AbortController | null>(null);
-
-  React.useEffect(() => {
-    warmUp();
-    loadPanel().then(setPanel).catch(() => setPanelErr(true));
-    loadForecasts().then(setForecasts).catch(() => {}); // real model forecasts (fallback handled inside buildForecast)
-    fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions(d[lang] || [])).catch(() => {});
-    fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts(d[lang] || [])).catch(() => {});
-    const iv = setInterval(() => { if (isModelReady()) { setReady(true); clearInterval(iv); } }, 600);
-    return () => clearInterval(iv);
-  }, [lang]);
-
-  React.useEffect(() => {
-    if (!panel) return;
-    if (!panel.countries.includes(country)) setCountry(panel.countries.includes("mexico") ? "mexico" : panel.countries[0]);
-    if (!panel.categories.includes(category)) setCategory(panel.categories.includes("F3") ? "F3" : panel.categories[0]);
-    if (!panel.tables.includes(table)) setTable(panel.tables.includes("FAD") ? "FAD" : panel.tables[0]);
-    if (!month && months.length) setMonth(months[0]);
-  }, [panel]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => { if (atBottom) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, atBottom]);
-  React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setNavOpen(false); setHowOpen(false); setPromptsOpen(false); } };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  const onScroll = () => { const el = scrollRef.current; if (el) setAtBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 60); };
-
-  const send = React.useCallback(async (text: string) => {
-    const q = text.trim();
-    if (!q || busy) return;
-    setInput(""); setBusy(true); setNavOpen(false);
-    track("VisaBot Query", { lang, surface: "console" });
-    const history = messages.map((m) => ({ role: m.role, content: m.content }));
-    setMessages((m) => [...m, { role: "user", content: q }, { role: "assistant", content: "" }]);
-    // Época 3.1: history-aware retrieval — augment clear follow-ups ("¿y India?")
-    // with the previous user turn; fresh questions (>3 words, no marker) untouched.
-    const isFollowUp = /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) || q.split(/\s+/).length <= 3;
-    const prevUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-    const rq = isFollowUp && prevUser ? `${prevUser} ${q}` : q;
-    let sources: Source[] = [];
-    try { sources = await retrieve(rq, lang, 6); } catch { /* conversational */ }
-    // use the follow-up-augmented query (rq) so "FAD" after "zoom india F1" still
-    // resolves country+category+intent for the chart, not just the bare word.
+  // console-only: build the chart for the query and prepend its synthetic
+  // grounding sources so the LLM interprets the rendered chart / month table.
+  const prepare = React.useCallback((rq: string, sources: Source[]): { sources: Source[]; chart?: ChartPayload } => {
     const chart = panel ? chartForQuery(rq, panel, lang, forecasts) : null;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full 2001→2026 panel.
@@ -186,21 +147,39 @@ export function AssistantConsole() {
         sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: localePath("/asistente", lang), text: note },
           ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     }
-    const ctrl = new AbortController(); abortRef.current = ctrl;
-    try {
-      const res = await generate(q, history, sources, lang,
-        (delta) => setMessages((m) => { const c = [...m]; const l = c[c.length - 1]; c[c.length - 1] = { ...l, content: l.content + delta }; return c; }),
-        ctrl.signal, "console");
-      setMessages((m) => { const c = [...m]; c[c.length - 1] = { role: "assistant", content: res.text, sources, extractive: res.extractive, chart: chart || undefined }; return c; });
-      if (res.extractive) track("VisaBot Fallback", { lang, surface: "console" });
-    } catch {
-      setMessages((m) => { const c = [...m]; const l = c[c.length - 1]; c[c.length - 1] = { ...l, content: l.content || tr(lang, "vbError"), chart: chart || undefined }; return c; });
-    } finally { setBusy(false); abortRef.current = null; }
-  }, [busy, lang, messages, panel, forecasts]);
+    return { sources, chart: chart || undefined };
+  }, [panel, lang, forecasts]);
 
-  const stop = () => { abortRef.current?.abort(); abortRef.current = null; setBusy(false); };
-  const newChat = () => { stop(); setMessages([]); inputRef.current?.focus(); };
-  const copy = (i: number, text: string) => { navigator.clipboard?.writeText(text); setCopied(i); setTimeout(() => setCopied((c) => (c === i ? null : c)), 1600); };
+  const {
+    messages, setMessages, input, setInput, busy, send, stop, newChat, copy, copiedId,
+    atBottom, setAtBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
+    semantic, modelReady, constrained, enableSemantic,
+  } = useVisabotChat({ lang, surface: "console", prepare });
+
+  // sending from anywhere in the console also closes the mobile drawer
+  const sendQ = React.useCallback((t: string) => { setNavOpen(false); void send(t); }, [send]);
+
+  React.useEffect(() => {
+    warm();
+    loadPanel().then(setPanel).catch(() => setPanelErr(true));
+    loadForecasts().then(setForecasts).catch(() => {}); // real model forecasts (fallback handled inside buildForecast)
+    fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions(d[lang] || [])).catch(() => {});
+    fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts(d[lang] || [])).catch(() => {});
+  }, [lang, warm]);
+
+  React.useEffect(() => {
+    if (!panel) return;
+    if (!panel.countries.includes(country)) setCountry(panel.countries.includes("mexico") ? "mexico" : panel.countries[0]);
+    if (!panel.categories.includes(category)) setCategory(panel.categories.includes("F3") ? "F3" : panel.categories[0]);
+    if (!panel.tables.includes(table)) setTable(panel.tables.includes("FAD") ? "FAD" : panel.tables[0]);
+    if (!month && months.length) setMonth(months[0]);
+  }, [panel]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setNavOpen(false); setHowOpen(false); setPromptsOpen(false); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table" | "forecast") => {
     if (!panel) return;
@@ -274,7 +253,7 @@ export function AssistantConsole() {
           <h3 className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">{tr(lang, "acQuick")}</h3>
           <div className="flex flex-col gap-1.5">
             {suggestions.map((s) => (
-              <button key={s} onClick={() => send(s)} className="vb-suggest flex items-center gap-2 text-left text-[0.8rem]">
+              <button key={s} onClick={() => sendQ(s)} className="vb-suggest flex items-center gap-2 text-left text-[0.8rem]">
                 <BookOpen className="h-3.5 w-3.5 shrink-0 text-[var(--color-accent)]" aria-hidden />
                 <span>{s}</span>
               </button>
@@ -297,8 +276,8 @@ export function AssistantConsole() {
         <div className="min-w-0">
           <div className="font-serif text-sm font-bold leading-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</div>
           <div className="flex items-center gap-1.5 text-[0.58rem] uppercase tracking-wide text-[var(--color-muted)]">
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${ready ? "bg-[var(--color-success)]" : "bg-[var(--color-accent-2)]"}`} />
-            {ready ? tr(lang, "vbEngineReady") : tr(lang, "vbLoadingEngine")}
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${modelReady ? "bg-[var(--color-success)]" : semantic ? "bg-[var(--color-accent-2)]" : "bg-[var(--color-muted)]"}`} />
+            {modelReady ? tr(lang, "vbEngineReady") : semantic ? tr(lang, "vbLoadingEngine") : tr(lang, "vbSemanticOff")}
           </div>
         </div>
         <div className="flex-1" />
@@ -347,7 +326,7 @@ export function AssistantConsole() {
                       keep the blue "¿Qué puedes preguntar?" button below as the entry point */}
                   <div className="hidden flex-wrap gap-2 pt-1 sm:flex">
                     {suggestions.slice(0, 4).map((s) => (
-                      <button key={s} onClick={() => send(s)} className="vb-suggest text-[0.8rem]">{s}</button>
+                      <button key={s} onClick={() => sendQ(s)} className="vb-suggest text-[0.8rem]">{s}</button>
                     ))}
                   </div>
                   {prompts.length > 0 && (
@@ -357,49 +336,37 @@ export function AssistantConsole() {
                   )}
                 </div>
               ) : (
-                messages.map((m, i) =>
-                  m.role === "user" ? (
-                    <div key={i} className="flex justify-end"><div className="vb-bubble vb-user">{m.content}</div></div>
-                  ) : (
-                    <div key={i} className="group/msg min-w-0 space-y-2">
-                      <div className="vb-bubble vb-bot min-w-0 max-w-full overflow-hidden">
-                        {m.content ? <Markdown text={m.content} sources={m.sources} /> : (
-                          <span className="flex items-center gap-2 text-[var(--color-muted)]"><Loader2 className="h-4 w-4 animate-spin" aria-hidden />{tr(lang, "vbThinking")}</span>
-                        )}
-                        {m.chart && <VisaChart spec={m.chart} />}
-                        {m.extractive && m.content && <p className="mt-2 text-[0.68rem] italic text-[var(--color-muted)]">{tr(lang, "vbExtractiveNote")}</p>}
-                      </div>
-                      {m.sources && m.sources.some((s) => m.content.includes(`[${s.n}]`)) && (
-                        <div className="flex flex-wrap items-center gap-1.5 pl-1">
-                          <span className="text-[0.62rem] uppercase tracking-wide text-[var(--color-muted)]">{tr(lang, "vbSources")}:</span>
-                          {m.sources.filter((s) => m.content.includes(`[${s.n}]`)).map((s) => (
-                            <a key={s.n} href={s.url} onClick={() => track("VisaBot Source Click", { lang, source: s.source })} className="vb-chip" title={`${s.source}${s.title ? " — " + s.title : ""}`}>[{s.n}] {s.source}</a>
-                          ))}
-                        </div>
-                      )}
-                      {m.content && (
-                        <div className="flex gap-1 pl-1 opacity-0 transition group-hover/msg:opacity-100">
-                          <button onClick={() => copy(i, m.content)} className="vb-iconbtn" aria-label={tr(lang, "vbCopy")} title={tr(lang, "vbCopy")}>{copied === i ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}</button>
-                        </div>
-                      )}
-                    </div>
-                  ),
-                )
+                <ChatThread
+                  lang={lang}
+                  variant="console"
+                  messages={messages}
+                  copiedId={copiedId}
+                  onCopy={copy}
+                  renderChart={(chart) => <VisaChart spec={chart} />}
+                />
               )}
             </div>
           </div>
 
           {!atBottom && (
-            <button onClick={() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })} aria-label={tr(lang, "vbScrollDown")} className="absolute bottom-24 left-1/2 z-10 -translate-x-1/2 rounded-full border border-border bg-[var(--color-surface)] p-2 shadow-md">
+            <button onClick={scrollToBottom} aria-label={tr(lang, "vbScrollDown")} className="absolute bottom-24 left-1/2 z-10 -translate-x-1/2 rounded-full border border-border bg-[var(--color-surface)] p-2 shadow-md">
               <ArrowDown className="h-4 w-4" aria-hidden />
             </button>
           )}
 
+          {/* AZ1 — semantic engine consent (no ~150 MB download without a gesture) */}
+          <SemanticConsent
+            lang={lang}
+            semantic={semantic}
+            constrained={constrained}
+            onEnable={() => enableSemantic()}
+          />
+
           <div className="border-t border-border bg-[var(--color-surface)] px-4 py-3 sm:px-6">
-            <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="mx-auto flex max-w-[820px] items-end gap-2">
+            <form onSubmit={(e) => { e.preventDefault(); sendQ(input); }} className="mx-auto flex max-w-[820px] items-end gap-2">
               <textarea
                 ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendQ(input); } }}
                 rows={1} placeholder={tr(lang, "vbPlaceholder")}
                 className="vb-input max-h-40 flex-1 resize-none rounded-xl border border-border bg-[var(--color-bg)] px-3 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)] focus:outline-none"
                 onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }}
@@ -460,7 +427,7 @@ export function AssistantConsole() {
                     <h3 className="mb-2 flex items-center gap-2 text-sm font-bold text-[var(--color-ink)]"><Icon className="h-4 w-4 text-[var(--color-accent)]" aria-hidden /> {p.cat}</h3>
                     <div className="flex flex-wrap gap-2">
                       {p.items.map((q) => (
-                        <button key={q} onClick={() => { setPromptsOpen(false); send(q); }} className="vb-suggest text-[0.82rem]">{q}</button>
+                        <button key={q} onClick={() => { setPromptsOpen(false); sendQ(q); }} className="vb-suggest text-[0.82rem]">{q}</button>
                       ))}
                     </div>
                   </div>
