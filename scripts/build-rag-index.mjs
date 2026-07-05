@@ -221,7 +221,7 @@ const REPO_DOCS = [
   // the frozen May-2026 proposal (8 candidates) because no indexed source
   // carried the current campaign results - the model card is their canonical,
   // auto-regenerated home (MCS, champion, prospective scorecard).
-  ["reports/governance/MODEL_CARD.md", "Model card del modelo desplegado"],
+  ["reports/governance/MODEL_CARD.md", "Model card · modelo campeón desplegado, cuál gana y evaluación"],
 ];
 async function collectRepoDocs() {
   let ok = 0;
