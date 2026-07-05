@@ -125,4 +125,18 @@ const run = (deltas, lang = "es") => {
   assert.ok(out.includes("Consulta el boletín oficial."), "prose survives");
 }
 
-console.log("✓ code-guard: 15/15 passed");
+// 16) Model-Confidence-Set notation must NOT trip the code guard: two
+// consecutive lines ending in `}` cut the flagship answer mid-stream (audit r2)
+{
+  const { out, blocked } = run(["- FAD = {naive1}\n", "- DFF = {naive1}\n", "según Friedman–Nemenyi."]);
+  assert.equal(blocked, false, "set notation blocked");
+  assert.ok(out.includes("{naive1}"), "set notation emitted");
+}
+
+// 17) …but real code lines ending in braces still block
+{
+  const { out, blocked } = run(["function f() {\n", "  return 1; }\n", "listo"]);
+  assert.equal(blocked, true, "real code not blocked");
+}
+
+console.log("✓ code-guard: 17/17 passed");
