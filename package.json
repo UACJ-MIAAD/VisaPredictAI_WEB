@@ -18,6 +18,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "pretest": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\"",
     "test": "vitest run",
     "guard:test": "node scripts/test-code-guard.mjs"
   },
