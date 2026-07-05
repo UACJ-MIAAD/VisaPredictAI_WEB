@@ -36,51 +36,77 @@ const GRID = "color-mix(in srgb, var(--color-border) 70%, transparent)";
 // null — so one named, documented cast instead of inline magic at each usage.
 const HIDE_TOOLTIP_ROW = [null, null] as unknown as [string, string];
 
-// Compare-two-bulletins renderer: a summary strip + a category×country grid of
-// signed transition badges (▲ advance / ▼ retrogression / →C / →U / new). Kept
-// as a typed sub-component so `spec` stays narrowed to the bulletinDiff variant.
+// Compare-two-bulletins renderer: the two bulletins side by side per cell —
+// "value in month A → value in month B" — with the change signalled by colour +
+// arrow, and only changed cells highlighted so the comparison reads as two
+// distinct bulletins (not a single merged table). Kept as a typed sub-component
+// so `spec` stays narrowed to the bulletinDiff variant.
+type DiffCell = import("@/lib/visabot/analytics").DiffCell;
 function BulletinDiffView({ spec, lang }: { spec: Extract<ChartSpec, { kind: "bulletinDiff" }>; lang: "es" | "en" }) {
   const su = spec.summary;
-  const yrU = lang === "en" ? "y" : "a";
-  const fmtDelta = (d: number) => { const a = Math.abs(d); const s = a >= 365 ? `${(d / 365.25).toFixed(1)}${yrU}` : `${d}d`; return d > 0 ? `+${s}` : s; };
-  const stLabel = (status: string, date: string | null) =>
-    status === "C" ? "Current" : status === "U" ? (lang === "en" ? "Unavailable" : "No disp.") : date || "—";
-  const GREEN = { fg: "var(--color-success)", bg: "color-mix(in srgb, var(--color-success) 15%, transparent)" };
-  const RED = { fg: "var(--color-danger)", bg: "color-mix(in srgb, var(--color-danger) 15%, transparent)" };
-  const cellView = (cell: import("@/lib/visabot/analytics").DiffCell): { txt: string; fg: string; bg: string } => {
-    switch (cell.kind) {
-      case "advance": return { txt: `▲ ${fmtDelta(cell.days as number)}`, ...GREEN };
-      case "retro": return { txt: `▼ ${fmtDelta(cell.days as number)}`, ...RED };
-      case "toCurrent": return { txt: "→ C", ...GREEN };
-      case "fromUnavailable": return { txt: "U →", ...GREEN };
-      case "fromCurrent": return { txt: "C →", ...RED };
-      case "toUnavailable": return { txt: "→ U", ...RED };
-      case "appeared": return { txt: lang === "en" ? "new" : "nuevo", fg: "var(--color-accent)", bg: "color-mix(in srgb, var(--color-accent) 12%, transparent)" };
-      case "flat": return { txt: "=", fg: "var(--color-muted)", bg: "transparent" };
-      default: return { txt: "—", fg: "var(--color-muted)", bg: "transparent" };
-    }
+  const en = lang === "en";
+  const yrU = en ? "y" : "a";
+  const M = MON_ABBR[lang] || MON_ABBR.es;
+  const SUCCESS = "var(--color-success)", DANGER = "var(--color-danger)", ACCENT = "var(--color-accent)";
+  const fmtDelta = (d: number) => { const a = Math.abs(d); const s = a >= 365 ? `${(d / 365.25).toFixed(1)}${yrU}` : `${d} d`; return d > 0 ? `+${s}` : s; };
+  const mLabel = (m: string) => { const [y, mo] = m.split("-").map(Number); return `${M[mo - 1]} ${y}`; };
+  const short = (d: string | null) => { if (!d) return "—"; const [y, mo] = d.split("-").map(Number); return `${M[mo - 1]} ${y}`; };
+  const val = (status: string, date: string | null) => (status === "C" ? "Current" : status === "U" ? (en ? "Unavail." : "No disp.") : short(date));
+  const fullVal = (status: string, date: string | null) => (status === "C" ? "Current" : status === "U" ? (en ? "Unavailable" : "No disponible") : date ? fmtDate(date, lang) : "—");
+  // per-kind glyph + colour of the transition
+  const META: Record<string, { glyph: string; color: string }> = {
+    advance: { glyph: "▲", color: SUCCESS }, retro: { glyph: "▼", color: DANGER },
+    toCurrent: { glyph: "→", color: SUCCESS }, fromUnavailable: { glyph: "→", color: SUCCESS },
+    fromCurrent: { glyph: "→", color: DANGER }, toUnavailable: { glyph: "→", color: DANGER },
+    appeared: { glyph: "→", color: ACCENT },
+  };
+  const Chip = ({ cell }: { cell: DiffCell }) => {
+    const tip = `${mLabel(spec.monthA)}: ${fullVal(cell.fromStatus, cell.fromDate)}  →  ${mLabel(spec.monthB)}: ${fullVal(cell.toStatus, cell.toDate)}${(cell.kind === "advance" || cell.kind === "retro") && cell.days != null ? ` · ${fmtDelta(cell.days)}` : ""}`;
+    if (cell.kind === "flat") return <span title={tip} className="tabular-nums text-[var(--color-muted)]">{val(cell.toStatus, cell.toDate)}</span>;
+    if (cell.kind === "disappeared" || cell.kind === "na") return <span className="text-[var(--color-muted)]">—</span>;
+    const m = META[cell.kind];
+    return (
+      <span title={tip} className="inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 tabular-nums" style={{ background: `color-mix(in srgb, ${m.color} 13%, transparent)` }}>
+        <span className="text-[var(--color-muted)]">{val(cell.fromStatus, cell.fromDate)}</span>
+        <span style={{ color: m.color }} aria-hidden>{m.glyph}</span>
+        <span className="font-semibold" style={{ color: m.color }}>{val(cell.toStatus, cell.toDate)}</span>
+      </span>
+    );
   };
   return (
     <>
+      {/* the two bulletins being compared, front and centre */}
+      <div className="mb-2 flex items-center gap-2 text-[0.78rem] font-semibold">
+        <span className="rounded-md bg-[var(--color-surface-soft)] px-2 py-0.5 text-[var(--color-ink)]">{mLabel(spec.monthA)}</span>
+        <span className="text-[var(--color-muted)]" aria-hidden>→</span>
+        <span className="rounded-md bg-[var(--color-surface-soft)] px-2 py-0.5 text-[var(--color-ink)]">{mLabel(spec.monthB)}</span>
+        <span className="text-[0.66rem] font-normal text-[var(--color-muted)]">· {spec.tableType}</span>
+      </div>
+      {/* summary strip */}
       <div className="mb-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[0.72rem] font-medium">
-        <span style={{ color: "var(--color-success)" }}>▲ {su.advanced} {lang === "en" ? "advanced" : "avanzaron"}</span>
-        <span style={{ color: "var(--color-danger)" }}>▼ {su.retrogressed} {lang === "en" ? "retrogressed" : "retrocedieron"}</span>
-        {su.toCurrent > 0 && <span style={{ color: "var(--color-success)" }}>→C {su.toCurrent}</span>}
-        {su.toUnavailable > 0 && <span style={{ color: "var(--color-danger)" }}>→U {su.toUnavailable}</span>}
-        <span style={{ color: "var(--color-muted)" }}>= {su.unchanged} {lang === "en" ? "unchanged" : "sin cambio"}</span>
+        <span style={{ color: SUCCESS }}>▲ {su.advanced} {en ? "advanced" : "avanzaron"}</span>
+        <span style={{ color: DANGER }}>▼ {su.retrogressed} {en ? "retrogressed" : "retrocedieron"}</span>
+        {su.toCurrent > 0 && <span style={{ color: SUCCESS }}>→ Current {su.toCurrent}</span>}
+        {su.toUnavailable > 0 && <span style={{ color: DANGER }}>→ {en ? "Unavail." : "No disp."} {su.toUnavailable}</span>}
+        <span className="text-[var(--color-muted)]">= {su.unchanged} {en ? "unchanged" : "sin cambio"}</span>
       </div>
       {(su.topAdvance || su.topRetro) && (
         <p className="mb-2 text-[0.7rem] text-[var(--color-muted)]">
-          {su.topAdvance && <>{lang === "en" ? "Biggest advance" : "Mayor avance"}: <b className="text-[var(--color-ink)]">{su.topAdvance.cat} {countryLabel(su.topAdvance.country, lang)}</b> {fmtDelta(su.topAdvance.days)}. </>}
-          {su.topRetro && <>{lang === "en" ? "Biggest retrogression" : "Mayor retroceso"}: <b className="text-[var(--color-ink)]">{su.topRetro.cat} {countryLabel(su.topRetro.country, lang)}</b> {fmtDelta(su.topRetro.days)}.</>}
+          {su.topAdvance && <>{en ? "Biggest advance" : "Mayor avance"}: <b className="text-[var(--color-ink)]">{su.topAdvance.cat} {countryLabel(su.topAdvance.country, lang)}</b> {fmtDelta(su.topAdvance.days)}. </>}
+          {su.topRetro && <>{en ? "Biggest retrogression" : "Mayor retroceso"}: <b className="text-[var(--color-ink)]">{su.topRetro.cat} {countryLabel(su.topRetro.country, lang)}</b> {fmtDelta(su.topRetro.days)}.</>}
         </p>
       )}
+      <p className="mb-2 text-[0.68rem] leading-snug text-[var(--color-muted)]">
+        {en
+          ? <>Each cell shows the cutoff in <b className="text-[var(--color-ink)]">{mLabel(spec.monthA)}</b> → <b className="text-[var(--color-ink)]">{mLabel(spec.monthB)}</b>. Unchanged cells show a single value; only what moved is highlighted.</>
+          : <>Cada celda muestra el corte en <b className="text-[var(--color-ink)]">{mLabel(spec.monthA)}</b> → <b className="text-[var(--color-ink)]">{mLabel(spec.monthB)}</b>. Las celdas sin cambio muestran un solo valor; solo se resalta lo que se movió.</>}
+      </p>
       <div className="relative">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[34rem] border-collapse text-[0.74rem]">
+          <table className="w-full min-w-[42rem] border-collapse text-[0.74rem]">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 text-left font-semibold text-[var(--color-muted)]">{lang === "en" ? "Category" : "Categoría"}</th>
+                <th className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 text-left font-semibold text-[var(--color-muted)]">{en ? "Category" : "Categoría"}</th>
                 {spec.countries.map((c) => (
                   <th key={c} className="px-2 py-1.5 text-center font-semibold text-[var(--color-ink)] whitespace-nowrap">{countryLabel(c, lang)}</th>
                 ))}
@@ -95,16 +121,9 @@ function BulletinDiffView({ spec, lang }: { spec: Extract<ChartSpec, { kind: "bu
                   {sec.rows.map((r) => (
                     <tr key={r.cat} className="border-t border-border">
                       <td className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 font-semibold text-[var(--color-ink)] whitespace-nowrap">{r.cat}</td>
-                      {r.cells.map((cell, ci) => {
-                        const v = cellView(cell);
-                        return (
-                          <td key={ci} className="px-1.5 py-1.5 text-center">
-                            <span title={`${stLabel(cell.fromStatus, cell.fromDate)} → ${stLabel(cell.toStatus, cell.toDate)}`}
-                              className="inline-block rounded px-1.5 py-0.5 font-mono text-[0.66rem] font-semibold tabular-nums whitespace-nowrap"
-                              style={{ color: v.fg, background: v.bg }}>{v.txt}</span>
-                          </td>
-                        );
-                      })}
+                      {r.cells.map((cell, ci) => (
+                        <td key={ci} className="px-1.5 py-1.5 text-center"><Chip cell={cell} /></td>
+                      ))}
                     </tr>
                   ))}
                 </React.Fragment>
@@ -113,6 +132,14 @@ function BulletinDiffView({ spec, lang }: { spec: Extract<ChartSpec, { kind: "bu
           </table>
         </div>
         <div className="pointer-events-none absolute right-0 top-0 h-full w-7 bg-gradient-to-l from-[var(--color-bg)] to-transparent sm:hidden" aria-hidden />
+      </div>
+      {/* legend */}
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.64rem] text-[var(--color-muted)]">
+        <span><span style={{ color: SUCCESS }}>▲</span> {en ? "advance" : "avance"}</span>
+        <span><span style={{ color: DANGER }}>▼</span> {en ? "retrogression" : "retroceso"}</span>
+        <span><span style={{ color: SUCCESS }}>→ Current</span> {en ? "became current" : "pasó a current"}</span>
+        <span><span style={{ color: DANGER }}>→ {en ? "Unavail." : "No disp."}</span> {en ? "became unavailable" : "no disponible"}</span>
+        <span>= {en ? "no change" : "sin cambio"}</span>
       </div>
       <p className="mt-1.5 flex items-center gap-1 text-[0.66rem] text-[var(--color-muted)] sm:hidden">
         <span aria-hidden>↔</span> {tr(lang, "acTableSwipe")}
