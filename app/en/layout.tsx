@@ -1,11 +1,18 @@
-import type { Metadata } from "next";
 import { SiteShell } from "@/components/site-shell";
+import { siteJsonLd } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  description:
-    "MIAAD UACJ thesis proposal. Predicting priority dates in the U.S. Visa Bulletin by country or chargeability area, immigration category and table type. Multi-series panel y_{p,c,b,t}, CRISP-DM methodology, 95% prediction intervals.",
-};
+// BA8: no layout-level description here — every page already sets its own via
+// pageMeta(), so a layout description only shadowed it asymmetrically vs (es).
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <SiteShell lang="en">{children}</SiteShell>;
+  return (
+    <>
+      {/* BA7: locale-scoped structured data (inLanguage/url = en). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: siteJsonLd("en") }}
+      />
+      <SiteShell lang="en">{children}</SiteShell>
+    </>
+  );
 }

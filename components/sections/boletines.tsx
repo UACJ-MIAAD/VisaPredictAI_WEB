@@ -9,6 +9,23 @@ import { tr } from "@/lib/i18n";
 
 const FEED =
   "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main/data/processed/bulletins.json";
+// AZ8b — same-origin mirror, refreshed at build by scripts/fetch-data.mjs (plus
+// a committed fallback): if the raw host is blocked/unreachable the section
+// still renders the feed as of the last deploy.
+const FEED_FALLBACK = "/data/bulletins.json";
+
+const fetchFeed = async (): Promise<Feed> => {
+  for (const url of [FEED, FEED_FALLBACK]) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(String(r.status));
+      return (await r.json()) as Feed;
+    } catch {
+      // try the next source
+    }
+  }
+  throw new Error("bulletins feed unavailable");
+};
 
 type Row = {
   country: string;
@@ -57,12 +74,8 @@ export function Boletines() {
         es.forEach((e) => {
           if (e.isIntersecting && !loaded.current) {
             loaded.current = true;
-            fetch(FEED)
-              .then((r) => {
-                if (!r.ok) throw new Error(String(r.status));
-                return r.json();
-              })
-              .then((d: Feed) => {
+            fetchFeed()
+              .then((d) => {
                 setData(d);
                 setMonth(d.latest_month);
               })
@@ -150,7 +163,7 @@ export function Boletines() {
               <label className="text-sm text-muted-foreground">
                 {tr(lang, "blnMonth")}
                 <select
-                  className="mt-1 block rounded-lg border border-border bg-card px-3 py-2 text-foreground"
+                  className="mt-1 block rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
                 >
@@ -164,15 +177,17 @@ export function Boletines() {
                 <input
                   type="text"
                   placeholder={tr(lang, "blnFilterPh")}
-                  className="mt-1 block w-64 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-foreground"
+                  className="mt-1 block w-64 max-w-full rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                 />
               </label>
             </div>
 
-            <div className="overflow-x-auto border-t-2 border-[var(--color-rule)]">
-              <table className="w-full text-sm">
+            {/* AX4: fixed floor + .scroll-x-shadow edge scrims (content.css) as
+                the horizontal-scroll affordance on phones */}
+            <div className="scroll-x-shadow overflow-x-auto border-t-2 border-[var(--color-rule)]">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="text-left">
                     {headers.map((h) => (

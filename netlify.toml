@@ -18,12 +18,14 @@
   [plugins.inputs]
     paths = ["public/models", "public/ort"]
 
-# Security headers (best-practice baseline). CSP allows our own inline scripts/
-# styles, self-hosted fonts, data: images, and the GitHub feed (connect-src).
-# VisaBot additions: 'wasm-unsafe-eval' for the on-device embedding model
-# (onnxruntime-web, self-hosted at /ort/ and /models/, run on the MAIN THREAD —
-# no worker, so no worker-src needed) and microphone=(self) for optional voice
-# input. The chat function and all model/index assets are same-origin → 'self'.
+# Security headers (best-practice baseline).
+# BA5 — the Content-Security-Policy does NOT live here anymore: script-src now
+# uses sha256 hashes instead of 'unsafe-inline', and the hashes depend on the
+# exact bytes of each page's inline scripts (Next inlines its Flight payload
+# per page). scripts/build-csp.mjs runs as `postbuild`, hashes every inline
+# script in out/**/*.html and emits per-page CSP rules into out/_headers.
+# Keep the base policy in that script — not here — to avoid double CSP
+# (Netlify merges netlify.toml + _headers, and two CSPs intersect).
 [[headers]]
   for = "/*"
   [headers.values]
@@ -32,7 +34,6 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(self), geolocation=(), browsing-topics=()"
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://plausible.io; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://raw.githubusercontent.com https://plausible.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
 # The on-device model + WASM are large and immutable — cache them hard.
 [[headers]]
@@ -50,9 +51,29 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# The generated OG image has no file extension — serve it as PNG so social
-# scrapers accept it.
+# AZ6 — data + RAG payloads refresh with each bulletin (~monthly): let the CDN
+# serve them for an hour and revalidate in the background for a day.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+[[headers]]
+  for = "/rag/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+
+# The generated OG images have no file extension — serve them as PNG so social
+# scrapers accept them. BA7 added per-route variants (/x/opengraph-image and
+# /en/x/opengraph-image); :seg matches exactly one path segment.
 [[headers]]
   for = "/opengraph-image"
+  [headers.values]
+    Content-Type = "image/png"
+[[headers]]
+  for = "/:seg/opengraph-image"
+  [headers.values]
+    Content-Type = "image/png"
+[[headers]]
+  for = "/en/:seg/opengraph-image"
   [headers.values]
     Content-Type = "image/png"

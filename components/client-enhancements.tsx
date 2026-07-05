@@ -16,23 +16,36 @@ export function ClientEnhancements() {
     ).matches;
 
     // ── Reveal on scroll
+    // AZ8a: anything already inside the first viewport becomes visible NOW —
+    // synchronously on hydration — so the LCP/above-the-fold content never
+    // waits for an IntersectionObserver tick (or a scroll) to fade in. Only
+    // below-the-fold elements go through the observer.
     const revealEls = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
     let obs: IntersectionObserver | undefined;
     if (reduceMotion) {
       revealEls.forEach((el) => el.classList.add("visible"));
     } else {
-      obs = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((en) => {
-            if (en.isIntersecting) {
-              en.target.classList.add("visible");
-              obs!.unobserve(en.target);
-            }
-          });
-        },
-        { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
-      );
-      revealEls.forEach((el) => obs!.observe(el));
+      const fold = window.innerHeight;
+      const below: HTMLElement[] = [];
+      revealEls.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.top < fold && r.bottom > 0) el.classList.add("visible");
+        else below.push(el);
+      });
+      if (below.length > 0) {
+        obs = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((en) => {
+              if (en.isIntersecting) {
+                en.target.classList.add("visible");
+                obs!.unobserve(en.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
+        );
+        below.forEach((el) => obs!.observe(el));
+      }
     }
 
     // ── Glossary live search

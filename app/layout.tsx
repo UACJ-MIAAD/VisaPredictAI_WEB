@@ -6,17 +6,20 @@ import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 import "./content.css";
 
+// AZ7 — weights trimmed to what the repo actually uses (audited via grep):
+// Playfair 700 (font-bold serif) / 800 (font-extrabold, CSS 800) / 900
+// (font-black hero). Italic was loaded but NO serif element renders <em> —
+// dropped (3 font files). DM Sans 300 (font-light) had zero uses — dropped.
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["700", "800", "900"],
-  style: ["normal", "italic"],
   variable: "--font-playfair",
   display: "swap",
 });
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-dm",
   display: "swap",
 });
@@ -38,10 +41,15 @@ export const metadata: Metadata = {
     "Anteproyecto MIAAD UACJ. Predicción de fechas de prioridad en el Visa Bulletin de los Estados Unidos considerando país o área de cargabilidad, categoría migratoria y tipo de tabla. Panel multiserie y_{p,c,b,t}, metodología CRISP-DM, intervalos de predicción al 95 %.",
   applicationName: "VisaPredict AI",
   manifest: "/manifest.webmanifest",
+  // AZ3b — purpose-built icons from scripts/build-icons.mjs (the 256 kB master
+  // logo is no longer referenced as an icon; /favicon.ico is a 2 kB 32px ICO).
   icons: {
-    icon: "/LogoVisaPredictAI.png",
-    shortcut: "/LogoVisaPredictAI.png",
-    apple: "/LogoVisaPredictAI.png",
+    icon: [
+      { url: "/logo-64.png", sizes: "64x64", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/logo-64.png",
+    apple: "/apple-touch-icon.png",
   },
   robots: { index: true, follow: true },
 };
@@ -75,40 +83,9 @@ export default function RootLayout({
               "document.documentElement.classList.add('js');if(location.pathname==='/en'||location.pathname.indexOf('/en/')===0)document.documentElement.lang='en'",
           }}
         />
-        {/* Structured data for rich results */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@graph": [
-                {
-                  "@type": "WebSite",
-                  "@id": `${SITE_URL}/#website`,
-                  url: SITE_URL,
-                  name: "VisaPredict AI",
-                  inLanguage: ["es", "en"],
-                },
-                {
-                  "@type": "ScholarlyArticle",
-                  headline:
-                    "Predicting priority dates in the U.S. Visa Bulletin by country or chargeability area, immigration category and table type",
-                  isPartOf: { "@id": `${SITE_URL}/#website` },
-                  inLanguage: "es",
-                  author: {
-                    "@type": "Person",
-                    name: "Javier Augusto Rebull Saucedo",
-                  },
-                  publisher: {
-                    "@type": "CollegeOrUniversity",
-                    name: "Universidad Autónoma de Ciudad Juárez",
-                  },
-                  about: "U.S. Visa Bulletin priority-date forecasting (MIAAD thesis proposal)",
-                },
-              ],
-            }),
-          }}
-        />
+        {/* BA7: the JSON-LD structured data moved to the per-locale layouts
+            (app/(es)/layout.tsx and app/en/layout.tsx) so inLanguage and the
+            canonical URL match each locale — see siteJsonLd() in lib/seo.ts. */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

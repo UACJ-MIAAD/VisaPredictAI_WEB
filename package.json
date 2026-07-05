@@ -13,6 +13,7 @@
     "predev": "node scripts/build-stats.mjs && node scripts/extract-content.mjs",
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/build-csp.mjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -44,6 +45,7 @@
     "eslint": "^9.20.0",
     "eslint-config-next": "^15.2.0",
     "netlify-plugin-cache": "^1.0.3",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.0.0",
     "tw-animate-css": "^1.2.4",
     "typescript": "^5.7.3"
