@@ -54,7 +54,7 @@ function TierGroup({ id, title, count, open, onToggle, series, panel, forecasts,
         <svg className={`h-3 w-3 text-[var(--color-muted)] transition ${open ? "rotate-180" : ""}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M1 1l4 4 4-4" /></svg>
       </summary>
       {open && (
-        <div className="grid gap-2 border-t border-border p-3 sm:grid-cols-2" id={id}>
+        <div className="grid grid-cols-1 gap-2 border-t border-border p-3 sm:grid-cols-2" id={id}>
           {series.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={() => onOpen(s)} />)}
         </div>
       )}
@@ -239,7 +239,7 @@ export function Resultados() {
                     <h3 className="font-serif text-lg font-bold text-[var(--color-ink)]">{tr(lang, "resTierFeatured")}</h3>
                     <p className="text-[0.8rem] text-[var(--color-muted)]">{tr(lang, "resTierFeaturedSub")}</p>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {tree.featured.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={() => openLightbox(s)} />)}
                   </div>
                 </div>
