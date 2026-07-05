@@ -6,12 +6,12 @@ import { StatusChip, Movement } from "@/components/ui/data-cells";
 import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { BULLETINS_FEED as FEED } from "@/lib/repo.mjs";
 
-const FEED =
-  "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main/data/processed/bulletins.json";
 // AZ8b — same-origin mirror, refreshed at build by scripts/fetch-data.mjs (plus
 // a committed fallback): if the raw host is blocked/unreachable the section
-// still renders the feed as of the last deploy.
+// still renders the feed as of the last deploy. FEED is the data-repo raw URL,
+// single-sourced in lib/repo.mjs (audit r4).
 const FEED_FALLBACK = "/data/bulletins.json";
 
 const fetchFeed = async (): Promise<Feed> => {
