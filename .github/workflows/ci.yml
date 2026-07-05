@@ -29,6 +29,11 @@ jobs:
         run: npm run typecheck
       - name: Lint
         run: npm run lint
+      - name: Unit tests
+        run: npm test
+      # NOTA: scripts/scorecard-render-check.mjs NO corre aquí — requiere el
+      # export completo en out/ (Netlify hace ese build) y un binario de Chrome
+      # con ruta hardcodeada de macOS; sigue siendo un check manual post-build.
       - name: VisaBot code-guard suite
         run: |
           # test-code-guard importa chat.mjs, que requiere el hash allowlist generado

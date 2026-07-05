@@ -90,7 +90,8 @@ function isNumericRecord(x: unknown): x is Record<string, number> {
   return vals.length > 0 && vals.every((v) => typeof v === "number" && Number.isFinite(v));
 }
 
-function isEdaFacts(x: unknown): x is EdaFacts {
+// Exported for unit tests (BC2); loadEdaFacts is the production entry point.
+export function isEdaFacts(x: unknown): x is EdaFacts {
   if (!x || typeof x !== "object") return false;
   const f = x as Record<string, unknown>;
   const p = f.panel as Record<string, unknown> | undefined;

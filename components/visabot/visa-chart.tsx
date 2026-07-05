@@ -11,7 +11,7 @@ import {
 import type { ChartSpec } from "@/lib/visabot/analytics";
 import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
-import { tr } from "@/lib/i18n";
+import { tr, localeOf } from "@/lib/i18n";
 
 const MON_ABBR: Record<string, string[]> = {
   es: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
@@ -29,6 +29,12 @@ const tip = {
   fontSize: "0.78rem",
 };
 const GRID = "color-mix(in srgb, var(--color-border) 70%, transparent)";
+
+// Recharts hack (unavoidable cast): returning null for [value, name] is the
+// documented way to SUPPRESS a tooltip row (here: the band areas, whose raw
+// [lo, hi] tuples would render as noise), but the Formatter type doesn't admit
+// null — so one named, documented cast instead of inline magic at each usage.
+const HIDE_TOOLTIP_ROW = [null, null] as unknown as [string, string];
 
 export default function VisaChart({ spec }: { spec: ChartSpec }) {
   const { lang } = useLang();
@@ -90,7 +96,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
               contentStyle={tip}
               labelFormatter={(m) => String(m)}
               formatter={(value, name, item) => {
-                if (name === "band95" || name === "band80") return [null, null] as unknown as [string, string];
+                if (name === "band95" || name === "band80") return HIDE_TOOLTIP_ROW;
                 const p = item?.payload;
                 const isF = p?.fc != null && p?.hist == null;
                 return [p?.date ?? "—", isF ? (lang === "en" ? "Forecast cutoff" : "Corte pronosticado") : (lang === "en" ? "Priority date" : "Fecha prioridad")];
@@ -258,7 +264,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
                 <Cell key={i} fill={d.color} stroke="var(--color-bg)" />
               ))}
             </Pie>
-            <Tooltip contentStyle={tip} formatter={(value, name) => [Number(value).toLocaleString(lang === "en" ? "en-US" : "es-MX"), name]} />
+            <Tooltip contentStyle={tip} formatter={(value, name) => [Number(value).toLocaleString(localeOf(lang)), name]} />
           </PieChart>
         </ResponsiveContainer>
       )}

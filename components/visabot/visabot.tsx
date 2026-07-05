@@ -15,7 +15,7 @@ import {
 import { usePathname } from "next/navigation";
 import { useLang } from "@/components/lang-provider";
 import { basePath } from "@/lib/site-map";
-import { tr } from "@/lib/i18n";
+import { tr, localeOf } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { Markdown } from "./markdown";
@@ -99,7 +99,7 @@ export function VisaBot() {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text.replace(/\[[\d]+\]/g, "").replace(/[#*_`>]/g, ""));
-    u.lang = lang === "en" ? "en-US" : "es-MX";
+    u.lang = localeOf(lang);
     window.speechSynthesis.speak(u);
     track("VisaBot Speak", { lang });
   };
@@ -113,7 +113,7 @@ export function VisaBot() {
     }
     const r = new Rec();
     recRef.current = r;
-    r.lang = lang === "en" ? "en-US" : "es-MX";
+    r.lang = localeOf(lang);
     r.interimResults = true;
     r.continuous = false;
     r.onresult = (e) => {
