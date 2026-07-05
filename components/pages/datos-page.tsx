@@ -3,6 +3,7 @@ import { Boletines } from "@/components/sections/boletines";
 import { Pronostico } from "@/components/sections/pronostico";
 import { Historico } from "@/components/sections/historico";
 import { Scorecard } from "@/components/sections/scorecard";
+import { LegacyAnchorRedirect } from "@/components/legacy-anchor-redirect";
 import type { Lang } from "@/lib/site-map";
 
 // Shared "historical data" body, rendered under both /datos-historicos and /en/...
@@ -18,6 +19,7 @@ export function DatosPage({ lang }: { lang: Lang }) {
   void lang;
   return (
     <>
+      <LegacyAnchorRedirect />
       <RouteHeader path="/datos-historicos" />
       <Boletines />
       <Pronostico />

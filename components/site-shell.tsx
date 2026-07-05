@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { NextPart } from "@/components/next-part";
 import { BackToTop } from "@/components/back-to-top";
 import { ClientEnhancements } from "@/components/client-enhancements";
+import { HashRescroll } from "@/components/hash-rescroll";
 import { VisaBotLauncher } from "@/components/visabot/visabot-launcher";
 import type { Lang } from "@/lib/site-map";
 
@@ -29,6 +30,7 @@ export function SiteShell({
       <SiteFooter />
       <BackToTop />
       <ClientEnhancements />
+      <HashRescroll />
       {/* AZ4: dynamically imported (ssr:false) so the bot stays out of First Load */}
       <VisaBotLauncher />
     </LangProvider>

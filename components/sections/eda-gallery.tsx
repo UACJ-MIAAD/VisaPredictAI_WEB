@@ -442,6 +442,9 @@ export function FigureLink({
 }) {
   const [open, setOpen] = React.useState(false);
   const { lang } = useLang();
+  // Deterministic focus return: pointer clicks don't focus anchors in every
+  // browser, so the native <dialog> restore can strand focus on <body> (audit).
+  const triggerRef = React.useRef<HTMLAnchorElement | null>(null);
   const original = originalLabel ?? (lang === "en" ? "Open original" : "Abrir original");
   const close = closeLabel ?? (lang === "en" ? "Close" : "Cerrar");
   const isPng = /\.png$/.test(src);
@@ -449,6 +452,7 @@ export function FigureLink({
     <div className={`mt-5 ${toggle}`}>
       <a
         href={src}
+        ref={triggerRef}
         aria-label={ariaLabel}
         aria-haspopup="dialog"
         onClick={(e) => {
@@ -483,7 +487,10 @@ export function FigureLink({
       </a>
       <Lightbox
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          triggerRef.current?.focus();
+        }}
         src={src}
         dim={dim}
         alt={alt}

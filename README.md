@@ -39,11 +39,11 @@ flowchart TD
     end
 
     subgraph ROUTES["📄 Rutas (×2 idiomas, zero-flash)"]
-        HOME["/ · Hero · Resumen · Explore · Autores · Contacto"]
+        HOME["/ · Hero · Problema · Pronóstico+Evidencia · Explore · Resumen · Autores · Contacto"]
         ANTE["/anteproyecto · Cap I–IV · Tablas · Reproducibilidad"]
-        ING["/ingenieria · Datos · MLOps · Estructura · Modelo"]
-        DAT["/datos-historicos · Boletines · Explorador"]
-        REC["/recursos · Glosario(42) · Referencias(64)"]
+        ING["/ingenieria · Datos · EDA · FE · MLOps · Estructura · Modelo"]
+        DAT["/datos-historicos · Boletines · Pronóstico · Explorador · Scorecard"]
+        REC["/recursos · Descargas · Glosario · Referencias"]
     end
     SHELL --> HOME & ANTE & ING & DAT & REC
 
@@ -72,7 +72,7 @@ flowchart TD
     subgraph CROSS["🔁 Transversal"]
         I18N["lib/i18n.ts + site-map.ts<br/>toggle ES⇄EN navega /x ⇄ /en/x"]
         THEME["next-themes<br/>claro/oscuro sin FOUC"]
-        ANALYTICS["lib/analytics.ts<br/>Plausible + 6 eventos custom"]
+        ANALYTICS["lib/analytics.ts<br/>Plausible + eventos custom"]
         SEO["lib/seo.ts<br/>canonical · hreflang · OG · Twitter"]
     end
     SHELL -.-> I18N & THEME & ANALYTICS
@@ -93,7 +93,7 @@ flowchart TD
 - **Next.js 15** (App Router) · **TypeScript** · **Tailwind v4** · **shadcn-style primitives**
 - **next-themes** (claro/oscuro sin FOUC) · **KaTeX** · **Recharts** · **TanStack Table + Virtual**
 - **Export estático** (`output: "export"`, `trailingSlash`) → cualquier host estático
-- **Plausible** (analítica cookieless + 6 eventos personalizados)
+- **Plausible** (analítica cookieless + eventos personalizados)
 
 ## Idioma y diseño
 
@@ -114,11 +114,11 @@ del repo `UACJ-MIAAD/VisaPredictAI`; sin valores inventados.
 
 | Ruta (×2 idiomas) | Contenido | First Load JS |
 |---|---|---|
-| `/` · `/en` | Hero · Resumen · navegador · Autores · Contacto | ~111 kB |
+| `/` · `/en` | Hero · Problema (G1) · Pronóstico+Evidencia · Explore · Resumen · Autores | ~134 kB |
 | `/anteproyecto` | Capítulos I–IV · Tablas · Reproducibilidad | ~111 kB |
-| `/ingenieria` | Panel · MLOps · Estructura · Modelo de datos | ~111 kB |
-| `/datos-historicos` | Boletines en vivo · explorador interactivo | ~124 kB |
-| `/recursos` | Glosario (42) · Referencias IEEE (64) | ~111 kB |
+| `/ingenieria` | Panel · EDA · FE · MLOps · Estructura · Modelo de datos | ~151 kB |
+| `/datos-historicos` | Boletines en vivo · pronóstico por categoría · explorador · scorecard prospectivo | ~249 kB |
+| `/recursos` | Descargas · Glosario · Referencias IEEE | ~151 kB |
 
 ## Desarrollo
 
@@ -136,7 +136,7 @@ npm run lint       # eslint .
 - **Social**: Open Graph + Twitter cards + imagen OG generada (1200×630).
 - **PWA/móvil**: `manifest.webmanifest`, `apple-touch-icon`, `favicon.ico` (multi-res), `theme-color`.
 - **A11y**: skip-link, foco gestionado, AA, `prefers-reduced-motion`.
-- **Seguridad** (`netlify.toml`): CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy + caché inmutable.
+- **Seguridad**: CSP **por página sin `unsafe-inline`** (hashes sha256 emitidos por `scripts/build-csp.mjs` en postbuild → `out/_headers`); HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy y caché inmutable en `netlify.toml`.
 
 ## Despliegue
 
@@ -148,6 +148,7 @@ npm run lint       # eslint .
 **Dashboard de estadísticas:** https://plausible.io/visapredictai.com
 (panel cookieless de visitas, fuentes, páginas y eventos).
 
-`lib/analytics.ts` → `track()`. Eventos: `Language Switch`, `Theme Toggle`,
-`Explore Section`, `Explore Historical CTA`, `CSV Export`, `Explorer Filter`.
+`lib/analytics.ts` → `track()`. Eventos principales: `Language Switch`, `Theme Toggle`,
+`Explore Section`, `Forecast CTA`, `Forecast View`, `CSV Export`, `Explorer Filter`
+y la familia VisaBot (inventario completo: `grep -rn "track(" components lib`).
 Para verlos: registrarlos como **Goals → Custom event** en el panel de Plausible.

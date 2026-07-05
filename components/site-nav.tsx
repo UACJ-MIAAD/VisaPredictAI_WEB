@@ -73,6 +73,15 @@ export function SiteNav() {
   // AX8: real focus trap for the open drawer (WAI-ARIA dialog pattern) — it
   // also moves focus in on open and restores it to the trigger on close.
   const drawerRef = useFocusTrap<HTMLElement>(open);
+  // Deterministic focus return: the trap restores document.activeElement from
+  // open-time, but pointer clicks don't focus buttons in Safari (and synthetic
+  // clicks nowhere), which strands focus on <body> after Escape (audit).
+  const openBtnRef = React.useRef<HTMLButtonElement | null>(null);
+  const wasOpen = React.useRef(false);
+  React.useEffect(() => {
+    if (wasOpen.current && !open) openBtnRef.current?.focus();
+    wasOpen.current = open;
+  }, [open]);
 
   React.useEffect(() => {
     // AZ8: coalesce scroll events into one setState per frame
@@ -155,6 +164,7 @@ export function SiteNav() {
             <ThemeToggle />
             <button
               type="button"
+              ref={openBtnRef}
               aria-label={tr(lang, "openMenu")}
               aria-expanded={open}
               aria-haspopup="dialog"
@@ -281,7 +291,7 @@ export function SiteNav() {
                       "pointer-events-none whitespace-nowrap rounded bg-[var(--color-bg)]/90 px-1.5 text-xs opacity-0 backdrop-blur transition-opacity group-hover:opacity-100",
                       "2xl:max-w-[calc((100vw-var(--container))/2-3.25rem)] 2xl:truncate 2xl:opacity-100 2xl:group-hover:max-w-none",
                       active === s.id
-                        ? "text-foreground opacity-100"
+                        ? "text-foreground 2xl:opacity-100"
                         : "text-muted-foreground",
                     )}
                   >

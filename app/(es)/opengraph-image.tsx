@@ -1,3 +1,6 @@
+// Lives inside the (es) route group (not app/ root): the group cuts the
+// metadata cascade, so a root-level card never reached the Spanish home and
+// "/" shipped with NO og:image (audit A2). Here Next injects it for "/".
 import { ogCard, OG_SIZE } from "@/lib/og";
 
 // BA7 — ES home card, built on the shared template (lib/og.tsx). The EN home

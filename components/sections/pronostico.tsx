@@ -65,22 +65,32 @@ export function Pronostico() {
   const started = React.useRef(false);
 
   // Same lazy-load pattern as historico.tsx: fetch the 1.5 MB panel only when
-  // the section approaches the viewport (a #pronostico deep link intersects
-  // immediately, so the hero CTA still lands on live data).
+  // the section approaches the viewport. A #pronostico deep link does NOT
+  // reliably intersect (the native anchor scroll fires before the async
+  // sections above expand the layout — audit finding), so the hash starts the
+  // load eagerly and HashRescroll re-anchors the viewport.
   React.useEffect(() => {
+    const start = () => {
+      if (started.current) return;
+      started.current = true;
+      Promise.all([loadPanel(), loadForecasts()])
+        .then(([p, f]) => {
+          setPanel(p);
+          setForecasts(f);
+        })
+        .catch(() => setError(true));
+    };
+    if (window.location.hash === "#pronostico") {
+      start();
+      return;
+    }
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
       (es) =>
         es.forEach((e) => {
-          if (e.isIntersecting && !started.current) {
-            started.current = true;
-            Promise.all([loadPanel(), loadForecasts()])
-              .then(([p, f]) => {
-                setPanel(p);
-                setForecasts(f);
-              })
-              .catch(() => setError(true));
+          if (e.isIntersecting) {
+            start();
             io.disconnect();
           }
         }),
