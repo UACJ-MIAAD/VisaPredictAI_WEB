@@ -197,7 +197,12 @@ export function makeCodeGuard(lang) {
     // dumps like "import os" / "return x" that carry no punctuation.
     if (/^(import|from|def|class|return|const|let|var|func|fn|public|private|package|using|async|await|export|require|print)\b/.test(s.trimStart())) return true;
     if (/<\/?[a-zA-Z][^>]*>/.test(s)) return true; // html / xml / jsx tag
-    if (/[;{}]\s*$/.test(s.trim())) return true; // line ends in ; { }
+    const t = s.trim();
+    if (/[;{]\s*$/.test(t)) return true; // line ends in ; {
+    // A `}`-ending line is code UNLESS the brace closes short SET NOTATION like
+    // "MCS = {naive1}" — the model card's canonical Model-Confidence-Set syntax.
+    // Without this the guard cut the flagship answer mid-stream (audit r2 E2E).
+    if (/}\s*$/.test(t) && !/\{[^{}\n]{1,40}\}\s*$/.test(t)) return true;
     if (/=>|->|::|&&|\|\||!=|==|\+=|\bconsole\.|\bSystem\.|printf?\(/.test(s)) return true; // operators / calls
     if (
       /\b(def|class|function|import|from|return|const|let|var|public|private|void|static|SELECT|INSERT|UPDATE|DELETE|CREATE|FROM|WHERE|while|elif|async|await|lambda|func|fn)\b/.test(s) &&
