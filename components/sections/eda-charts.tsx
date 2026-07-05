@@ -73,6 +73,22 @@ const tooltipStyle = {
   color: "var(--color-ink)",
 };
 
+// AX4: compact chart geometry on narrow phones (category axis + tick size).
+// Charts here render client-only (next/dynamic, ssr:false), so reading
+// matchMedia inside an effect never causes a hydration mismatch.
+function useNarrow(query = "(max-width: 480px)") {
+  const [narrow, setNarrow] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia(query);
+    const update = () => setNarrow(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [query]);
+  return narrow;
+}
+
+// AX1: editorial module (hairline rule), not a bordered card.
 function Figure({
   title,
   desc,
@@ -83,9 +99,9 @@ function Figure({
   children: React.ReactNode;
 }) {
   return (
-    <figure className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+    <figure className="mt-10 border-t-2 border-[var(--color-rule)] pt-4">
       <figcaption className="mb-1 font-serif text-lg font-bold text-[var(--color-ink)]">{title}</figcaption>
-      <p className="mb-3 text-sm text-[var(--color-muted)]">{desc}</p>
+      <p className="mb-3 max-w-3xl text-sm text-[var(--color-muted)]">{desc}</p>
       <div role="img" aria-label={`${title}. ${desc}`}>
         {children}
       </div>
@@ -98,6 +114,7 @@ const fmt = (n: number, lang: string) => n.toLocaleString(lang === "es" ? "es-MX
 export default function EdaCharts({ facts }: { facts: EdaFacts }) {
   const { lang } = useLang();
   const t = T[lang];
+  const narrow = useNarrow();
 
   // ── a. Today's backlog: family FAD series, longest wait first ──────────────
   const backlog = facts.backlog_today
@@ -160,8 +177,8 @@ export default function EdaCharts({ facts }: { facts: EdaFacts }) {
             <YAxis
               type="category"
               dataKey="name"
-              width={148}
-              tick={{ fontSize: 11, fill: "var(--color-muted)" }}
+              width={narrow ? 96 : 148}
+              tick={{ fontSize: narrow ? 10 : 11, fill: "var(--color-muted)" }}
               interval={0}
             />
             <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} ${t.years}`, t.backlogAxis]} />

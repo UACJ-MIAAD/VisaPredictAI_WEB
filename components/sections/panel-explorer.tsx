@@ -37,7 +37,8 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+        // AX6: ≥16px on phones so iOS Safari doesn't auto-zoom on focus
+        className="mt-1 rounded-lg border border-border bg-card px-3 py-2 text-base text-foreground sm:text-sm"
       >
         {options.map((o) => (
           <option key={o} value={o}>{fmt ? fmt(o) : o}</option>
@@ -208,16 +209,20 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
 
       <ChartCard title={tr(lang, "chart4Title")} desc={tr(lang, "chart4Desc")}>
         <div className="flex flex-col items-center gap-6 md:flex-row">
-          <ResponsiveContainer width="100%" height={260} className="md:!w-1/2">
-            <PieChart>
-              <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={56} outerRadius={92} paddingAngle={2}>
-                {statusData.map((d) => (
-                  <Cell key={d.name} fill={statusColor(d.name)} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={tooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
+          {/* AX8: size via a plain wrapper instead of !important on the
+              ResponsiveContainer (md:!w-1/2 fought its inline width) */}
+          <div className="w-full md:w-1/2">
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={statusData} dataKey="value" nameKey="name" innerRadius={56} outerRadius={92} paddingAngle={2}>
+                  {statusData.map((d) => (
+                    <Cell key={d.name} fill={statusColor(d.name)} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
           <ul className="w-full space-y-2 md:w-1/2">
             {statusData.map((d) => (
               <li key={d.name} className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">

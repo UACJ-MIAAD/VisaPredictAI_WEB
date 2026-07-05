@@ -108,8 +108,10 @@ export function Scorecard() {
   // evidence teaser, the nav TOC and deep links all target it (same as #eda).
   if (!loaded)
     return (
-      <section id="scorecard" className="mx-auto w-full max-w-5xl px-4 py-12">
-        <Skeleton className="h-64 w-full" />
+      <section id="scorecard" className="section">
+        <div className="section-inner">
+          <Skeleton className="h-64 w-full" />
+        </div>
       </section>
     );
   if (!sc) return <section id="scorecard" aria-hidden="true" />; // ledger not yet seeded
@@ -121,14 +123,18 @@ export function Scorecard() {
     .sort((a, b) => a.h - b.h);
 
   return (
-    <section id="scorecard" className="mx-auto w-full max-w-5xl px-4 py-12" aria-labelledby="scorecard-title">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">{t.eyebrow}</p>
-      <h2 id="scorecard-title" className="mt-1 font-serif text-2xl font-bold text-[var(--color-ink)]">
+    // AX1: same editorial scaffold as every other section (.section >
+    // .section-inner with section-tag/-title/-sub), on the shared rail.
+    <section id="scorecard" className="section" aria-labelledby="scorecard-title">
+      <div className="section-inner">
+      <span className="section-tag">{t.eyebrow}</span>
+      <h2 id="scorecard-title" className="section-title">
         {t.title}
       </h2>
-      <p className="mt-2 max-w-3xl text-[var(--color-muted)]">{t.intro}</p>
+      <p className="section-sub">{t.intro}</p>
 
-      <div className="mt-6 flex flex-wrap gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+      {/* stats as a typographic group under a module rule — no boxed card */}
+      <div className="flex flex-wrap gap-x-10 gap-y-6 border-t-2 border-[var(--color-rule)] pt-5">
         <Stat value={o.mae_days.toFixed(0)} unit={t.maeUnit} label={t.mae} />
         <Stat value={o.mase.toFixed(3)} label={t.mase} />
         <Stat
@@ -146,9 +152,10 @@ export function Scorecard() {
         </p>
       </div>
 
-      <figure className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+      {/* chart keeps a subtle editorial rule as its container (AX1) */}
+      <figure className="mt-10 border-t-2 border-[var(--color-rule)] pt-4">
         <figcaption className="mb-1 font-serif text-lg font-bold text-[var(--color-ink)]">{t.chartTitle}</figcaption>
-        <p className="mb-3 text-sm text-[var(--color-muted)]">{t.chartDesc}</p>
+        <p className="mb-3 max-w-3xl text-sm text-[var(--color-muted)]">{t.chartDesc}</p>
         <div role="img" aria-label={`${t.chartTitle}. ${t.chartDesc}`}>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={byH} margin={{ left: 4, right: 12, top: 8, bottom: 4 }}>
@@ -167,6 +174,7 @@ export function Scorecard() {
       </figure>
 
       <p className="mt-3 text-xs text-[var(--color-muted)]">{sc.caveat ?? t.caveatFallback}</p>
+      </div>
     </section>
   );
 }

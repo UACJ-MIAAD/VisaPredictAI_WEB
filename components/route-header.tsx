@@ -11,7 +11,7 @@ export function RouteHeader({ path }: { path: string }) {
   const route = routeByPath(path);
   return (
     <header className="border-b border-border px-5 pb-8 pt-10">
-      <div className="mx-auto max-w-[1140px]">
+      <div className="mx-auto max-w-[var(--container)]">
         <Link
           href={localePath("/", lang)}
           className="text-xs text-muted-foreground hover:text-[var(--color-accent)]"
@@ -22,15 +22,17 @@ export function RouteHeader({ path }: { path: string }) {
           <span className="h-0.5 w-6 bg-[var(--color-accent)]" aria-hidden />
           {rLabel(route, lang)}
         </span>
-        <p className="mt-3 max-w-[60ch] font-serif text-2xl font-bold leading-snug md:text-[2rem]">
+        {/* BA1: the route title is the page's h1 (interior pages had none);
+            classes keep the exact visual style of the previous <p>. */}
+        <h1 className="mt-3 max-w-[60ch] font-serif text-2xl font-bold leading-snug tracking-normal md:text-[2rem]">
           {rBlurb(route, lang)}
-        </p>
+        </h1>
         <nav className="mt-5 flex flex-wrap gap-2" aria-label={tr(lang, "menu")}>
           {route.sections.map((s) => (
             <a
               key={s.id}
               href={`#${s.id}`}
-              className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-[var(--color-accent)] hover:text-foreground"
+              className="rounded-full border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-[var(--color-accent)] hover:text-foreground"
             >
               {sLabel(s, lang)}
             </a>

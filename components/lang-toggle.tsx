@@ -48,7 +48,7 @@ export function LangToggle() {
           }}
           aria-current={lang === it.code ? "true" : undefined}
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-[7px] uppercase transition-colors",
+            "flex h-11 w-11 items-center justify-center rounded-[7px] uppercase transition-colors",
             lang === it.code
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground",

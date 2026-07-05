@@ -99,8 +99,10 @@ export function Eda() {
   // the prose deep-link, the RAG link and the nav TOC all target it.
   if (!loaded)
     return (
-      <section id="eda" className="mx-auto w-full max-w-5xl px-4 py-12">
-        <Skeleton className="h-64 w-full" />
+      <section id="eda" className="section">
+        <div className="section-inner">
+          <Skeleton className="h-64 w-full" />
+        </div>
       </section>
     );
   if (!facts) return <section id="eda" aria-hidden="true" />; // census not shipped
@@ -113,14 +115,18 @@ export function Eda() {
   const expectedMonths = y0 && y1 ? (y1 - y0) * 12 + (m1 - m0) + 1 : p.n_months;
 
   return (
-    <section id="eda" className="mx-auto w-full max-w-5xl px-4 py-12" aria-labelledby="eda-title">
-      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">{t.eyebrow}</p>
-      <h2 id="eda-title" className="mt-1 font-serif text-2xl font-bold text-[var(--color-ink)]">
+    // AX1: same editorial scaffold as every other section (.section >
+    // .section-inner with section-tag/-title/-sub), on the shared rail.
+    <section id="eda" className="section" aria-labelledby="eda-title">
+      <div className="section-inner">
+      <span className="section-tag">{t.eyebrow}</span>
+      <h2 id="eda-title" className="section-title">
         {t.title}
       </h2>
-      <p className="mt-2 max-w-3xl text-[var(--color-muted)]">{t.intro}</p>
+      <p className="section-sub">{t.intro}</p>
 
-      <div className="mt-6 flex flex-wrap gap-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+      {/* stats as a typographic group under a module rule — no boxed card */}
+      <div className="flex flex-wrap gap-x-10 gap-y-6 border-t-2 border-[var(--color-rule)] pt-5">
         <Stat value={p.n_obs.toLocaleString(locale)} label={t.obs} />
         <Stat
           value={String(p.n_series_structural)}
@@ -147,6 +153,7 @@ export function Eda() {
         <p className="text-xs text-[var(--color-muted)]">
           {t.vintageNote.replace("{vintage}", `${t.asOf} ${vintageLabel(facts.vintage, lang)}`)}
         </p>
+      </div>
       </div>
     </section>
   );

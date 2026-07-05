@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "katex/dist/katex.min.css";
+/* AZ7: katex.min.css moved out of the global bundle — it is imported only by
+   the /anteproyecto pages (the sole routes that render math). */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -9,6 +10,10 @@
    Light + dark. Components never hardcode major colors.
    ───────────────────────────────────────────────────────────── */
 :root {
+  /* Single content rail (AX1): every full-width band (nav, hero, route
+     header, .section-inner, footer) centers on this same measure so the
+     text edge never jumps between sections. Gutter = px-5 (1.25rem). */
+  --container: 1140px;
   --color-bg: #ffffff;
   --color-surface: #ffffff;
   --color-surface-soft: #f5f7fa; /* cool, clean alternation (not beige) */
@@ -297,6 +302,7 @@ main:focus {
 .vb-suggest:hover { border-color: var(--color-accent); transform: translateY(-1px); }
 
 .vb-iconbtn {
+  position: relative; /* anchors the extended touch target below */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -305,6 +311,13 @@ main:focus {
   border-radius: 0.5rem;
   color: var(--color-muted);
   transition: background 0.15s, color 0.15s;
+}
+/* AX5: extend the tap area to ≥44px (2.75rem) without growing the visual
+   size — the pseudo-element participates in hit-testing, not layout. */
+.vb-iconbtn::after {
+  content: "";
+  position: absolute;
+  inset: calc((2.75rem - 100%) / -2);
 }
 .vb-iconbtn:hover { background: var(--color-surface-soft); color: var(--color-ink); }
 
