@@ -80,7 +80,10 @@ export function Pronostico() {
         })
         .catch(() => setError(true));
     };
-    if (window.location.hash === "#pronostico") {
+    // Also eager for hashes BELOW this section: a #historico/#scorecard deep
+    // link scrolls past us, so the IO never intersects an already-passed
+    // section and the page above the target would stay skeletal (audit r2).
+    if (["#pronostico", "#historico", "#scorecard"].includes(window.location.hash)) {
       start();
       return;
     }

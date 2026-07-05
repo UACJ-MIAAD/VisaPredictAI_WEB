@@ -155,7 +155,7 @@ function addSectionHtml(id, sectionLabel, html, lang) {
   }
 }
 
-function addMarkdown(name, md, sourceUrl) {
+function addMarkdown(name, md, sourceUrl, langs = ["es"]) {
   // split markdown by ##/### headings
   const blocks = [];
   const re = /^#{1,4}\s+(.+)$/gm;
@@ -175,7 +175,8 @@ function addMarkdown(name, md, sourceUrl) {
       .trim();
     if (text.length < 40) continue;
     for (const ch of splitByLength(text, b.heading))
-      add({ lang: "es", kind: "docs", source: `Repo · ${name}`, sourceId: "ingenieria", url: sourceUrl, title: ch.title, text: ch.text });
+      for (const lang of langs)
+        add({ lang, kind: "docs", source: `Repo · ${name}`, sourceId: "ingenieria", url: sourceUrl, title: ch.title, text: ch.text });
   }
 }
 
@@ -235,6 +236,17 @@ async function collectRepoDocs() {
         const text = txt.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/[ \t]+/g, " ");
         for (const ch of splitByLength(text, name))
           add({ lang: "es", kind: "docs", source: `Repo · ${name}`, sourceId: "modelo", url, title: ch.title, text: ch.text });
+      } else if (path.endsWith("MODEL_CARD.md")) {
+        // Audit round 2: the card must be retrievable in BOTH language pools
+        // (the engine filters chunks by lang) and needs query-shaped keywords —
+        // topic words only, NO factual claims (those live in the card itself,
+        // regla #0). Without this, "which model wins?" answered from the
+        // frozen May proposal.
+        const kw =
+          "Modelos comparados: cuál gana, campeón desplegado, retador, evaluación " +
+          "prospectiva del pronóstico. Model comparison: which model wins, deployed " +
+          "champion, challenger, prospective forecast evaluation.\n\n";
+        addMarkdown(name, kw + txt, url, ["es", "en"]);
       } else {
         addMarkdown(name, txt, url);
       }
