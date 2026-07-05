@@ -8,7 +8,7 @@
 import { writeFile, readFile, access, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
-const RAW = "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main";
+import { DATA_REPO_RAW as RAW } from "../lib/repo.mjs";
 const OUT = join(process.cwd(), "public", "data");
 const FILES = [
   { url: `${RAW}/data/processed/visa_panel_long.csv`, out: "visa_panel_long.csv", critical: true },
@@ -22,8 +22,8 @@ const FILES = [
   { url: `${RAW}/reports/eda/eda_report.pdf`, out: "eda_report.pdf", critical: false },
   { url: `${RAW}/reports/eda/en/eda_report.pdf`, out: "eda_report_en.pdf", critical: false },
   // FE (feature engineering): census of the cleaning/FE master decisions + the
-  // standalone report. The English report is a REAL translation (unlike the EDA
-  // one, still Spanish-only) and ships under its own name.
+  // standalone report. Both the EDA and FE reports ship a real EN translation
+  // (reports/*/en/), served under their own *_en.pdf names.
   { url: `${RAW}/reports/fe/fe_facts.json`, out: "fe_facts.json", critical: false },
   { url: `${RAW}/reports/fe/fe_report.pdf`, out: "fe_report.pdf", critical: false },
   { url: `${RAW}/reports/fe/en/fe_report.pdf`, out: "fe_report_en.pdf", critical: false },

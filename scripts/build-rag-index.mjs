@@ -19,13 +19,13 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { DATA_REPO_RAW as REPO_RAW } from "../lib/repo.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
 const EMBED_MODEL = "Xenova/multilingual-e5-small";
 const EMBED_DIM = 384;
-const REPO_RAW = "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main";
 const CHUNK_CHARS = 900; // target chunk size
 const CHUNK_OVERLAP = 150;
 
@@ -502,9 +502,11 @@ function copyOrtWasm() {
   writeFileSync(join(outDir, "suggestions.json"), JSON.stringify(suggestions, null, 0));
   writeFileSync(join(outDir, "prompts.json"), JSON.stringify(buildPrompts(), null, 0));
 
-  // compact stats for the assistant console (avoids downloading the 1.5 MB index just for counts)
-  const byKind = {};
-  for (const c of chunks) byKind[c.kind] = (byKind[c.kind] || 0) + 1;
+  // Build manifest — `built` is the ONLY field read programmatically (the
+  // deploy-freshness smoke waits for it to advance); the rest is an inspectable
+  // heartbeat (curl /rag/meta.json). NOT for the console — that reads
+  // suggestions.json / prompts.json (audit r4: dropped the dead byKind loop and
+  // the misleading "for the assistant console" claim).
   writeFileSync(
     join(outDir, "meta.json"),
     JSON.stringify({
@@ -514,7 +516,6 @@ function copyOrtWasm() {
       chunks: chunks.length,
       sources: new Set(chunks.map((c) => c.source)).size,
       langs: [...new Set(chunks.map((c) => c.lang))],
-      byKind,
       latestMonth,
     }),
   );
