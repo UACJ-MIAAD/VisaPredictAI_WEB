@@ -1,7 +1,7 @@
 "use client";
 
 // First-class forecast section (/datos-historicos#pronostico): the deployed
-// production model's 12-month forecast for any pilot country × category ×
+// production model's multi-month forecast for any pilot country × category ×
 // table, rendered with the same fan chart the VisaBot console uses
 // (components/visabot/visa-chart). Data: the real panel CSV (loadPanel) plus
 // the pre-generated production forecasts (loadForecasts). When a series has no
@@ -18,6 +18,7 @@ import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { loadPanel, countryLabel, PILOT, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
+import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import { buildForecast } from "@/lib/visabot/analytics";
 
 // Recharts lives in visa-chart; only fetched when this section mounts.
@@ -134,7 +135,7 @@ export function Pronostico() {
       <div className="section-inner">
         <span className="section-tag">{tr(lang, "pronTag")}</span>
         <h2 className="section-title">{tr(lang, "pronTitle")}</h2>
-        <p className="section-sub">{tr(lang, "pronSub")}</p>
+        <p className="section-sub">{tr(lang, "pronSub").replace("{n}", String(SITE_STATS.horizonMonths))}</p>
 
         {error ? (
           <EmptyState msg={tr(lang, "histError")} />

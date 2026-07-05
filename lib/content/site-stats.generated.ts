@@ -7,4 +7,5 @@ export const SITE_STATS = {
   pctFrozen: 45,
   dateFirst: "2001-12",
   dateLast: "2026-07",
+  horizonMonths: 12,
 } as const;

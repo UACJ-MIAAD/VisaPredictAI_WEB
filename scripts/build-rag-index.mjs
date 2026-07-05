@@ -408,9 +408,9 @@ function buildSuggestions() {
   return { es, en };
 }
 
-// Categorized, curated prompt library (à la EpiBot's prompt menu) — a help/
-// onboarding surface. Prompts are derived from the glossary + latest bulletin
-// so they stay fresh; chart prompts trigger the data visualizations.
+// Categorized, curated prompt library — a help/onboarding surface. Prompts are
+// derived from the glossary + latest bulletin so they stay fresh; chart prompts
+// trigger the data visualizations.
 function buildPrompts() {
   const glTerms = (lang, wanted, n) => {
     const terms = chunks.filter((c) => c.kind === "glossary" && c.lang === lang);

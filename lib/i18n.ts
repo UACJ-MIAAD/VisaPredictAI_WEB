@@ -289,9 +289,10 @@ const S = {
   // ── #pronostico section (/datos-historicos, AV1)
   pronTag: { es: "Pronóstico · modelo de producción", en: "Forecast · production model" },
   pronTitle: { es: "¿Cuándo me toca?", en: "When is my date?" },
+  // {n} interpolated from SITE_STATS.horizonMonths (derived from forecasts_meta.json) — never hand-typed (regla #0)
   pronSub: {
-    es: "Elige país o área, categoría y tabla para ver el pronóstico a 12 meses del modelo desplegado, con bandas de predicción al 80 % y 95 %. Si una serie no tiene pronóstico pre-generado, se muestra una proyección de deriva claramente etiquetada como ilustrativa.",
-    en: "Pick a country or area, category and table to see the deployed model's 12-month forecast, with 80% and 95% prediction bands. If a series has no pre-generated forecast, a drift projection clearly labelled as illustrative is shown instead.",
+    es: "Elige país o área, categoría y tabla para ver el pronóstico a {n} meses del modelo desplegado, con bandas de predicción al 80 % y 95 %. Si una serie no tiene pronóstico pre-generado, se muestra una proyección de deriva claramente etiquetada como ilustrativa.",
+    en: "Pick a country or area, category and table to see the deployed model's {n}-month forecast, with 80% and 95% prediction bands. If a series has no pre-generated forecast, a drift projection clearly labelled as illustrative is shown instead.",
   },
   pronScope: {
     es: "El sistema pronostica fechas publicadas (estado F); no predice cambios de régimen (C/U).",
@@ -302,17 +303,19 @@ const S = {
     en: "This combination does not have enough published dates (F status) to anchor an honest forecast.",
   },
 
-  // ── /resultados · galería de pronósticos (réplica de la sección hermana)
+  // ── /resultados · galería de pronósticos (patrón: galería filtrable + tiers + lightbox)
   resTag: { es: "Galería de pronósticos · modelo de producción", en: "Forecast gallery · production model" },
   resTitle: { es: "Todas las series, un vistazo", en: "Every series, at a glance" },
+  // {n} interpolated from SITE_STATS.horizonMonths (derived from forecasts_meta.json) — never hand-typed (regla #0)
   resSub: {
-    es: "Explora el pronóstico a 12 meses de cada serie país × categoría × tabla. Filtra, hojea por país o por categoría, y abre cualquiera para ver el abanico completo con sus bandas al 80 % y 95 %.",
-    en: "Browse the 12-month forecast of every country × category × table series. Filter, skim by country or category, and open any one to see the full fan chart with its 80% and 95% bands.",
+    es: "Explora el pronóstico a {n} meses de cada serie país × categoría × tabla. Filtra, hojea por país o por categoría, y abre cualquiera para ver el abanico completo con sus bandas al 80 % y 95 %.",
+    en: "Browse the {n}-month forecast of every country × category × table series. Filter, skim by country or category, and open any one to see the full fan chart with its 80% and 95% bands.",
   },
   resMetaUpdated: { es: "Actualizado", en: "Updated" },
   resMetaThrough: { es: "Datos reales hasta", en: "Real data through" },
   resMetaHorizon: { es: "Horizonte", en: "Horizon" },
-  resHorizonVal: { es: "próximos 12 meses", en: "next 12 months" },
+  // {n} is interpolated from the pipeline (forecasts.horizonMonths) — never hand-typed (regla #0)
+  resHorizonVal: { es: "próximos {n} meses", en: "next {n} months" },
   resSeriesLabel: { es: "series", en: "series" },
   resAreasLabel: { es: "áreas", en: "areas" },
   resFilterBlock: { es: "Bloque", en: "Block" },
@@ -336,6 +339,34 @@ const S = {
   resNext: { es: "Siguiente", en: "Next" },
   resClose: { es: "Cerrar", en: "Close" },
   resOpenHint: { es: "Abre cualquier tarjeta para el abanico completo, navegación y vistas.", en: "Open any card for the full fan chart, navigation and views." },
+  // sort control
+  resSort: { es: "Ordenar", en: "Sort" },
+  resSortOrder: { es: "Boletín", en: "Bulletin" },
+  resSortMase: { es: "Precisión", en: "Accuracy" },
+  resSortBacklog: { es: "Espera", en: "Wait" },
+  resSortMovement: { es: "Avance", en: "Movement" },
+  // scorecard chip (real prospective accuracy)
+  resScoreLabel: { es: "Precisión real", en: "Real accuracy" },
+  resScoreTip: { es: "Pronósticos congelados y calificados contra el boletín ya publicado.", en: "Forecasts frozen and graded against the already-published bulletin." },
+  // card face signals
+  resWait: { es: "espera", en: "wait" },
+  resYr: { es: "a", en: "yr" }, // años / years — compact unit
+  resAdvancing: { es: "avanza", en: "advancing" },
+  resRetrogressing: { es: "retrocede", en: "retrogressing" },
+  resPerYear: { es: "d/año", en: "d/yr" },
+  resTierGood: { es: "nítido", en: "sharp" },
+  resTierMid: { es: "medio", en: "mid" },
+  resTierWeak: { es: "flojo", en: "weak" },
+  // "reaches my priority date?" lightbox tool
+  resReachTitle: { es: "¿Alcanza mi fecha de prioridad?", en: "Does it reach my priority date?" },
+  resReachHint: { es: "Escribe tu fecha de prioridad (AAAA-MM-DD).", en: "Enter your priority date (YYYY-MM-DD)." },
+  resReachYes: { es: "Se proyecta alcanzarla hacia {m} (dentro del horizonte).", en: "Projected to reach it around {m} (within the horizon)." },
+  resReachNo: { es: "No se proyecta alcanzarla dentro de los {n} meses mostrados.", en: "Not projected to reach it within the {n} months shown." },
+  resReachPast: { es: "Tu fecha ya está por detrás del corte actual: la categoría ya la pasó.", en: "Your date is already behind the current cutoff: the category has passed it." },
+  resReachBad: { es: "Fecha no válida.", en: "Invalid date." },
+  // deep link
+  resCopyLink: { es: "Copiar enlace", en: "Copy link" },
+  resCopied: { es: "¡Copiado!", en: "Copied!" },
 
   // ── #problema section (home, AU1)
   probTag: { es: "El problema", en: "The problem" },

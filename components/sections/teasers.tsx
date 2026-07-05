@@ -12,13 +12,14 @@ import { useLang } from "@/components/lang-provider";
 import { localePath } from "@/lib/site-map";
 import { track } from "@/lib/analytics";
 import { loadForecasts, type Scorecard } from "@/lib/data/forecasts";
+import { SITE_STATS } from "@/lib/content/site-stats.generated";
 
 const T = {
   es: {
     kicker: "Pronóstico y evidencia",
     fcTitle: "¿Cuándo me toca?",
     fcBody:
-      "Elige tu país o área, categoría y tabla y mira el pronóstico del modelo desplegado a 12 meses, con bandas de predicción al 80 % / 95 %.",
+      "Elige tu país o área, categoría y tabla y mira el pronóstico del modelo desplegado a {n} meses, con bandas de predicción al 80 % / 95 %.",
     fcCta: "Ver el pronóstico de tu categoría",
     evTitle: "La evidencia, contra la realidad",
     evBody:
@@ -32,7 +33,7 @@ const T = {
     kicker: "Forecast & evidence",
     fcTitle: "When is my date?",
     fcBody:
-      "Pick your country or area, category and table and see the deployed model's 12-month forecast, with 80% / 95% prediction bands.",
+      "Pick your country or area, category and table and see the deployed model's {n}-month forecast, with 80% / 95% prediction bands.",
     fcCta: "See your category's forecast",
     evTitle: "The evidence, against reality",
     evBody:
@@ -96,7 +97,7 @@ export function Teasers() {
           <div className="border-t-2 border-[var(--color-rule)] pt-3">
             <h3 className="font-serif text-2xl font-bold">{t.fcTitle}</h3>
             <p className="mt-2 max-w-[46ch] text-sm leading-relaxed text-muted-foreground">
-              {t.fcBody}
+              {t.fcBody.replace("{n}", String(SITE_STATS.horizonMonths))}
             </p>
             <Cta
               href={`${datosBase}#pronostico`}
