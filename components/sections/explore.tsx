@@ -39,7 +39,7 @@ export function Explore() {
                 {rBlurb(r, lang)}
               </p>
               <span className="mt-3 block text-xs text-muted-foreground">
-                {r.sections.map((s) => sLabel(s, lang)).join(" · ")}
+                {r.sections.map((s) => sLabel(s, lang)).join(", ")}
               </span>
             </Link>
           ))}

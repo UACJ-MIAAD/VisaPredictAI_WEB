@@ -8,12 +8,11 @@ import {
   Legend, BarChart, Bar, PieChart, Pie, Cell,
 } from "recharts";
 import { PanelTable } from "@/components/tables/panel-table";
-import { countryLabel, statusColor, movementColor, type Panel, type VisaPanelRow } from "@/lib/data/visa-panel";
+import { countryLabel, statusColor, movementColor, PILOT, type Panel, type VisaPanelRow } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 
-const PILOT = ["mexico", "india", "china", "philippines", "all_chargeability"];
 const SERIES_COLORS = [
   "var(--color-accent)", "var(--color-accent-2)", "var(--color-success)",
   "var(--color-danger)", "var(--color-muted)",

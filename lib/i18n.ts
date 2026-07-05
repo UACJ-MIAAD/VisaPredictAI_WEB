@@ -5,7 +5,8 @@ type Dict = Record<string, { es: string; en: string }>;
 
 const S: Dict = {
   // hero
-  heroEyebrow: { es: "Anteproyecto MIAAD · UACJ · Mayo 2026", en: "MIAAD Thesis Proposal · UACJ · May 2026" },
+  heroEyebrow: { es: "Tesis MIAAD · UACJ · Proyecto I en curso", en: "MIAAD Thesis · UACJ · Project I underway" },
+  heroDataThrough: { es: "datos a", en: "data through" },
   heroTitlePre: { es: "Predicción de fechas de prioridad en el ", en: "Predicting priority dates in the U.S. " },
   heroTitlePost: { es: " de los Estados Unidos", en: "" },
   heroSub: {
@@ -14,18 +15,19 @@ const S: Dict = {
   },
   heroCtaRead: { es: "Leer el resumen", en: "Read the abstract" },
   heroCtaExplore: { es: "Explorar datos históricos", en: "Explore historical data" },
-  statModels: { es: "Modelos comparados", en: "Models compared" },
+  statBulletins: { es: "Boletines mensuales", en: "Monthly bulletins" },
   statCountries: { es: "Países / áreas piloto", en: "Pilot countries / areas" },
   statObs: { es: "Observaciones del panel", en: "Panel observations" },
-  statRefs: { es: "Referencias IEEE", en: "IEEE references" },
+  statSeries: { es: "Series país × categoría × tabla", en: "Country × category × table series" },
   statMethod: { es: "Metodología nominada", en: "Named methodology" },
 
   // explore
   exploreKicker: { es: "Explorar", en: "Explore" },
-  exploreTitle: { es: "El proyecto, en cuatro partes", en: "The project, in four parts" },
+  // No route count in the title: a hand-typed count fossilized once when a route was added.
+  exploreTitle: { es: "Explora el proyecto", en: "Explore the project" },
   exploreSub: {
-    es: "El anteproyecto se divide para leerse con foco: el documento académico, la ingeniería de datos, el explorador histórico interactivo y los recursos de consulta.",
-    en: "The proposal is split for focused reading: the academic document, the data engineering, the interactive historical explorer and the reference resources.",
+    es: "El proyecto se divide para leerse con foco: el documento académico, la ingeniería de datos, los datos históricos interactivos, los recursos de consulta y el asistente.",
+    en: "The project is split for focused reading: the academic document, the data engineering, the interactive historical data, the reference resources and the assistant.",
   },
 
   // route header

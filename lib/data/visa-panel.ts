@@ -28,6 +28,9 @@ const BLOCK_ES: Record<string, string> = {
   family: "familia",
 };
 
+// Pilot coverage (single source of truth — analytics, explorer and hero derive from it).
+export const PILOT = ["mexico", "india", "china", "philippines", "all_chargeability"];
+
 // CSV is comma-separated with no quoted fields (values are ISO dates / codes).
 function parseCsv(text: string): VisaPanelRow[] {
   const lines = text.split("\n");

@@ -2,11 +2,11 @@
 // computed from the real panel (lib/data/visa-panel.ts). This is the
 // "engineering" layer EpiBot had — turning a query (or a tool click) into a
 // chart spec backed by actual Visa Bulletin data. No fabricated numbers.
-import { type Panel, type VisaPanelRow, countryLabel, statusColor } from "@/lib/data/visa-panel";
+import { type Panel, type VisaPanelRow, countryLabel, statusColor, PILOT } from "@/lib/data/visa-panel";
 import { type ForecastStore, forecastFor, forecastMetaFor } from "@/lib/data/forecasts";
 
 export type Lang = "es" | "en";
-export const PILOT = ["mexico", "india", "china", "philippines", "all_chargeability"];
+export { PILOT };
 
 // ── entity detection (visa domain vocabulary) ───────────────────────────────
 const COUNTRY_ALIASES: [RegExp, string][] = [
@@ -169,7 +169,11 @@ export function buildForecast(panel: Panel, country: string, category: string, t
       data.push({ month: p.date.slice(0, 7), hist: null, fc: yr(p.days), date: epochToDate(baseEpoch + p.days),
         band80: [yr(p.lo80), yr(p.hi80)], band95: [yr(p.lo95), yr(p.hi95)] });
     const meta = forecastMetaFor(forecasts ?? null, country, category, table);
-    const mlabel = meta?.models?.length ? meta.models.join("+") : (table === "DFF" ? "SARIMA" : "Theta+ETS+SARIMA");
+    // Fallback label comes from the meta's method map (shipped with the forecasts),
+    // never hardcoded — if the deployed champion changes, this follows automatically.
+    const mlabel = meta?.models?.length
+      ? meta.models.join("+")
+      : (forecasts?.method?.[table] ?? (lang === "en" ? "production model" : "modelo de producción"));
     const mase = meta && Number.isFinite(meta.mase) ? (lang === "en" ? ` · hold-out MASE ${meta.mase}` : ` · MASE hold-out ${meta.mase}`) : "";
     subtitle = lang === "en"
       ? `Production-model forecast (${mlabel}) · 80 % / 95 % bands (conformal · per-horizon empirical quantiles)${mase}`
@@ -321,7 +325,7 @@ export function buildRadar(panel: Panel, table: string, lang: Lang): ChartSpec |
   };
 }
 
-// ── monthly bulletin table (full 291-month history, any month) ──────────────
+// ── monthly bulletin table (full panel history, any month) ──────────────────
 const MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const MONTHS_EN = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 const MON_ABBR: Record<string, number> = { ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7, ago: 8, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dic: 12, dec: 12 };
