@@ -5,7 +5,7 @@
 //
 // The committed files in public/data/ are the fallback: if GitHub raw hiccups,
 // we keep whatever is already there (the panel is critical; forecasts optional).
-import { writeFile, readFile, access, mkdir } from "node:fs/promises";
+import { writeFile, readFile, access, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const RAW = "https://raw.githubusercontent.com/UACJ-MIAAD/VisaPredictAI/main";
@@ -152,9 +152,24 @@ if (sharp) {
     if (!changed && !missing) continue;
     jobs.push(async () => {
       const src = sharp(png);
+      const pngBytes = (await stat(png)).size;
       await Promise.all([
         src.clone().avif({ quality: 55, effort: 4 }).toFile(avif),
-        src.clone().webp({ quality: 78 }).toFile(webp),
+        // Pick the smaller WebP: lossy q78 wins on photographic content, but on
+        // flat figures/screenshots it can exceed the PNG (g01: 245 KB > 243 KB)
+        // while lossless crushes them (70 KB). Deleting the WebP is not an option
+        // — the <picture> emits a webp <source> unconditionally, so a 404 breaks
+        // that image. So we always ship a WebP, just the best one (audit B4).
+        (async () => {
+          const lossy = await src.clone().webp({ quality: 78 }).toBuffer();
+          const best =
+            lossy.length < pngBytes
+              ? lossy
+              : [lossy, await src.clone().webp({ lossless: true }).toBuffer()].reduce((a, b) =>
+                  b.length < a.length ? b : a,
+                );
+          await writeFile(webp, best);
+        })(),
       ]);
     });
   }
