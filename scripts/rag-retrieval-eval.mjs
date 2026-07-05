@@ -80,6 +80,11 @@ const ACAD = [
   // (model card), not the frozen May proposal — in both languages.
   { q: "¿Qué modelos compara el proyecto y cuál gana?", src: /model card/i, lang: "es" },
   { q: "Which models does the project compare and which one wins?", src: /model card/i, lang: "en" },
+  // Audit round 3: natural PARAPHRASES must reach the verdict too, not just the
+  // exact seeded suggestion (BM25 fell back to the May proposal otherwise).
+  { q: "¿cuál es el mejor modelo?", src: /model card/i, lang: "es" },
+  { q: "¿cuántos modelos compararon?", src: /model card/i, lang: "es" },
+  { q: "which is the best model?", src: /model card/i, lang: "en" },
 ];
 let aHit = 0, aRankSum = 0;
 for (const p of ACAD) {

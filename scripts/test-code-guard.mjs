@@ -139,4 +139,20 @@ const run = (deltas, lang = "es") => {
   assert.equal(blocked, true, "real code not blocked");
 }
 
-console.log("✓ code-guard: 17/17 passed");
+// 18) the set-notation exemption is TIGHT: `}`-ending lines with code
+// punctuation inside the braces (`{ foo(); }`, `{ print(i); }`) are still code —
+// two consecutive block. With the old over-broad exemption both would be
+// exempted and slip through (audit r3 over-broad-exemption).
+{
+  const { blocked } = run(["Ejemplo:\n", "if (a) { foo(); }\n", "for (i in x) { print(i); }\n", "fin"]);
+  assert.equal(blocked, true, "consecutive brace lines with code punctuation not blocked");
+}
+
+// 19) …while a set with a comma and a space stays prose (e.g. `{ETS, Theta}`).
+{
+  const { out, blocked } = run(["El MCS al 90 % = {ETS, Theta}\n", "según el ranking."]);
+  assert.equal(blocked, false, "comma set notation blocked");
+  assert.ok(out.includes("{ETS, Theta}"), "comma set notation emitted");
+}
+
+console.log("✓ code-guard: 19/19 passed");

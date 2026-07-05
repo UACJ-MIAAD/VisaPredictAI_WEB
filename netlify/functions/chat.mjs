@@ -202,7 +202,10 @@ export function makeCodeGuard(lang) {
     // A `}`-ending line is code UNLESS the brace closes short SET NOTATION like
     // "MCS = {naive1}" — the model card's canonical Model-Confidence-Set syntax.
     // Without this the guard cut the flagship answer mid-stream (audit r2 E2E).
-    if (/}\s*$/.test(t) && !/\{[^{}\n]{1,40}\}\s*$/.test(t)) return true;
+    // The exemption stays TIGHT: only prose tokens inside the braces (letters,
+    // digits, commas, spaces) — anything with code punctuation like `;` or `()`
+    // (e.g. `{ print(i); }`) is still code (audit r3 over-broad-exemption).
+    if (/}\s*$/.test(t) && !/\{[\w\s,–-]{1,40}\}\s*$/.test(t)) return true;
     if (/=>|->|::|&&|\|\||!=|==|\+=|\bconsole\.|\bSystem\.|printf?\(/.test(s)) return true; // operators / calls
     if (
       /\b(def|class|function|import|from|return|const|let|var|public|private|void|static|SELECT|INSERT|UPDATE|DELETE|CREATE|FROM|WHERE|while|elif|async|await|lambda|func|fn)\b/.test(s) &&
