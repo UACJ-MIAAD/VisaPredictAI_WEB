@@ -91,8 +91,8 @@ export const ROUTES: Route[] = [
     labelEn: "Resources",
     short: "Recursos",
     shortEn: "Resources",
-    blurb: "Glosario operativo de 42 términos y 64 referencias IEEE.",
-    blurbEn: "Working glossary of 42 terms and 64 IEEE references.",
+    blurb: "Glosario operativo y referencias IEEE del documento académico.",
+    blurbEn: "Working glossary and IEEE references from the academic document.",
     sections: [
       { id: "glosario", label: "Glosario", labelEn: "Glossary" },
       { id: "referencias", label: "Referencias IEEE", labelEn: "IEEE references" },

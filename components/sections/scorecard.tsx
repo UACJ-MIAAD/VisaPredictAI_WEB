@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
 import { loadForecasts, type Scorecard } from "@/lib/data/forecasts";
+import { SITE_STATS } from "@/lib/content/site-stats.generated";
 
 const T = {
   es: {
@@ -39,7 +40,7 @@ const T = {
       "Muestra prospectiva pequeña y creciente; la cobertura 80 % reportada es out-of-sample.",
     methodTitle: "Honestidad radical: a un mes, nadie le gana al random walk",
     methodBody:
-      "El marco comparativo de 24 modelos dejó un hallazgo incómodo y valioso: en el pronóstico puntual a un mes, ningún modelo supera al random walk — con cerca de 45 % de los meses congelados, la fila que no se mueve es difícil de vencer. El valor del sistema está en lo que el random walk no da: el horizonte de 12 meses, los intervalos calibrados y la coherencia entre tablas. El campeón desplegado (mediana de Theta+ETS+SARIMA en FAD; SARIMA en DFF) sigue en producción; el retador ingenuo pasó el gate de promoción, pero la promoción está retenida hasta confirmarse prospectivamente en todos los horizontes — su añada mensual se congela en un ledger sombra. Las bandas 80 / 95 % se escalan por horizonte con los cuantiles empíricos del propio ledger prospectivo (calibradas solo sobre fechas F, con ajuste adaptativo ACI), y cada publicación respeta un cono de coherencia (FAD ≤ DFF; país ≤ mundial).",
+      "El marco comparativo de 24 modelos dejó un hallazgo incómodo y valioso: en el pronóstico puntual a un mes, ningún modelo supera al random walk — con cerca de {PCT} % de los meses congelados, la fila que no se mueve es difícil de vencer. El valor del sistema está en lo que el random walk no da: el horizonte de 12 meses, los intervalos calibrados y la coherencia entre tablas. El campeón desplegado (mediana de Theta+ETS+SARIMA en FAD; SARIMA en DFF) sigue en producción; el retador ingenuo pasó el gate de promoción, pero la promoción está retenida hasta confirmarse prospectivamente en todos los horizontes — su añada mensual se congela en un ledger sombra. Las bandas 80 / 95 % se escalan por horizonte con los cuantiles empíricos del propio ledger prospectivo (calibradas solo sobre fechas F, con ajuste adaptativo ACI), y cada publicación respeta un cono de coherencia (FAD ≤ DFF; país ≤ mundial).",
   },
   en: {
     eyebrow: "Prospective evaluation",
@@ -60,7 +61,7 @@ const T = {
       "Small and growing prospective sample; the reported 80% coverage is out-of-sample.",
     methodTitle: "Radical honesty: at one month out, nothing beats the random walk",
     methodBody:
-      "The 24-model comparison surfaced an uncomfortable, valuable finding: on one-month-ahead point forecasts, no model beats the random walk — with about 45% of months frozen, the row that does not move is hard to outdo. The system's value lies in what the random walk cannot give: the 12-month horizon, calibrated intervals and cross-table coherence. The deployed champion (median of Theta+ETS+SARIMA on FAD; SARIMA on DFF) stays in production; the naïve challenger passed the promotion gate, but promotion is held until it is confirmed prospectively across all horizons — its monthly vintages are frozen in a shadow ledger. The 80 / 95% bands are scaled per horizon with the empirical quantiles of the prospective ledger itself (calibrated on F-status dates only, with adaptive ACI adjustment), and every release respects a coherence cone (FAD ≤ DFF; country ≤ worldwide).",
+      "The 24-model comparison surfaced an uncomfortable, valuable finding: on one-month-ahead point forecasts, no model beats the random walk — with about {PCT}% of months frozen, the row that does not move is hard to outdo. The system's value lies in what the random walk cannot give: the 12-month horizon, calibrated intervals and cross-table coherence. The deployed champion (median of Theta+ETS+SARIMA on FAD; SARIMA on DFF) stays in production; the naïve challenger passed the promotion gate, but promotion is held until it is confirmed prospectively across all horizons — its monthly vintages are frozen in a shadow ledger. The 80 / 95% bands are scaled per horizon with the empirical quantiles of the prospective ledger itself (calibrated on F-status dates only, with adaptive ACI adjustment), and every release respects a coherence cone (FAD ≤ DFF; country ≤ worldwide).",
   },
 };
 
@@ -132,7 +133,10 @@ export function Scorecard() {
 
       <div className="mt-6 border-l-2 border-[var(--color-accent)] pl-4">
         <h3 className="font-serif text-lg font-bold text-[var(--color-ink)]">{t.methodTitle}</h3>
-        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--color-muted)]">{t.methodBody}</p>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--color-muted)]">
+          {/* {PCT} is interpolated from the build-time census (eda_facts.json), never typed by hand. */}
+          {t.methodBody.replace("{PCT}", String(SITE_STATS.pctFrozen))}
+        </p>
       </div>
 
       <figure className="mt-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
