@@ -23,6 +23,8 @@ export function ChatThread({
   onCopy,
   onSpeak,
   renderChart,
+  followUps,
+  onFollowUp,
 }: {
   lang: Lang;
   variant: "widget" | "console";
@@ -31,6 +33,9 @@ export function ChatThread({
   onCopy: (i: number, text: string) => void;
   onSpeak?: (text: string) => void;
   renderChart?: (chart: ChartPayload) => React.ReactNode;
+  /** contextual next-question chips shown under the latest completed answer */
+  followUps?: string[];
+  onFollowUp?: (q: string) => void;
 }) {
   const wide = variant === "console";
   return (
@@ -110,6 +115,17 @@ export function ChatThread({
             )}
           </div>
         ),
+      )}
+
+      {/* contextual follow-up chips under the latest answer */}
+      {followUps && followUps.length > 0 && onFollowUp && (
+        <div className="flex flex-wrap gap-1.5 pl-1 pt-1" aria-label={tr(lang, "vbFollowUps")}>
+          {followUps.map((f) => (
+            <button key={f} onClick={() => onFollowUp(f)} className="vb-suggest text-[0.76rem]">
+              {f}
+            </button>
+          ))}
+        </div>
       )}
     </>
   );

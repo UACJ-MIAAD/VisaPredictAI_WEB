@@ -4,41 +4,27 @@
 // fused ranking for MRR/nDCG and post-MMR top-6 for recall). No network, no
 // Claude — fast + free, so it can be re-run after every indexing change to
 // prove a gain. Run: node scripts/rag-retrieval-eval.mjs
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
+import { buildBM25, retrieveRanked } from "../lib/visabot/retrieval-core.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const idx = JSON.parse(readFileSync(join(root, "public", "rag", "index.json"), "utf8"));
 
-const STOP = new Set("de la el los las un una unos unas y o a en que es del al se su por con para the a an of to in is are and or for on with that this it as by be from at qué que como cómo cuál cuales donde dónde es son está están".split(" "));
-const fold = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-const tok = (s) => fold(s).replace(/[^a-z0-9_]+/g, " ").split(/\s+/).filter((t) => t.length > 1 && !STOP.has(t));
-
-// decode vectors + BM25 (mirror engine.ts; uses chunk.embedCtx if present)
+// decode vectors; BM25 comes from the shared retrieval-core (single source with
+// engine.ts — embedCtx-aware, code-normalized tokenizer).
 const bin = atob(idx.vectors); const by = new Uint8Array(bin.length);
 for (let i = 0; i < bin.length; i++) by[i] = bin.charCodeAt(i);
 const vectors = new Float32Array(by.buffer); const dim = idx.dim; const chunks = idx.chunks;
-const idxText = (c) => `${c.embedCtx ? c.embedCtx + " " : ""}${c.title} ${c.text}`;
-const docTf = [], docLen = [], df = new Map();
-for (const c of chunks) { const ts = tok(idxText(c)); const tf = new Map(); for (const t of ts) tf.set(t, (tf.get(t) || 0) + 1); for (const t of tf.keys()) df.set(t, (df.get(t) || 0) + 1); docTf.push(tf); docLen.push(ts.length); }
-const N = chunks.length, idf = new Map();
-for (const [t, n] of df) idf.set(t, Math.log(1 + (N - n + 0.5) / (n + 0.5)));
-const avgdl = docLen.reduce((a, b) => a + b, 0) / Math.max(1, N);
+const L = buildBM25(chunks);
 
-function rank(qv, qt, lang) {
-  let pool = chunks.map((_, i) => i).filter((i) => chunks[i].lang === lang);
-  if (pool.length < 18) pool = chunks.map((_, i) => i);
-  const k1 = 1.5, b = 0.75;
-  const lex = pool.map((i) => { let s = 0; for (const t of qt) { const f = docTf[i].get(t); if (!f) continue; s += (idf.get(t) || 0) * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * docLen[i]) / avgdl))); } return { i, s }; }).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 40);
-  const dense = pool.map((i) => { let s = 0; const o = i * dim; for (let k = 0; k < dim; k++) s += qv[k] * vectors[o + k]; return { i, s }; }).sort((a, b) => b.s - a.s).slice(0, 40);
-  const rrf = new Map(); lex.forEach((x, r) => rrf.set(x.i, (rrf.get(x.i) || 0) + 1 / (60 + r))); dense.forEach((x, r) => rrf.set(x.i, (rrf.get(x.i) || 0) + 1 / (60 + r)));
-  const fused = [...rrf.entries()].map(([i, s]) => ({ i, s })).sort((a, b) => b.s - a.s);
-  // MMR top-6 (mirror engine λ=0.7) for recall@6
-  const cos = (a, c) => { let s = 0; for (let k = 0; k < dim; k++) s += vectors[a * dim + k] * vectors[c * dim + k]; return s; };
-  const cand = fused.slice(0, 24); const sel = [];
-  while (sel.length < 6 && cand.length) { let best = -1, bs = -Infinity; const mr = cand[0].s || 1; for (let ci = 0; ci < cand.length; ci++) { const { i, s } = cand[ci]; let div = sel.length ? Math.max(...sel.map((j) => cos(i, j))) : 0; const sc = 0.7 * (s / mr) - 0.3 * div; if (sc > bs) { bs = sc; best = ci; } } sel.push(cand[best].i); cand.splice(best, 1); }
-  return { fused: fused.map((x) => x.i), mmr: sel };
+// Full pipeline via the shared core (expand → cross-lingual → BM25+dense → RRF →
+// rerank → MMR) so the gate measures exactly what engine.ts ships.
+function rank(qv, lang, query) {
+  const { fused, selected } = retrieveRanked({ chunks, vectors, dim, bm25: L, query, qv, lang, k: 6 });
+  return { fused, mmr: selected };
 }
 
 const { pipeline, env } = await import("@huggingface/transformers");
@@ -54,7 +40,7 @@ const probes = chunks.map((c, i) => ({ i, c })).filter((p) => p.c.kind === "glos
 
 let r1 = 0, r6 = 0, mrrSum = 0, ndcgSum = 0;
 for (const p of probes) {
-  const { fused, mmr } = rank(await embed(p.q), tok(p.q), p.lang);
+  const { fused, mmr } = rank(await embed(p.q), p.lang, p.q);
   const fusedRank = fused.indexOf(p.target) + 1; // 1-based; 0 → not found
   if (mmr[0] === p.target) r1++;
   if (mmr.includes(p.target)) r6++;
@@ -65,6 +51,16 @@ const n = probes.length, pct = (x) => `${Math.round((x / n) * 100)}%`;
 console.log(`\nRETRIEVAL BENCHMARK · index built ${idx.built?.slice(0, 10)} · contextual prefix: ${chunks.some((c) => c.embedCtx) ? "ON (academic/docs)" : "OFF"}`);
 console.log(`GLOSSARY probes (${n}, self-contained — guards against dilution):`);
 console.log(`  recall@1: ${pct(r1)} (${r1}/${n})  recall@6: ${pct(r6)} (${r6}/${n})  MRR: ${(mrrSum / n).toFixed(3)}  nDCG@10: ${(ndcgSum / n).toFixed(3)}`);
+
+// BM25-ONLY (pre-consent default): the lexical-only ranking EVERY first-time
+// visitor hits before the ~150 MB semantic download. Previously unmeasured.
+let b1 = 0, b6 = 0;
+for (const p of probes) {
+  const { mmr } = rank(null, p.lang, p.q); // qv=null → BM25-only
+  if (mmr[0] === p.target) b1++;
+  if (mmr.includes(p.target)) b6++;
+}
+console.log(`  BM25-only (pre-consent): recall@1 ${pct(b1)} (${b1}/${n})  recall@6 ${pct(b6)} (${b6}/${n})`);
 
 // ACADEMIC/fragment probes (where contextual retrieval should help): query → expected source (regex)
 const ACAD = [
@@ -77,32 +73,43 @@ const ACAD = [
   { q: "which methodology does the project follow?", src: /method|crisp|product|IV/i, lang: "en" },
   { q: "what error metrics does the project use?", src: /metodolog|marco|product|model|method|framework/i, lang: "es" },
   // Audit round 2: the seeded suggestion must retrieve the CURRENT results
-  // (model card), not the frozen May proposal — in both languages.
-  { q: "¿Qué modelos compara el proyecto y cuál gana?", src: /model card/i, lang: "es" },
-  { q: "Which models does the project compare and which one wins?", src: /model card/i, lang: "en" },
+  // (model card), not the frozen May proposal — in both languages. These are the
+  // FLAGSHIP probes and get their own 100 % gate (finding 14: otherwise one
+  // flagship paraphrase could regress and still ship, diluted in the acadHit avg).
+  { q: "¿Qué modelos compara el proyecto y cuál gana?", src: /model card/i, lang: "es", flagship: true },
+  { q: "Which models does the project compare and which one wins?", src: /model card/i, lang: "en", flagship: true },
   // Audit round 3: natural PARAPHRASES must reach the verdict too, not just the
   // exact seeded suggestion (BM25 fell back to the May proposal otherwise).
-  { q: "¿cuál es el mejor modelo?", src: /model card/i, lang: "es" },
-  { q: "¿cuántos modelos compararon?", src: /model card/i, lang: "es" },
-  { q: "which is the best model?", src: /model card/i, lang: "en" },
+  { q: "¿cuál es el mejor modelo?", src: /model card/i, lang: "es", flagship: true },
+  { q: "¿cuántos modelos compararon?", src: /model card/i, lang: "es", flagship: true },
+  { q: "which is the best model?", src: /model card/i, lang: "en", flagship: true },
 ];
-let aHit = 0, aRankSum = 0;
+let aHit = 0, aRankSum = 0, flagN = 0, flagHit = 0;
+const probeLog = [];
 for (const p of ACAD) {
-  const { fused } = rank(await embed(p.q), tok(p.q), p.lang);
+  const { fused } = rank(await embed(p.q), p.lang, p.q);
   const r = fused.findIndex((i) => p.src.test(chunks[i].source)) + 1;
-  if (r && r <= 6) aHit++;
+  const hit = r && r <= 6;
+  if (hit) aHit++;
   else console.log(`  MISS: "${p.q}" → best-rank ${r || "none"}`);
+  if (p.flagship) { flagN++; if (hit) flagHit++; }
   aRankSum += r || 99;
+  probeLog.push({ q: p.q, lang: p.lang, rank: r || null, hit: !!hit, flagship: !!p.flagship });
 }
 console.log(`ACADEMIC/fragment probes (${ACAD.length}, where contextual helps):`);
 console.log(`  source-hit@6: ${Math.round((aHit / ACAD.length) * 100)}% (${aHit}/${ACAD.length})  mean best-rank: ${(aRankSum / ACAD.length).toFixed(1)}`);
+console.log(`  flagship "which model wins" probes: ${flagHit}/${flagN} hit@6`);
 
 // Época 5 — CI gate: with --gate, fail (exit 1) if any metric regresses below
 // the frozen baseline thresholds. Keeps deploys from silently degrading retrieval.
 if (process.argv.includes("--gate")) {
-  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85 };
-  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length };
+  // Per-probe ranks → machine-readable artifact (OS temp, never shipped) so a
+  // regression shows WHICH probe moved, not just an aggregate pass/fail.
+  const probesPath = join(tmpdir(), "visabot-gate-probes.json");
+  try { writeFileSync(probesPath, JSON.stringify({ built: idx.built, glossary: { recall1: r1 / n, recall6: r6 / n, mrr: mrrSum / n, bm25Recall6: b6 / n }, academic: probeLog }, null, 2)); console.log(`  per-probe ranks → ${probesPath}`); } catch { /* best-effort */ }
+  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85, flagship: 1.0, bm25Recall6: 0.90 };
+  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length, flagship: flagN ? flagHit / flagN : 1, bm25Recall6: b6 / n };
   const fails = Object.entries(T).filter(([k, t]) => m[k] < t).map(([k, t]) => `${k} ${m[k].toFixed(3)} < ${t}`);
   if (fails.length) { console.error(`\n✗ RAG GATE FAILED:\n  ${fails.join("\n  ")}`); process.exit(1); }
-  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}).`);
+  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}, flagship ${m.flagship.toFixed(2)}, bm25@6 ${m.bm25Recall6.toFixed(2)}).`);
 }

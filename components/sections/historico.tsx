@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { loadPanel, type Panel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { SITE_STATS } from "@/lib/content/site-stats.generated";
 
 // Recharts + TanStack live in panel-explorer; only fetched when it mounts.
 const PanelExplorer = dynamic(() => import("./panel-explorer"), {
@@ -68,7 +69,7 @@ export function Historico() {
         <h2 className="section-title">
           Visa Bulletin · {lang === "en" ? "Historical data" : "Datos históricos"}
         </h2>
-        <p className="section-sub">{tr(lang, "histSub")}</p>
+        <p className="section-sub">{tr(lang, "histSub").replace("{lastYear}", SITE_STATS.dateLast.slice(0, 4))}</p>
 
         {error ? (
           <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">

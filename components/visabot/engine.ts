@@ -13,12 +13,16 @@
 // index + BM25, so the bot is instantly usable — and stays usable — without
 // the semantic engine (AZ1: no ~150 MB download without consent).
 import type { Chunk, Lang, Source } from "./types";
+import { buildBM25, retrieveRanked } from "@/lib/visabot/retrieval-core.mjs";
 
 type Index = { model: string; dim: number; built: string; chunks: Chunk[] };
 
 let _index: Promise<Loaded> | null = null;
 let _embedder: Promise<(text: string) => Promise<Float32Array>> | null = null;
 let _modelReady = false;
+// download progress (0–100) for the semantic engine, aggregated across model files
+let _dlProgress = 0;
+const _dlFiles = new Map<string, { loaded: number; total: number }>();
 
 type Loaded = {
   meta: Index;
@@ -31,19 +35,8 @@ type Loaded = {
   avgdl: number;
 };
 
-// ── tokenization (accent-folded, stopword-trimmed) ─────────────────────────
-const STOP = new Set(
-  ("de la el los las un una unos unas y o a en que es del al se su por con para " +
-    "the a an of to in is are and or for on with that this it as by be from at " +
-    "qué que como cómo cuál cuales donde dónde es son está están").split(" "),
-);
-const fold = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-const tokenize = (s: string) =>
-  fold(s)
-    .replace(/[^a-z0-9_]+/g, " ")
-    .split(/\s+/)
-    .filter((t) => t.length > 1 && !STOP.has(t));
+// tokenization + BM25/RRF/MMR live in the shared retrieval-core.mjs (imported
+// above) so the three rag-*.mjs evals rank identically to production.
 
 function decodeVectors(b64: string): Float32Array {
   const bin = atob(b64);
@@ -60,22 +53,7 @@ async function loadIndex(): Promise<Loaded> {
     const json = (await raw.json()) as Index & { vectors: string };
     const vectors = decodeVectors(json.vectors);
     const dim = json.dim;
-    // build BM25
-    const docTf: Map<string, number>[] = [];
-    const docLen: number[] = [];
-    const df = new Map<string, number>();
-    for (const c of json.chunks) {
-      const toks = tokenize(`${c.embedCtx ? c.embedCtx + " " : ""}${c.title} ${c.text}`);
-      const tf = new Map<string, number>();
-      for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
-      for (const t of tf.keys()) df.set(t, (df.get(t) || 0) + 1);
-      docTf.push(tf);
-      docLen.push(toks.length);
-    }
-    const N = json.chunks.length;
-    const idf = new Map<string, number>();
-    for (const [t, n] of df) idf.set(t, Math.log(1 + (N - n + 0.5) / (n + 0.5)));
-    const avgdl = docLen.reduce((a, b) => a + b, 0) / Math.max(1, N);
+    const { docTf, docLen, idf, avgdl } = buildBM25(json.chunks);
     return { meta: json, vectors, dim, docTf, docLen, idf, avgdl };
   })();
   return _index;
@@ -99,8 +77,19 @@ function ensureEmbedder(): Promise<(text: string) => Promise<Float32Array>> {
     }
     const extractor = await pipeline("feature-extraction", "Xenova/multilingual-e5-small", {
       dtype: "q8",
+      progress_callback: (p) => {
+        // ProgressInfo is a union; only the download variants carry file/total
+        if ("file" in p && "total" in p && typeof p.total === "number") {
+          const loaded = "loaded" in p && typeof p.loaded === "number" ? p.loaded : 0;
+          _dlFiles.set(p.file, { loaded, total: p.total });
+        }
+        let loaded = 0, total = 0;
+        for (const f of _dlFiles.values()) { loaded += f.loaded; total += f.total; }
+        if (total > 0) _dlProgress = Math.min(99, Math.round((loaded / total) * 100));
+      },
     });
     _modelReady = true;
+    _dlProgress = 100;
     return async (text: string) => {
       const out = await extractor([`query: ${text}`], { pooling: "mean", normalize: true });
       return out.data as Float32Array;
@@ -126,99 +115,37 @@ export function warmUpSemantic() {
 }
 
 export const isModelReady = () => _modelReady;
+// 0–100 download progress of the semantic engine (for the loading pill)
+export const downloadProgress = () => _dlProgress;
 // whether the semantic download has been started (this page load)
 export const isSemanticStarted = () => _embedder !== null;
 
 // ── retrieval ───────────────────────────────────────────────────────────────
-const RRF_K = 60;
-const POOL = 40; // candidates per modality
-const MMR_LAMBDA = 0.7;
-
-function bm25Rank(L: Loaded, qTokens: string[], pool: number[]): { i: number; s: number }[] {
-  const k1 = 1.5,
-    b = 0.75;
-  const scored = pool.map((i) => {
-    let s = 0;
-    for (const t of qTokens) {
-      const f = L.docTf[i].get(t);
-      if (!f) continue;
-      const idf = L.idf.get(t) || 0;
-      s += idf * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * L.docLen[i]) / L.avgdl)));
-    }
-    return { i, s };
-  });
-  return scored.filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, POOL);
-}
-
-function denseRank(L: Loaded, qv: Float32Array, pool: number[]): { i: number; s: number }[] {
-  const d = L.dim;
-  const scored = pool.map((i) => {
-    let s = 0;
-    const off = i * d;
-    for (let k = 0; k < d; k++) s += qv[k] * L.vectors[off + k];
-    return { i, s };
-  });
-  return scored.sort((a, b) => b.s - a.s).slice(0, POOL);
-}
-
-function cosineIdx(L: Loaded, a: number, b: number): number {
-  const d = L.dim;
-  let s = 0;
-  for (let k = 0; k < d; k++) s += L.vectors[a * d + k] * L.vectors[b * d + k];
-  return s;
-}
+// The whole pipeline (expand → cross-lingual pool → BM25 + dense → RRF → rerank
+// → MMR) lives in the shared retrieval-core.mjs so the three rag-*.mjs evals
+// rank byte-identically to this path.
 
 export async function retrieve(query: string, lang: Lang, k = 6): Promise<Source[]> {
   const L = await loadIndex();
-  // candidate pool: prefer active language, but fall back to all if sparse
-  let pool = L.meta.chunks.map((_, i) => i).filter((i) => L.meta.chunks[i].lang === lang);
-  if (pool.length < k * 3) pool = L.meta.chunks.map((_, i) => i);
-
-  const qTokens = tokenize(query);
-  const lex = bm25Rank(L, qTokens, pool);
-
   // dense only if the model is ready (don't block the first answer on a 129MB load)
-  let dense: { i: number; s: number }[] = [];
+  let qv: Float32Array | null = null;
   if (_modelReady && _embedder) {
     try {
-      const embed = await _embedder;
-      const qv = await embed(query);
-      dense = denseRank(L, qv, pool);
+      qv = await (await _embedder)(query);
     } catch {
-      dense = [];
+      qv = null;
     }
   }
-
-  // Reciprocal Rank Fusion
-  const rrf = new Map<number, number>();
-  lex.forEach((x, r) => rrf.set(x.i, (rrf.get(x.i) || 0) + 1 / (RRF_K + r)));
-  dense.forEach((x, r) => rrf.set(x.i, (rrf.get(x.i) || 0) + 1 / (RRF_K + r)));
-  const fused = [...rrf.entries()].map(([i, s]) => ({ i, s })).sort((a, b) => b.s - a.s);
-  if (fused.length === 0) return [];
-
-  // MMR diversification (uses dense vectors for similarity when available)
-  const haveVecs = dense.length > 0;
-  const selected: number[] = [];
-  const cand = fused.slice(0, Math.max(k * 4, 16));
-  const maxRel = cand[0].s || 1;
-  while (selected.length < k && cand.length) {
-    let best = -1,
-      bestScore = -Infinity;
-    for (let ci = 0; ci < cand.length; ci++) {
-      const { i, s } = cand[ci];
-      let div = 0;
-      if (haveVecs && selected.length)
-        div = Math.max(...selected.map((j) => cosineIdx(L, i, j)));
-      const score = MMR_LAMBDA * (s / maxRel) - (1 - MMR_LAMBDA) * div;
-      if (score > bestScore) {
-        bestScore = score;
-        best = ci;
-      }
-    }
-    selected.push(cand[best].i);
-    cand.splice(best, 1);
-  }
-
+  const { selected } = retrieveRanked({
+    chunks: L.meta.chunks,
+    vectors: L.vectors,
+    dim: L.dim,
+    bm25: { docTf: L.docTf, docLen: L.docLen, idf: L.idf, avgdl: L.avgdl },
+    query,
+    qv,
+    lang,
+    k,
+  });
   return selected.map((i, idx) => {
     const c = L.meta.chunks[i];
     return { n: idx + 1, title: c.title, source: c.source, url: c.url, text: c.text };
@@ -264,13 +191,20 @@ export async function generate(
     const { done, value } = await reader.read();
     if (done) break;
     buf += dec.decode(value, { stream: true });
+    // Runaway guard: a malformed stream with no frame boundary must not grow the
+    // buffer without bound — bail to the extractive fallback instead.
+    if (buf.length > 1_000_000) {
+      erred = true;
+      break;
+    }
     const parts = buf.split("\n\n");
     buf = parts.pop() || "";
     for (const p of parts) {
-      const line = p.split("\n").find((l) => l.startsWith("data:"));
-      if (!line) continue;
+      // an SSE event may carry MULTIPLE data: lines that concatenate
+      const payload = p.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("\n");
+      if (!payload) continue;
       try {
-        const ev = JSON.parse(line.slice(5).trim());
+        const ev = JSON.parse(payload);
         if (ev.t === "delta" && ev.text) {
           full += ev.text;
           onDelta(ev.text);
@@ -278,7 +212,7 @@ export async function generate(
           erred = true;
         }
       } catch {
-        /* ignore */
+        /* ignore ping / keep-alive */
       }
     }
   }

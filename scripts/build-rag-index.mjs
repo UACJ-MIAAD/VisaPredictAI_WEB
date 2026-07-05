@@ -83,18 +83,28 @@ function splitByLength(text, title) {
     if (t.length > 40) out.push(t);
     buf = "";
   };
+  const carryOverlap = () => {
+    // carry the tail of the just-flushed chunk into the next for continuity
+    const prev = out[out.length - 1] || "";
+    return prev.slice(-CHUNK_OVERLAP);
+  };
   for (const p of paras) {
     if (buf.length + p.length + 2 > CHUNK_CHARS && buf) {
       flush();
-      // carry overlap (tail of previous chunk) for continuity
-      const prev = out[out.length - 1] || "";
-      buf = prev.slice(-CHUNK_OVERLAP) + "\n\n";
+      buf = carryOverlap() + "\n\n";
     }
     if (p.length > CHUNK_CHARS) {
-      // hard-split very long paragraphs on sentence boundaries
-      const sents = p.match(/[^.!?]+[.!?]+|\S+$/g) || [p];
+      // hard-split very long paragraphs on sentence boundaries. The final
+      // alternative is `[^.!?]+$` (NOT `\S+$`): the old form matched only the
+      // last whitespace-delimited TOKEN of a punctuation-free tail, silently
+      // dropping the rest — e.g. a whole CREATE TABLE DDL after a comment's
+      // period became unretrievable (finding 1).
+      const sents = p.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [p];
       for (const s of sents) {
-        if (buf.length + s.length > CHUNK_CHARS && buf) flush();
+        if (buf.length + s.length > CHUNK_CHARS && buf) {
+          flush();
+          buf = carryOverlap() + " "; // keep 150-char overlap on the sentence-split path too (finding 15)
+        }
         buf += s + " ";
       }
     } else {
@@ -417,6 +427,10 @@ function buildPrompts() {
     const en = lang === "en";
     const gl = glTerms(lang, glWanted, 12);
     const m = latestMonth ? monthLabel(latestMonth, lang) : null;
+    // ≈ one year before the latest bulletin, derived (never hard-typed) so the
+    // "compare two bulletins" prompts stay fresh — regla #0.
+    const yearAgo = latestMonth ? (() => { const [y, mo] = latestMonth.split("-"); return `${+y - 1}-${mo}`; })() : null;
+    const mAgo = yearAgo ? monthLabel(yearAgo, lang) : null;
     return [
       { icon: "glossary", cat: en ? "Glossary" : "Glosario",
         items: gl.map((t) => (en ? `What is ${t}?` : `¿Qué es ${t}?`)) },
@@ -434,8 +448,8 @@ function buildPrompts() {
           : ["Muéstrame el pronóstico de México F2A", "Pronóstico de India EB2", "Predice Filipinas F4 (DFF)", "Proyección de China EB3", "Zoom al pronóstico de México F3", "Pronóstico India F1 (FAD)", "Pronóstico de All Chargeability F4", "Predice México EB3 (DFF)", "Pronóstico de China F4", "Zoom Filipinas F1", "Pronóstico India F2B", "Proyección de México F1 (DFF)"] },
       { icon: "charts", cat: en ? "Charts (data viz)" : "Gráficos (visualizaciones)",
         items: en
-          ? [m ? `Show the ${m} bulletin table` : "Show the latest bulletin table", "Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement", "Mexico F4 backlog vs the world", "Status mix (C/F/U) for India F1", "Employment heatmap (DFF)", "China F4 priority-date evolution", "Compare the wait for F2A across countries", "Monthly movement of Philippines F4", "Country race for F4 (DFF)"]
-          : [m ? `Muéstrame la tabla del boletín de ${m}` : "Muéstrame la tabla del último boletín", "Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2", "Backlog de México F4 vs el mundo", "Mezcla de estado (C/F/U) de India F1", "Mapa de calor de empleo (DFF)", "Evolución de la fecha de China F4", "Compara la espera de F2A entre países", "Movimiento mensual de Filipinas F4", "Carrera de países en F4 (DFF)"] },
+          ? [m ? `Show the ${m} bulletin table` : "Show the latest bulletin table", (m && mAgo) ? `Compare the ${mAgo} and ${m} bulletins` : "Compare two bulletins", (m && mAgo) ? `What changed between ${mAgo} and ${m}?` : "What changed between two bulletins?", "Show Mexico F3's date evolution", "Compare the wait across countries for F4", "Heatmap of family categories", "Wait radar by country", "Country race for F3", "India EB2 monthly movement", "Mexico F4 backlog vs the world", "Status mix (C/F/U) for India F1", "Employment heatmap (DFF)", "China F4 priority-date evolution", "Compare the wait for F2A across countries", "Monthly movement of Philippines F4", "Country race for F4 (DFF)"]
+          : [m ? `Muéstrame la tabla del boletín de ${m}` : "Muéstrame la tabla del último boletín", (m && mAgo) ? `Compara los boletines de ${mAgo} y ${m}` : "Compara dos boletines", (m && mAgo) ? `¿Qué cambió entre ${mAgo} y ${m}?` : "¿Qué cambió entre dos boletines?", "Muéstrame la evolución de México F3", "Compara la espera entre países en F4", "Mapa de calor de las categorías familiares", "Radar de espera por país", "Carrera de países en F3", "Movimiento mensual de India EB2", "Backlog de México F4 vs el mundo", "Mezcla de estado (C/F/U) de India F1", "Mapa de calor de empleo (DFF)", "Evolución de la fecha de China F4", "Compara la espera de F2A entre países", "Movimiento mensual de Filipinas F4", "Carrera de países en F4 (DFF)"] },
       { icon: "refs", cat: en ? "References" : "Referencias",
         items: en
           ? ["Which reference backs CRISP-DM?", "What reference introduces the MASE metric?", "What reference is Prophet based on?", "Which paper proposes DeepAR?", "What reference covers conformal prediction?", "Which reference is behind walk-forward validation?"]
