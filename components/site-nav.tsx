@@ -10,6 +10,7 @@ import { LangToggle } from "@/components/lang-toggle";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { ROUTES, routeByPath, rShort, rLabel, sLabel, localePath, basePath } from "@/lib/site-map";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import { cn } from "@/lib/utils";
 
 /** Reading progress + scroll-spy over the *current route's* sections. */
@@ -34,10 +35,17 @@ function usePageState(sectionIds: string[]) {
     );
     els.forEach((el) => io.observe(el));
 
+    // AZ8: coalesce scroll events into one setState per frame
+    let ticking = false;
     const onScroll = () => {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      setProgress(max > 0 ? (h.scrollTop / max) * 100 : 0);
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const h = document.documentElement;
+        const max = h.scrollHeight - h.clientHeight;
+        setProgress(max > 0 ? (h.scrollTop / max) * 100 : 0);
+      });
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -62,11 +70,21 @@ export function SiteNav() {
   const { active, progress } = usePageState(sectionIds);
   const [open, setOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
-  const menuBtnRef = React.useRef<HTMLButtonElement>(null);
-  const closeBtnRef = React.useRef<HTMLButtonElement>(null);
+  // AX8: real focus trap for the open drawer (WAI-ARIA dialog pattern) — it
+  // also moves focus in on open and restores it to the trigger on close.
+  const drawerRef = useFocusTrap<HTMLElement>(open);
 
   React.useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    // AZ8: coalesce scroll events into one setState per frame
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        setScrolled(window.scrollY > 20);
+      });
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -79,13 +97,11 @@ export function SiteNav() {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    closeBtnRef.current?.focus(); // move focus into the dialog
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
-      menuBtnRef.current?.focus(); // restore focus to the trigger on close
     };
   }, [open]);
 
@@ -97,7 +113,7 @@ export function SiteNav() {
           scrolled && "shadow-[0_2px_14px_rgba(0,0,0,0.06)]",
         )}
       >
-        <nav className="mx-auto flex h-16 max-w-[1140px] items-center gap-4 px-5">
+        <nav className="mx-auto flex h-16 max-w-[var(--container)] items-center gap-4 px-5">
           <Link
             href={localePath("/", lang)}
             className="flex items-center gap-2 font-serif text-lg font-extrabold"
@@ -113,7 +129,8 @@ export function SiteNav() {
             </span>
           </Link>
 
-          <ul className="ml-auto hidden items-center gap-1 md:flex">
+          {/* AX8: horizontal nav only from lg — at 768–1024px it crowded the bar */}
+          <ul className="ml-auto hidden items-center gap-1 lg:flex">
             {ROUTES.filter((r) => r.path !== "/").map((r) => {
               const isActive = base === r.path;
               return (
@@ -133,17 +150,16 @@ export function SiteNav() {
             })}
           </ul>
 
-          <div className="ml-auto flex items-center gap-2 md:ml-2">
+          <div className="ml-auto flex items-center gap-2 lg:ml-2">
             <LangToggle />
             <ThemeToggle />
             <button
-              ref={menuBtnRef}
               type="button"
               aria-label={tr(lang, "openMenu")}
               aria-expanded={open}
               aria-haspopup="dialog"
               onClick={() => setOpen(true)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-secondary"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border hover:bg-secondary"
             >
               <Menu className="h-5 w-5" aria-hidden />
             </button>
@@ -171,6 +187,7 @@ export function SiteNav() {
       >
         <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
         <aside
+          ref={drawerRef}
           className={cn(
             "absolute right-0 top-0 flex h-full w-[320px] max-w-[88vw] flex-col border-l border-border bg-background transition-transform duration-300",
             open ? "translate-x-0" : "translate-x-full",
@@ -184,11 +201,10 @@ export function SiteNav() {
               {tr(lang, "menu")}
             </span>
             <button
-              ref={closeBtnRef}
               type="button"
               aria-label={tr(lang, "closeMenu")}
               onClick={() => setOpen(false)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-secondary"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border hover:bg-secondary"
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
@@ -236,11 +252,11 @@ export function SiteNav() {
         </aside>
       </div>
 
-      {/* desktop scroll-spy rail for the current route (xl only) */}
+      {/* desktop scroll-spy rail for the current route (lg+, AW-13) */}
       {route.sections.length > 1 && (
         <nav
           aria-label={tr(lang, "menu")}
-          className="fixed left-4 top-1/2 z-30 hidden -translate-y-1/2 xl:block"
+          className="fixed left-1.5 top-1/2 z-30 hidden -translate-y-1/2 lg:block xl:left-4"
         >
           <ul className="flex flex-col gap-2">
             {route.sections.map((s) => (
@@ -252,9 +268,11 @@ export function SiteNav() {
                       active === s.id && "h-2.5 w-2.5 bg-[var(--color-accent)]",
                     )}
                   />
+                  {/* AX8: readable plate so the hover label never melts into
+                      content it overlaps at 1280–1366px */}
                   <span
                     className={cn(
-                      "pointer-events-none whitespace-nowrap text-xs opacity-0 transition-opacity group-hover:opacity-100",
+                      "pointer-events-none whitespace-nowrap rounded bg-[var(--color-bg)]/90 px-1.5 text-xs opacity-0 backdrop-blur transition-opacity group-hover:opacity-100",
                       active === s.id
                         ? "text-foreground opacity-100"
                         : "text-muted-foreground",

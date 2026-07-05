@@ -4,6 +4,16 @@
    not bordered boxes. Cards remain only for genuine asides (tinted,
    no border) and the data-explorer controls. All legacy class names
    are preserved so the extracted academic markup themes correctly.
+
+   Breakpoint scale (AX2) — unified with Tailwind's sm/md/lg:
+     max-width: 640px  → single column, small type (Tailwind sm)
+     max-width: 768px  → 2-col collapses, stacked metrics (Tailwind md)
+     max-width: 1024px → 3/4-col grids drop to 2 (Tailwind lg)
+   No other cutoffs may be introduced.
+
+   Content rail (AX1): .section-inner is max-width var(--container)
+   (globals.css, 1140px) with a 1.25rem gutter — the same measure as
+   the nav / hero / route-header (max-w-[var(--container)] px-5).
    ────────────────────────────────────────────────────────────── */
 
 /* Legacy CSS-variable aliases → semantic tokens */
@@ -26,7 +36,8 @@
 
 /* ── Section scaffold ── */
 .section {
-  padding: clamp(3rem, 6vw, 5.5rem) 1.5rem;
+  /* gutter 1.25rem = px-5, the shared rail gutter (AX1) */
+  padding: clamp(3rem, 6vw, 5.5rem) 1.25rem;
 }
 .section {
   border-top: 1px solid var(--color-border);
@@ -43,7 +54,7 @@
   color: #fff;
 }
 .section-inner {
-  max-width: 1100px;
+  max-width: var(--container);
   margin: 0 auto;
 }
 .section-inner.center {
@@ -106,6 +117,12 @@
   color: var(--color-ink);
   line-height: 1.72;
 }
+/* AX7: cap line length on loose paragraphs (leads keep their own 64ch;
+   .subsec p already caps at 68ch further down) */
+.section-inner > p:not(.section-sub),
+.callout p {
+  max-width: 68ch;
+}
 .subsec p {
   font-size: 1.05rem;
   max-width: 68ch;
@@ -145,10 +162,10 @@
 .grid--2 { grid-template-columns: repeat(2, 1fr); }
 .grid--3 { grid-template-columns: repeat(3, 1fr); }
 .grid--4 { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 880px) {
+@media (max-width: 1024px) {
   .grid--3, .grid--4 { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .grid--2, .grid--3, .grid--4 { grid-template-columns: 1fr; }
 }
 
@@ -228,12 +245,12 @@
 .metrics-inner {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  max-width: 1100px;
+  max-width: var(--container);
   margin: 0 auto;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .metrics-inner { grid-template-columns: repeat(2, 1fr); }
 }
 .metric {
@@ -245,7 +262,7 @@
   border-radius: 0;
 }
 .metrics-inner .metric:first-child { border-left: 0; padding-left: 0; }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .metric { padding-left: 1rem; border-top: 1px solid var(--color-border); }
 }
 .metric-num {
@@ -327,8 +344,8 @@
   gap: 1.6rem;
   margin-top: 1rem;
 }
-@media (max-width: 880px) { .steps { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 560px) { .steps { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .steps { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .steps { grid-template-columns: 1fr; } }
 .step {
   background: transparent;
   border: 0;
@@ -352,7 +369,7 @@
   gap: 1.6rem;
   margin-top: 1rem;
 }
-@media (max-width: 760px) { .levels { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .levels { grid-template-columns: 1fr; } }
 .level {
   border: 0;
   border-top: 3px solid var(--color-muted);
@@ -413,7 +430,7 @@
 }
 .arch svg { width: 100%; height: auto; min-width: 620px; }
 /* phones: let diagrams scale to fit instead of forcing 620px (overflows page) */
-@media (max-width: 680px) { .arch svg { min-width: 0; } }
+@media (max-width: 768px) { .arch svg { min-width: 0; } }
 
 /* ── Tables (keep light structure) ── */
 .tbl-wrap, .matrix {
@@ -422,6 +439,29 @@
   border-top: 2px solid var(--color-rule);
   border-radius: 0;
   margin-top: 0.6rem;
+}
+/* AX3/AX8: horizontal-scroll affordance. Pure-CSS "scrolling shadows":
+   the covers (background-attachment: local) travel with the content and
+   hide the edge scrims (attachment: scroll) when there is nothing more
+   to scroll on that side. Token-only colors; .scroll-x-shadow is the
+   same helper for component wrappers (panel table, bulletins table). */
+.tbl-wrap, .matrix, .scroll-x-shadow {
+  --scroll-shadow-bg: var(--color-bg);
+  background:
+    linear-gradient(to right, var(--scroll-shadow-bg) 30%, transparent) left center,
+    linear-gradient(to left, var(--scroll-shadow-bg) 30%, transparent) right center,
+    radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--color-rule) 40%, transparent), transparent) left center,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--color-rule) 40%, transparent), transparent) right center;
+  background-repeat: no-repeat;
+  background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+/* covers must match the band they sit on */
+.section--alt :is(.tbl-wrap, .matrix, .scroll-x-shadow) {
+  --scroll-shadow-bg: var(--color-surface-soft);
+}
+@media (max-width: 640px) {
+  .section-inner table { font-size: 0.84rem; }
 }
 .section-inner table {
   width: 100%;
@@ -469,7 +509,8 @@
 /* ── Reproducibility ── */
 .repro-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* min(100%, …) so the track can never force horizontal overflow (AX8) */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 1.8rem 2.4rem;
 }
 .repro-card {
@@ -507,7 +548,8 @@
 .glossary-search::placeholder { color: var(--color-muted); }
 .glossary-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  /* min(100%, …) so the track can never force horizontal overflow (AX8) */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 1.4rem 2.4rem;
 }
 .gloss-item {
@@ -562,7 +604,7 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 2.4rem;
 }
-@media (max-width: 760px) { .author-grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .author-grid { grid-template-columns: 1fr; } }
 .author {
   display: grid;
   grid-template-columns: 84px 1fr;
@@ -630,15 +672,15 @@ html.js .reveal.visible { opacity: 1; transform: none; }
 .footer {
   background: var(--color-surface-soft);
   border-top: 1px solid var(--color-border);
-  padding: 3rem 1.5rem 1.5rem;
+  padding: 3rem 1.25rem 1.5rem; /* gutter = rail gutter (AX1) */
 }
 .footer-inner {
-  max-width: 1100px; margin: 0 auto; display: grid;
+  max-width: var(--container); margin: 0 auto; display: grid;
   grid-template-columns: minmax(200px, 1.5fr) repeat(auto-fit, minmax(140px, 1fr));
   gap: 1.5rem 2rem;
 }
-@media (max-width: 760px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 420px) { .footer-inner { grid-template-columns: 1fr; } }
+@media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) { .footer-inner { grid-template-columns: 1fr; } }
 .footer-brand-row {
   display: flex; align-items: center; gap: 0.6rem;
   font-family: var(--font-serif); font-weight: 800; margin-bottom: 0.6rem;
@@ -654,6 +696,6 @@ html.js .reveal.visible { opacity: 1; transform: none; }
 .footer a { color: var(--color-ink); text-decoration: none; font-size: 0.86rem; }
 .footer a:hover { color: var(--color-accent); }
 .footer-bottom {
-  max-width: 1100px; margin: 2rem auto 0; padding-top: 1rem;
+  max-width: var(--container); margin: 2rem auto 0; padding-top: 1rem;
   border-top: 1px solid var(--color-border); font-size: 0.78rem; color: var(--color-muted);
 }

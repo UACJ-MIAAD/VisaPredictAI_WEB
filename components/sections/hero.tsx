@@ -43,7 +43,7 @@ export function Hero() {
           {tr(lang, "heroEyebrow")} · {tr(lang, "heroDataThrough")} {monthLabel(SITE_STATS.dateLast, lang)}
         </span>
 
-        <h1 className="mt-5 max-w-[17ch] font-serif text-[2.6rem] font-black leading-[1.02] tracking-[-0.02em] md:text-[4.2rem]">
+        <h1 className="mt-5 max-w-[17ch] font-serif text-[clamp(2.5rem,5.5vw,4.2rem)] font-black leading-[1.02] tracking-[-0.02em]">
           {tr(lang, "heroTitlePre")}
           <em className="text-[var(--color-accent)]">Visa Bulletin</em>
           {tr(lang, "heroTitlePost")}
@@ -70,13 +70,13 @@ export function Hero() {
         </div>
 
         <dl className="mt-10 grid grid-cols-2 border-y border-border sm:grid-cols-3 lg:grid-cols-5">
-          {stats.map((s, i) => (
+          {stats.map((s) => (
+            // AX8: per-column borders — the first cell of each ROW drops its
+            // border-l (rows of 2 / 3 / 5 per breakpoint) and wrapped rows
+            // gain a border-t, so no rule is ever broken mid-grid.
             <div
               key={s.key}
-              className={
-                "px-4 py-5 " +
-                (i === 0 ? "" : "border-l border-border")
-              }
+              className="border-l border-border px-4 py-5 max-sm:[&:nth-child(2n+1)]:border-l-0 max-sm:[&:nth-child(n+3)]:border-t sm:max-lg:[&:nth-child(3n+1)]:border-l-0 sm:max-lg:[&:nth-child(n+4)]:border-t lg:[&:nth-child(5n+1)]:border-l-0"
             >
               <dt className="text-xs text-muted-foreground">{tr(lang, s.key)}</dt>
               <dd className="mt-1 font-serif text-3xl font-extrabold tabular-nums tracking-tight text-[var(--color-accent)]">

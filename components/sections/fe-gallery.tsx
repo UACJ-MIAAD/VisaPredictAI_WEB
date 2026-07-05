@@ -86,6 +86,8 @@ const T: Record<
     sub: string;
     figura: string;
     fullSize: string;
+    openOriginal: string;
+    close: string;
     figs: Record<string, FigCopy>;
   }
 > = {
@@ -94,6 +96,8 @@ const T: Record<
     sub: "Siete figuras del reporte de ingeniería de características, cada una con su decisión. Se regeneran con cada boletín.",
     figura: "Figura",
     fullSize: "Ver a tamaño completo",
+    openOriginal: "Abrir original",
+    close: "Cerrar",
     figs: {
       f06_parser: {
         tag: "El parser",
@@ -151,6 +155,8 @@ const T: Record<
     sub: "Seven figures from the feature-engineering report, each with its decision. They regenerate with every bulletin.",
     figura: "Figure",
     fullSize: "View full size",
+    openOriginal: "Open original",
+    close: "Close",
     figs: {
       f06_parser: {
         tag: "The parser",
@@ -239,6 +245,8 @@ export function FeGallery({ facts }: { facts: FeFacts }) {
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
+                originalLabel={t.openOriginal}
+                closeLabel={t.close}
                 toggle="block dark:hidden"
                 plate="bg-[var(--color-figure-plate)]"
               />
@@ -248,6 +256,8 @@ export function FeGallery({ facts }: { facts: FeFacts }) {
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
+                originalLabel={t.openOriginal}
+                closeLabel={t.close}
                 toggle="hidden dark:block"
                 plate="bg-[var(--color-figure-plate-dark)]"
                 imgAriaHidden

@@ -25,6 +25,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { useLang } from "@/components/lang-provider";
+import { Lightbox } from "@/components/ui/lightbox";
 import { seriesLabel, type EdaFacts } from "@/lib/data/eda";
 import { figDim, type Dim } from "@/lib/data/fig-dims";
 
@@ -218,6 +219,8 @@ const T: Record<
     note?: string;
     figura: string;
     fullSize: string;
+    openOriginal: string;
+    close: string;
     figs: Record<string, FigCopy>;
   }
 > = {
@@ -226,6 +229,8 @@ const T: Record<
     sub: "Once figuras del reporte EDA, cada una con su hallazgo. Se regeneran con cada boletín.",
     figura: "Figura",
     fullSize: "Ver a tamaño completo",
+    openOriginal: "Abrir original",
+    close: "Cerrar",
     figs: {
       g01_panel: {
         tag: "El panel",
@@ -315,6 +320,8 @@ const T: Record<
     sub: "Eleven figures from the EDA report, each with its finding. They regenerate with every bulletin.",
     figura: "Figure",
     fullSize: "View full size",
+    openOriginal: "Open original",
+    close: "Close",
     figs: {
       g01_panel: {
         tag: "The panel",
@@ -404,12 +411,17 @@ const T: Record<
 // One theme's variant: full <a><img/></a> block, shown/hidden purely via CSS
 // (`dark:` variant) so the visible full-size link always matches the visible
 // image and there is no client-side theme branching (no hydration flash).
+// AX8: clicking now opens an in-page <dialog> lightbox (pinch-zoomable,
+// Escape/backdrop to close); the href survives as the no-JS fallback and as
+// the "open original" link inside the dialog.
 export function FigureLink({
   src,
   dim,
   alt,
   ariaLabel,
   hint,
+  originalLabel,
+  closeLabel,
   toggle,
   plate,
   imgAriaHidden,
@@ -419,31 +431,53 @@ export function FigureLink({
   alt: string;
   ariaLabel: string;
   hint: string;
+  // optional: consumers outside the galleries (e.g. problema.tsx) fall back
+  // to the route language's default strings resolved below
+  originalLabel?: string;
+  closeLabel?: string;
   toggle: string; // "block dark:hidden" | "hidden dark:block"
   plate: string; // plate background class for this variant
   imgAriaHidden?: boolean; // audit B5: the theme duplicate must not double-announce
 }) {
+  const [open, setOpen] = React.useState(false);
+  const { lang } = useLang();
+  const original = originalLabel ?? (lang === "en" ? "Open original" : "Abrir original");
+  const close = closeLabel ?? (lang === "en" ? "Close" : "Cerrar");
   return (
-    <a
-      href={src}
-      target="_blank"
-      rel="noopener"
-      aria-label={ariaLabel}
-      className={`group mt-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-accent)] ${toggle}`}
-    >
-      <Image
+    <div className={`mt-5 ${toggle}`}>
+      <a
+        href={src}
+        aria-label={ariaLabel}
+        aria-haspopup="dialog"
+        onClick={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
+        className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-accent)]"
+      >
+        <Image
+          src={src}
+          alt={alt}
+          aria-hidden={imgAriaHidden || undefined}
+          width={dim.w}
+          height={dim.h}
+          loading="lazy"
+          className={`h-auto w-full rounded-xl border border-[var(--color-border)] p-2 sm:p-3 ${plate}`}
+        />
+        <span className="mt-2 inline-block text-xs text-[var(--color-muted)] underline-offset-2 transition-colors group-hover:text-[var(--color-accent)] group-hover:underline group-focus-visible:text-[var(--color-accent)]">
+          {hint} ↗
+        </span>
+      </a>
+      <Lightbox
+        open={open}
+        onClose={() => setOpen(false)}
         src={src}
+        dim={dim}
         alt={alt}
-        aria-hidden={imgAriaHidden || undefined}
-        width={dim.w}
-        height={dim.h}
-        loading="lazy"
-        className={`h-auto w-full rounded-xl border border-[var(--color-border)] p-2 sm:p-3 ${plate}`}
+        originalLabel={original}
+        closeLabel={close}
       />
-      <span className="mt-2 inline-block text-xs text-[var(--color-muted)] underline-offset-2 transition-colors group-hover:text-[var(--color-accent)] group-hover:underline group-focus-visible:text-[var(--color-accent)]">
-        {hint} ↗
-      </span>
-    </a>
+    </div>
   );
 }
 
@@ -492,6 +526,8 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
+                originalLabel={t.openOriginal}
+                closeLabel={t.close}
                 toggle="block dark:hidden"
                 plate="bg-[var(--color-figure-plate)]"
               />
@@ -501,6 +537,8 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 alt={c.alt}
                 ariaLabel={ariaLabel}
                 hint={t.fullSize}
+                originalLabel={t.openOriginal}
+                closeLabel={t.close}
                 toggle="hidden dark:block"
                 plate="bg-[var(--color-figure-plate-dark)]"
                 imgAriaHidden

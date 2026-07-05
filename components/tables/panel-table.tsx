@@ -8,6 +8,7 @@ import {
   flexRender,
   type ColumnDef,
   type SortingState,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpDown, Download, SlidersHorizontal } from "lucide-react";
@@ -75,8 +76,19 @@ function exportCsv(rows: VisaPanelRow[]) {
 
 export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const columns = React.useMemo(() => makeColumns(lang), [lang]);
   const colMenuRef = React.useRef<HTMLDetailsElement>(null);
+
+  // AX3c: on small screens start with the secondary columns hidden — the
+  // "Columns" menu re-enables them. Computed client-side after mount (SSR
+  // renders all columns; setting it in an effect avoids hydration mismatch)
+  // and only once, so it never fights the user's own choices.
+  React.useEffect(() => {
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      setColumnVisibility({ block: false, table: false, daysSinceBase: false });
+    }
+  }, []);
 
   // close the column dropdown on Escape / outside-click
   React.useEffect(() => {
@@ -98,8 +110,9 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
   const table = useReactTable({
     data: rows,
     columns,
-    state: { sorting },
+    state: { sorting, columnVisibility },
     onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
@@ -157,13 +170,15 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
         </div>
       </div>
 
+      {/* AX3a: never taller than 65dvh on small screens; AX3b: .scroll-x-shadow
+          (content.css) paints edge scrims that hint at horizontal overflow */}
       <div
         ref={parentRef}
-        className="h-[560px] overflow-auto rounded-xl border border-border"
+        className="scroll-x-shadow h-[min(560px,65dvh)] overflow-auto rounded-xl border border-border"
         tabIndex={0}
         aria-label={tr(lang, "tableScroll")}
       >
-        <table className="w-full min-w-[760px] border-collapse text-sm">
+        <table className="w-full min-w-[640px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-secondary">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
