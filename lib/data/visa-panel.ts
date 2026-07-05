@@ -37,6 +37,9 @@ function loadViaWorker(): Promise<Panel> {
       done();
       loadInline().then(resolve, reject);
     };
+    // The worker only starts on an incoming message — without this kick,
+    // loadPanel() hangs forever (caught by the post-plan audit, live in prod).
+    worker.postMessage(null);
   });
 }
 
