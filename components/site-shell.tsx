@@ -1,9 +1,10 @@
 import { LangProvider } from "@/components/lang-provider";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { NextPart } from "@/components/next-part";
 import { BackToTop } from "@/components/back-to-top";
 import { ClientEnhancements } from "@/components/client-enhancements";
-import { VisaBot } from "@/components/visabot/visabot";
+import { VisaBotLauncher } from "@/components/visabot/visabot-launcher";
 import type { Lang } from "@/lib/site-map";
 
 // Per-locale shell: fixes the language for everything inside (chrome + content),
@@ -23,11 +24,13 @@ export function SiteShell({
       <SiteNav />
       <main id="main-content" tabIndex={-1} className="pt-16">
         {children}
+        <NextPart />
       </main>
       <SiteFooter />
       <BackToTop />
       <ClientEnhancements />
-      <VisaBot />
+      {/* AZ4: dynamically imported (ssr:false) so the bot stays out of First Load */}
+      <VisaBotLauncher />
     </LangProvider>
   );
 }

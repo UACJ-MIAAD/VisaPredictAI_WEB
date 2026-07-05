@@ -26,8 +26,10 @@ export const ROUTES: Route[] = [
     blurbEn: "Project overview and a way into each part.",
     sections: [
       { id: "inicio", label: "Inicio", labelEn: "Top" },
-      { id: "resumen", label: "Resumen", labelEn: "Abstract" },
+      { id: "problema", label: "El problema", labelEn: "The problem" },
+      { id: "evidencia", label: "Pronóstico y evidencia", labelEn: "Forecast & evidence" },
       { id: "explorar", label: "Explorar", labelEn: "Explore" },
+      { id: "resumen", label: "Resumen", labelEn: "Abstract" },
       { id: "autores", label: "Autores", labelEn: "Authors" },
       { id: "contacto", label: "Contacto", labelEn: "Contact" },
     ],
@@ -58,11 +60,13 @@ export const ROUTES: Route[] = [
     short: "Ingeniería",
     shortEn: "Engineering",
     blurb:
-      "Cómo se construyó el panel: pipeline, prácticas MLOps, estructura del repositorio y almacén en esquema estrella.",
+      "Cómo se construyó y entendió el panel: pipeline, análisis exploratorio, ingeniería de características, prácticas MLOps, estructura del repositorio y almacén en esquema estrella.",
     blurbEn:
-      "How the panel was built: pipeline, MLOps practices, repository structure and a star-schema warehouse.",
+      "How the panel was built and understood: pipeline, exploratory analysis, feature engineering, MLOps practices, repository structure and a star-schema warehouse.",
     sections: [
       { id: "datos", label: "Construcción del panel", labelEn: "Building the panel" },
+      { id: "eda", label: "Análisis exploratorio", labelEn: "Exploratory analysis" },
+      { id: "fe", label: "Ingeniería de características", labelEn: "Feature engineering" },
       { id: "mlops", label: "Prácticas MLOps", labelEn: "MLOps practices" },
       { id: "estructura", label: "Estructura del repo", labelEn: "Repo structure" },
       { id: "modelo", label: "Modelo de datos", labelEn: "Data model" },
@@ -75,14 +79,14 @@ export const ROUTES: Route[] = [
     short: "Datos",
     shortEn: "Data",
     blurb:
-      "El corazón empírico: boletín en vivo y el explorador interactivo del panel real del Visa Bulletin.",
+      "El corazón empírico: boletín en vivo, pronóstico por categoría, explorador interactivo del panel real y el marcador prospectivo del sistema.",
     blurbEn:
-      "The empirical heart: a live bulletin feed and the interactive explorer over the real Visa Bulletin panel.",
+      "The empirical heart: a live bulletin, per-category forecasts, an interactive explorer over the real panel and the system's prospective scorecard.",
     sections: [
       { id: "boletines", label: "Boletines en vivo", labelEn: "Live bulletins" },
-      { id: "eda", label: "Análisis exploratorio", labelEn: "Exploratory analysis" },
-      { id: "fe", label: "Ingeniería de características", labelEn: "Feature engineering" },
+      { id: "pronostico", label: "Pronóstico", labelEn: "Forecast" },
       { id: "historico", label: "Explorador histórico", labelEn: "Historical explorer" },
+      { id: "scorecard", label: "Marcador prospectivo", labelEn: "Prospective scorecard" },
     ],
   },
   {
@@ -91,9 +95,10 @@ export const ROUTES: Route[] = [
     labelEn: "Resources",
     short: "Recursos",
     shortEn: "Resources",
-    blurb: "Glosario operativo y referencias IEEE del documento académico.",
-    blurbEn: "Working glossary and IEEE references from the academic document.",
+    blurb: "Descargas reales del proyecto, glosario operativo y referencias IEEE del documento académico.",
+    blurbEn: "Real project downloads, a working glossary and IEEE references from the academic document.",
     sections: [
+      { id: "descargas", label: "Descargas", labelEn: "Downloads" },
       { id: "glosario", label: "Glosario", labelEn: "Glossary" },
       { id: "referencias", label: "Referencias IEEE", labelEn: "IEEE references" },
     ],

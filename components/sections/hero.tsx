@@ -55,17 +55,17 @@ export function Hero() {
 
         <div className="mt-7 flex flex-wrap gap-3">
           <a
-            href="#resumen"
+            href={`${localePath("/datos-historicos", lang)}#pronostico`}
+            onClick={() => track("Forecast CTA")}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-medium text-primary-foreground transition-transform hover:-translate-y-0.5"
           >
-            {tr(lang, "heroCtaRead")} <ArrowRight className="h-4 w-4" aria-hidden />
+            {tr(lang, "heroCtaForecast")} <ArrowRight className="h-4 w-4" aria-hidden />
           </a>
           <a
-            href={localePath("/datos-historicos", lang)}
-            onClick={() => track("Explore Historical CTA")}
+            href="#resumen"
             className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-3 font-medium transition-colors hover:border-[var(--color-accent-2)]"
           >
-            {tr(lang, "heroCtaExplore")}
+            {tr(lang, "heroCtaRead")}
           </a>
         </div>
 
