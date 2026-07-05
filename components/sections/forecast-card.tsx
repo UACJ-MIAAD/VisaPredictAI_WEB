@@ -72,7 +72,7 @@ export function ForecastCard({ series, panel, forecasts, index, terciles, onOpen
   return (
     <button
       onClick={onOpen}
-      className="group flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition hover:border-[var(--color-accent)] hover:shadow-sm"
+      className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition hover:border-[var(--color-accent)] hover:shadow-sm"
     >
       <span className="w-1 shrink-0 self-stretch rounded-full" style={{ background: tint }} aria-hidden />
       <div className="min-w-0 flex-1">

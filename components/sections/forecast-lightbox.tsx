@@ -93,38 +93,43 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={`${countryLabel(cur.country, lang)} · ${cur.category} · ${cur.table}`}>
       <div className="absolute inset-0 bg-black/55" onClick={onClose} aria-hidden />
       <div ref={trapRef} className="relative flex max-h-[92vh] w-full max-w-[920px] flex-col overflow-hidden rounded-2xl border border-border bg-[var(--color-bg)] shadow-2xl">
-        {/* header */}
-        <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 sm:px-5">
-          <span className="w-1 self-stretch rounded-full" style={{ background: cur.block === "familia" ? "var(--color-accent)" : "var(--color-accent-2)" }} aria-hidden />
-          <div className="min-w-0 flex-1">
-            <div className="truncate font-serif text-base font-bold text-[var(--color-ink)]">
-              {countryLabel(cur.country, lang)} · {cur.category} · {cur.table}
-            </div>
-            <div className="mt-0.5 flex flex-wrap gap-x-2 text-[0.66rem] text-[var(--color-muted)]">
-              {cur.mase != null && <span className="tabular-nums">MASE {cur.mase.toFixed(3)}</span>}
-              {cur.models.length > 0 && <span>{cur.models.join("+")}</span>}
-              {cur.lastMonth && <span>· {monthLabel(cur.lastMonth, lang)}</span>}
-              <span className="tabular-nums">{index + 1} / {series.length}</span>
+        {/* header — on mobile the title keeps its own row (stays readable) and the
+            controls wrap below; on sm+ they sit inline as one row. */}
+        <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3 sm:flex-nowrap sm:px-5">
+          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
+            <span className="w-1 self-stretch rounded-full" style={{ background: cur.block === "familia" ? "var(--color-accent)" : "var(--color-accent-2)" }} aria-hidden />
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-serif text-base font-bold text-[var(--color-ink)]">
+                {countryLabel(cur.country, lang)} · {cur.category} · {cur.table}
+              </div>
+              <div className="mt-0.5 flex flex-wrap gap-x-2 text-[0.66rem] text-[var(--color-muted)]">
+                {cur.mase != null && <span className="tabular-nums">MASE {cur.mase.toFixed(3)}</span>}
+                {cur.models.length > 0 && <span className="truncate">{cur.models.join("+")}</span>}
+                {cur.lastMonth && <span>· {monthLabel(cur.lastMonth, lang)}</span>}
+                <span className="tabular-nums">{index + 1} / {series.length}</span>
+              </div>
             </div>
           </div>
-          {/* view toggle */}
-          <div className="flex rounded-lg border border-border p-0.5">
-            {views.map((v) => (
-              <button
-                key={v.k}
-                onClick={() => setView(v.k)}
-                className={`rounded-md px-2.5 py-1 text-xs transition ${view === v.k ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}
-              >
-                {v.label}
-              </button>
-            ))}
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
+            {/* view toggle */}
+            <div className="flex rounded-lg border border-border p-0.5">
+              {views.map((v) => (
+                <button
+                  key={v.k}
+                  onClick={() => setView(v.k)}
+                  className={`rounded-md px-2.5 py-1 text-xs transition ${view === v.k ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+            <button onClick={copyLink} aria-label={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} title={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} className="vb-iconbtn shrink-0">
+              {copied ? <Check className="h-4 w-4 text-[var(--color-success)]" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
+            </button>
+            <button onClick={onClose} aria-label={tr(lang, "resClose")} title={tr(lang, "resClose")} className="vb-iconbtn shrink-0">
+              <X className="h-4 w-4" aria-hidden />
+            </button>
           </div>
-          <button onClick={copyLink} aria-label={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} title={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} className="vb-iconbtn shrink-0">
-            {copied ? <Check className="h-4 w-4 text-[var(--color-success)]" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
-          </button>
-          <button onClick={onClose} aria-label={tr(lang, "resClose")} title={tr(lang, "resClose")} className="vb-iconbtn shrink-0">
-            <X className="h-4 w-4" aria-hidden />
-          </button>
         </header>
 
         {/* screen-reader announcement of the current series + position */}
