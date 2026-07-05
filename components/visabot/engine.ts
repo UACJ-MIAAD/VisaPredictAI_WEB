@@ -8,8 +8,10 @@
 //   • generation       — Claude via /.netlify/functions/chat (streamed)
 //   • graceful fallback— extractive answer from top chunks when no LLM key
 //
-// The embedding model (~129 MB) loads lazily in the background; BM25 answers
-// instantly so the bot is usable before the model finishes downloading.
+// The embedding model (~129 MB) + ORT wasm (~23 MB) download ONLY after an
+// explicit user gesture (warmUpSemantic); warmUp loads just the lightweight
+// index + BM25, so the bot is instantly usable — and stays usable — without
+// the semantic engine (AZ1: no ~150 MB download without consent).
 import type { Chunk, Lang, Source } from "./types";
 
 type Index = { model: string; dim: number; built: string; chunks: Chunk[] };
@@ -108,13 +110,24 @@ function ensureEmbedder(): Promise<(text: string) => Promise<Float32Array>> {
 }
 
 export function warmUp() {
-  // fire-and-forget: start index + model downloads as soon as the panel opens.
-  // Failures are non-fatal (retrieval falls back to BM25) but log them — a
-  // silent swallow hides real load problems (CSP, worker, missing assets).
+  // fire-and-forget: load the retrieval index (small JSON → BM25) as soon as
+  // the panel opens. Deliberately does NOT touch the embedding model — that
+  // download is ~150 MB and requires user consent (see warmUpSemantic).
+  loadIndex().catch((e) => console.warn("[visabot] index load failed:", e));
+}
+
+export function warmUpSemantic() {
+  // user-gesture only: start the semantic engine download (~113 MB model +
+  // ~17 MB tokenizer + ~23 MB ORT wasm). Failures are non-fatal (retrieval
+  // falls back to BM25) but log them — a silent swallow hides real load
+  // problems (CSP, worker, missing assets).
   loadIndex().catch((e) => console.warn("[visabot] index load failed:", e));
   ensureEmbedder().catch((e) => console.warn("[visabot] embed model load failed:", e));
 }
+
 export const isModelReady = () => _modelReady;
+// whether the semantic download has been started (this page load)
+export const isSemanticStarted = () => _embedder !== null;
 
 // ── retrieval ───────────────────────────────────────────────────────────────
 const RRF_K = 60;
