@@ -1,10 +1,10 @@
 // Domain analytics for the VisaBot console: entity detection + chart builders
-// computed from the real panel (lib/data/visa-panel.ts). This is the
-// "engineering" layer EpiBot had — turning a query (or a tool click) into a
-// chart spec backed by actual Visa Bulletin data. No fabricated numbers.
+// computed from the real panel (lib/data/visa-panel.ts). The "engineering"
+// layer that turns a query (or a tool click) into a chart spec backed by actual
+// Visa Bulletin data. No fabricated numbers.
 import { type Panel, type VisaPanelRow, countryLabel, statusColor, PILOT } from "@/lib/data/visa-panel";
 import { localeOf } from "@/lib/i18n";
-import { type ForecastStore, forecastFor, forecastMetaFor } from "@/lib/data/forecasts";
+import { type ForecastStore, type ForecastPoint, forecastFor, forecastMetaFor } from "@/lib/data/forecasts";
 
 export type Lang = "es" | "en";
 export { PILOT };
@@ -98,6 +98,62 @@ function latestWaitYears(panel: Panel, country: string, category: string, table:
   const latest = rows[0];
   if (!latest || !latest.priorityDate) return { years: null, date: null };
   return { years: Math.max(0, (monthDays(latest.bulletinMonth) - isoDays(latest.priorityDate)) / 365.25), date: latest.priorityDate };
+}
+
+// A panel pre-indexed by "country|category|table" → the series' rows sorted asc.
+// Built once so the gallery's many buildForecast/seriesSignals calls don't each
+// re-scan the whole (~27k-row) panel.
+export type PanelIndex = Map<string, VisaPanelRow[]>;
+export function buildPanelIndex(panel: Panel): PanelIndex {
+  const m: PanelIndex = new Map();
+  for (const r of panel.rows) {
+    const k = `${r.country}|${r.category}|${r.table}`;
+    const arr = m.get(k);
+    if (arr) arr.push(r); else m.set(k, [r]);
+  }
+  for (const arr of m.values()) arr.sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+  return m;
+}
+
+// Derived per-series signals for the gallery (backlog + projected movement),
+// computed from the real panel + the pre-generated forecast — never hand-typed.
+// backlogYears = wait implied by the latest F cutoff; movementDays = how far the
+// cutoff is projected to advance (>0) or retrogress (<0) over the whole horizon.
+export type SeriesSignals = { backlogYears: number | null; backlogDate: string | null; movementDays: number | null; movementPerYear: number | null };
+export function seriesSignals(rows: VisaPanelRow[] | undefined, fc: ForecastPoint[] | null | undefined, horizonMonths: number): SeriesSignals {
+  const empty: SeriesSignals = { backlogYears: null, backlogDate: null, movementDays: null, movementPerYear: null };
+  if (!rows || !rows.length) return empty;
+  const fobs = rows.filter((r) => r.status === "F" && r.priorityDate && r.daysSinceBase != null);
+  const last = fobs[fobs.length - 1];
+  if (!last || !last.priorityDate) return empty;
+  const backlogYears = Math.max(0, (monthDays(last.bulletinMonth) - isoDays(last.priorityDate)) / 365.25);
+  let movementDays: number | null = null, movementPerYear: number | null = null;
+  if (fc && fc.length && last.daysSinceBase != null) {
+    movementDays = fc[fc.length - 1].days - (last.daysSinceBase as number);
+    if (horizonMonths > 0) movementPerYear = movementDays / (horizonMonths / 12);
+  }
+  return { backlogYears, backlogDate: last.priorityDate, movementDays, movementPerYear };
+}
+
+// "Does the projected cutoff reach a user's priority date within the horizon?"
+// Answered from the already-computed forecast — a static gallery can't do this.
+// The base epoch is derived from the data (never a hardcoded 1975).
+export function reachesPriorityDate(
+  rows: VisaPanelRow[] | undefined, fc: ForecastPoint[] | null | undefined, priorityDate: string,
+): { status: "past" | "within" | "beyond" | "invalid"; month: string | null } {
+  const bad = { status: "invalid" as const, month: null };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(priorityDate) || !rows) return bad;
+  const m = isoDays(priorityDate);
+  if (!Number.isFinite(m)) return bad;
+  const fobs = rows.filter((r) => r.status === "F" && r.priorityDate && r.daysSinceBase != null);
+  const last = fobs[fobs.length - 1];
+  if (!last || last.priorityDate == null || last.daysSinceBase == null) return bad;
+  const baseEpoch = isoDays(last.priorityDate) - (last.daysSinceBase as number);
+  const pdDays = m - baseEpoch; // user's date in the forecast's daysSinceBase units
+  if ((last.daysSinceBase as number) >= pdDays) return { status: "past", month: null };
+  if (!fc || !fc.length) return { status: "beyond", month: null };
+  const hit = fc.find((p) => p.days >= pdDays);
+  return hit ? { status: "within", month: hit.date.slice(0, 7) } : { status: "beyond", month: null };
 }
 
 const FAM = ["F1", "F2A", "F2B", "F3", "F4"];
@@ -213,10 +269,13 @@ export function driftBands(fit: DriftFit, h: number): { point: number; lo80: num
   return { point, lo80: point - Z80 * half, hi80: point + Z80 * half, lo95: point - Z95 * half, hi95: point + Z95 * half };
 }
 
-export function buildForecast(panel: Panel, country: string, category: string, table: string, lang: Lang, horizon = 12, window = 48, forecasts?: ForecastStore | null): ChartSpec | null {
-  const series = panel.rows
-    .filter((r) => r.country === country && r.category === category && r.table === table)
-    .sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+export function buildForecast(panel: Panel, country: string, category: string, table: string, lang: Lang, horizon = 12, window = 48, forecasts?: ForecastStore | null, index?: PanelIndex): ChartSpec | null {
+  // When a pre-built index is supplied (gallery: many cards over one panel), use
+  // the O(1) slice instead of scanning all panel.rows per call. Same rows, sorted.
+  const series = index?.get(`${country}|${category}|${table}`) ??
+    panel.rows
+      .filter((r) => r.country === country && r.category === category && r.table === table)
+      .sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
   const fobs = series.filter((r) => r.status === "F" && r.daysSinceBase != null && r.priorityDate);
   if (fobs.length < 8) return null; // too short to anchor an honest forecast
 

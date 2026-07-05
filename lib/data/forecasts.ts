@@ -23,9 +23,10 @@ export type Scorecard = {
 };
 export type ForecastStore = {
   method: Record<string, string>; // table -> human method description
-  series: Map<string, ForecastPoint[]>; // "country|category|table" -> 12 future points
+  series: Map<string, ForecastPoint[]>; // "country|category|table" -> future points
   meta: Map<string, SeriesMeta>;
   scorecard: Scorecard | null; // prospective real-world accuracy (frozen vs realized)
+  horizonMonths: number; // forecast horizon, derived from the pipeline (0 when no forecasts shipped)
 };
 
 const key = (country: string, category: string, table: string) => `${country}|${category}|${table}`;
@@ -35,9 +36,9 @@ let cache: Promise<ForecastStore> | null = null;
 export function loadForecasts(): Promise<ForecastStore> {
   if (cache) return cache;
   cache = (async () => {
-    const empty: ForecastStore = { method: {}, series: new Map(), meta: new Map(), scorecard: null };
+    const empty: ForecastStore = { method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0 };
     let csv: string,
-      metaJson: { method?: Record<string, string>; series?: Record<string, SeriesMeta> },
+      metaJson: { method?: Record<string, string>; series?: Record<string, SeriesMeta>; horizon_months?: number },
       scorecard: Scorecard | null = null;
     try {
       const [c, m, sc] = await Promise.all([
@@ -51,7 +52,7 @@ export function loadForecasts(): Promise<ForecastStore> {
     } catch {
       return empty; // no forecasts shipped → callers fall back to the drift baseline
     }
-    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map(), scorecard };
+    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map(), scorecard, horizonMonths: 0 };
     const lines = csv.split("\n");
     const h = lines[0].split(",");
     const ix = (k: string) => h.indexOf(k);
@@ -64,8 +65,12 @@ export function loadForecasts(): Promise<ForecastStore> {
       (store.series.get(k) ?? store.series.set(k, []).get(k)!).push(pt);
     }
     if (metaJson.series) for (const [k, v] of Object.entries(metaJson.series)) store.meta.set(k.replace(/\//g, "|"), v);
+    // horizon derived from the pipeline: prefer the explicit meta field, else the real point count per series
+    let maxLen = 0;
+    for (const a of store.series.values()) if (a.length > maxLen) maxLen = a.length;
+    store.horizonMonths = metaJson.horizon_months ?? maxLen;
     return store;
-  })().catch(() => ({ method: {}, series: new Map(), meta: new Map(), scorecard: null }));
+  })().catch(() => ({ method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0 }));
   return cache;
 }
 

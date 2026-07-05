@@ -2,21 +2,21 @@
 
 // Forecast-gallery lightbox: opens the full Recharts fan chart for a series,
 // with prev/next through the (filtered) set and a view toggle — Full history /
-// Zoom (recent + 12-mo projection) / Compare countries (the priority-date race
+// Zoom (recent + projection) / Compare countries (the priority-date race
 // for this category × table). This is the ONLY place the heavy chart mounts, so
 // the card grid stays cheap. Focus-trapped, Esc + arrow-key navigable.
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Link2, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { countryLabel } from "@/lib/data/visa-panel";
-import { buildForecast, buildMultiLine, monthLabel, type ChartSpec } from "@/lib/visabot/analytics";
+import { buildForecast, buildMultiLine, monthLabel, reachesPriorityDate, type ChartSpec, type PanelIndex } from "@/lib/visabot/analytics";
+import { forecastFor, type ForecastStore } from "@/lib/data/forecasts";
 import type { Panel } from "@/lib/data/panel-core";
-import type { ForecastStore } from "@/lib/data/forecasts";
 import type { GallerySeries } from "@/lib/visabot/gallery";
 
 const VisaChart = dynamic(() => import("@/components/visabot/visa-chart"), {
@@ -26,16 +26,19 @@ const VisaChart = dynamic(() => import("@/components/visabot/visa-chart"), {
 
 type View = "full" | "zoom" | "compare";
 
-export function ForecastLightbox({ series, index, panel, forecasts, onIndex, onClose }: {
+export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, onIndex, onClose }: {
   series: GallerySeries[];
   index: number;
   panel: Panel;
   forecasts: ForecastStore | null;
+  panelIndex?: PanelIndex | null;
   onIndex: (i: number) => void;
   onClose: () => void;
 }) {
   const { lang } = useLang();
   const [view, setView] = React.useState<View>("zoom");
+  const [copied, setCopied] = React.useState(false);
+  const [pd, setPd] = React.useState("");
   const trapRef = useFocusTrap<HTMLDivElement>(true);
   const cur = series[index];
 
@@ -59,9 +62,25 @@ export function ForecastLightbox({ series, index, panel, forecasts, onIndex, onC
   const spec: ChartSpec | null = React.useMemo(() => {
     if (!cur) return null;
     if (view === "compare") return buildMultiLine(panel, cur.category, cur.table, lang);
-    // full = wide window (covers the whole panel history); zoom = recent 48 mo
-    return buildForecast(panel, cur.country, cur.category, cur.table, lang, 12, view === "full" ? 480 : 48, forecasts);
-  }, [cur, view, panel, forecasts, lang]);
+    // full = wide window (covers the whole panel history); zoom = recent 48 mo.
+    // horizon = pipeline value (forecasts.horizonMonths); undefined → buildForecast default.
+    return buildForecast(panel, cur.country, cur.category, cur.table, lang, forecasts?.horizonMonths || undefined, view === "full" ? 480 : 48, forecasts, panelIndex ?? undefined);
+  }, [cur, view, panel, forecasts, lang, panelIndex]);
+
+  // "reaches my priority date?" — answered from the already-computed forecast
+  const reach = React.useMemo(() => {
+    if (!cur || !pd.trim()) return null;
+    const rows = panelIndex?.get(cur.key) ?? panel.rows.filter((r) => r.country === cur.country && r.category === cur.category && r.table === cur.table);
+    return reachesPriorityDate(rows, forecastFor(forecasts, cur.country, cur.category, cur.table), pd.trim());
+  }, [cur, pd, panelIndex, panel, forecasts]);
+
+  const copyLink = React.useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.clipboard) return;
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    }).catch(() => {});
+  }, []);
 
   if (!cur) return null;
   const views: { k: View; label: string }[] = [
@@ -100,14 +119,42 @@ export function ForecastLightbox({ series, index, panel, forecasts, onIndex, onC
               </button>
             ))}
           </div>
+          <button onClick={copyLink} aria-label={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} title={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} className="vb-iconbtn shrink-0">
+            {copied ? <Check className="h-4 w-4 text-[var(--color-success)]" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
+          </button>
           <button onClick={onClose} aria-label={tr(lang, "resClose")} title={tr(lang, "resClose")} className="vb-iconbtn shrink-0">
             <X className="h-4 w-4" aria-hidden />
           </button>
         </header>
 
+        {/* screen-reader announcement of the current series + position */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {countryLabel(cur.country, lang)} · {cur.category} · {cur.table}, {index + 1} / {series.length}
+        </p>
+
         {/* chart */}
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
           {spec ? <VisaChart spec={spec} /> : <p className="py-16 text-center text-sm text-[var(--color-muted)]">{tr(lang, "pronEmpty")}</p>}
+
+          {/* "reaches my priority date?" — personalization a static gallery can't do */}
+          <div className="mt-4 rounded-xl border border-border bg-[var(--color-surface)] px-3 py-3">
+            <label htmlFor="reach-pd" className="block text-xs font-semibold text-[var(--color-ink)]">{tr(lang, "resReachTitle")}</label>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <input id="reach-pd" type="date" value={pd} onChange={(e) => setPd(e.target.value)}
+                aria-label={tr(lang, "resReachTitle")}
+                className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-sm text-foreground" />
+              <span className="text-[0.7rem] text-[var(--color-muted)]">{tr(lang, "resReachHint")}</span>
+            </div>
+            {reach && (
+              <p className="mt-2 text-[0.8rem]" role="status" aria-live="polite"
+                style={{ color: reach.status === "within" || reach.status === "past" ? "var(--color-success)" : reach.status === "beyond" ? "var(--color-danger)" : "var(--color-muted)" }}>
+                {reach.status === "within" && tr(lang, "resReachYes").replace("{m}", reach.month ? monthLabel(reach.month, lang) : "—")}
+                {reach.status === "beyond" && tr(lang, "resReachNo").replace("{n}", String(forecasts?.horizonMonths ?? ""))}
+                {reach.status === "past" && tr(lang, "resReachPast")}
+                {reach.status === "invalid" && tr(lang, "resReachBad")}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* prev / next */}

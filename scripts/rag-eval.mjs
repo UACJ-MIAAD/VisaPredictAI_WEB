@@ -2,7 +2,7 @@
 // LIVE index (e5 q8 + BM25 → RRF → MMR, faithful replica of engine.ts), POST to
 // the LIVE function (real Claude), and score: retrieval recall@6, citation
 // grounding, keyword grounding, off-topic refusal, latency, errors.
-// Mirrors EpiBot's tests/rag_eval.json + run_tests.js methodology.
+// A JSON fixture of probes + a live runner, mirroring standard RAG-eval methodology.
 // Run: node scripts/rag-eval.mjs   (hits production → consumes Claude credits)
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

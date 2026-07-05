@@ -2,8 +2,9 @@
 // a browsable country → block → category×table tree for the /resultados section.
 // Pure data helpers (no React) so they're unit-testable. Every count is derived
 // from the loaded store — never hand-typed (regla #0).
-import { type ForecastStore, type SeriesMeta } from "@/lib/data/forecasts";
+import { type ForecastStore, type SeriesMeta, forecastFor } from "@/lib/data/forecasts";
 import { PILOT } from "@/lib/data/visa-panel";
+import { seriesSignals, type PanelIndex } from "@/lib/visabot/analytics";
 
 export type GallerySeries = {
   key: string; // "country|category|table"
@@ -15,6 +16,10 @@ export type GallerySeries = {
   models: string[];
   lastMonth: string | null;
   nFObs: number | null;
+  // derived signals (attachSignals) — null until enriched with the panel
+  backlogYears?: number | null; // years of wait implied by the latest F cutoff
+  movementDays?: number | null; // projected advance (>0) / retrogression (<0) over the horizon
+  movementPerYear?: number | null; // same, normalized to days/year
 };
 
 // Canonical category order (mirrors analytics.buildMonthTable so cards order like
@@ -57,6 +62,47 @@ export function buildGallerySeries(store: ForecastStore): GallerySeries[] {
   );
 }
 
+// Enrich the leaf set with derived signals (backlog + projected movement) from
+// the real panel. Uses a pre-built index so the whole set is O(n), not O(n·rows).
+export function attachSignals(series: GallerySeries[], store: ForecastStore, index: PanelIndex): GallerySeries[] {
+  return series.map((s) => {
+    const sig = seriesSignals(index.get(s.key), forecastFor(store, s.country, s.category, s.table), store.horizonMonths);
+    return { ...s, backlogYears: sig.backlogYears, movementDays: sig.movementDays, movementPerYear: sig.movementPerYear };
+  });
+}
+
+// MASE quality terciles derived from the loaded distribution itself — never a
+// typed cutoff (regla #0). Returns the two split points, or null if too few.
+export function maseTerciles(series: GallerySeries[]): { t1: number; t2: number } | null {
+  const vals = series.map((s) => s.mase).filter((v): v is number => v != null && Number.isFinite(v)).sort((a, b) => a - b);
+  if (vals.length < 3) return null;
+  const q = (p: number) => vals[Math.min(vals.length - 1, Math.floor(p * (vals.length - 1)))];
+  return { t1: q(1 / 3), t2: q(2 / 3) };
+}
+export type MaseTier = "good" | "mid" | "weak" | null;
+export function maseTier(mase: number | null | undefined, t: { t1: number; t2: number } | null): MaseTier {
+  if (mase == null || !Number.isFinite(mase) || !t) return null;
+  return mase <= t.t1 ? "good" : mase <= t.t2 ? "mid" : "weak";
+}
+
+// Sort keys for the gallery (default 'order' = canonical bulletin order).
+export type SortKey = "order" | "mase" | "backlog" | "movement";
+const nlast = (v: number | null | undefined) => (v == null || !Number.isFinite(v) ? null : v);
+export function sortSeries(series: GallerySeries[], key: SortKey): GallerySeries[] {
+  if (key === "order") return series;
+  const by = (f: (s: GallerySeries) => number | null, dir: 1 | -1) =>
+    [...series].sort((a, b) => {
+      const va = nlast(f(a)), vb = nlast(f(b));
+      if (va == null && vb == null) return 0;
+      if (va == null) return 1; // nulls always last
+      if (vb == null) return -1;
+      return (va - vb) * dir;
+    });
+  if (key === "mase") return by((s) => s.mase, 1); // sharpest (lowest) first
+  if (key === "backlog") return by((s) => s.backlogYears ?? null, -1); // longest wait first
+  return by((s) => s.movementPerYear ?? null, -1); // fastest advancing first
+}
+
 export type CountryGroup = { country: string; series: GallerySeries[] };
 export type CategoryGroup = { category: string; block: "familia" | "empleo"; series: GallerySeries[] };
 export type GalleryTree = { featured: GallerySeries[]; byCountry: CountryGroup[]; byCategory: CategoryGroup[] };
@@ -64,11 +110,18 @@ export type GalleryTree = { featured: GallerySeries[]; byCountry: CountryGroup[]
 // Group the leaf set three ways (mirrors the reference's three tiers): a small
 // featured grid, a by-country accordion and a by-category (cross-cut) accordion.
 export function buildGalleryTree(series: GallerySeries[]): GalleryTree {
-  // one headline FAD series per pilot area (falls back to any table)
+  // one headline series per pilot area — the MOST NOTABLE (largest current
+  // backlog), not a fixed category, so 'Destacados' isn't five identical F1
+  // cards. Falls back to first FAD / any when no backlog signal is attached.
   const featured: GallerySeries[] = [];
   for (const c of PILOT) {
-    const s = series.find((x) => x.country === c && x.table === "FAD") ?? series.find((x) => x.country === c);
-    if (s) featured.push(s);
+    const inC = series.filter((x) => x.country === c);
+    if (!inC.length) continue;
+    const withB = inC.filter((x) => x.backlogYears != null);
+    const pick = withB.length
+      ? withB.reduce((a, b) => ((b.backlogYears as number) > (a.backlogYears as number) ? b : a))
+      : (inC.find((x) => x.table === "FAD") ?? inC[0]);
+    featured.push(pick);
   }
   const byCountry: CountryGroup[] = PILOT
     .map((c) => ({ country: c, series: series.filter((x) => x.country === c) }))
