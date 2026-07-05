@@ -45,6 +45,40 @@ describe("derive() invariants against the real eda_facts.json", () => {
     expect(d.nLevel).toBe(real.stationarity_summary.stationary ?? 0);
   });
 
+  // The aggregation/backlog/gap fields are where a wrong caption would hide, so
+  // recompute each INDEPENDENTLY of derive() (not frozen values — robust to the
+  // JSON changing each bulletin) — audit round 3 test-strengthening.
+  it("worst aggregate family-FAD month recomputed independently", () => {
+    const sums = new Map<string, { days: number; n: number }>();
+    for (const e of real.retro_events) {
+      if (e.block !== "family" || e.table !== "FAD") continue;
+      const s = sums.get(e.date) ?? { days: 0, n: 0 };
+      s.days += e.days;
+      s.n += 1;
+      sums.set(e.date, s);
+    }
+    const worst = [...sums.entries()].reduce((a, b) => (b[1].days > a[1].days ? b : a));
+    expect(d.aggCount).toBe(worst[1].n);
+    expect(d.aggYears).toBe(Math.round(worst[1].days / 365.25));
+  });
+
+  it("deepest backlog per block = max backlog_years on the FAD table", () => {
+    const fad = real.backlog_today.filter((b) => b.table === "FAD");
+    const famMax = fad
+      .filter((b) => b.block === "family")
+      .reduce((a, b) => (b.backlog_years > a.backlog_years ? b : a));
+    const empMax = fad
+      .filter((b) => b.block === "employment")
+      .reduce((a, b) => (b.backlog_years > a.backlog_years ? b : a));
+    expect(d.famBacklogYears).toBe(Math.floor(famMax.backlog_years));
+    expect(d.empBacklogYears).toBe(Math.floor(empMax.backlog_years));
+  });
+
+  it("nFamFad counts every family-FAD series, not a literal", () => {
+    const n = real.series.filter((s) => s.block === "family" && s.table === "FAD").length;
+    expect(d.nFamFad).toBe(n);
+  });
+
   it("no derived number is NaN", () => {
     for (const [k, v] of Object.entries(d)) {
       if (typeof v === "number") expect(Number.isNaN(v), `${k} is NaN`).toBe(false);
