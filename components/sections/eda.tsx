@@ -7,6 +7,7 @@
 // standalone report ships as /data/eda_report.pdf.
 
 import * as React from "react";
+import { localeOf } from "@/lib/i18n";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
@@ -68,7 +69,7 @@ function Stat({ value, label, sub }: { value: string; label: string; sub?: strin
 function vintageLabel(vintage: string, lang: "es" | "en"): string {
   const [y, m] = vintage.split("-").map(Number);
   if (!y || !m) return vintage;
-  const month = new Intl.DateTimeFormat(lang === "es" ? "es-MX" : "en-US", {
+  const month = new Intl.DateTimeFormat(localeOf(lang), {
     month: "long",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(y, m - 1, 1)));
@@ -78,7 +79,7 @@ function vintageLabel(vintage: string, lang: "es" | "en"): string {
 export function Eda() {
   const { lang } = useLang();
   const t = T[lang];
-  const locale = lang === "es" ? "es-MX" : "en-US";
+  const locale = localeOf(lang);
   const [facts, setFacts] = React.useState<EdaFacts | null>(null);
   const [loaded, setLoaded] = React.useState(false);
 

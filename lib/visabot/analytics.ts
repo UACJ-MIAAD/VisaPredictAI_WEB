@@ -3,6 +3,7 @@
 // "engineering" layer EpiBot had — turning a query (or a tool click) into a
 // chart spec backed by actual Visa Bulletin data. No fabricated numbers.
 import { type Panel, type VisaPanelRow, countryLabel, statusColor, PILOT } from "@/lib/data/visa-panel";
+import { localeOf } from "@/lib/i18n";
 import { type ForecastStore, forecastFor, forecastMetaFor } from "@/lib/data/forecasts";
 
 export type Lang = "es" | "en";
@@ -26,7 +27,10 @@ export function detectEntities(q: string, panel: Panel): Entities {
   const cats = [...panel.categories].sort((a, b) => b.length - a.length);
   let category: string | null = null;
   for (const c of cats) {
-    const pat = c.replace(/[_]/g, "[ _-]?").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Escape BEFORE widening "_" into [ _-]? — the old inverted order escaped
+    // the freshly inserted brackets, turning every underscored code (EB5_RURAL,
+    // EB4_RW…) into unmatched literal text that silently degraded to its parent.
+    const pat = c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/_/g, "[ _-]?");
     if (new RegExp(`(?<![A-Z0-9])${pat}(?![A-Z0-9])`).test(up)) { category = c; break; }
   }
   const table = /\bDFF\b|DATES FOR FILING|PRESENTACI/i.test(q)
@@ -141,6 +145,40 @@ const nextMonth = (m: string) => { const [y, mo] = m.split("-").map(Number); con
 const epochToYear = (e: number) => 1970 + e / DAYS_Y;
 const epochToDate = (e: number) => { const d = new Date(e * 86400000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`; };
 
+// Band cells in the forecast data are typed `[number, number] | null` because
+// history rows carry no band — but the projected points always do (both the
+// production and the drift paths write them). Narrow once here instead of
+// scattering `as [number, number]` casts; a (theoretically impossible) null
+// degrades to NaN bounds, which render as "NaN" instead of throwing.
+export const bandOf = (b: [number, number] | null | undefined): [number, number] => b ?? [NaN, NaN];
+
+// ── drift-baseline primitives (pure; exported for unit tests) ───────────────
+// OLS regression of the series on its observation index 0..n-1. `slope` is the
+// per-month drift, `sigma` the residual std-dev (n−2 dof), `last` the final
+// observed value — the anchor every projected point extends from.
+export type DriftFit = { slope: number; sigma: number; last: number };
+
+export function fitDrift(ys: number[]): DriftFit {
+  const n = ys.length;
+  const mx = (n - 1) / 2, my = ys.reduce((a, b) => a + b, 0) / n;
+  let sxx = 0, sxy = 0;
+  for (let i = 0; i < n; i++) { sxx += (i - mx) ** 2; sxy += (i - mx) * (ys[i] - my); }
+  const slope = sxx ? sxy / sxx : 0, intercept = my - slope * mx;
+  let ss = 0;
+  for (let i = 0; i < n; i++) ss += (ys[i] - (intercept + slope * i)) ** 2;
+  const sigma = Math.sqrt(ss / Math.max(1, n - 2));
+  return { slope, sigma, last: ys[n - 1] };
+}
+
+// Point + 80/95 % bands at horizon h (months ahead). The half-width grows with
+// √h — the random-walk spread of THIS illustrative in-browser baseline (its
+// own documented method; the production bands ship pre-computed with
+// per-horizon empirical quantiles and never go through here).
+export function driftBands(fit: DriftFit, h: number): { point: number; lo80: number; hi80: number; lo95: number; hi95: number } {
+  const point = fit.last + fit.slope * h, half = fit.sigma * Math.sqrt(h);
+  return { point, lo80: point - Z80 * half, hi80: point + Z80 * half, lo95: point - Z95 * half, hi95: point + Z95 * half };
+}
+
 export function buildForecast(panel: Panel, country: string, category: string, table: string, lang: Lang, horizon = 12, window = 48, forecasts?: ForecastStore | null): ChartSpec | null {
   const series = panel.rows
     .filter((r) => r.country === country && r.category === category && r.table === table)
@@ -188,23 +226,17 @@ export function buildForecast(panel: Panel, country: string, category: string, t
         : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos en conjunto (menor a los horizontes más largos).`;
     }
   } else {
-    const xs = win.map((_, i) => i), ys = win.map((r) => r.daysSinceBase as number);
-    const n = xs.length, mx = (n - 1) / 2, my = ys.reduce((a, b) => a + b, 0) / n;
-    let sxx = 0, sxy = 0;
-    for (let i = 0; i < n; i++) { sxx += (xs[i] - mx) ** 2; sxy += (xs[i] - mx) * (ys[i] - my); }
-    const slope = sxx ? sxy / sxx : 0, intercept = my - slope * mx;
-    let ss = 0; for (let i = 0; i < n; i++) ss += (ys[i] - (intercept + slope * xs[i])) ** 2;
-    const sigma = Math.sqrt(ss / Math.max(1, n - 2));
-    const anchorDays = last.daysSinceBase as number;
+    // fit.last === the window's final daysSinceBase (the old `anchorDays`).
+    const fit = fitDrift(win.map((r) => r.daysSinceBase as number));
     let m = last.bulletinMonth;
     for (let h = 1; h <= horizon; h++) {
       m = nextMonth(m);
-      const fcDays = anchorDays + slope * h, half = sigma * Math.sqrt(h);
-      data.push({ month: m, hist: null, fc: yr(fcDays), date: epochToDate(baseEpoch + fcDays),
-        band80: [yr(fcDays - Z80 * half), yr(fcDays + Z80 * half)],
-        band95: [yr(fcDays - Z95 * half), yr(fcDays + Z95 * half)] });
+      const b = driftBands(fit, h);
+      data.push({ month: m, hist: null, fc: yr(b.point), date: epochToDate(baseEpoch + b.point),
+        band80: [yr(b.lo80), yr(b.hi80)],
+        band95: [yr(b.lo95), yr(b.hi95)] });
     }
-    const perYear = slope * 12;
+    const perYear = fit.slope * 12;
     const dir = lang === "en" ? (perYear >= 0 ? "advancing" : "retrogressing") : (perYear >= 0 ? "avanzando" : "retrocediendo");
     subtitle = lang === "en"
       ? `Illustrative ${horizon}-month projection (in-browser drift baseline, ${dir} ~${Math.abs(Math.round(perYear))} days/yr) with 80 % / 95 % bands`
@@ -224,6 +256,7 @@ export function buildForecast(panel: Panel, country: string, category: string, t
 export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lang: Lang): string {
   const lastHist = [...spec.data].filter((d) => d.hist != null).pop();
   const end = spec.data[spec.data.length - 1];
+  const b95 = bandOf(end.band95);
   const fmt = (yr: number) => (yr).toFixed(1);
   const h = spec.data.length - spec.data.findIndex((d) => d.month === spec.splitMonth) - 1;
   // spec.subtitle already states whether this is the PRODUCTION model or the in-browser
@@ -231,8 +264,8 @@ export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lan
   // Pass both through verbatim (do NOT re-label the production model as "illustrative").
   const acc = spec.note ? ` ${spec.note}` : "";
   return lang === "en"
-    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${h}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95% band [${fmt((end.band95 as [number, number])[0])}, ${fmt((end.band95 as [number, number])[1])}].${acc} If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the 12 months shown, say so frankly and give a rough pace-based estimate with its uncertainty. Frame it as an aggregate statistical forecast, not legal advice — but DO give the estimate.`
-    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${h} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt((end.band95 as [number, number])[0])}, ${fmt((end.band95 as [number, number])[1])}].${acc} Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los 12 meses mostrados, dilo con franqueza y da una estimación aproximada por el ritmo, con su incertidumbre. Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la estimación.`;
+    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${h}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95% band [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the 12 months shown, say so frankly and give a rough pace-based estimate with its uncertainty. Frame it as an aggregate statistical forecast, not legal advice — but DO give the estimate.`
+    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${h} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los 12 meses mostrados, dilo con franqueza y da una estimación aproximada por el ritmo, con su incertidumbre. Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la estimación.`;
 }
 
 // Generic note for the non-table charts so the LLM complements the visual.
@@ -394,7 +427,7 @@ export function buildPanorama(panel: Panel, lang: Lang): Kpi[] {
   const total = panel.rows.length;
   const fCount = panel.statusCounts["F"] || 0;
   const pctF = total ? Math.round((fCount / total) * 100) : 0;
-  const fmt = (n: number) => n.toLocaleString(lang === "en" ? "en-US" : "es-MX");
+  const fmt = (n: number) => n.toLocaleString(localeOf(lang));
   return [
     { label: lang === "en" ? "Series" : "Series", value: fmt(seriesKeys.size), hint: lang === "en" ? "country × category × table" : "país × categoría × tabla" },
     { label: lang === "en" ? "Observations" : "Observaciones", value: fmt(total), hint: lang === "en" ? "panel rows y(p,c,b,t)" : "filas del panel y(p,c,b,t)" },

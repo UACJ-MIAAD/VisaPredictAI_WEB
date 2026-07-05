@@ -395,7 +395,7 @@ export function AssistantConsole() {
               <button className="vb-iconbtn shrink-0" onClick={() => setHowOpen(false)} aria-label={tr(lang, "vbClose")}><X className="h-5 w-5" aria-hidden /></button>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
-              {[1, 2, 3, 4].map((n) => (
+              {([1, 2, 3, 4] as const).map((n) => (
                 <div key={n} className="border-t-2 border-[var(--color-rule)] pt-3">
                   <h3 className="font-serif text-base font-bold text-[var(--color-ink)]">{tr(lang, `acStep${n}T`)}</h3>
                   <p className="mt-1.5 text-[0.9rem] leading-relaxed text-[var(--color-muted)]">{tr(lang, `acStep${n}B`)}</p>

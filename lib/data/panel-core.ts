@@ -30,7 +30,8 @@ const BLOCK_ES: Record<string, string> = {
 };
 
 // CSV is comma-separated with no quoted fields (values are ISO dates / codes).
-function parseCsv(text: string): VisaPanelRow[] {
+// Exported for unit tests (BC2); production callers go through buildPanel.
+export function parseCsv(text: string): VisaPanelRow[] {
   const lines = text.split("\n");
   const header = lines[0].split(",");
   const idx = (k: string) => {
@@ -71,7 +72,8 @@ function parseCsv(text: string): VisaPanelRow[] {
 }
 
 // Δ days vs the previous month within the same (country, category, table) series.
-function computeMovement(rows: VisaPanelRow[]): void {
+// Exported for unit tests (BC2); production callers go through buildPanel.
+export function computeMovement(rows: VisaPanelRow[]): void {
   const byKey = new Map<string, VisaPanelRow[]>();
   for (const r of rows) {
     const k = `${r.country}|${r.category}|${r.table}`;

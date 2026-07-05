@@ -14,7 +14,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpDown, Download, SlidersHorizontal } from "lucide-react";
 import { type VisaPanelRow, blockLabel, countryLabel, movementColor } from "@/lib/data/visa-panel";
 import { StatusChip } from "@/components/ui/data-cells";
-import { tr } from "@/lib/i18n";
+import { tr, localeOf } from "@/lib/i18n";
 import type { Lang } from "@/lib/site-map";
 import { track } from "@/lib/analytics";
 
@@ -56,13 +56,24 @@ const colLabel = (lang: Lang, id: string) =>
     priorityDate: tr(lang, "thFecha"), daysSinceBase: tr(lang, "thDias"), movement: tr(lang, "thMov"),
   })[id] ?? id;
 
+// One column list drives BOTH the CSV header and the row cells, so they can
+// never drift apart (the header used to be a hand-typed string).
+const EXPORT_COLUMNS: { header: string; key: keyof VisaPanelRow }[] = [
+  { header: "country", key: "country" },
+  { header: "block", key: "block" },
+  { header: "category", key: "category" },
+  { header: "table", key: "table" },
+  { header: "bulletin_month", key: "bulletinMonth" },
+  { header: "status", key: "status" },
+  { header: "priority_date", key: "priorityDate" },
+  { header: "days_since_base", key: "daysSinceBase" },
+  { header: "movement", key: "movement" },
+];
+
 function exportCsv(rows: VisaPanelRow[]) {
-  const head = "country,block,category,table,bulletin_month,status,priority_date,days_since_base,movement";
+  const head = EXPORT_COLUMNS.map((c) => c.header).join(",");
   const body = rows
-    .map((r) =>
-      [r.country, r.block, r.category, r.table, r.bulletinMonth, r.status,
-       r.priorityDate ?? "", r.daysSinceBase ?? "", r.movement ?? ""].join(","),
-    )
+    .map((r) => EXPORT_COLUMNS.map((c) => r[c.key] ?? "").join(","))
     .join("\n");
   // ﻿ BOM so Excel reads UTF-8 (accented labels) correctly
   const blob = new Blob(["﻿" + head + "\n" + body], { type: "text/csv;charset=utf-8" });
@@ -135,7 +146,7 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground tabular-nums">
-          {tableRows.length.toLocaleString(lang === "en" ? "en-US" : "es-MX")} {tr(lang, "rows")}
+          {tableRows.length.toLocaleString(localeOf(lang))} {tr(lang, "rows")}
         </p>
         <div className="flex items-center gap-2">
           <details ref={colMenuRef} className="relative">
@@ -171,10 +182,11 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
       </div>
 
       {/* AX3a: never taller than 65dvh on small screens; AX3b: .scroll-x-shadow
-          (content.css) paints edge scrims that hint at horizontal overflow */}
+          (content.css) paints edge scrims that hint at horizontal overflow;
+          AY4: on ultrawide (2xl) let the table breathe up to 75dvh/1000px */}
       <div
         ref={parentRef}
-        className="scroll-x-shadow h-[min(560px,65dvh)] overflow-auto rounded-xl border border-border"
+        className="scroll-x-shadow h-[min(560px,65dvh)] overflow-auto rounded-xl border border-border 2xl:h-[min(75dvh,1000px)]"
         tabIndex={0}
         aria-label={tr(lang, "tableScroll")}
       >

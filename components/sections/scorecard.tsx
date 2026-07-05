@@ -6,6 +6,7 @@
 // forecast that was frozen BEFORE its target month and later scored against the real cutoff.
 
 import * as React from "react";
+import { localeOf } from "@/lib/i18n";
 import {
   ResponsiveContainer,
   BarChart,
@@ -141,7 +142,7 @@ export function Scorecard() {
           value={`${Math.round(o.cov95 * 100)}%`}
           label={`${t.cov95} (${t.nominal}${cov80 != null ? ` · 80 %: ${Math.round(cov80 * 100)}%` : ""})`}
         />
-        <Stat value={sc.n_scored.toLocaleString(lang === "es" ? "es-MX" : "en-US")} label={t.nScored} />
+        <Stat value={sc.n_scored.toLocaleString(localeOf(lang))} label={t.nScored} />
       </div>
 
       <div className="mt-6 border-l-2 border-[var(--color-accent)] pl-4">

@@ -1,9 +1,13 @@
 import type { Lang } from "@/lib/site-map";
 
+// Single source for the BCP-47 locale (the ternary was copy-pasted ~15×,
+// once with flipped operands — grep-proof it here instead).
+export const localeOf = (l: Lang | string): string => (l === "en" ? "en-US" : "es-MX");
+
 // Chrome / UI strings (the academic body stays in its source language, Spanish).
 type Dict = Record<string, { es: string; en: string }>;
 
-const S: Dict = {
+const S = {
   // hero
   heroEyebrow: { es: "Tesis MIAAD · UACJ · Proyecto I en curso", en: "MIAAD Thesis · UACJ · Project I underway" },
   heroDataThrough: { es: "datos a", en: "data through" },
@@ -311,12 +315,11 @@ const S: Dict = {
     es: "Documento propuesto en mayo de 2026. Los resultados en ejecución viven en",
     en: "Document as proposed in May 2026. The results now in execution live in",
   },
-};
+} satisfies Dict;
 
-export function tr(lang: Lang, key: keyof typeof S | string): string {
-  const e = S[key as string];
-  if (!e && process.env.NODE_ENV !== "production") {
-    console.warn(`[i18n] missing key: ${String(key)}`);
-  }
-  return e ? e[lang] : (key as string);
+export type I18nKey = keyof typeof S;
+export function tr(lang: Lang, key: I18nKey): string {
+  // key is a compile-time literal union now (S uses `satisfies`, not a widening
+  // annotation) — a typo no longer compiles, so no runtime miss handling needed.
+  return S[key][lang];
 }
