@@ -90,6 +90,22 @@ export const ROUTES: Route[] = [
     ],
   },
   {
+    path: "/resultados",
+    label: "Galería de pronósticos",
+    labelEn: "Forecast gallery",
+    short: "Galería",
+    shortEn: "Gallery",
+    blurb:
+      "Todas las series de pronóstico país × categoría × tabla en una galería filtrable: hojea por país o por categoría y abre cualquiera para ver el abanico completo con sus bandas al 80 % y 95 %.",
+    blurbEn:
+      "Every country × category × table forecast series in a filterable gallery: skim by country or by category and open any one for the full fan chart with its 80% and 95% bands.",
+    sections: [
+      { id: "res-featured", label: "Destacados", labelEn: "Featured" },
+      { id: "res-country", label: "Por país", labelEn: "By country" },
+      { id: "res-category", label: "Por categoría", labelEn: "By category" },
+    ],
+  },
+  {
     path: "/recursos",
     label: "Recursos",
     labelEn: "Resources",
