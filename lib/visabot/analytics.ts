@@ -15,14 +15,27 @@ const COUNTRY_ALIASES: [RegExp, string][] = [
   [/\bindia\b|\bindi[oa]\b/i, "india"],
   [/\bchina\b|\bchin[oa]\b/i, "china"],
   [/filipin|philippin/i, "philippines"],
-  [/all charge?ability|resto del mundo|todos los pa[ií]ses|\brow\b/i, "all_chargeability"],
+  // "all chargeability" residual area. The bare word "row" is NOT here: it
+  // matched English "row" (e.g. "the first row"), a false all_chargeability
+  // detection — only the UPPERCASE abbreviation ROW is accepted, below.
+  [/all charge?ability|resto del mundo|todos los pa[ií]ses/i, "all_chargeability"],
 ];
+
+// Collapse letter↔digit separators in category codes so "EB-5", "EB 5", "F2-A"
+// match the panel codes EB5/F2A (finding 7). Uppercase form (detectEntities
+// works on the uppercased query).
+// The optional [AB] suffix must NOT be followed by another letter, or it would
+// absorb the first letter of an adjacent word ("F1 backlog"→"F1BACKLOG",
+// "EB2 based"→"EB2BASED") and break detection of the most common phrasings.
+const normalizeCatsUp = (s: string) =>
+  s.replace(/\b(EB|F)[ ._-]?(\d)(?:[ ._-]?([AB])(?![A-Z]))?/g, (_m, p, d, x) => p + d + (x || ""));
 
 export type Entities = { country: string | null; category: string | null; table: string | null; block: string | null };
 
 export function detectEntities(q: string, panel: Panel): Entities {
-  const country = COUNTRY_ALIASES.find(([re]) => re.test(q))?.[1] ?? null;
-  const up = ` ${q.toUpperCase()} `;
+  const country =
+    COUNTRY_ALIASES.find(([re]) => re.test(q))?.[1] ?? (/\bROW\b/.test(q) ? "all_chargeability" : null);
+  const up = ` ${normalizeCatsUp(q.toUpperCase())} `;
   // longest category code first so EB5_RURAL wins over EB5
   const cats = [...panel.categories].sort((a, b) => b.length - a.length);
   let category: string | null = null;
@@ -55,11 +68,28 @@ export type ChartSpec =
   | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[] }
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
-  | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string;
+  | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string; fallback?: boolean;
       data: { month: string; hist: number | null; fc: number | null; band80: [number, number] | null; band95: [number, number] | null; date: string | null }[] }
   | { kind: "table"; title: string; subtitle: string; month: string; tableType: string;
       countries: string[];
-      sections: { block: string; rows: { cat: string; cells: ({ status: string; date: string | null })[] }[] }[] };
+      sections: { block: string; rows: { cat: string; cells: ({ status: string; date: string | null })[] }[] }[] }
+  | { kind: "bulletinDiff"; title: string; subtitle: string; monthA: string; monthB: string; tableType: string;
+      countries: string[];
+      summary: { advanced: number; retrogressed: number; toCurrent: number; toUnavailable: number; unchanged: number; other: number;
+                 topAdvance: { cat: string; country: string; days: number } | null;
+                 topRetro: { cat: string; country: string; days: number } | null };
+      sections: { block: string; rows: { cat: string; cells: DiffCell[] }[] }[] };
+
+// One category×country cell of a bulletin-to-bulletin comparison.
+export type DiffKind = "advance" | "retro" | "flat" | "toCurrent" | "fromCurrent" | "toUnavailable" | "fromUnavailable" | "appeared" | "disappeared" | "na";
+export type DiffCell = {
+  kind: DiffKind;
+  days: number | null; // signed Δ days (advance > 0, retrogression < 0) when both months are dated F
+  fromDate: string | null;
+  toDate: string | null;
+  fromStatus: string;
+  toStatus: string;
+};
 
 function latestWaitYears(panel: Panel, country: string, category: string, table: string): { years: number | null; date: string | null } {
   const rows = panel.rows
@@ -75,7 +105,11 @@ const EMP = ["EB1", "EB2", "EB3", "EB4", "EB5"];
 
 const monthDays = (m: string) => { const [y, mo] = m.split("-").map(Number); return Date.UTC(y, mo - 1, 1) / 86400000; };
 const isoDays = (d: string) => { const [y, mo, da] = d.split("-").map(Number); return Date.UTC(y, mo - 1, da || 1) / 86400000; };
-const pdYear = (d: string) => { const [y, mo, da] = d.split("-").map(Number); return y + (mo - 1) / 12 + (da - 1) / 365; };
+// Decimal year of a priority date. Uses the SAME days→year transform as the
+// forecast points (epochToYear = 1970 + days/365.25) so the history line and the
+// projection meet continuously at the split (P3: history divided the day by 365
+// and the month by 12, while forecast points used /365.25 — a visible kink).
+const pdYear = (d: string) => 1970 + isoDays(d) / 365.25;
 
 const seriesTitle = (e: { country: string; category: string; table: string }) =>
   `${countryLabel(e.country)} · ${e.category} · ${e.table}`;
@@ -219,11 +253,22 @@ export function buildForecast(panel: Panel, country: string, category: string, t
     // Prospective track record (real frozen forecasts vs realized cutoffs) — global.
     const sc = (forecasts ?? null)?.scorecard;
     if (sc) {
-      const mae = (k: number) => Math.round(sc.by_horizon[String(k)]?.mae_days ?? NaN);
-      const cov = Math.round(sc.overall.cov95 * 100);
-      note = lang === "en"
-        ? `Real-world accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs): typical error ±${mae(3)} d at 3 mo · ±${mae(6)} d at 6 mo · ±${mae(12)} d at 12 mo. The 95 % band held in ${cov} % of cases overall (lower at the longest horizons).`
-        : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): error típico ±${mae(3)} d a 3 m · ±${mae(6)} d a 6 m · ±${mae(12)} d a 12 m. La banda al 95 % acertó en el ${cov} % de los casos en conjunto (menor a los horizontes más largos).`;
+      // Guard each horizon: a missing by_horizon key must not render "±NaN d" (P2).
+      const maeAt = (k: number) => { const v = sc.by_horizon[String(k)]?.mae_days; return Number.isFinite(v) ? Math.round(v as number) : null; };
+      const hs = ([3, 6, 12] as const)
+        .map((h) => [h, maeAt(h)] as const)
+        .filter(([, v]) => v != null)
+        .map(([h, v]) => (lang === "en" ? `±${v} d at ${h} mo` : `±${v} d a ${h} m`));
+      const cov = Number.isFinite(sc.overall?.cov95) ? Math.round(sc.overall.cov95 * 100) : null;
+      const errClause = hs.length ? (lang === "en" ? `typical error ${hs.join(" · ")}. ` : `error típico ${hs.join(" · ")}. `) : "";
+      const covClause = cov != null
+        ? (lang === "en" ? `The 95 % band held in ${cov} % of cases overall (lower at the longest horizons).` : `La banda al 95 % acertó en el ${cov} % de los casos en conjunto (menor a los horizontes más largos).`)
+        : "";
+      if (errClause || covClause) {
+        note = lang === "en"
+          ? `Real-world accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs): ${errClause}${covClause}`
+          : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): ${errClause}${covClause}`;
+      }
     }
   } else {
     // fit.last === the window's final daysSinceBase (the old `anchorDays`).
@@ -243,7 +288,7 @@ export function buildForecast(panel: Panel, country: string, category: string, t
       : `Proyección ilustrativa a ${horizon} meses (línea base de deriva en el navegador, ${dir} ~${Math.abs(Math.round(perYear))} días/año) con bandas al 80 % / 95 %`;
   }
   return {
-    kind: "forecast", splitMonth: last.bulletinMonth, note,
+    kind: "forecast", splitMonth: last.bulletinMonth, note, fallback: !(real && real.length),
     title: lang === "en" ? `Forecast · ${seriesTitle({ country, category, table })}` : `Pronóstico · ${seriesTitle({ country, category, table })}`,
     subtitle,
     yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
@@ -272,6 +317,7 @@ export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lan
 export function chartContextNote(chart: ChartSpec, lang: Lang): string | null {
   if (chart.kind === "forecast") return forecastText(chart, lang);
   if (chart.kind === "table") return null; // handled by monthTableText (richer)
+  if (chart.kind === "bulletinDiff") return bulletinDiffText(chart, lang);
   return lang === "en"
     ? `A chart titled "${chart.title}" is being rendered to the user from the real data panel — reference and interpret it; do NOT say you cannot show charts.`
     : `Se está mostrando al usuario un gráfico titulado «${chart.title}» generado con el panel de datos real — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos.`;
@@ -370,16 +416,49 @@ export function parseMonth(q: string, panel: Panel): string | null {
   const have = new Set(panel.rows.map((r) => r.bulletinMonth));
   const pick = (y: number, mo: number) => { const s = `${y}-${String(mo).padStart(2, "0")}`; return have.has(s) ? s : null; };
   const t = q.toLowerCase();
-  let mo: number | null = null, yr: number | null = null;
+  // relative "latest / most recent / último boletín / this month" → newest month.
+  // Fold accents first: \b does not fire before an accented "ú" (non-ASCII), so
+  // "\búltimo\b" never matched on the raw string.
+  const tf = t.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  if (/\b(latest|most recent|newest|last bulletin|ultimo|mas reciente|este mes|this month)\b/.test(tf)) {
+    const all = [...have].sort();
+    return all.length ? all[all.length - 1] : null;
+  }
+  // quarter "Q3 2024" / "tercer trimestre de 2024" → last available month of the quarter
+  const qMap: Record<string, number> = { primer: 1, segundo: 2, tercer: 3, tercero: 3, cuarto: 4 };
+  const qm = t.match(/\bq([1-4])\b/) || t.match(/\b(primer|segundo|tercer|tercero|cuarto)\s+trimestre/);
+  if (qm) {
+    const quarter = qm[1].length === 1 ? +qm[1] : qMap[qm[1]];
+    const yq = t.match(/\b(19|20)\d{2}\b/);
+    if (yq) for (const mo of [quarter * 3, quarter * 3 - 1, quarter * 3 - 2]) { const s = pick(+yq[0], mo); if (s) return s; }
+  }
+  // unambiguous numeric forms
   const iso = t.match(/(20\d{2})[-/](0?[1-9]|1[0-2])\b/);
   if (iso) return pick(+iso[1], +iso[2]);
   const ym = t.match(/\b(0?[1-9]|1[0-2])[-/](20\d{2})\b/);
   if (ym) return pick(+ym[2], +ym[1]);
-  const names = MONTHS_ES.concat(MONTHS_EN);
-  for (let i = 0; i < names.length; i++) if (t.includes(names[i])) { mo = (i % 12) + 1; break; }
-  if (mo === null) { const a = t.match(/\b(ene|jan|feb|mar|abr|apr|may|jun|jul|ago|aug|sept?|oct|nov|dic|dec)\b/); if (a) mo = MON_ABBR[a[1]]; }
-  const ym2 = t.match(/\b(19|20)\d{2}\b/);
-  if (ym2) yr = +ym2[0];
+
+  const yrMatch = t.match(/\b(19|20)\d{2}\b/);
+  const yr = yrMatch ? +yrMatch[0] : null;
+  const yrPos = yrMatch ? (yrMatch.index ?? -1) : -1;
+
+  // Month by name (full + abbreviation), word-bounded. The English modal "may"
+  // is only accepted as a month when it sits next to the year (finding 19: a
+  // stray "may" + any year used to resolve to a wrong month). When several
+  // months appear, the one nearest the year wins.
+  const NAMES: { re: RegExp; mo: number; ambiguous?: boolean }[] = [
+    ...MONTHS_ES.map((n, i) => ({ re: new RegExp(`\\b${n}\\b`), mo: i + 1 })),
+    ...MONTHS_EN.map((n, i) => ({ re: new RegExp(`\\b${n}\\b`), mo: i + 1, ambiguous: n === "may" })),
+    ...Object.entries(MON_ABBR).map(([a, mo]) => ({ re: new RegExp(`\\b${a}\\b`), mo, ambiguous: a === "may" })),
+  ];
+  let mo: number | null = null, best = Infinity;
+  for (const { re, mo: m, ambiguous } of NAMES) {
+    const mm = re.exec(t);
+    if (!mm) continue;
+    const dist = yrPos >= 0 ? Math.abs((mm.index ?? 0) - yrPos) : 0;
+    if (ambiguous && (yrPos < 0 || dist > 8)) continue;
+    if (dist < best) { best = dist; mo = m; }
+  }
   if (mo && yr) return pick(yr, mo);
   // bare year + table intent → latest available month of that year
   if (yr && !mo) { const ms = [...have].filter((s) => s.startsWith(`${yr}-`)).sort(); return ms[ms.length - 1] || null; }
@@ -418,6 +497,152 @@ export function monthTableText(spec: Extract<ChartSpec, { kind: "table" }>, lang
   return (lang === "en"
     ? `U.S. Visa Bulletin ${monthLabel(spec.month, lang)}, ${spec.tableType} (columns: ${head}). C = current, U = unavailable, otherwise the priority-date cutoff:\n`
     : `Visa Bulletin de EE. UU. ${monthLabel(spec.month, lang)}, ${spec.tableType} (columnas: ${head}). C = al corriente, U = no disponible, en otro caso la fecha de corte:\n`) + lines.join("\n");
+}
+
+// ── compare two bulletins (the "what changed between month A and month B" view) ─
+// Extract TWO distinct bulletin months from free text, e.g. "compara julio 2025
+// con julio 2026", "qué cambió entre 2015 y 2026", "diff 2020-07 vs 2026-07",
+// "julio y agosto 2026". Returns [older, newer] (both present in the panel) or null.
+export function parseTwoMonths(q: string, panel: Panel): [string, string] | null {
+  const have = [...new Set(panel.rows.map((r) => r.bulletinMonth))];
+  const haveSet = new Set(have);
+  const pick = (y: number, mo: number) => { const s = `${y}-${String(mo).padStart(2, "0")}`; return haveSet.has(s) ? s : null; };
+  const latestOfYear = (y: number) => { const ms = have.filter((s) => s.startsWith(`${y}-`)).sort(); return ms[ms.length - 1] || null; };
+  const t = q.toLowerCase();
+  const months = new Set<string>();
+
+  // 1) explicit ISO YYYY-MM
+  for (const m of t.matchAll(/\b(20\d{2})[-/](0?[1-9]|1[0-2])\b/g)) { const s = pick(+m[1], +m[2]); if (s) months.add(s); }
+
+  // 2) year occurrences (position-tagged) → pair each named month with its nearest year
+  const years: { y: number; pos: number }[] = [];
+  for (const m of t.matchAll(/\b(19|20)\d{2}\b/g)) years.push({ y: +m[0], pos: m.index ?? 0 });
+  const nearestYear = (pos: number): number | null =>
+    years.length ? years.reduce((best, y) => (Math.abs(y.pos - pos) < Math.abs(best.pos - pos) ? y : best)).y : null;
+  const nearestYearDist = (pos: number): number =>
+    years.length ? Math.min(...years.map((y) => Math.abs(y.pos - pos))) : Infinity;
+
+  // 3) named / abbreviated months, each resolved with its nearest year
+  const NAMES: [string, number][] = [
+    ...MONTHS_ES.map((n, i) => [n, i + 1] as [string, number]),
+    ...MONTHS_EN.map((n, i) => [n, i + 1] as [string, number]),
+    ...Object.entries(MON_ABBR).map(([a, mo]) => [a, mo] as [string, number]),
+  ];
+  for (const [name, mo] of NAMES) {
+    for (const m of t.matchAll(new RegExp(`\\b${name}\\b`, "g"))) {
+      const y = nearestYear(m.index ?? 0);
+      // modal "may" only counts as a month when it sits NEXT TO the year (mirror
+      // parseMonth) — a stray "may" + two bare years otherwise fabricates May.
+      if (name === "may" && (y == null || nearestYearDist(m.index ?? 0) > 8)) continue;
+      if (y != null) { const s = pick(y, mo); if (s) months.add(s); }
+    }
+  }
+
+  // 4) two DISTINCT bare years, no resolvable month → latest available month of each
+  const distinctYears = [...new Set(years.map((y) => y.y))];
+  if (months.size < 2 && distinctYears.length >= 2) for (const y of distinctYears) { const s = latestOfYear(y); if (s) months.add(s); }
+
+  const out = [...months].sort();
+  return out.length >= 2 ? [out[0], out[out.length - 1]] : null;
+}
+
+// Diff every category × pilot country between two bulletins of the same table.
+export function buildBulletinDiff(panel: Panel, monthA: string, monthB: string, tableType: string, lang: Lang): ChartSpec | null {
+  if (monthA === monthB) return null;
+  const [mA, mB] = monthA < monthB ? [monthA, monthB] : [monthB, monthA]; // A earlier, B later
+  const rowsA = panel.rows.filter((r) => r.bulletinMonth === mA && r.table === tableType);
+  const rowsB = panel.rows.filter((r) => r.bulletinMonth === mB && r.table === tableType);
+  if (!rowsA.length && !rowsB.length) return null;
+  const countries = PILOT.filter((c) => rowsA.some((r) => r.country === c) || rowsB.some((r) => r.country === c));
+  if (!countries.length) return null;
+  const order = [...FAM, "EB1", "EB2", "EB3", "EB3_OW", "EB4", "EB4_RW", "EB4_TRANS", "EB5", "EB5_UNRESERVED", "EB5_RURAL", "EB5_HIGHUNEMP", "EB5_INFRA", "EB5_NONRC", "EB5_TEA", "EB5_PILOT", "EB5_RC"];
+  const cats = [...new Set([...rowsA, ...rowsB].map((r) => r.category))].sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+
+  const findRow = (rows: VisaPanelRow[], cat: string, country: string) => rows.find((r) => r.category === cat && r.country === country) || null;
+  let advanced = 0, retrogressed = 0, toCurrent = 0, toUnavailable = 0, unchanged = 0, other = 0;
+  let topAdvance: { cat: string; country: string; days: number } | null = null;
+  let topRetro: { cat: string; country: string; days: number } | null = null;
+
+  const classify = (cat: string, country: string): DiffCell => {
+    const a = findRow(rowsA, cat, country), b = findRow(rowsB, cat, country);
+    const base = { fromDate: a?.priorityDate ?? null, toDate: b?.priorityDate ?? null, fromStatus: a?.status ?? "", toStatus: b?.status ?? "", days: null as number | null };
+    if (!a && !b) return { ...base, kind: "na" };
+    if (!a && b) { other++; return { ...base, kind: "appeared" }; }
+    if (a && !b) { other++; return { ...base, kind: "disappeared" }; }
+    if (base.toStatus === "C") { if (base.fromStatus === "C") { unchanged++; return { ...base, kind: "flat" }; } toCurrent++; return { ...base, kind: "toCurrent" }; }
+    if (base.toStatus === "U") { if (base.fromStatus === "U") { unchanged++; return { ...base, kind: "flat" }; } toUnavailable++; return { ...base, kind: "toUnavailable" }; }
+    if (base.fromStatus === "C") { other++; return { ...base, kind: "fromCurrent" }; } // Current → a date = retrogression
+    if (base.fromStatus === "U") { other++; return { ...base, kind: "fromUnavailable" }; } // Unavailable → a date = opened up
+    const dd = (a!.daysSinceBase != null && b!.daysSinceBase != null)
+      ? (b!.daysSinceBase as number) - (a!.daysSinceBase as number)
+      : (base.fromDate && base.toDate ? isoDays(base.toDate) - isoDays(base.fromDate) : null);
+    if (dd == null) { unchanged++; return { ...base, kind: "flat" }; }
+    if (dd > 0) { advanced++; if (!topAdvance || dd > topAdvance.days) topAdvance = { cat, country, days: dd }; return { ...base, kind: "advance", days: dd }; }
+    if (dd < 0) { retrogressed++; if (!topRetro || dd < topRetro.days) topRetro = { cat, country, days: dd }; return { ...base, kind: "retro", days: dd }; }
+    unchanged++; return { ...base, kind: "flat", days: 0 };
+  };
+
+  const mk = (cs: string[]) => cs.map((cat) => ({ cat, cells: countries.map((c) => classify(cat, c)) }));
+  const fam = cats.filter((c) => /^F/.test(c)), emp = cats.filter((c) => /^EB/.test(c));
+  const sections: { block: string; rows: { cat: string; cells: DiffCell[] }[] }[] = [];
+  if (fam.length) sections.push({ block: lang === "en" ? "Family-sponsored" : "Familiar", rows: mk(fam) });
+  if (emp.length) sections.push({ block: lang === "en" ? "Employment-based" : "Empleo", rows: mk(emp) });
+
+  return {
+    kind: "bulletinDiff", monthA: mA, monthB: mB, tableType, countries,
+    title: lang === "en" ? `Bulletin comparison · ${monthLabel(mA, lang)} → ${monthLabel(mB, lang)} · ${tableType}` : `Comparación de boletines · ${monthLabel(mA, lang)} → ${monthLabel(mB, lang)} · ${tableType}`,
+    subtitle: lang === "en"
+      ? "How each category × country moved between the two bulletins (▲ advance, ▼ retrogression, →C became current, →U became unavailable)"
+      : "Cómo se movió cada categoría × país entre los dos boletines (▲ avance, ▼ retroceso, →C pasó a current, →U pasó a no disponible)",
+    summary: { advanced, retrogressed, toCurrent, toUnavailable, unchanged, other, topAdvance, topRetro },
+    sections,
+  };
+}
+
+// Grounding text so the LLM can answer any cell of the comparison it renders.
+export function bulletinDiffText(spec: Extract<ChartSpec, { kind: "bulletinDiff" }>, lang: Lang): string {
+  const s = spec.summary;
+  const head = spec.countries.map((c) => countryLabel(c, lang)).join(" / ");
+  const cellLabel = (cell: DiffCell, i: number) => {
+    const cn = countryLabel(spec.countries[i], lang);
+    const st = (status: string, date: string | null) => (status === "C" ? "C" : status === "U" ? "U" : date || "—");
+    const delta = cell.kind === "advance" ? ` (+${cell.days}d)` : cell.kind === "retro" ? ` (${cell.days}d)` : "";
+    return `${cn} ${st(cell.fromStatus, cell.fromDate)}→${st(cell.toStatus, cell.toDate)}${delta}`;
+  };
+  const lines = spec.sections.flatMap((sec) => sec.rows.map((r) => `${r.cat}: ${r.cells.map((c, i) => cellLabel(c, i)).join("; ")}`));
+  const top: string[] = [];
+  if (s.topAdvance) top.push(lang === "en" ? `biggest advance ${s.topAdvance.cat}/${countryLabel(s.topAdvance.country, lang)} +${s.topAdvance.days} d` : `mayor avance ${s.topAdvance.cat}/${countryLabel(s.topAdvance.country, lang)} +${s.topAdvance.days} d`);
+  if (s.topRetro) top.push(lang === "en" ? `biggest retrogression ${s.topRetro.cat}/${countryLabel(s.topRetro.country, lang)} ${s.topRetro.days} d` : `mayor retroceso ${s.topRetro.cat}/${countryLabel(s.topRetro.country, lang)} ${s.topRetro.days} d`);
+  const header = lang === "en"
+    ? `A BULLETIN COMPARISON chart is shown to the user right now — describe and interpret it, do NOT refuse. ${monthLabel(spec.monthA, lang)} → ${monthLabel(spec.monthB, lang)}, ${spec.tableType} (columns: ${head}). Summary: ${s.advanced} advanced, ${s.retrogressed} retrogressed, ${s.toCurrent} became Current, ${s.toUnavailable} became Unavailable, ${s.unchanged} unchanged.${top.length ? " " + top.join("; ") + "." : ""} These are official published cutoffs, not predictions. Per cell (from→to; C=current, U=unavailable):\n`
+    : `Se está mostrando al usuario una COMPARACIÓN DE BOLETINES — descríbela e interprétala, NO te niegues. ${monthLabel(spec.monthA, lang)} → ${monthLabel(spec.monthB, lang)}, ${spec.tableType} (columnas: ${head}). Resumen: ${s.advanced} avanzaron, ${s.retrogressed} retrocedieron, ${s.toCurrent} pasaron a Current, ${s.toUnavailable} a No disponible, ${s.unchanged} sin cambio.${top.length ? " " + top.join("; ") + "." : ""} Son cortes oficiales publicados, no predicciones. Por celda (de→a; C=al corriente, U=no disponible):\n`;
+  return header + lines.join("\n");
+}
+
+// Contextual "next question" chips shown under the latest answer. Entity-aware
+// when a panel is available (console); the caller passes a few discovery nudges
+// otherwise. Returns up to 3 localized prompts.
+export function buildFollowUps(lastUserQ: string, lang: Lang, panel: Panel): string[] {
+  const cl = (c: string) => countryLabel(c, lang);
+  const e = detectEntities(lastUserQ, panel);
+  const other = e.country === "india" ? "mexico" : "india"; // a contrasting pilot country
+  const out: string[] = [];
+  if (e.country && e.category) {
+    out.push(lang === "en" ? `Compare ${cl(e.country)} ${e.category} with ${cl(other)} ${e.category}` : `Compara ${cl(e.country)} ${e.category} con ${cl(other)} ${e.category}`);
+    out.push(lang === "en" ? `Monthly movement of ${cl(e.country)} ${e.category}` : `Movimiento mensual de ${cl(e.country)} ${e.category}`);
+    out.push(lang === "en" ? `When will ${cl(e.country)} ${e.category} advance?` : `¿Cuándo avanza ${cl(e.country)} ${e.category}?`);
+  } else if (e.category) {
+    out.push(lang === "en" ? `Compare the wait across countries for ${e.category}` : `Compara la espera entre países en ${e.category}`);
+    out.push(lang === "en" ? `Forecast for Mexico ${e.category}` : `Pronóstico de México ${e.category}`);
+  } else if (e.country) {
+    out.push(lang === "en" ? `Status mix for ${cl(e.country)}` : `Mezcla de estado de ${cl(e.country)}`);
+    out.push(lang === "en" ? `Forecast for ${cl(e.country)} F2A` : `Pronóstico de ${cl(e.country)} F2A`);
+  }
+  const nudges = lang === "en"
+    ? ["Compare two bulletins", "Which models does the project compare and which one wins?", "What changed in the latest bulletin?"]
+    : ["Compara dos boletines", "¿Qué modelos compara el proyecto y cuál gana?", "¿Qué cambió en el último boletín?"];
+  for (const n of nudges) { if (out.length >= 3) break; if (!out.includes(n)) out.push(n); }
+  return out.slice(0, 3);
 }
 
 // ── KPI panorama (computed once from the panel) ─────────────────────────────

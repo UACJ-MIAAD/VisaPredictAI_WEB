@@ -36,6 +36,91 @@ const GRID = "color-mix(in srgb, var(--color-border) 70%, transparent)";
 // null — so one named, documented cast instead of inline magic at each usage.
 const HIDE_TOOLTIP_ROW = [null, null] as unknown as [string, string];
 
+// Compare-two-bulletins renderer: a summary strip + a category×country grid of
+// signed transition badges (▲ advance / ▼ retrogression / →C / →U / new). Kept
+// as a typed sub-component so `spec` stays narrowed to the bulletinDiff variant.
+function BulletinDiffView({ spec, lang }: { spec: Extract<ChartSpec, { kind: "bulletinDiff" }>; lang: "es" | "en" }) {
+  const su = spec.summary;
+  const yrU = lang === "en" ? "y" : "a";
+  const fmtDelta = (d: number) => { const a = Math.abs(d); const s = a >= 365 ? `${(d / 365.25).toFixed(1)}${yrU}` : `${d}d`; return d > 0 ? `+${s}` : s; };
+  const stLabel = (status: string, date: string | null) =>
+    status === "C" ? "Current" : status === "U" ? (lang === "en" ? "Unavailable" : "No disp.") : date || "—";
+  const GREEN = { fg: "var(--color-success)", bg: "color-mix(in srgb, var(--color-success) 15%, transparent)" };
+  const RED = { fg: "var(--color-danger)", bg: "color-mix(in srgb, var(--color-danger) 15%, transparent)" };
+  const cellView = (cell: import("@/lib/visabot/analytics").DiffCell): { txt: string; fg: string; bg: string } => {
+    switch (cell.kind) {
+      case "advance": return { txt: `▲ ${fmtDelta(cell.days as number)}`, ...GREEN };
+      case "retro": return { txt: `▼ ${fmtDelta(cell.days as number)}`, ...RED };
+      case "toCurrent": return { txt: "→ C", ...GREEN };
+      case "fromUnavailable": return { txt: "U →", ...GREEN };
+      case "fromCurrent": return { txt: "C →", ...RED };
+      case "toUnavailable": return { txt: "→ U", ...RED };
+      case "appeared": return { txt: lang === "en" ? "new" : "nuevo", fg: "var(--color-accent)", bg: "color-mix(in srgb, var(--color-accent) 12%, transparent)" };
+      case "flat": return { txt: "=", fg: "var(--color-muted)", bg: "transparent" };
+      default: return { txt: "—", fg: "var(--color-muted)", bg: "transparent" };
+    }
+  };
+  return (
+    <>
+      <div className="mb-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[0.72rem] font-medium">
+        <span style={{ color: "var(--color-success)" }}>▲ {su.advanced} {lang === "en" ? "advanced" : "avanzaron"}</span>
+        <span style={{ color: "var(--color-danger)" }}>▼ {su.retrogressed} {lang === "en" ? "retrogressed" : "retrocedieron"}</span>
+        {su.toCurrent > 0 && <span style={{ color: "var(--color-success)" }}>→C {su.toCurrent}</span>}
+        {su.toUnavailable > 0 && <span style={{ color: "var(--color-danger)" }}>→U {su.toUnavailable}</span>}
+        <span style={{ color: "var(--color-muted)" }}>= {su.unchanged} {lang === "en" ? "unchanged" : "sin cambio"}</span>
+      </div>
+      {(su.topAdvance || su.topRetro) && (
+        <p className="mb-2 text-[0.7rem] text-[var(--color-muted)]">
+          {su.topAdvance && <>{lang === "en" ? "Biggest advance" : "Mayor avance"}: <b className="text-[var(--color-ink)]">{su.topAdvance.cat} {countryLabel(su.topAdvance.country, lang)}</b> {fmtDelta(su.topAdvance.days)}. </>}
+          {su.topRetro && <>{lang === "en" ? "Biggest retrogression" : "Mayor retroceso"}: <b className="text-[var(--color-ink)]">{su.topRetro.cat} {countryLabel(su.topRetro.country, lang)}</b> {fmtDelta(su.topRetro.days)}.</>}
+        </p>
+      )}
+      <div className="relative">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[34rem] border-collapse text-[0.74rem]">
+            <thead>
+              <tr>
+                <th className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 text-left font-semibold text-[var(--color-muted)]">{lang === "en" ? "Category" : "Categoría"}</th>
+                {spec.countries.map((c) => (
+                  <th key={c} className="px-2 py-1.5 text-center font-semibold text-[var(--color-ink)] whitespace-nowrap">{countryLabel(c, lang)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {spec.sections.map((sec) => (
+                <React.Fragment key={sec.block}>
+                  <tr>
+                    <td colSpan={spec.countries.length + 1} className="bg-[var(--color-surface-soft)] px-2 py-1 text-[0.62rem] font-bold uppercase tracking-[0.14em] text-[var(--color-muted)]">{sec.block}</td>
+                  </tr>
+                  {sec.rows.map((r) => (
+                    <tr key={r.cat} className="border-t border-border">
+                      <td className="sticky left-0 z-10 border-r border-border bg-[var(--color-bg)] px-2 py-1.5 font-semibold text-[var(--color-ink)] whitespace-nowrap">{r.cat}</td>
+                      {r.cells.map((cell, ci) => {
+                        const v = cellView(cell);
+                        return (
+                          <td key={ci} className="px-1.5 py-1.5 text-center">
+                            <span title={`${stLabel(cell.fromStatus, cell.fromDate)} → ${stLabel(cell.toStatus, cell.toDate)}`}
+                              className="inline-block rounded px-1.5 py-0.5 font-mono text-[0.66rem] font-semibold tabular-nums whitespace-nowrap"
+                              style={{ color: v.fg, background: v.bg }}>{v.txt}</span>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-7 bg-gradient-to-l from-[var(--color-bg)] to-transparent sm:hidden" aria-hidden />
+      </div>
+      <p className="mt-1.5 flex items-center gap-1 text-[0.66rem] text-[var(--color-muted)] sm:hidden">
+        <span aria-hidden>↔</span> {tr(lang, "acTableSwipe")}
+      </p>
+    </>
+  );
+}
+
 export default function VisaChart({ spec }: { spec: ChartSpec }) {
   const { lang } = useLang();
   const yr = lang === "en" ? "y" : "a";
@@ -45,8 +130,8 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
     // (título + subtítulo) los anuncia. La variante "table" es contenido tabular real
     // (mantiene su semántica nativa, sin role).
     <figure
-      role={spec.kind === "table" ? undefined : "img"}
-      aria-label={spec.kind === "table" ? undefined : `${spec.title}. ${spec.subtitle}`}
+      role={spec.kind === "table" || spec.kind === "bulletinDiff" ? undefined : "img"}
+      aria-label={spec.kind === "table" || spec.kind === "bulletinDiff" ? undefined : `${spec.title}. ${spec.subtitle}`}
       className="mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3"
     >
       <figcaption className="mb-0.5 font-serif text-sm font-bold text-[var(--color-ink)]">{spec.title}</figcaption>
@@ -114,6 +199,12 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
           <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4" style={{ background: "var(--color-accent)" }} />{lang === "en" ? "History" : "Histórico"}</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4 border-t-2 border-dashed" style={{ borderColor: "var(--color-accent-2)" }} />{lang === "en" ? "Forecast" : "Pronóstico"}</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-4 rounded-sm" style={{ background: "color-mix(in srgb, var(--color-accent) 20%, transparent)" }} />{lang === "en" ? "80 % / 95 % band" : "Banda 80 % / 95 %"}</span>
+          {spec.fallback && (
+            <span className="rounded-full px-2 py-0.5 text-[0.64rem] font-medium" style={{ background: "color-mix(in srgb, var(--color-accent-2) 16%, transparent)", color: "var(--color-accent-2)" }}
+              title={lang === "en" ? "This series has no production forecast — showing the illustrative in-browser drift baseline." : "Esta serie no tiene pronóstico de producción — se muestra la línea base de deriva ilustrativa en el navegador."}>
+              {lang === "en" ? "in-browser baseline" : "línea base en el navegador"}
+            </span>
+          )}
         </div>
         {spec.note && (
           <p className="mt-2 rounded-lg border border-border bg-[var(--color-surface-soft)] px-3 py-2 text-[0.7rem] leading-relaxed text-[var(--color-muted)]">
@@ -151,11 +242,17 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
                 {spec.cols.map((c, ci) => {
                   const cell = spec.m[ri][ci];
                   const ratio = cell.value == null ? 0 : cell.value / spec.max;
-                  const bg = cell.value == null ? "var(--color-surface-soft)" : `color-mix(in srgb, var(--color-danger) ${Math.round(ratio * 85)}%, var(--color-surface))`;
+                  // Ramp the fill to full --color-danger at the top so the darkest
+                  // cells are truly dark, and only switch to white text once the
+                  // fill is dark enough for AA. The old code paired white text
+                  // (ratio>0.5) with a fill that was still light salmon at 0.5,
+                  // failing contrast in the mid range (finding 6). Below the
+                  // threshold, --color-ink (which flips per theme) stays legible.
+                  const bg = cell.value == null ? "var(--color-surface-soft)" : `color-mix(in srgb, var(--color-danger) ${Math.round(ratio * 100)}%, var(--color-surface))`;
                   return (
                     <div key={c} title={cell.value == null ? "—" : `${cell.value.toFixed(1)} ${spec.unit} (${cell.date})`}
                       className="flex h-9 items-center justify-center rounded font-mono tabular-nums"
-                      style={{ background: bg, color: ratio > 0.5 ? "#fff" : "var(--color-ink)" }}>
+                      style={{ background: bg, color: ratio > 0.7 ? "#fff" : "var(--color-ink)" }}>
                       {cell.value == null ? "—" : cell.value.toFixed(1)}
                     </div>
                   );
@@ -215,6 +312,8 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
         </p>
         </>
       )}
+
+      {spec.kind === "bulletinDiff" && <BulletinDiffView spec={spec} lang={lang} />}
 
       {spec.kind === "compare" && (
         <ResponsiveContainer width="100%" height={Math.max(160, spec.data.length * 46)}>

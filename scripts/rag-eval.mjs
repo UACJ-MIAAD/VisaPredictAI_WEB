@@ -7,68 +7,25 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { buildBM25, retrieveRanked } from "../lib/visabot/retrieval-core.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SITE = process.argv[2] || "https://visapredictai.com";
 const FN = `${SITE}/.netlify/functions/chat`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ── retrieval replica of components/visabot/engine.ts ───────────────────────
-const STOP = new Set(("de la el los las un una unos unas y o a en que es del al se su por con para the a an of to in is are and or for on with that this it as by be from at qué que como cómo cuál cuales donde dónde es son está están").split(" "));
-const fold = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-const tokenize = (s) => fold(s).replace(/[^a-z0-9_]+/g, " ").split(/\s+/).filter((t) => t.length > 1 && !STOP.has(t));
-
+// ── retrieval replica of components/visabot/engine.ts (via shared core) ─────
 function buildIndex(json) {
   const bin = atob(json.vectors);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   const vectors = new Float32Array(bytes.buffer);
-  const dim = json.dim;
-  const docTf = [], docLen = [], df = new Map();
-  for (const c of json.chunks) {
-    const toks = tokenize(`${c.title} ${c.text}`);
-    const tf = new Map();
-    for (const t of toks) tf.set(t, (tf.get(t) || 0) + 1);
-    for (const t of tf.keys()) df.set(t, (df.get(t) || 0) + 1);
-    docTf.push(tf); docLen.push(toks.length);
-  }
-  const N = json.chunks.length;
-  const idf = new Map();
-  for (const [t, n] of df) idf.set(t, Math.log(1 + (N - n + 0.5) / (n + 0.5)));
-  const avgdl = docLen.reduce((a, b) => a + b, 0) / Math.max(1, N);
-  return { chunks: json.chunks, vectors, dim, docTf, docLen, idf, avgdl };
+  return { chunks: json.chunks, vectors, dim: json.dim, bm25: buildBM25(json.chunks) };
 }
 
-function retrieve(L, qv, qTokens, lang, k = 6) {
-  let pool = L.chunks.map((_, i) => i).filter((i) => L.chunks[i].lang === lang);
-  if (pool.length < k * 3) pool = L.chunks.map((_, i) => i);
-  const k1 = 1.5, b = 0.75;
-  const lex = pool.map((i) => {
-    let s = 0;
-    for (const t of qTokens) { const f = L.docTf[i].get(t); if (!f) continue; const idf = L.idf.get(t) || 0; s += idf * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * L.docLen[i]) / L.avgdl))); }
-    return { i, s };
-  }).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 40);
-  const d = L.dim;
-  const dense = pool.map((i) => { let s = 0; const off = i * d; for (let kk = 0; kk < d; kk++) s += qv[kk] * L.vectors[off + kk]; return { i, s }; }).sort((a, b) => b.s - a.s).slice(0, 40);
-  const rrf = new Map();
-  lex.forEach((x, r) => rrf.set(x.i, (rrf.get(x.i) || 0) + 1 / (60 + r)));
-  dense.forEach((x, r) => rrf.set(x.i, (rrf.get(x.i) || 0) + 1 / (60 + r)));
-  const fused = [...rrf.entries()].map(([i, s]) => ({ i, s })).sort((a, b) => b.s - a.s);
-  if (!fused.length) return [];
-  const cos = (a, c) => { let s = 0; for (let kk = 0; kk < d; kk++) s += L.vectors[a * d + kk] * L.vectors[c * d + kk]; return s; };
-  const cand = fused.slice(0, Math.max(k * 4, 16));
-  const sel = [];
-  while (sel.length < k && cand.length) {
-    let best = -1, bestScore = -Infinity; const maxRel = cand[0].s || 1;
-    for (let ci = 0; ci < cand.length; ci++) {
-      const { i, s } = cand[ci];
-      let div = 0; if (sel.length) div = Math.max(...sel.map((j) => cos(i, j)));
-      const sc = 0.7 * (s / maxRel) - 0.3 * div;
-      if (sc > bestScore) { bestScore = sc; best = ci; }
-    }
-    sel.push(cand[best].i); cand.splice(best, 1);
-  }
-  return sel.map((i, idx) => { const c = L.chunks[i]; return { n: idx + 1, title: c.title, source: c.source, url: c.url, text: c.text }; });
+function retrieve(L, qv, lang, query, k = 6) {
+  const { selected } = retrieveRanked({ chunks: L.chunks, vectors: L.vectors, dim: L.dim, bm25: L.bm25, query, qv, lang, k });
+  return selected.map((i, idx) => { const c = L.chunks[i]; return { n: idx + 1, title: c.title, source: c.source, url: c.url, text: c.text }; });
 }
 
 // ── live generation ─────────────────────────────────────────────────────────
@@ -116,7 +73,7 @@ console.log(`Running ${set.length} questions against ${FN} …\n`);
 for (let i = 0; i < set.length; i++) {
   const q = set[i];
   const qv = await embed(q.q);
-  const sources = retrieve(L, qv, tokenize(q.q), q.lang, 6);
+  const sources = retrieve(L, qv, q.lang, q.q, 6);
   let r, t0 = Date.now();
   for (let attempt = 0; attempt < 2; attempt++) {
     try { r = await ask(q.lang, q.q, sources); } catch (e) { r = { answer: "", err: "network:" + e.message, status: 0 }; }

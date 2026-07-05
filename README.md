@@ -110,6 +110,37 @@ Prosa, glosario (42) y referencias (64) se preservan **literales** desde
 y se transforman en build a `lib/content/sections.*generated.ts`. Datos reales
 del repo `UACJ-MIAAD/VisaPredictAI`; sin valores inventados.
 
+## Asistente VisaBot (RAG)
+
+Asistente conversacional **RAG real, cero datos inventados**, en el widget flotante
+y en la consola `/asistente`. Todo el índice y la recuperación corren **en el
+navegador**; solo la generación pasa por una función.
+
+- **Recuperación híbrida single-sourced** en `lib/visabot/retrieval-core.mjs`
+  (fuente única que importan `components/visabot/engine.ts` y los tres
+  `scripts/rag-*.mjs`, para que los evals midan exactamente lo que se envía):
+  denso (coseno sobre `multilingual-e5-small` q8 auto-hospedado) + **BM25 Okapi**
+  → **Reciprocal Rank Fusion** → **reranker léxico** (title-hit + boost
+  glosario/hecho en preguntas de definición + penalización off-locale) →
+  **MMR**. Expansión de acrónimos (`dates for filing`→DFF) y recuperación
+  cross-lingual cuando el idioma de la consulta ≠ el de la página.
+- **Arranque instantáneo**: BM25 responde de inmediato (recall@6 100 % sin el
+  motor semántico); el modelo (~150 MB) se descarga **solo con consentimiento**
+  del usuario, con **% de progreso** en la píldora de estado.
+- **Generación citada** vía `netlify/functions/chat.mjs` — proxy *streaming* a
+  Claude con defensas: guardián de código determinista, allowlist sha256 del
+  contexto (anti prompt-injection), normalización de historial, rate-limit y
+  allowlist de origen. Sin `ANTHROPIC_API_KEY` cae a respuesta **extractiva**
+  citada. Citas `[n]` que enlazan a la sección fuente.
+- **Consola con visualizaciones** desde el panel real (`lib/visabot/analytics.ts`):
+  evolución, comparación por país, movimiento mensual, mezcla C/F/U, carrera de
+  países, mapa de calor, radar, **pronóstico (fan-chart 80/95 %)**, tabla mensual
+  y **comparación de dos boletines** (qué avanzó / retrocedió / cambió de estado).
+  Tras cada respuesta, **chips de seguimiento** contextuales.
+- **Evaluación**: `npm run rag:gate` (benchmark de recuperación con umbrales de
+  CI, incl. flagship «cuál gana» y BM25-only), `npm run guard:test`
+  (guardián de código), `npm test` (unit: builders, retrieval-core, sanitize).
+
 ## Rutas y bundle
 
 | Ruta (×2 idiomas) | Contenido | First Load JS |

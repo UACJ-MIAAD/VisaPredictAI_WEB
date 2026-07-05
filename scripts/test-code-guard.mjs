@@ -1,7 +1,7 @@
 // Unit test for the streaming code-block guard in netlify/functions/chat.mjs.
 // Runs offline (no key, no network). `npm run guard:test`.
 import assert from "node:assert";
-import { makeCodeGuard, guardText } from "../netlify/functions/chat.mjs";
+import { makeCodeGuard, guardText, makeEmojiStripper } from "../netlify/functions/chat.mjs";
 
 const run = (deltas, lang = "es") => {
   const g = makeCodeGuard(lang);
@@ -155,4 +155,108 @@ const run = (deltas, lang = "es") => {
   assert.ok(out.includes("{ETS, Theta}"), "comma set notation emitted");
 }
 
-console.log("✓ code-guard: 19/19 passed");
+// 20) a NESTED markdown list (sub-items indented ≥4 spaces) must NOT be treated
+// as an indented code block — two consecutive sub-items used to trip the guard
+// and cut the answer (indent-vs-list false positive).
+{
+  const md = "Opciones:\n- México:\n    - F2A avanza.\n    - F4 retrocede.\nEso es todo.";
+  const { out, blocked } = run([md]);
+  assert.equal(blocked, false, "nested markdown list must not trip the guard");
+  assert.ok(out.includes("F2A avanza.") && out.includes("F4 retrocede."), "nested items survive");
+}
+
+// 21) sentence-final "console." / "System." (domain prose) must NOT block: the
+// /asistente surface is literally "the console" (finding 3).
+{
+  const { out, blocked } = run(["Abre el asistente console.\n", "El console. Muestra los gráficos.\n", "listo"]);
+  assert.equal(blocked, false, "domain word 'console.' must not be code");
+  assert.ok(out.includes("Muestra los gráficos."), "console prose survives");
+}
+{
+  const { out, blocked } = run(["Open the assistant console.\n", "The console. It renders charts.\n"], "en");
+  assert.equal(blocked, false, "English 'console.' prose must not block");
+  assert.ok(out.includes("It renders charts."), "english console prose survives");
+}
+
+// 22) …but a real console.log() call is still code (2 lines block).
+{
+  const { blocked } = run(["debug:\n", "console.log(x);\n", "console.log(y);\n", "fin"]);
+  assert.equal(blocked, true, "console.log() calls still blocked");
+}
+
+// 23) a LONE shebang / <?php / <!DOCTYPE now blocks on a single line (finding 4:
+// the 2-consecutive rule let one such line through between prose).
+{
+  const { out, blocked } = run(["Ejecuta esto:\n", "#!/bin/bash\n", "y ya."]);
+  assert.equal(blocked, true, "lone shebang blocks");
+  assert.ok(out.startsWith("Ejecuta esto:\n") && !out.includes("bin/bash"), "drops the shebang line");
+}
+{
+  const { blocked } = run(["antes\n", "<?php echo 1;\n"]);
+  assert.equal(blocked, true, "lone <?php blocks");
+}
+
+// 24) a CREATE TABLE mentioned in ordinary prose must NOT hard-block (the site
+// legitimately explains the star schema) — only unambiguous shebang/php/doctype.
+{
+  const { out, blocked } = run(["La tabla dim_category se define con CREATE TABLE en el esquema.\n", "Tiene 7 columnas."]);
+  assert.equal(blocked, false, "prose mentioning CREATE TABLE must not hard-block");
+  assert.ok(out.includes("Tiene 7 columnas."), "schema prose survives");
+}
+
+// 25) obfuscation: a fence with leading indentation is still caught
+{
+  const { blocked } = run(["mira:\n", "   ```python\nprint(1)\n```"]);
+  assert.equal(blocked, true, "indented fence caught");
+}
+
+// 26) obfuscation: <pre> with attributes is caught
+{
+  const { out, blocked } = run(['aquí <pre class="lang-js">code()</pre>']);
+  assert.equal(blocked, true, "<pre> with attributes caught");
+  assert.ok(!out.includes("code()"), "drops the code");
+}
+
+// 27) obfuscation: a ~~~ fence carrying a language tag + minified JS is caught
+{
+  const { blocked } = run(["ok\n", "~~~javascript\nfunction f(){return 1}\n~~~"]);
+  assert.equal(blocked, true, "~~~ minified caught");
+}
+
+// 28) code smuggled as indented markdown bullets IS caught (bare keyword + identifier)
+{
+  const { out, blocked } = run(["Aquí:\n", "    - import os\n    - return secret\nfin"]);
+  assert.equal(blocked, true, "bulleted code smuggling blocked");
+  assert.ok(!out.includes("import os") && !out.includes("return secret"), "drops the smuggled code");
+}
+
+// 29) …but prose bullets ("- From Mexico", "- from 2020") are NOT flagged
+{
+  const { out, blocked } = run(["Comparación:\n", "- From Mexico the wait grows\n- from 2020 onwards it changed\nlisto"]);
+  assert.equal(blocked, false, "prose bullets must not be code");
+  assert.ok(out.includes("From Mexico the wait grows"), "prose bullet survives");
+}
+
+console.log("✓ code-guard: 29 groups passed");
+
+// ── emoji stripper (a serious RAG must never emit emojis) ───────────────────
+{
+  const strip = makeEmojiStripper();
+  const out = strip("📊 Pronóstico 📅 de México ❓ ✅ 👋 🔍 listo");
+  assert.ok(!/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u.test(out), "all emojis removed");
+  assert.ok(out.includes("Pronóstico") && out.includes("de México") && out.includes("listo"), "prose preserved");
+}
+{
+  // legitimate arrows/shapes the assistant uses in tables must survive
+  const strip = makeEmojiStripper();
+  const out = strip("FAD → DFF · ↔ desliza · ▲ +30 d · ▼ -14 d");
+  assert.ok(out.includes("→") && out.includes("↔") && out.includes("▲") && out.includes("▼"), "arrows/shapes preserved");
+}
+{
+  // a surrogate-pair emoji (📊 = 📊) split across two deltas is still removed
+  const strip = makeEmojiStripper();
+  const out = strip("dato \uD83D") + strip("\uDCCA fin");
+  assert.ok(!out.includes("\uDCCA") && !out.includes("\uD83D"), "split emoji removed");
+  assert.ok(out.includes("dato ") && out.includes(" fin"), "surrounding text kept");
+}
+console.log("✓ emoji-stripper: 3 groups passed");

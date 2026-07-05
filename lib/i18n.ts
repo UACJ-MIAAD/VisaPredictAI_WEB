@@ -71,9 +71,11 @@ const S = {
 
   // historico shell
   histTag: { es: "Datos históricos · panel multiserie", en: "Historical data · multi-series panel" },
+  // {lastYear} is interpolated from SITE_STATS.dateLast (derived, regla #0) —
+  // never hand-code the panel end year here (finding 11).
   histSub: {
-    es: "El corazón empírico del proyecto: el panel real del U.S. Visa Bulletin, desde dic-2001 hasta 2026. Explore la evolución de las fechas de prioridad, compare países bajo el límite del 7 %, observe retrogresiones e inspeccione cada serie disponible. Todas las cifras provienen del CSV publicado; no hay valores inventados.",
-    en: "The empirical heart of the project: the real U.S. Visa Bulletin panel, from Dec-2001 through 2026. Explore how priority dates evolve, compare countries under the 7% limit, see retrogressions and inspect every available series. All figures come from the published CSV; no values are fabricated.",
+    es: "El corazón empírico del proyecto: el panel real del U.S. Visa Bulletin, desde dic-2001 hasta {lastYear}. Explore la evolución de las fechas de prioridad, compare países bajo el límite del 7 %, observe retrogresiones e inspeccione cada serie disponible. Todas las cifras provienen del CSV publicado; no hay valores inventados.",
+    en: "The empirical heart of the project: the real U.S. Visa Bulletin panel, from Dec-2001 through {lastYear}. Explore how priority dates evolve, compare countries under the 7% limit, see retrogressions and inspect every available series. All figures come from the published CSV; no values are fabricated.",
   },
   histError: { es: "Datos no encontrados: no se pudo cargar visa_panel_long.csv.", en: "Data not found: could not load visa_panel_long.csv." },
 
@@ -143,17 +145,19 @@ const S = {
   },
   vbLauncher: { es: "Pregúntale a VisaBot", en: "Ask VisaBot" },
   vbWelcome: {
-    es: "Hola 👋 Soy **VisaBot**. Respondo sobre el Visa Bulletin, el panel de datos y la metodología del proyecto, **citando** las fuentes. Prueba una pregunta:",
-    en: "Hi 👋 I'm **VisaBot**. I answer about the Visa Bulletin, the data panel and the project's methodology, **citing** the sources. Try a question:",
+    es: "Hola. Soy **VisaBot**. Respondo sobre el Visa Bulletin, el panel de datos y la metodología del proyecto, **citando** las fuentes. Prueba una pregunta:",
+    en: "Hi. I'm **VisaBot**. I answer about the Visa Bulletin, the data panel and the project's methodology, **citing** the sources. Try a question:",
   },
   vbPlaceholder: { es: "Escribe tu pregunta…", en: "Type your question…" },
   vbSend: { es: "Enviar", en: "Send" },
   vbStop: { es: "Detener", en: "Stop" },
   vbThinking: { es: "Consultando la documentación…", en: "Searching the documentation…" },
+  vbReady: { es: "Respuesta lista", en: "Answer ready" },
   vbNewChat: { es: "Nueva conversación", en: "New chat" },
   vbCopy: { es: "Copiar", en: "Copy" },
   vbCopied: { es: "Copiado", en: "Copied" },
   vbSources: { es: "Fuentes", en: "Sources" },
+  vbFollowUps: { es: "Preguntas de seguimiento sugeridas", en: "Suggested follow-up questions" },
   vbScrollDown: { es: "Ir al final", en: "Scroll to bottom" },
   vbLoadingEngine: { es: "Cargando el motor semántico…", en: "Loading the semantic engine…" },
   vbEngineReady: { es: "Motor semántico activo", en: "Semantic engine active" },
@@ -267,7 +271,11 @@ const S = {
   acTableSwipe: { es: "Desliza horizontalmente para ver todos los países", en: "Swipe horizontally to see all countries" },
   acHereTable: { es: "Tabla del Visa Bulletin para el mes seleccionado:", en: "Visa Bulletin table for the selected month:" },
   acSelMonth: { es: "Mes", en: "Month" },
+  acSelMonthB: { es: "Comparar con", en: "Compare with" },
+  acCompareBulletins: { es: "Comparar boletines", en: "Compare bulletins" },
+  acHereDiff: { es: "Comparación de dos boletines (qué avanzó, retrocedió o cambió de estado):", en: "Comparison of two bulletins (what advanced, retrogressed or changed status):" },
   acPanelToggle: { es: "Panel", en: "Panel" },
+  acCloseTools: { es: "Cerrar herramientas", en: "Close tools" },
   acExamples: { es: "Ejemplos", en: "Examples" },
   acExamplesTitle: { es: "¿Qué puedes preguntar?", en: "What can you ask?" },
   acExamplesLead: {

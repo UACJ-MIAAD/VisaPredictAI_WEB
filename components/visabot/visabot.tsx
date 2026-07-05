@@ -50,7 +50,7 @@ export function VisaBot() {
   const {
     messages, input, setInput, busy, send, stop, newChat, copy, copiedId,
     atBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
-    semantic, modelReady, constrained, enableSemantic,
+    semantic, modelReady, dlProgress, constrained, enableSemantic, liveStatus,
   } = useVisabotChat({ lang, surface: "widget" });
 
   // BB2 — WAI-ARIA dialog focus trap via the shared hook (replaces the old
@@ -68,7 +68,7 @@ export function VisaBot() {
     track("VisaBot Open", { lang });
     fetch("/rag/suggestions.json")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setSuggestions(d[lang] || []))
+      .then((d) => d && setSuggestions((d[lang]?.length ? d[lang] : d.es || d.en) || []))
       .catch(() => {});
     const t = setTimeout(() => inputRef.current?.focus(), 80);
     return () => clearTimeout(t);
@@ -131,11 +131,21 @@ export function VisaBot() {
   // console is the surface there). All hooks above run unconditionally.
   if (basePath(pathname || "/") === "/asistente") return null;
 
+  // Contextual follow-ups for the widget: text-answerable nudges only (the
+  // widget renders no charts, so chart/compare prompts go to the console).
+  const lastMsg = messages[messages.length - 1];
+  const followUps =
+    !busy && lastMsg?.role === "assistant" && lastMsg.content
+      ? lang === "en"
+        ? ["Which models does the project compare and which one wins?", "What changed in the latest bulletin?", "How does the Visa Bulletin work?"]
+        : ["¿Qué modelos compara el proyecto y cuál gana?", "¿Qué cambió en el último boletín?", "¿Cómo funciona el Visa Bulletin?"]
+      : [];
+
   // status pill: ready → active · downloading → loading · no consent → lexical
   const statusLabel = modelReady
     ? tr(lang, "vbEngineReady")
     : semantic
-      ? tr(lang, "vbLoadingEngine")
+      ? `${tr(lang, "vbLoadingEngine")}${dlProgress ? ` ${dlProgress} %` : ""}`
       : tr(lang, "vbSemanticOff");
 
   return (
@@ -209,13 +219,15 @@ export function VisaBot() {
             </header>
 
             {/* Messages */}
+            {/* discrete SR status ("thinking"/"answer ready"/"copied") instead of
+                re-announcing the streamed answer on every token (P4) */}
+            <p className="sr-only" role="status" aria-live="polite">{liveStatus}</p>
             <div
               ref={scrollRef}
               onScroll={onScroll}
               className="relative flex-1 space-y-4 overflow-y-auto px-4 py-4"
               role="log"
-              aria-live="polite"
-              aria-relevant="additions text"
+              aria-live="off"
             >
               {messages.length === 0 && (
                 <div className="space-y-4">
@@ -244,6 +256,8 @@ export function VisaBot() {
                 copiedId={copiedId}
                 onCopy={copy}
                 onSpeak={speak}
+                followUps={followUps}
+                onFollowUp={send}
               />
             </div>
 

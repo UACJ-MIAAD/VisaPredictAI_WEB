@@ -37,6 +37,15 @@ describe("detectEntities", () => {
       country: null, category: null, table: null, block: null,
     });
   });
+
+  it("still detects the code when it precedes a word starting with A or B (regression)", () => {
+    // the code normalizer must not absorb the next word's first letter
+    // (fixture categories: F1, F2A, EB2, EB5 — use those before A/B words)
+    expect(detectEntities("F1 backlog for Mexico", panel).category).toBe("F1");
+    expect(detectEntities("when does F1 advance", panel).category).toBe("F1");
+    expect(detectEntities("india EB2 based jobs", panel).category).toBe("EB2");
+    expect(detectEntities("EB2 by month", panel).category).toBe("EB2");
+  });
 });
 
 describe("parseMonth", () => {
@@ -64,5 +73,15 @@ describe("parseMonth", () => {
   it("returns null for months absent from the panel, and for garbage", () => {
     expect(parseMonth("julio 2030", panel)).toBeNull();
     expect(parseMonth("no month here", panel)).toBeNull();
+  });
+
+  it("resolves relative 'latest / último boletín' to the newest month", () => {
+    expect(parseMonth("muéstrame el último boletín", panel)).toBe("2024-09");
+    expect(parseMonth("the latest bulletin", panel)).toBe("2024-09");
+  });
+
+  it("resolves a quarter to the last available month of that quarter", () => {
+    expect(parseMonth("Q3 2024", panel)).toBe("2024-09");
+    expect(parseMonth("tercer trimestre de 2024", panel)).toBe("2024-09");
   });
 });

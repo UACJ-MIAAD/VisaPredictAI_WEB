@@ -16,6 +16,7 @@ import {
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
   Lightbulb, Database, Cpu, Quote, CalendarDays, AreaChart as ForecastIcon,
+  ArrowLeftRight,
 } from "lucide-react";
 
 type PromptCat = { icon: string; cat: string; items: string[] };
@@ -34,13 +35,22 @@ import { useVisabotChat } from "./use-visabot-chat";
 import type { ChartPayload, Source } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
+import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import {
   detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
   buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
+  buildBulletinDiff, parseTwoMonths, bulletinDiffText, buildFollowUps,
   monthTableText, chartContextNote, monthLabel, type Kpi, type ChartSpec,
 } from "@/lib/visabot/analytics";
 
 const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
+
+// Panel year range derived from the build-time stats (regla #0 — never hand-typed).
+// The chat.mjs security allowlist matches these synthetic sources by the PREFIX
+// "VisaPredict AI panel (" / "Panel VisaPredict AI (", so the year can vary freely.
+const PANEL_RANGE = `${SITE_STATS.dateFirst.slice(0, 4)}–${SITE_STATS.dateLast.slice(0, 4)}`;
+const panelSource = (lang: "es" | "en") =>
+  lang === "en" ? `VisaPredict AI panel (${PANEL_RANGE})` : `Panel VisaPredict AI (${PANEL_RANGE})`;
 
 // Fisher-Yates shuffle + take n — gives a fresh random pick each time the prompt
 // library opens, drawn from a larger pool.
@@ -71,6 +81,12 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
     /when|how long|my turn|be current|get current|catch up|reach my|my priority date/i.test(q);
   if (wantsForecast && e.category)
     return buildForecast(panel, e.country || "mexico", e.category, t, lang, 12, 48, forecasts);
+  // Compare two bulletins: needs TWO months, checked BEFORE the single-month
+  // table branch (so "compara el boletín de X con Y" isn't hijacked by "boletín").
+  if (/compar|versus|\bvs\b|diferencia|difference|contra|frente a|cambi[oó]|changed?/i.test(q)) {
+    const mm = parseTwoMonths(q, panel);
+    if (mm) return buildBulletinDiff(panel, mm[0], mm[1], t, lang);
+  }
   // Monthly bulletin snapshot: "tabla/boletín de <mes>" → full-history snapshot. Only when
   // it is NOT a forecast question (guarded above), so the word "tabla" can't hijack it.
   if (!wantsForecast && /\btabla\b|\bbolet[ií]n\b|\bbulletin\b|\btable\b|snapshot/i.test(q)) {
@@ -116,6 +132,7 @@ export function AssistantConsole() {
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
   const howTrapRef = useFocusTrap<HTMLDivElement>(howOpen);
   const promptsTrapRef = useFocusTrap<HTMLDivElement>(promptsOpen);
+  const navTrapRef = useFocusTrap<HTMLElement>(navOpen); // mobile tools drawer (finding 10)
   const [prompts, setPrompts] = React.useState<PromptCat[]>([]);
   const [promptsView, setPromptsView] = React.useState<PromptCat[]>([]); // shuffled subset shown in the modal
   const openPrompts = () => {
@@ -127,6 +144,7 @@ export function AssistantConsole() {
   const [category, setCategory] = React.useState("F3");
   const [table, setTable] = React.useState("FAD");
   const [month, setMonth] = React.useState("");
+  const [monthB, setMonthB] = React.useState(""); // second month for the compare-bulletins view
   const months = React.useMemo(() => panel ? [...new Set(panel.rows.map((r) => r.bulletinMonth))].sort().reverse() : [], [panel]);
 
   // console-only: build the chart for the query and prepend its synthetic
@@ -137,7 +155,11 @@ export function AssistantConsole() {
     // looks "limited to recent years" — the table covers the full 2001→2026 panel.
     if (chart?.kind === "table") {
       const ml = monthLabel(chart.month, lang);
-      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: lang === "en" ? "VisaPredict AI panel (2001–2026)" : "Panel VisaPredict AI (2001–2026)", url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
+      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
+        ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
+    } else if (chart?.kind === "bulletinDiff") {
+      // ground the comparison as real panel data (full per-cell transitions)
+      sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: bulletinDiffText(chart, lang) },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart) {
       // Tell the LLM a chart is rendered alongside its answer so it interprets
@@ -153,7 +175,7 @@ export function AssistantConsole() {
   const {
     messages, setMessages, input, setInput, busy, send, stop, newChat, copy, copiedId,
     atBottom, setAtBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
-    semantic, modelReady, constrained, enableSemantic,
+    semantic, modelReady, dlProgress, constrained, enableSemantic, liveStatus,
   } = useVisabotChat({ lang, surface: "console", prepare });
 
   // sending from anywhere in the console also closes the mobile drawer
@@ -163,8 +185,8 @@ export function AssistantConsole() {
     warm();
     loadPanel().then(setPanel).catch(() => setPanelErr(true));
     loadForecasts().then(setForecasts).catch(() => {}); // real model forecasts (fallback handled inside buildForecast)
-    fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions(d[lang] || [])).catch(() => {});
-    fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts(d[lang] || [])).catch(() => {});
+    fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions((d[lang]?.length ? d[lang] : d.es || d.en) || [])).catch(() => {});
+    fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts((d[lang]?.length ? d[lang] : d.es || d.en) || [])).catch(() => {});
   }, [lang, warm]);
 
   React.useEffect(() => {
@@ -173,6 +195,8 @@ export function AssistantConsole() {
     if (!panel.categories.includes(category)) setCategory(panel.categories.includes("F3") ? "F3" : panel.categories[0]);
     if (!panel.tables.includes(table)) setTable(panel.tables.includes("FAD") ? "FAD" : panel.tables[0]);
     if (!month && months.length) setMonth(months[0]);
+    // default comparison month ≈ one year before the latest bulletin
+    if (!monthB && months.length) setMonthB(months[Math.min(12, months.length - 1)]);
   }, [panel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
@@ -181,12 +205,13 @@ export function AssistantConsole() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table" | "forecast") => {
+  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table" | "forecast" | "diff") => {
     if (!panel) return;
     track("VisaBot Tool", { lang, tool: kind });
     setNavOpen(false);
     let chart: ChartPayload | null = null, lead = "";
     if (kind === "table") { chart = buildMonthTable(panel, month || months[0], table, lang); lead = tr(lang, "acHereTable"); }
+    else if (kind === "diff") { chart = buildBulletinDiff(panel, month || months[0], monthB || months[Math.min(12, months.length - 1)], table, lang); lead = tr(lang, "acHereDiff"); }
     else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang, 12, 48, forecasts); lead = tr(lang, "acHereForecast"); }
     else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
@@ -200,6 +225,11 @@ export function AssistantConsole() {
   };
 
   const kpis: Kpi[] = panel ? buildPanorama(panel, lang) : [];
+  // contextual follow-up chips from the last user turn, shown under a finished answer
+  const lastMsg = messages[messages.length - 1];
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+  const followUps = !busy && panel && lastMsg?.role === "assistant" && lastMsg.content
+    ? buildFollowUps(lastUserMsg, lang, panel) : [];
   const tools = [
     { k: "forecast" as const, icon: ForecastIcon, label: tr(lang, "toolForecast") },
     { k: "evol" as const, icon: TrendingUp, label: tr(lang, "toolEvol") },
@@ -233,6 +263,10 @@ export function AssistantConsole() {
           <Select label={tr(lang, "acSelMonth")} value={month} onChange={setMonth} options={months.length ? months : [month]} fmt={(m) => (m ? monthLabel(m, lang) : "—")} />
           <button onClick={() => runTool("table")} disabled={!panel} className="mt-0.5 flex items-center justify-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50">
             <CalendarDays className="h-4 w-4 shrink-0" aria-hidden /> {tr(lang, "acViewTable")}
+          </button>
+          <Select label={tr(lang, "acSelMonthB")} value={monthB} onChange={setMonthB} options={months.length ? months : [monthB]} fmt={(m) => (m ? monthLabel(m, lang) : "—")} />
+          <button onClick={() => runTool("diff")} disabled={!panel} className="flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] transition hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] disabled:opacity-50">
+            <ArrowLeftRight className="h-4 w-4 shrink-0" aria-hidden /> {tr(lang, "acCompareBulletins")}
           </button>
         </div>
       </div>
@@ -277,7 +311,7 @@ export function AssistantConsole() {
           <div className="font-serif text-sm font-bold leading-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</div>
           <div className="flex items-center gap-1.5 text-[0.58rem] uppercase tracking-wide text-[var(--color-muted)]">
             <span className={`inline-block h-1.5 w-1.5 rounded-full ${modelReady ? "bg-[var(--color-success)]" : semantic ? "bg-[var(--color-accent-2)]" : "bg-[var(--color-muted)]"}`} />
-            {modelReady ? tr(lang, "vbEngineReady") : semantic ? tr(lang, "vbLoadingEngine") : tr(lang, "vbSemanticOff")}
+            {modelReady ? tr(lang, "vbEngineReady") : semantic ? `${tr(lang, "vbLoadingEngine")}${dlProgress ? ` ${dlProgress} %` : ""}` : tr(lang, "vbSemanticOff")}
           </div>
         </div>
         <div className="flex-1" />
@@ -303,10 +337,10 @@ export function AssistantConsole() {
         {navOpen && (
           <>
             <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />
-            <aside className="fixed inset-y-0 left-0 z-50 w-[84%] max-w-[320px] border-r border-border bg-[var(--color-surface)] shadow-2xl lg:hidden">
+            <aside ref={navTrapRef} role="dialog" aria-modal="true" aria-label={tr(lang, "acTools")} className="fixed inset-y-0 left-0 z-50 w-[84%] max-w-[320px] border-r border-border bg-[var(--color-surface)] shadow-2xl lg:hidden">
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <span className="font-serif text-sm font-bold">{tr(lang, "vbName")}</span>
-                <button className="vb-iconbtn" onClick={() => setNavOpen(false)} aria-label={tr(lang, "vbClose")}><X className="h-4 w-4" aria-hidden /></button>
+                <button className="vb-iconbtn" onClick={() => setNavOpen(false)} aria-label={tr(lang, "acCloseTools")}><X className="h-4 w-4" aria-hidden /></button>
               </div>
               <div className="h-[calc(100%-3.25rem)]">{Sidebar}</div>
             </aside>
@@ -316,7 +350,8 @@ export function AssistantConsole() {
         {/* chat column — min-w-0 lets it shrink below the table's min-width so the
             table scrolls inside its own box instead of widening the whole column */}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
-          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6" role="log" aria-live="polite" aria-relevant="additions text">
+          <p className="sr-only" role="status" aria-live="polite">{liveStatus}</p>
+          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6" role="log" aria-live="off">
             <div className="mx-auto min-w-0 max-w-[820px] space-y-4">
               {messages.length === 0 ? (
                 <div className="flex min-h-[40vh] flex-col items-start justify-center gap-3">
@@ -343,6 +378,8 @@ export function AssistantConsole() {
                   copiedId={copiedId}
                   onCopy={copy}
                   renderChart={(chart) => <VisaChart spec={chart} />}
+                  followUps={followUps}
+                  onFollowUp={sendQ}
                 />
               )}
             </div>
