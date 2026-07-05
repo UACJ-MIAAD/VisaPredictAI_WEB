@@ -9,7 +9,7 @@
     "rag:smoke": "node scripts/visabot-smoke.mjs",
     "rag:retr": "node scripts/rag-retrieval-eval.mjs",
     "rag:gate": "node scripts/rag-retrieval-eval.mjs --gate",
-    "prebuild": "node scripts/fetch-data.mjs && node scripts/build-stats.mjs && node scripts/extract-content.mjs && node scripts/build-rag-index.mjs",
+    "prebuild": "node scripts/fetch-data.mjs && node scripts/build-stats.mjs && node scripts/extract-content.mjs && node scripts/build-rag-index.mjs && node scripts/rag-retrieval-eval.mjs --gate",
     "predev": "node scripts/build-stats.mjs && node scripts/extract-content.mjs",
     "dev": "next dev",
     "build": "next build",
