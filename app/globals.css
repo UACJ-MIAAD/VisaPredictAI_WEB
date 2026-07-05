@@ -35,6 +35,26 @@
   --radius: 0.5rem;
 }
 
+/* ── Ultrawide (épica AY) ─────────────────────────────────────
+   AY1: the shared rail widens one step at 2xl. Prose is already
+   capped in ch units (content.css: 64ch leads / 68ch body), so the
+   extra width is consumed by figures, tables and grids — never by
+   longer lines. Every rail consumer reads var(--container), so nav,
+   hero, route header, sections and footer widen in lockstep. */
+@media (min-width: 1536px) {
+  :root {
+    --container: 1320px;
+  }
+}
+/* AY6: on giant desktops the whole rem-based system scales ~6%.
+   Media queries evaluate against the initial 16px, so this cannot
+   feed back into itself. */
+@media (min-width: 1920px) {
+  html {
+    font-size: 17px;
+  }
+}
+
 /* ── Dark theme — inspired by award-winning dark UIs (Linear, GitHub Dark
    Dimmed, Vercel Geist): deep cool charcoal (never pure black), clear
    elevation steps, off-white text (not #fff), a soft blue that doesn't
@@ -213,7 +233,9 @@ main:focus {
 .vb-panel {
   bottom: 1rem;
   right: 1rem;
-  width: 400px;
+  /* AY6: on giant desktops the panel grows with the viewport (24vw)
+     between its classic 400px floor and a 520px readability ceiling. */
+  width: clamp(400px, 24vw, 520px);
   max-width: calc(100vw - 2rem);
   height: min(680px, 78vh);
   border-radius: 1rem;

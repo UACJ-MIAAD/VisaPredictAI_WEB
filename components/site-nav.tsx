@@ -258,7 +258,7 @@ export function SiteNav() {
           aria-label={tr(lang, "menu")}
           className="fixed left-1.5 top-1/2 z-30 hidden -translate-y-1/2 lg:block xl:left-4"
         >
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2 2xl:gap-2.5">
             {route.sections.map((s) => (
               <li key={s.id}>
                 <a href={`#${s.id}`} className="group flex items-center gap-2" title={sLabel(s, lang)}>
@@ -269,10 +269,17 @@ export function SiteNav() {
                     )}
                   />
                   {/* AX8: readable plate so the hover label never melts into
-                      content it overlaps at 1280–1366px */}
+                      content it overlaps at 1280–1366px.
+                      AY5 (ultrawide): from 2xl the labels are ALWAYS visible
+                      (Stripe-docs mini-TOC). The rail's free lane is the gap
+                      between the viewport edge and the 1320px rail, so the
+                      label is capped to that lane (truncated with the blur
+                      plate) and expands to its full text on hover — at ≥1920px
+                      the lane is wide enough that the cap never bites. */}
                   <span
                     className={cn(
                       "pointer-events-none whitespace-nowrap rounded bg-[var(--color-bg)]/90 px-1.5 text-xs opacity-0 backdrop-blur transition-opacity group-hover:opacity-100",
+                      "2xl:max-w-[calc((100vw-var(--container))/2-3.25rem)] 2xl:truncate 2xl:opacity-100 2xl:group-hover:max-w-none",
                       active === s.id
                         ? "text-foreground opacity-100"
                         : "text-muted-foreground",

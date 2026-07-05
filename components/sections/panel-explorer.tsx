@@ -10,7 +10,7 @@ import {
 import { PanelTable } from "@/components/tables/panel-table";
 import { countryLabel, statusColor, movementColor, PILOT, type Panel, type VisaPanelRow } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
-import { tr } from "@/lib/i18n";
+import { tr, localeOf } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 
 const SERIES_COLORS = [
@@ -60,6 +60,24 @@ function ChartCard({
   );
 }
 
+// AY4 (ultrawide): taller charts on ≥1536px screens. Same matchMedia-in-effect
+// pattern as eda-charts' useNarrow — this module is client-rendered, and the
+// false initial state matches the server markup, so there is no hydration
+// mismatch; ResponsiveContainer absorbs the height change on mount/resize.
+// NOTE: the lg:grid-cols-2 chart grid below holds exactly TWO charts, so the
+// planned 2xl:grid-cols-3 would leave an empty track — deliberately skipped.
+function useWide(query = "(min-width: 1536px)") {
+  const [wide, setWide] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia(query);
+    const update = () => setWide(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [query]);
+  return wide;
+}
+
 function NoData({ msg }: { msg: string }) {
   return (
     <div className="flex h-[300px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
@@ -70,6 +88,7 @@ function NoData({ msg }: { msg: string }) {
 
 export default function PanelExplorer({ panel }: { panel: Panel }) {
   const { lang } = useLang();
+  const wide = useWide();
   const cats = panel.categories;
   const [country, setCountry] = React.useState(
     panel.countries.includes("mexico") ? "mexico" : panel.countries[0],
@@ -152,7 +171,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
         desc={`${countryLabel(country, lang)} · ${category} · ${table}. ${tr(lang, "chart1Desc")}`}
       >
         {hasSeries ? (
-          <ResponsiveContainer width="100%" height={320}>
+          <ResponsiveContainer width="100%" height={wide ? 420 : 320}>
             <LineChart data={timeSeries} margin={{ left: 4, right: 12, top: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted)" }} minTickGap={48} />
@@ -169,7 +188,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard title={tr(lang, "chart2Title")} desc={`${category} · ${table}. ${tr(lang, "chart2Desc")}`}>
           {hasComparison ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={wide ? 380 : 300}>
               <LineChart data={comparison} margin={{ left: 4, right: 12, top: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted)" }} minTickGap={48} />
@@ -188,7 +207,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
 
         <ChartCard title={tr(lang, "chart3Title")} desc={`${countryLabel(country, lang)} · ${category} · ${table}. ${tr(lang, "chart3Desc")}`}>
           {hasMovement ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={wide ? 380 : 300}>
               <BarChart data={movement} margin={{ left: 4, right: 12, top: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted)" }} minTickGap={48} />
@@ -231,7 +250,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
                   <strong className="font-mono">{d.name}</strong>
                 </span>
                 <span className="tabular-nums text-muted-foreground">
-                  {d.value.toLocaleString(lang === "en" ? "en-US" : "es-MX")} · {d.pct}%
+                  {d.value.toLocaleString(localeOf(lang))} · {d.pct}%
                 </span>
               </li>
             ))}
@@ -242,7 +261,7 @@ export default function PanelExplorer({ panel }: { panel: Panel }) {
       <div>
         <h3 className="mb-1 font-serif text-2xl font-bold">{tr(lang, "tableTitle")}</h3>
         <p className="mb-3 text-sm text-muted-foreground">
-          {panel.rows.length.toLocaleString(lang === "en" ? "en-US" : "es-MX")}{" "}
+          {panel.rows.length.toLocaleString(localeOf(lang))}{" "}
           {tr(lang, "tableDescA")}
         </p>
         <div className="mb-3 flex flex-wrap gap-3 rounded-xl border border-border bg-card p-4">

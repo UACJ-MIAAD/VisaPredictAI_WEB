@@ -16,6 +16,7 @@
 // parser regimes, the six pipeline stages).
 
 import * as React from "react";
+import { localeOf } from "@/lib/i18n";
 import { useLang } from "@/components/lang-provider";
 import { FigureLink } from "@/components/sections/eda-gallery";
 import type { FeFacts } from "@/lib/data/fe";
@@ -54,7 +55,7 @@ type Derived = {
 };
 
 function derive(facts: FeFacts, lang: "es" | "en"): Derived {
-  const locale = lang === "es" ? "es-MX" : "en-US";
+  const locale = localeOf(lang);
   const led = facts.cleaning_ledger;
   const vintageYear = Number(facts.vintage.split("-")[0]);
   return {
@@ -229,8 +230,16 @@ export function FeGallery({ facts }: { facts: FeFacts }) {
           const prefix = lang === "en" ? "fe/en" : "fe";
           const fallback = f[lang];
           return (
-            <figure key={f.id}>
-              <figcaption>
+            // Ultrawide: mismo patrón AY3 que eda-gallery (decisión AY2 vs AY3
+            // documentada allí): dos columnas con caption sticky + breakout
+            // moderado hasta min(1600px, 90vw) centrado con márgenes negativos
+            // simétricos; el wrapper min-w-0 agrupa ambas variantes de tema en
+            // una celda y su 2xl:-mt-5 cancela el mt-5 interno de FigureLink.
+            <figure
+              key={f.id}
+              className="2xl:mx-[calc((100%-min(1600px,90vw))/2)] 2xl:grid 2xl:w-[min(1600px,90vw)] 2xl:grid-cols-[minmax(32ch,38ch)_1fr] 2xl:items-start 2xl:gap-12"
+            >
+              <figcaption className="2xl:sticky 2xl:top-24">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">
                   {t.figura} {i + 1} · {c.tag}
                 </p>
@@ -239,29 +248,31 @@ export function FeGallery({ facts }: { facts: FeFacts }) {
                 </h4>
                 <p className="mt-2 max-w-3xl leading-relaxed text-[var(--color-muted)]">{c.body(d)}</p>
               </figcaption>
-              <FigureLink
-                src={`/data/${prefix}/${f.id}.png`}
-                dim={figDim(`${prefix}/${f.id}.png`, fallback.light)}
-                alt={c.alt}
-                ariaLabel={ariaLabel}
-                hint={t.fullSize}
-                originalLabel={t.openOriginal}
-                closeLabel={t.close}
-                toggle="block dark:hidden"
-                plate="bg-[var(--color-figure-plate)]"
-              />
-              <FigureLink
-                src={`/data/${prefix}/dark/${f.id}.png`}
-                dim={figDim(`${prefix}/dark/${f.id}.png`, fallback.dark)}
-                alt={c.alt}
-                ariaLabel={ariaLabel}
-                hint={t.fullSize}
-                originalLabel={t.openOriginal}
-                closeLabel={t.close}
-                toggle="hidden dark:block"
-                plate="bg-[var(--color-figure-plate-dark)]"
-                imgAriaHidden
-              />
+              <div className="min-w-0 2xl:-mt-5">
+                <FigureLink
+                  src={`/data/${prefix}/${f.id}.png`}
+                  dim={figDim(`${prefix}/${f.id}.png`, fallback.light)}
+                  alt={c.alt}
+                  ariaLabel={ariaLabel}
+                  hint={t.fullSize}
+                  originalLabel={t.openOriginal}
+                  closeLabel={t.close}
+                  toggle="block dark:hidden"
+                  plate="bg-[var(--color-figure-plate)]"
+                />
+                <FigureLink
+                  src={`/data/${prefix}/dark/${f.id}.png`}
+                  dim={figDim(`${prefix}/dark/${f.id}.png`, fallback.dark)}
+                  alt={c.alt}
+                  ariaLabel={ariaLabel}
+                  hint={t.fullSize}
+                  originalLabel={t.openOriginal}
+                  closeLabel={t.close}
+                  toggle="hidden dark:block"
+                  plate="bg-[var(--color-figure-plate-dark)]"
+                  imgAriaHidden
+                />
+              </div>
             </figure>
           );
         })}
