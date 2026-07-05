@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ROUTES, rLabel, sLabel, localePath } from "@/lib/site-map";
+import { ROUTES, rLabel, localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
@@ -13,6 +13,9 @@ const EXTERNAL = [
   { label: "GitHub · VisaPredictAI", href: "https://github.com/UACJ-MIAAD/VisaPredictAI" },
 ];
 
+// Compact footer (AW8): brand + the five top-level routes + external links.
+// Per-section anchor lists were dropped — the in-page chips (RouteHeader) and
+// the nav already cover them, and the one-item assistant column read as noise.
 export function SiteFooter() {
   const { lang } = useLang();
   return (
@@ -28,20 +31,16 @@ export function SiteFooter() {
           <p>{tr(lang, "footerBlurb")}</p>
         </div>
 
-        {ROUTES.filter((r) => r.path !== "/").map((r) => (
-          <div key={r.path}>
-            <h4>{rLabel(r, lang)}</h4>
-            <ul>
-              {r.sections.map((s) => (
-                <li key={s.id}>
-                  <Link href={`${localePath(r.path, lang)}#${s.id}`}>
-                    {sLabel(s, lang)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <div>
+          <h4>{tr(lang, "menu")}</h4>
+          <ul>
+            {ROUTES.filter((r) => r.path !== "/").map((r) => (
+              <li key={r.path}>
+                <Link href={localePath(r.path, lang)}>{rLabel(r, lang)}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div>
           <h4>{tr(lang, "footerExternal")}</h4>

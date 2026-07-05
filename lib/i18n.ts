@@ -154,6 +154,17 @@ const S: Dict = {
   vbLoadingEngine: { es: "Cargando el motor semántico…", en: "Loading the semantic engine…" },
   vbEngineReady: { es: "Motor semántico activo", en: "Semantic engine active" },
   vbLexicalOnly: { es: "Búsqueda léxica (el motor semántico sigue cargando)", en: "Lexical search (semantic engine still loading)" },
+  // AZ1 — semantic-engine consent (the ~150 MB download never starts without a gesture)
+  vbSemanticOff: { es: "Búsqueda léxica", en: "Lexical search" },
+  vbSemanticEnable: { es: "Activar búsqueda semántica", en: "Enable semantic search" },
+  vbSemanticHint: {
+    es: "Opcional: descarga el motor semántico (~150 MB) en tu navegador para mejorar la búsqueda. La búsqueda léxica ya funciona sin él.",
+    en: "Optional: download the semantic engine (~150 MB) in your browser to improve retrieval. Lexical search already works without it.",
+  },
+  vbSemanticSlowNet: {
+    es: "Conexión limitada detectada: la descarga solo se inicia manualmente.",
+    en: "Limited connection detected: the download only starts manually.",
+  },
   vbError: {
     es: "Algo falló al responder. Intenta de nuevo.",
     en: "Something went wrong. Please try again.",
@@ -258,6 +269,47 @@ const S: Dict = {
   acExamplesLead: {
     es: "Una selección al azar por categoría — vuelve a abrir para ver otras. Toca una para enviarla; las de “Gráficos” y “Pronósticos” generan visualizaciones de datos reales.",
     en: "A random pick per category — reopen for more. Tap one to send it; “Charts” and “Forecasts” ones generate real-data visualizations.",
+  },
+
+  // ── hero primary CTA (AU3)
+  heroCtaForecast: { es: "¿Cuándo me toca? Ver pronóstico", en: "When is my date? See the forecast" },
+
+  // ── #pronostico section (/datos-historicos, AV1)
+  pronTag: { es: "Pronóstico · modelo de producción", en: "Forecast · production model" },
+  pronTitle: { es: "¿Cuándo me toca?", en: "When is my date?" },
+  pronSub: {
+    es: "Elige país o área, categoría y tabla para ver el pronóstico a 12 meses del modelo desplegado, con bandas de predicción al 80 % y 95 %. Si una serie no tiene pronóstico pre-generado, se muestra una proyección de deriva claramente etiquetada como ilustrativa.",
+    en: "Pick a country or area, category and table to see the deployed model's 12-month forecast, with 80% and 95% prediction bands. If a series has no pre-generated forecast, a drift projection clearly labelled as illustrative is shown instead.",
+  },
+  pronScope: {
+    es: "El sistema pronostica fechas publicadas (estado F); no predice cambios de régimen (C/U).",
+    en: "The system forecasts published dates (F status); it does not predict regime changes (C/U).",
+  },
+  pronEmpty: {
+    es: "Esta combinación no tiene suficientes fechas publicadas (estado F) para anclar un pronóstico honesto.",
+    en: "This combination does not have enough published dates (F status) to anchor an honest forecast.",
+  },
+
+  // ── #problema section (home, AU1)
+  probTag: { es: "El problema", en: "The problem" },
+  probTitle: { es: "El problema, en una figura", en: "The problem, in one figure" },
+  probBody: {
+    es: "Cada fila es una serie país × categoría × tabla y cada columna uno de los {n} boletines mensuales publicados desde diciembre de 2001: la fila avanza, se congela y a veces retrocede años en un solo boletín. Anticipar ese movimiento — con su incertidumbre — es el problema que este sistema ataca.",
+    en: "Each row is one country × category × table series and each column one of the {n} monthly bulletins published since December 2001: the line advances, freezes, and sometimes retrogresses years in a single bulletin. Anticipating that movement — with its uncertainty — is the problem this system takes on.",
+  },
+  probAlt: {
+    es: "Mapa de calor del panel completo: una fila por serie y una columna por boletín, coloreado por régimen (avanza, congelada, retrocede, Current).",
+    en: "Heatmap of the full panel: one row per series and one column per bulletin, colored by regime (advancing, frozen, retrogressing, Current).",
+  },
+  probFullSize: { es: "Ver a tamaño completo", en: "View full size" },
+
+  // ── next-part footer nav (AW7)
+  nextLabel: { es: "Siguiente", en: "Next" },
+
+  // ── /anteproyecto temporal-context banner (AU4)
+  anteBannerPre: {
+    es: "Documento propuesto en mayo de 2026. Los resultados en ejecución viven en",
+    en: "Document as proposed in May 2026. The results now in execution live in",
   },
 };
 

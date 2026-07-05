@@ -104,8 +104,15 @@ export function Scorecard() {
     };
   }, []);
 
-  if (!loaded) return <Skeleton className="h-64 w-full" />;
-  if (!sc) return null; // no scorecard available (e.g. ledger not yet seeded) -> render nothing
+  // the #scorecard anchor must exist even while loading / on failure — the home
+  // evidence teaser, the nav TOC and deep links all target it (same as #eda).
+  if (!loaded)
+    return (
+      <section id="scorecard" className="mx-auto w-full max-w-5xl px-4 py-12">
+        <Skeleton className="h-64 w-full" />
+      </section>
+    );
+  if (!sc) return <section id="scorecard" aria-hidden="true" />; // ledger not yet seeded
 
   const o = sc.overall;
   const cov80 = sc.band80_calibration?.cov80_heldout;
@@ -114,7 +121,7 @@ export function Scorecard() {
     .sort((a, b) => a.h - b.h);
 
   return (
-    <section className="mx-auto w-full max-w-5xl px-4 py-12" aria-labelledby="scorecard-title">
+    <section id="scorecard" className="mx-auto w-full max-w-5xl px-4 py-12" aria-labelledby="scorecard-title">
       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">{t.eyebrow}</p>
       <h2 id="scorecard-title" className="mt-1 font-serif text-2xl font-bold text-[var(--color-ink)]">
         {t.title}

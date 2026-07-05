@@ -35,7 +35,17 @@ export function LangToggle() {
         <Link
           key={it.code}
           href={it.href}
-          onClick={() => lang !== it.code && track("Language Switch", { to: it.code })}
+          onClick={(e) => {
+            if (lang !== it.code) track("Language Switch", { to: it.code });
+            // AW9: preserve the in-page anchor across the locale switch. Only
+            // hijack navigation when a hash exists, so the normal prefetched
+            // <Link> path stays untouched otherwise.
+            const hash = window.location.hash;
+            if (hash) {
+              e.preventDefault();
+              window.location.assign(it.href + hash);
+            }
+          }}
           aria-current={lang === it.code ? "true" : undefined}
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-[7px] uppercase transition-colors",
