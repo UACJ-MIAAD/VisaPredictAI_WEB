@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
-import { tr } from "@/lib/i18n";
+import { tr, localeOf } from "@/lib/i18n";
 import { localePath } from "@/lib/site-map";
 import { track } from "@/lib/analytics";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
@@ -10,12 +10,12 @@ import { PILOT } from "@/lib/data/visa-panel";
 
 // Every number here is derived at build time (site-stats.generated.ts ← eda_facts.json)
 // or from a domain constant — never typed by hand (regla #0).
-const nf = (lang: string, n: number) => n.toLocaleString(lang === "en" ? "en-US" : "es-MX");
+const nf = (lang: string, n: number) => n.toLocaleString(localeOf(lang));
 
 // "2026-07" → "jul 2026" / "Jul 2026"
 function monthLabel(ym: string, lang: string): string {
   const [y, m] = ym.split("-").map(Number);
-  const s = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(lang === "en" ? "en-US" : "es-MX", {
+  const s = new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(localeOf(lang), {
     month: "short",
     year: "numeric",
     timeZone: "UTC",
@@ -31,13 +31,15 @@ export function Hero() {
     { num: nf(lang, SITE_STATS.nSeriesStructural), key: "statSeries" },
     { num: nf(lang, PILOT.length), key: "statCountries" },
     { num: "CRISP-DM", key: "statMethod" },
-  ];
+  ] as const;
   return (
     <section
       id="inicio"
       className="border-b border-border px-5 pb-12 pt-10 md:pt-14"
     >
-      <div className="mx-auto max-w-[1140px]">
+      {/* AY1: rail width via var(--container) (1140px, 1320px at 2xl) so the
+          hero's text edge stays in lockstep with nav/sections/footer. */}
+      <div className="mx-auto max-w-[var(--container)]">
         <span className="flex items-center gap-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-accent)]">
           <span className="h-0.5 w-6 bg-[var(--color-accent)]" aria-hidden />
           {tr(lang, "heroEyebrow")} · {tr(lang, "heroDataThrough")} {monthLabel(SITE_STATS.dateLast, lang)}

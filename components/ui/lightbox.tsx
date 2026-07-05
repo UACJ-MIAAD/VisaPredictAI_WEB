@@ -49,15 +49,29 @@ export function Lightbox({
       }}
       className="m-auto max-h-[95dvh] w-auto max-w-[min(95vw,1400px)] rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3 text-[var(--color-ink)] backdrop:bg-black/70 sm:p-4"
     >
-      {/* only mount the (large) image while open, so it is never fetched early */}
+      {/* only mount the (large) image while open, so it is never fetched early.
+          Same AVIF/WebP negotiation as FigureLink: the pipeline ships modern
+          variants next to every gallery PNG, so the sources are pure string
+          rewrites and the PNG <img> stays as fallback (also the "open
+          original" href below, untouched). */}
       {open && (
-        <Image
-          src={src}
-          alt={alt}
-          width={dim.w}
-          height={dim.h}
-          className="mx-auto h-auto max-h-[85dvh] w-auto max-w-full [touch-action:pinch-zoom]"
-        />
+        // display:contents so the wrapper is layout-invisible and the img
+        // keeps sizing against the dialog exactly as before
+        <picture className="contents">
+          {/\.png$/.test(src) && (
+            <source type="image/avif" srcSet={src.replace(/\.png$/, ".avif")} />
+          )}
+          {/\.png$/.test(src) && (
+            <source type="image/webp" srcSet={src.replace(/\.png$/, ".webp")} />
+          )}
+          <Image
+            src={src}
+            alt={alt}
+            width={dim.w}
+            height={dim.h}
+            className="mx-auto h-auto max-h-[85dvh] w-auto max-w-full [touch-action:pinch-zoom]"
+          />
+        </picture>
       )}
       <div className="mt-3 flex items-center justify-between gap-3">
         <a

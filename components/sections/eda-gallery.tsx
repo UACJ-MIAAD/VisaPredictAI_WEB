@@ -23,6 +23,7 @@
 // ±6-month lead–lag window, qualitative claims taken from the report).
 
 import * as React from "react";
+import { localeOf } from "@/lib/i18n";
 import Image from "next/image";
 import { useLang } from "@/components/lang-provider";
 import { Lightbox } from "@/components/ui/lightbox";
@@ -92,7 +93,7 @@ type Derived = {
 function monthYear(ym: string, lang: "es" | "en"): string {
   const [y, m] = ym.split("-").map(Number);
   if (!y || !m) return ym;
-  return new Intl.DateTimeFormat(lang === "es" ? "es-MX" : "en-US", {
+  return new Intl.DateTimeFormat(localeOf(lang), {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
@@ -107,7 +108,7 @@ function median(xs: number[]): number {
 }
 
 function derive(facts: EdaFacts, lang: "es" | "en"): Derived {
-  const locale = lang === "es" ? "es-MX" : "en-US";
+  const locale = localeOf(lang);
   const p = facts.panel;
 
   // Worst single retrogression event.
@@ -443,6 +444,7 @@ export function FigureLink({
   const { lang } = useLang();
   const original = originalLabel ?? (lang === "en" ? "Open original" : "Abrir original");
   const close = closeLabel ?? (lang === "en" ? "Close" : "Cerrar");
+  const isPng = /\.png$/.test(src);
   return (
     <div className={`mt-5 ${toggle}`}>
       <a
@@ -455,15 +457,26 @@ export function FigureLink({
         }}
         className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-accent)]"
       >
-        <Image
-          src={src}
-          alt={alt}
-          aria-hidden={imgAriaHidden || undefined}
-          width={dim.w}
-          height={dim.h}
-          loading="lazy"
-          className={`h-auto w-full rounded-xl border border-[var(--color-border)] p-2 sm:p-3 ${plate}`}
-        />
+        {/* Modern-format negotiation: the pipeline ships <name>.avif and
+            <name>.webp next to every gallery <name>.png (all four language ×
+            theme variants), so the <picture> sources are pure string rewrites
+            and the PNG <img> stays as the universal fallback with its measured
+            dims/alt/lazy loading. Each theme variant is its own <picture>,
+            preserving the CSS dark-toggle: inside a display:none wrapper the
+            lazy <img> governs the request, so the hidden variant never loads. */}
+        <picture className="contents">
+          {isPng && <source type="image/avif" srcSet={src.replace(/\.png$/, ".avif")} />}
+          {isPng && <source type="image/webp" srcSet={src.replace(/\.png$/, ".webp")} />}
+          <Image
+            src={src}
+            alt={alt}
+            aria-hidden={imgAriaHidden || undefined}
+            width={dim.w}
+            height={dim.h}
+            loading="lazy"
+            className={`h-auto w-full rounded-xl border border-[var(--color-border)] p-2 sm:p-3 ${plate}`}
+          />
+        </picture>
         <span className="mt-2 inline-block text-xs text-[var(--color-muted)] underline-offset-2 transition-colors group-hover:text-[var(--color-accent)] group-hover:underline group-focus-visible:text-[var(--color-accent)]">
           {hint} ↗
         </span>
@@ -510,8 +523,22 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
           return (
             // sin m-0 en el figure: anulaba el space-y-16 del contenedor (misma
             // especificidad que la utilidad space-y de Tailwind v4; el orden gana)
-            <figure key={f.id}>
-              <figcaption>
+            //
+            // Ultrawide (AY2 vs AY3 — decisión): AY3 GANA en las galerías. En
+            // ≥1536px cada figura pasa a dos columnas —caption sticky a la
+            // izquierda (32–38ch), imagen a la derecha— y el breakout de AY2 se
+            // aplica MODERADO sobre la misma <figure>: crece hasta
+            // min(1600px, 90vw) centrada con márgenes negativos simétricos
+            // (el padre es .section-inner = var(--container), 1320px en 2xl),
+            // de modo que la imagen recibe ~2/3 del riel ampliado + el extra
+            // del breakout sin pelearse con la grid. El wrapper min-w-0 agrupa
+            // las dos variantes de tema en UNA celda; su 2xl:-mt-5 cancela el
+            // mt-5 interno de FigureLink para alinear imagen y caption arriba.
+            <figure
+              key={f.id}
+              className="2xl:mx-[calc((100%-min(1600px,90vw))/2)] 2xl:grid 2xl:w-[min(1600px,90vw)] 2xl:grid-cols-[minmax(32ch,38ch)_1fr] 2xl:items-start 2xl:gap-12"
+            >
+              <figcaption className="2xl:sticky 2xl:top-24">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">
                   {t.figura} {i + 1} · {c.tag}
                 </p>
@@ -520,29 +547,31 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
                 </h4>
                 <p className="mt-2 max-w-3xl leading-relaxed text-[var(--color-muted)]">{c.body(d)}</p>
               </figcaption>
-              <FigureLink
-                src={`/data/${prefix}/${f.id}.png`}
-                dim={figDim(`${prefix}/${f.id}.png`, fallback.light)}
-                alt={c.alt}
-                ariaLabel={ariaLabel}
-                hint={t.fullSize}
-                originalLabel={t.openOriginal}
-                closeLabel={t.close}
-                toggle="block dark:hidden"
-                plate="bg-[var(--color-figure-plate)]"
-              />
-              <FigureLink
-                src={`/data/${prefix}/dark/${f.id}.png`}
-                dim={figDim(`${prefix}/dark/${f.id}.png`, fallback.dark)}
-                alt={c.alt}
-                ariaLabel={ariaLabel}
-                hint={t.fullSize}
-                originalLabel={t.openOriginal}
-                closeLabel={t.close}
-                toggle="hidden dark:block"
-                plate="bg-[var(--color-figure-plate-dark)]"
-                imgAriaHidden
-              />
+              <div className="min-w-0 2xl:-mt-5">
+                <FigureLink
+                  src={`/data/${prefix}/${f.id}.png`}
+                  dim={figDim(`${prefix}/${f.id}.png`, fallback.light)}
+                  alt={c.alt}
+                  ariaLabel={ariaLabel}
+                  hint={t.fullSize}
+                  originalLabel={t.openOriginal}
+                  closeLabel={t.close}
+                  toggle="block dark:hidden"
+                  plate="bg-[var(--color-figure-plate)]"
+                />
+                <FigureLink
+                  src={`/data/${prefix}/dark/${f.id}.png`}
+                  dim={figDim(`${prefix}/dark/${f.id}.png`, fallback.dark)}
+                  alt={c.alt}
+                  ariaLabel={ariaLabel}
+                  hint={t.fullSize}
+                  originalLabel={t.openOriginal}
+                  closeLabel={t.close}
+                  toggle="hidden dark:block"
+                  plate="bg-[var(--color-figure-plate-dark)]"
+                  imgAriaHidden
+                />
+              </div>
             </figure>
           );
         })}

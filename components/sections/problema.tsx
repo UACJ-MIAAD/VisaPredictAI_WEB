@@ -10,7 +10,7 @@
 import { FigureLink } from "@/components/sections/eda-gallery";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import { figDim, type Dim } from "@/lib/data/fig-dims";
-import { tr } from "@/lib/i18n";
+import { tr, localeOf } from "@/lib/i18n";
 import type { Lang } from "@/lib/site-map";
 
 // Fallback intrinsic dims for g01_panel (same values as eda-gallery's FIGS).
@@ -20,7 +20,7 @@ const FALLBACK: Record<Lang, Dim> = {
 };
 
 export function Problema({ lang }: { lang: Lang }) {
-  const n = SITE_STATS.nMonths.toLocaleString(lang === "en" ? "en-US" : "es-MX");
+  const n = SITE_STATS.nMonths.toLocaleString(localeOf(lang));
   const prefix = lang === "en" ? "eda/en" : "eda";
   const alt = tr(lang, "probAlt");
   const hint = tr(lang, "probFullSize");

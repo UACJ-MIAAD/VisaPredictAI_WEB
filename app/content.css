@@ -9,7 +9,9 @@
      max-width: 640px  → single column, small type (Tailwind sm)
      max-width: 768px  → 2-col collapses, stacked metrics (Tailwind md)
      max-width: 1024px → 3/4-col grids drop to 2 (Tailwind lg)
-   No other cutoffs may be introduced.
+   Ultrawide tiers (épica AY, globals.css): min-width 1536px (Tailwind
+   2xl → rail 1320px, gallery 2-col layout) and min-width 1920px
+   (html 17px). No other cutoffs may be introduced.
 
    Content rail (AX1): .section-inner is max-width var(--container)
    (globals.css, 1140px) with a 1.25rem gutter — the same measure as
@@ -648,6 +650,59 @@
   background: #f6f5f1 !important;
   border: 1px solid var(--color-border) !important;
   border-radius: 10px;
+}
+
+/* ── AW5: reading layer — long chapters fold after their lead ──
+   A small client enhancement (components/prose-fold.tsx) wraps every
+   /anteproyecto section's content AFTER the .section-sub lead into a
+   native <details class="prose-fold">: open by default on desktop
+   (≥1024px), folded on mobile so the page reads as a scannable
+   outline. Without JS nothing is wrapped and the full prose renders
+   (progressive enhancement). Editorial summary: no box, sans small
+   caps in accent + a chevron drawn with borders (token colors only). */
+.prose-fold {
+  margin-top: 1.2rem;
+}
+.prose-fold > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  padding: 0.25rem 0;
+  user-select: none;
+}
+.prose-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.prose-fold > summary::before {
+  content: "";
+  flex: none;
+  width: 0.45em;
+  height: 0.45em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg); /* chevron pointing right (closed) */
+  transition: transform 0.18s ease;
+}
+.prose-fold[open] > summary::before {
+  transform: rotate(45deg); /* chevron pointing down (open) */
+}
+.prose-fold > summary .pf-less,
+.prose-fold[open] > summary .pf-more {
+  display: none;
+}
+.prose-fold[open] > summary .pf-less {
+  display: inline;
+}
+.prose-fold[open] > summary {
+  margin-bottom: 0.3rem;
 }
 
 /* ── Utilities ── */

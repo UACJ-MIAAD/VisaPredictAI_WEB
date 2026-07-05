@@ -5,6 +5,7 @@
 // EDA section mounts. All colors are semantic tokens (light/dark safe).
 
 import * as React from "react";
+import { localeOf } from "@/lib/i18n";
 import {
   ResponsiveContainer,
   BarChart,
@@ -109,7 +110,7 @@ function Figure({
   );
 }
 
-const fmt = (n: number, lang: string) => n.toLocaleString(lang === "es" ? "es-MX" : "en-US");
+const fmt = (n: number, lang: string) => n.toLocaleString(localeOf(lang));
 
 export default function EdaCharts({ facts }: { facts: EdaFacts }) {
   const { lang } = useLang();
