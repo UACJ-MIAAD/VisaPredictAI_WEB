@@ -25,7 +25,7 @@ flowchart TD
         EXT["scripts/extract-content.mjs<br/>quita avisos · KaTeX · de-box"]
         GEN["lib/content/sections.generated.ts (ES)<br/>sections.en.generated.ts (EN)"]
         SRC --> EXT --> GEN
-        OG["app/opengraph-image.tsx<br/>→ tarjeta social 1200×630"]
+        OG["app/(es)|en/opengraph-image.tsx<br/>tarjeta social por locale + por ruta (lib/og.tsx)"]
         SEOF["app/robots.ts · sitemap.ts · manifest.ts<br/>favicon.ico"]
     end
 

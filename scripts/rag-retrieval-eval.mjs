@@ -76,12 +76,17 @@ const ACAD = [
   { q: "how is the multi-series panel structured?", src: /data|panel|model|repo|engineer|datos/i, lang: "en" },
   { q: "which methodology does the project follow?", src: /method|crisp|product|IV/i, lang: "en" },
   { q: "what error metrics does the project use?", src: /metodolog|marco|product|model|method|framework/i, lang: "es" },
+  // Audit round 2: the seeded suggestion must retrieve the CURRENT results
+  // (model card), not the frozen May proposal — in both languages.
+  { q: "¿Qué modelos compara el proyecto y cuál gana?", src: /model card/i, lang: "es" },
+  { q: "Which models does the project compare and which one wins?", src: /model card/i, lang: "en" },
 ];
 let aHit = 0, aRankSum = 0;
 for (const p of ACAD) {
   const { fused } = rank(await embed(p.q), tok(p.q), p.lang);
   const r = fused.findIndex((i) => p.src.test(chunks[i].source)) + 1;
   if (r && r <= 6) aHit++;
+  else console.log(`  MISS: "${p.q}" → best-rank ${r || "none"}`);
   aRankSum += r || 99;
 }
 console.log(`ACADEMIC/fragment probes (${ACAD.length}, where contextual helps):`);

@@ -39,8 +39,9 @@ export function Historico() {
       loadPanel().then(setPanel).catch(() => setError(true));
     };
     // A #historico deep link may never intersect (anchor scroll fires before
-    // async sections above expand the layout) — start eagerly on hash.
-    if (window.location.hash === "#historico") {
+    // async sections above expand the layout) — start eagerly on hash. Also
+    // for #scorecard (below us): the IO never fires for scrolled-past sections.
+    if (["#historico", "#scorecard"].includes(window.location.hash)) {
       start();
       return;
     }
