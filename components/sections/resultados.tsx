@@ -127,6 +127,12 @@ export function Resultados() {
   // resolve pinned keys → series (in pin order), dropping any no longer present
   const byKey = React.useMemo(() => new Map(allSeries.map((s) => [s.key, s])), [allSeries]);
   const basketItems = React.useMemo(() => basket.map((k) => byKey.get(k)).filter(Boolean) as GallerySeries[], [basket, byKey]);
+  // once the store is loaded, drop any pinned keys (e.g. from a stale ?pin= link)
+  // that no longer exist — so phantom keys can't wedge the max-4 cap or the bar.
+  React.useEffect(() => {
+    if (!allSeries.length) return;
+    setBasket((b) => { const keep = b.filter((k) => byKey.has(k)); return keep.length === b.length ? b : keep; });
+  }, [allSeries, byKey]);
 
   // ── deep-link: hydrate filters/sort + pending series from the URL on mount
   React.useEffect(() => {
@@ -145,12 +151,15 @@ export function Resultados() {
     hydrated.current = true;
   }, []);
 
-  // open the pending (deep-linked) series once the filtered set is ready
+  // open the pending (deep-linked) series once the filtered set is ready. Consume
+  // the ref on the first materialized render — hit OR miss — so a stale key can't
+  // pop the lightbox open later when the user changes filters.
   React.useEffect(() => {
     const k = pendingSeries.current;
     if (!k || !filtered.length) return;
     const i = idx.get(k);
-    if (i != null) { setLightbox(i); pendingSeries.current = null; }
+    if (i != null) setLightbox(i);
+    pendingSeries.current = null;
   }, [filtered, idx]);
 
   // ── deep-link: reflect filters/sort + open series in the URL (shareable)

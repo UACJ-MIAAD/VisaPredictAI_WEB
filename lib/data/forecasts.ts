@@ -65,10 +65,11 @@ export function loadForecasts(): Promise<ForecastStore> {
       (store.series.get(k) ?? store.series.set(k, []).get(k)!).push(pt);
     }
     if (metaJson.series) for (const [k, v] of Object.entries(metaJson.series)) store.meta.set(k.replace(/\//g, "|"), v);
-    // horizon derived from the pipeline: prefer the explicit meta field, else the real point count per series
+    // horizon derived from the pipeline: prefer the explicit meta field (only if
+    // positive — an explicit 0 must not survive), else the real point count per series
     let maxLen = 0;
     for (const a of store.series.values()) if (a.length > maxLen) maxLen = a.length;
-    store.horizonMonths = metaJson.horizon_months ?? maxLen;
+    store.horizonMonths = (typeof metaJson.horizon_months === "number" && metaJson.horizon_months > 0) ? metaJson.horizon_months : maxLen;
     return store;
   })().catch(() => ({ method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0 }));
   return cache;

@@ -122,7 +122,8 @@ export function Pronostico() {
   }, [panel, countries, country, category, table]);
 
   const spec = React.useMemo(
-    () => (panel ? buildForecast(panel, country, category, table, lang, 12, 48, forecasts) : null),
+    // horizon derived from the pipeline (forecasts.horizonMonths; undefined → buildForecast default) — never hand-typed
+    () => (panel ? buildForecast(panel, country, category, table, lang, forecasts?.horizonMonths || undefined, 48, forecasts) : null),
     [panel, country, category, table, lang, forecasts],
   );
 
