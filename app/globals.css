@@ -480,17 +480,17 @@ main:focus {
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  padding: 5px 9px 6px;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--color-surface) 42%, transparent);
-  -webkit-backdrop-filter: blur(15px) saturate(1.4);
-  backdrop-filter: blur(15px) saturate(1.4);
+  padding: 4px 8px 5px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-surface) 36%, transparent);
+  -webkit-backdrop-filter: blur(17px) saturate(1.45);
+  backdrop-filter: blur(17px) saturate(1.45);
 }
 .vb-tt--multi .vb-tt__month {
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   padding-bottom: 3px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 42%, transparent);
-  font-size: 8.5px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 38%, transparent);
+  font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -499,8 +499,8 @@ main:focus {
 .vb-tt__mgrid {
   display: grid;
   grid-template-columns: auto;
-  column-gap: 14px;
-  row-gap: 4px;
+  column-gap: 11px;
+  row-gap: 3px;
 }
 .vb-tt--multi2 .vb-tt__mgrid {
   grid-template-columns: auto auto;
@@ -508,17 +508,21 @@ main:focus {
 .vb-tt__row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+}
+.vb-tt--multi .vb-tt__dot {
+  width: 5px;
+  height: 5px;
 }
 .vb-tt__mlabel {
-  font-size: 9.5px;
+  font-size: 9px;
   font-weight: 600;
-  color: color-mix(in srgb, var(--color-ink) 80%, transparent);
+  color: color-mix(in srgb, var(--color-ink) 78%, transparent);
 }
 .vb-tt__mdate {
   margin-left: auto;
-  padding-left: 9px;
-  font-size: 9.5px;
+  padding-left: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
