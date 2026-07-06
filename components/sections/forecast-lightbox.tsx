@@ -100,7 +100,7 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
 
   const spec: ChartSpec | null = React.useMemo(() => {
     if (!cur) return null;
-    if (view === "compare") return buildMultiLine(panel, cur.category, cur.table, lang);
+    if (view === "compare") return buildMultiLine(panel, cur.category, cur.table, lang, forecasts);
     // full = wide window (covers the whole panel history); zoom = recent 48 mo.
     // horizon = pipeline value (forecasts.horizonMonths); undefined → buildForecast default.
     return buildForecast(panel, cur.country, cur.category, cur.table, lang, forecasts?.horizonMonths || undefined, view === "full" ? 480 : 48, forecasts, panelIndex ?? undefined);

@@ -78,6 +78,44 @@ function GlassPill(props: {
   );
 }
 
+// Multi-series compare tooltip ("Comparar países" / basket): one translucent glass
+// card, a row per series — dot + label + its DATE in the series colour — instead of
+// the default card's raw fractional years ("2021.3675…"). Reads the data row directly
+// so a country's history/forecast collapse to one row (date from __fcd or __d).
+function MultiPill(props: {
+  lang: "es" | "en";
+  series: { key: string; label: string }[];
+  active?: boolean;
+  label?: string | number;
+  payload?: ReadonlyArray<{ payload?: Record<string, unknown> }>;
+}) {
+  const { active, payload, label, series, lang } = props;
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+  const rows = series
+    .map((s, i) => {
+      const fcd = row[`${s.key}__fcd`];
+      const hd = row[`${s.key}__d`];
+      const date = (typeof fcd === "string" && fcd) || (typeof hd === "string" && hd) || null;
+      return date ? { label: s.label, color: SERIES[i % SERIES.length], date } : null;
+    })
+    .filter((r): r is { label: string; color: string; date: string } => r != null);
+  if (!rows.length) return null;
+  return (
+    <div className="vb-tt vb-tt--multi">
+      <span className="vb-tt__month">{ttMonth(label, lang)}</span>
+      {rows.map((r) => (
+        <span key={r.label} className="vb-tt__row">
+          <span className="vb-tt__dot" style={{ "--dot": r.color } as React.CSSProperties} />
+          <span className="vb-tt__mlabel">{r.label}</span>
+          <span className="vb-tt__mdate" style={{ color: r.color }}>{r.date}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // Compare-two-bulletins renderer: the two bulletins side by side per cell —
 // "value in month A → value in month B" — with the change signalled by colour +
 // arrow, and only changed cells highlighted so the comparison reads as two
@@ -230,10 +268,15 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => String(m).slice(0, 4)} minTickGap={36} />
             <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
-            <Tooltip contentStyle={tip} />
+            <Tooltip content={<MultiPill lang={lang} series={spec.series} />} />
             <Legend wrapperStyle={{ fontSize: "0.72rem" }} />
             {spec.series.map((s, i) => (
-              <Line key={s.key} type="monotone" dataKey={s.key} name={s.label} stroke={SERIES[i % SERIES.length]} strokeWidth={2.2} dot={false} connectNulls />
+              <React.Fragment key={s.key}>
+                <Line type="monotone" dataKey={s.key} name={s.label} stroke={SERIES[i % SERIES.length]} strokeWidth={2.2} strokeOpacity={0.9} dot={false} connectNulls isAnimationActive={false} />
+                {spec.hasForecast && (
+                  <Line type="monotone" dataKey={`${s.key}__fc`} name={s.label} legendType="none" stroke={SERIES[i % SERIES.length]} strokeWidth={2} strokeDasharray="5 4" strokeOpacity={0.85} dot={false} connectNulls isAnimationActive={false} />
+                )}
+              </React.Fragment>
             ))}
           </LineChart>
         </ResponsiveContainer>

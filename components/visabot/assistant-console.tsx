@@ -97,7 +97,7 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
   if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
   if (/radar|huella|fingerprint/i.test(q)) return buildRadar(panel, t, lang);
-  if (/carrera|todos los pa[ií]s|all countr|cada pa[ií]s|\brace\b/i.test(q) && e.category) return buildMultiLine(panel, e.category, t, lang);
+  if (/carrera|todos los pa[ií]s|all countr|cada pa[ií]s|\brace\b/i.test(q) && e.category) return buildMultiLine(panel, e.category, t, lang, forecasts);
   if (e.country && e.category) {
     if (move) return buildMovement(panel, e.country, e.category, t, lang);
     if (status) return buildStatus(panel, lang, { country: e.country, category: e.category, table: t });
@@ -216,7 +216,7 @@ export function AssistantConsole() {
     else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
     else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
-    else if (kind === "race") { chart = buildMultiLine(panel, category, table, lang); lead = tr(lang, "acHereRace"); }
+    else if (kind === "race") { chart = buildMultiLine(panel, category, table, lang, forecasts); lead = tr(lang, "acHereRace"); }
     else if (kind === "heat") { chart = buildHeatmap(panel, blockOf(category), table, lang); lead = tr(lang, "acHereHeat"); }
     else if (kind === "radar") { chart = buildRadar(panel, table, lang); lead = tr(lang, "acHereRadar"); }
     else { chart = buildStatus(panel, lang, { country, category, table }); lead = tr(lang, "acHereStatus"); }
