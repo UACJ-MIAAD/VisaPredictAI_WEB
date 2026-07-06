@@ -27,16 +27,16 @@ const SERIES = ["var(--color-accent)", "var(--color-accent-2)", "var(--color-suc
 // pointer-events:none + label/item spacing are set globally (globals.css) so the
 // card never intercepts the cursor and every VisaChart tooltip stays consistent.
 const tip = {
-  background: "color-mix(in srgb, var(--color-surface) 82%, transparent)",
-  backdropFilter: "blur(6px)",
-  WebkitBackdropFilter: "blur(6px)",
-  border: "1px solid color-mix(in srgb, var(--color-border) 75%, transparent)",
-  borderRadius: "8px",
-  boxShadow: "0 4px 16px color-mix(in srgb, var(--color-ink) 14%, transparent)",
+  background: "color-mix(in srgb, var(--color-surface) 58%, transparent)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
+  border: "1px solid color-mix(in srgb, var(--color-border) 60%, transparent)",
+  borderRadius: "7px",
+  boxShadow: "0 2px 10px color-mix(in srgb, var(--color-ink) 10%, transparent)",
   color: "var(--color-ink)",
-  fontSize: "0.7rem",
-  padding: "5px 9px",
-  lineHeight: 1.3,
+  fontSize: "0.64rem",
+  padding: "3px 8px",
+  lineHeight: 1.25,
 };
 const GRID = "color-mix(in srgb, var(--color-border) 70%, transparent)";
 
@@ -186,7 +186,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => m.slice(0, 4)} minTickGap={36} />
             <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
-            <Tooltip contentStyle={tip} labelFormatter={(m) => String(m)} formatter={(_v, _n, item) => [item?.payload?.date ?? "—", lang === "en" ? "Priority date" : "Fecha prioridad"]} />
+            <Tooltip contentStyle={tip} separator="" labelFormatter={(m) => String(m)} formatter={(_v, _n, item) => [item?.payload?.date ?? "—", ""]} />
             <Area type="monotone" dataKey="year" stroke="var(--color-accent)" strokeWidth={2.4} fill="url(#vbLineFill)" dot={false} connectNulls />
           </AreaChart>
         </ResponsiveContainer>
@@ -216,12 +216,14 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
             <Tooltip
               contentStyle={tip}
-              labelFormatter={(m) => String(m)}
+              separator=""
+              labelFormatter={(m) => String(m).slice(0, 7)}
               formatter={(value, name, item) => {
                 if (name === "band95" || name === "band80") return HIDE_TOOLTIP_ROW;
-                const p = item?.payload;
-                const isF = p?.fc != null && p?.hist == null;
-                return [p?.date ?? "—", isF ? (lang === "en" ? "Forecast cutoff" : "Corte pronosticado") : (lang === "en" ? "Priority date" : "Fecha prioridad")];
+                // Just the date, tinted by the series (gold = forecast cutoff,
+                // blue = historical priority date). Dropping the verbose label
+                // keeps the card tiny so the plot stays visible while hovering.
+                return [item?.payload?.date ?? "—", ""];
               }}
             />
             {/* prediction bands (outer 95 %, inner 80 %) */}
