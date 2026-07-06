@@ -106,7 +106,7 @@ function DecisionItem({ d, lang, moduleLabel }: { d: FeDecision; lang: "es" | "e
   return (
     <details className="group border-b border-[var(--color-border)] py-3">
       <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3 [&::-webkit-details-marker]:hidden">
-        <span className="font-semibold leading-snug text-[var(--color-ink)]">{title}</span>
+        <span className="min-w-0 break-words font-semibold leading-snug text-[var(--color-ink)]">{title}</span>
         <span
           aria-hidden="true"
           className="shrink-0 text-[var(--color-muted)] transition-transform group-open:rotate-90"
@@ -114,11 +114,11 @@ function DecisionItem({ d, lang, moduleLabel }: { d: FeDecision; lang: "es" | "e
           ›
         </span>
       </summary>
-      <div className="mt-2 pr-6">
-        <p className="text-sm leading-relaxed text-[var(--color-muted)]">{rationale}</p>
-        <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+      <div className="mt-2 min-w-0 pr-6">
+        <p className="text-sm leading-relaxed text-[var(--color-muted)] break-words">{rationale}</p>
+        <p className="mt-1.5 text-xs text-[var(--color-muted)] break-words">
           {moduleLabel}{" "}
-          <code className="rounded bg-[var(--color-surface-soft)] px-1.5 py-0.5 font-mono text-[0.7rem]">
+          <code className="rounded bg-[var(--color-surface-soft)] px-1.5 py-0.5 font-mono text-[0.7rem] [overflow-wrap:anywhere]">
             {d.module}
           </code>
         </p>
@@ -187,7 +187,7 @@ export function Fe() {
         {t.contract(c.min_train.FAD, c.min_train.DFF, c.holdout, c.lags)}
       </p>
 
-      <div className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-2">
+      <div className="mt-12 grid gap-x-12 gap-y-10 md:grid-cols-2 [&>div]:min-w-0">
         <div>
           <h3 className="font-serif text-xl font-bold text-[var(--color-ink)]">{t.cleanTitle}</h3>
           <p className="mt-1 text-sm text-[var(--color-muted)]">{t.cleanSub(nClean)}</p>
