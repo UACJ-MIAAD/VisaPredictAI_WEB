@@ -2,7 +2,7 @@
 // a browsable country → block → category×table tree for the /resultados section.
 // Pure data helpers (no React) so they're unit-testable. Every count is derived
 // from the loaded store — never hand-typed (regla #0).
-import { type ForecastStore, type SeriesMeta, forecastFor } from "@/lib/data/forecasts";
+import { type ForecastStore, type SeriesMeta, type ForecastPoint, forecastFor } from "@/lib/data/forecasts";
 import { PILOT } from "@/lib/data/visa-panel";
 import { seriesSignals, type PanelIndex } from "@/lib/visabot/analytics";
 
@@ -149,6 +149,14 @@ export function gallerySummary(series: GallerySeries[]): GallerySummary {
     nDFF: series.filter((s) => s.table === "DFF").length,
     lastMonth: lastMonths.length ? lastMonths.sort()[lastMonths.length - 1] : null,
   };
+}
+
+// Export the pre-generated forecast of one series as CSV (traceable to the
+// pipeline) — a data flex a static image gallery can't offer.
+export function forecastToCsv(key: string, points: ForecastPoint[]): string {
+  const head = "series,date,days,lo80,hi80,lo95,hi95";
+  const rows = points.map((p) => `${key},${p.date},${p.days},${p.lo80},${p.hi80},${p.lo95},${p.hi95}`);
+  return [head, ...rows].join("\n") + "\n";
 }
 
 export type GalleryFilter = { country?: string; table?: string; block?: string; query?: string };

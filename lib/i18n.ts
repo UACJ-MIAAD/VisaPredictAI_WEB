@@ -367,6 +367,26 @@ const S = {
   // deep link
   resCopyLink: { es: "Copiar enlace", en: "Copy link" },
   resCopied: { es: "¡Copiado!", en: "Copied!" },
+  // compare basket
+  resPin: { es: "Fijar para comparar", en: "Pin to compare" },
+  resUnpin: { es: "Quitar de comparación", en: "Unpin from compare" },
+  resBasket: { es: "Comparación", en: "Compare" },
+  resCompareN: { es: "Comparar", en: "Compare" }, // followed by a count
+  resClearBasket: { es: "Limpiar", en: "Clear" },
+  resBasketHint: { es: "Fija 2 a 4 series (📌) y compáralas superpuestas.", en: "Pin 2 to 4 series (📌) and compare them overlaid." },
+  resBasketFull: { es: "Máximo 4 series.", en: "Up to 4 series." },
+  // density toggle
+  resDensity: { es: "Densidad", en: "Density" },
+  resDensityComfy: { es: "Cómodo", en: "Comfortable" },
+  resDensityCompact: { es: "Compacto", en: "Compact" },
+  // freshness
+  resFresh: { es: "al día", en: "up to date" },
+  resStale: { es: "pronósticos al mes de {f} · panel al {p}", en: "forecasts as of {f} · panel to {p}" },
+  // export
+  resExportCsv: { es: "CSV", en: "CSV" },
+  resExportPng: { es: "PNG", en: "PNG" },
+  resExportCsvTip: { es: "Descargar los puntos del pronóstico (CSV)", en: "Download the forecast points (CSV)" },
+  resExportPngTip: { es: "Descargar la gráfica (PNG)", en: "Download the chart (PNG)" },
 
   // ── #problema section (home, AU1)
   probTag: { es: "El problema", en: "The problem" },

@@ -7,7 +7,7 @@
 // the card grid stays cheap. Focus-trapped, Esc + arrow-key navigable.
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { X, ChevronLeft, ChevronRight, Link2, Check } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Link2, Check, Download, Image as ImageIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
@@ -16,8 +16,42 @@ import { useFocusTrap } from "@/lib/use-focus-trap";
 import { countryLabel } from "@/lib/data/visa-panel";
 import { buildForecast, buildMultiLine, monthLabel, reachesPriorityDate, type ChartSpec, type PanelIndex } from "@/lib/visabot/analytics";
 import { forecastFor, type ForecastStore } from "@/lib/data/forecasts";
+import { forecastToCsv } from "@/lib/visabot/gallery";
 import type { Panel } from "@/lib/data/panel-core";
 import type { GallerySeries } from "@/lib/visabot/gallery";
+
+// Trigger a client download of a Blob/string.
+function download(name: string, data: Blob | string, type = "text/csv;charset=utf-8") {
+  const blob = typeof data === "string" ? new Blob([data], { type }) : data;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// Rasterize a mounted chart SVG to PNG, resolving CSS custom properties (the
+// chart strokes use var(--color-…), which don't survive a standalone SVG).
+async function svgToPngBlob(svg: SVGSVGElement, bg: string): Promise<Blob | null> {
+  const rect = svg.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+  const clone = svg.cloneNode(true) as SVGSVGElement;
+  clone.setAttribute("width", String(w)); clone.setAttribute("height", String(h));
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const cs = getComputedStyle(document.documentElement);
+  const str = new XMLSerializer().serializeToString(clone)
+    .replace(/var\((--[a-z0-9-]+)\)/gi, (_, v) => cs.getPropertyValue(v).trim() || "#000");
+  const img = new Image();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(str); });
+  const scale = 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = w * scale; canvas.height = h * scale;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = bg || "#fff"; ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(img, 0, 0, w, h);
+  return new Promise((res) => canvas.toBlob(res, "image/png"));
+}
 
 const VisaChart = dynamic(() => import("@/components/visabot/visa-chart"), {
   ssr: false,
@@ -40,6 +74,7 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
   const [copied, setCopied] = React.useState(false);
   const [pd, setPd] = React.useState("");
   const trapRef = useFocusTrap<HTMLDivElement>(true);
+  const chartRef = React.useRef<HTMLDivElement>(null);
   const cur = series[index];
 
   const prev = React.useCallback(() => onIndex((index - 1 + series.length) % series.length), [index, series.length, onIndex]);
@@ -89,6 +124,21 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
     { k: "compare", label: tr(lang, "resViewCompare") },
   ];
 
+  // export: only for a real (pre-generated) forecast, and not the compare overlay
+  const points = forecastFor(forecasts, cur.country, cur.category, cur.table);
+  const canExport = view !== "compare" && !!points && points.length > 0;
+  const fileBase = `${cur.country}_${cur.category}_${cur.table}`;
+  const exportCsv = () => { if (points) download(`${fileBase}.csv`, forecastToCsv(cur.key, points)); };
+  const exportPng = async () => {
+    const svg = chartRef.current?.querySelector("svg");
+    if (!svg) return;
+    try {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue("--color-bg").trim() || "#ffffff";
+      const blob = await svgToPngBlob(svg as SVGSVGElement, bg);
+      if (blob) download(`${fileBase}.png`, blob, "image/png");
+    } catch { /* rasterization unsupported → no-op (CSV export still available) */ }
+  };
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={`${countryLabel(cur.country, lang)} · ${cur.category} · ${cur.table}`}>
       <div className="absolute inset-0 bg-black/55" onClick={onClose} aria-hidden />
@@ -123,6 +173,16 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
                 </button>
               ))}
             </div>
+            {canExport && (
+              <>
+                <button onClick={exportCsv} aria-label={tr(lang, "resExportCsvTip")} title={tr(lang, "resExportCsvTip")} className="vb-iconbtn shrink-0">
+                  <Download className="h-4 w-4" aria-hidden />
+                </button>
+                <button onClick={exportPng} aria-label={tr(lang, "resExportPngTip")} title={tr(lang, "resExportPngTip")} className="vb-iconbtn shrink-0">
+                  <ImageIcon className="h-4 w-4" aria-hidden />
+                </button>
+              </>
+            )}
             <button onClick={copyLink} aria-label={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} title={copied ? tr(lang, "resCopied") : tr(lang, "resCopyLink")} className="vb-iconbtn shrink-0">
               {copied ? <Check className="h-4 w-4 text-[var(--color-success)]" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
             </button>
@@ -138,7 +198,7 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
         </p>
 
         {/* chart */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+        <div ref={chartRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
           {spec ? <VisaChart spec={spec} /> : <p className="py-16 text-center text-sm text-[var(--color-muted)]">{tr(lang, "pronEmpty")}</p>}
 
           {/* "reaches my priority date?" — personalization a static gallery can't do */}
