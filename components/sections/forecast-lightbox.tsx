@@ -82,8 +82,12 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { e.stopPropagation(); onClose(); }
-      else if (e.key === "ArrowLeft") prev();
+      if (e.key === "Escape") { e.stopPropagation(); onClose(); return; }
+      // don't hijack arrow keys typed inside a form field (e.g. the native date
+      // input steps day/month/year with Left/Right) — only navigate series otherwise
+      const el = e.target as HTMLElement | null;
+      if (el && el.closest("input, select, textarea, [contenteditable]")) return;
+      if (e.key === "ArrowLeft") prev();
       else if (e.key === "ArrowRight") next();
     };
     document.addEventListener("keydown", onKey, true);
