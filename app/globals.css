@@ -392,8 +392,9 @@ main:focus {
   transition: transform 70ms ease-out;
 }
 .recharts-tooltip-label {
-  margin: 0 0 2px !important;
-  font-size: 0.64rem;
+  margin: 0 0 1px !important;
+  font-size: 0.56rem;
+  letter-spacing: 0.02em;
   color: var(--color-muted);
 }
 .recharts-tooltip-item-list {
@@ -401,5 +402,7 @@ main:focus {
   padding: 0 !important;
 }
 .recharts-tooltip-item {
-  padding: 1px 0 !important;
+  padding: 0 !important;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
