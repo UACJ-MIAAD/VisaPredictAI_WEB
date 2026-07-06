@@ -473,32 +473,53 @@ main:focus {
   font-variant-numeric: tabular-nums;
 }
 
-/* multi-series variant ("Comparar países" / basket): one row per series. */
+/* multi-series variant ("Comparar países" / basket) — compact dot matrix: a tiny
+   month caption + a grid of dot · short label · AAAA-MM date, sorted leader-first.
+   Smaller + more translucent than the base pill (chosen design). */
 .vb-tt--multi {
   flex-direction: column;
   align-items: stretch;
-  gap: 3px;
-  padding: 6px 10px;
+  gap: 0;
+  padding: 5px 9px 6px;
   border-radius: 9px;
+  background: color-mix(in srgb, var(--color-surface) 42%, transparent);
+  -webkit-backdrop-filter: blur(15px) saturate(1.4);
+  backdrop-filter: blur(15px) saturate(1.4);
 }
 .vb-tt--multi .vb-tt__month {
-  margin-bottom: 1px;
+  margin-bottom: 4px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 42%, transparent);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.vb-tt__mgrid {
+  display: grid;
+  grid-template-columns: auto;
+  column-gap: 14px;
+  row-gap: 4px;
+}
+.vb-tt--multi2 .vb-tt__mgrid {
+  grid-template-columns: auto auto;
 }
 .vb-tt__row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 .vb-tt__mlabel {
-  margin-right: auto;
-  padding-right: 10px;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--color-muted);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-ink) 80%, transparent);
 }
 .vb-tt__mdate {
-  font-size: 11px;
+  margin-left: auto;
+  padding-left: 9px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }

@@ -82,6 +82,9 @@ function GlassPill(props: {
 // card, a row per series — dot + label + its DATE in the series colour — instead of
 // the default card's raw fractional years ("2021.3675…"). Reads the data row directly
 // so a country's history/forecast collapse to one row (date from __fcd or __d).
+// Short country code for the compact matrix; basket composites keep their label.
+const CC: Record<string, string> = { mexico: "MX", india: "IN", china: "CN", philippines: "PH", all_chargeability: "RoW" };
+
 function MultiPill(props: {
   lang: "es" | "en";
   series: { key: string; label: string }[];
@@ -98,20 +101,25 @@ function MultiPill(props: {
       const fcd = row[`${s.key}__fcd`];
       const hd = row[`${s.key}__d`];
       const date = (typeof fcd === "string" && fcd) || (typeof hd === "string" && hd) || null;
-      return date ? { label: s.label, color: SERIES[i % SERIES.length], date } : null;
+      return date ? { key: s.key, label: CC[s.key] ?? s.label, color: SERIES[i % SERIES.length], date } : null;
     })
-    .filter((r): r is { label: string; color: string; date: string } => r != null);
+    .filter((r): r is { key: string; label: string; color: string; date: string } => r != null)
+    .sort((a, b) => b.date.localeCompare(a.date)); // leader-first: latest priority date advances furthest
   if (!rows.length) return null;
+  // Two-column dot matrix for the country race; single column for basket composites.
+  const twoCol = rows.length > 3 && series.every((s) => !s.key.includes("|"));
   return (
-    <div className="vb-tt vb-tt--multi">
+    <div className={`vb-tt vb-tt--multi${twoCol ? " vb-tt--multi2" : ""}`}>
       <span className="vb-tt__month">{ttMonth(label, lang)}</span>
-      {rows.map((r) => (
-        <span key={r.label} className="vb-tt__row">
-          <span className="vb-tt__dot" style={{ "--dot": r.color } as React.CSSProperties} />
-          <span className="vb-tt__mlabel">{r.label}</span>
-          <span className="vb-tt__mdate" style={{ color: r.color }}>{r.date}</span>
-        </span>
-      ))}
+      <span className="vb-tt__mgrid">
+        {rows.map((r) => (
+          <span key={r.key} className="vb-tt__row">
+            <span className="vb-tt__dot" style={{ "--dot": r.color } as React.CSSProperties} />
+            <span className="vb-tt__mlabel">{r.label}</span>
+            <span className="vb-tt__mdate" style={{ color: r.color }}>{r.date.slice(0, 7)}</span>
+          </span>
+        ))}
+      </span>
     </div>
   );
 }
