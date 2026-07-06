@@ -21,12 +21,22 @@ const fmtDate = (d: string, lang = "es") => { const [y, m, da] = d.split("-").ma
 
 const AXIS = { fontSize: 11, fill: "var(--color-muted)" };
 const SERIES = ["var(--color-accent)", "var(--color-accent-2)", "var(--color-success)", "var(--color-danger)", "var(--color-muted)"];
+// Compact, translucent tooltip: it must not blanket the chart while hovering. A
+// semi-transparent surface + backdrop blur keeps the plotted line/bands legible
+// THROUGH the card; tight padding + smaller type shrink its footprint; the
+// pointer-events:none + label/item spacing are set globally (globals.css) so the
+// card never intercepts the cursor and every VisaChart tooltip stays consistent.
 const tip = {
-  background: "var(--color-surface)",
-  border: "1px solid var(--color-border)",
+  background: "color-mix(in srgb, var(--color-surface) 82%, transparent)",
+  backdropFilter: "blur(6px)",
+  WebkitBackdropFilter: "blur(6px)",
+  border: "1px solid color-mix(in srgb, var(--color-border) 75%, transparent)",
   borderRadius: "8px",
+  boxShadow: "0 4px 16px color-mix(in srgb, var(--color-ink) 14%, transparent)",
   color: "var(--color-ink)",
-  fontSize: "0.78rem",
+  fontSize: "0.7rem",
+  padding: "5px 9px",
+  lineHeight: 1.3,
 };
 const GRID = "color-mix(in srgb, var(--color-border) 70%, transparent)";
 

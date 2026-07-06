@@ -381,3 +381,25 @@ main:focus {
   border-color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
+
+/* VisaChart (Recharts) tooltip — compact + non-blocking (bot + galería). The
+   card must never intercept the cursor nor blanket the plot while hovering:
+   contentStyle (`tip` in visa-chart.tsx) styles the box; these keep it
+   click-through and tighten the internal label/item spacing so it stays small. */
+.recharts-tooltip-wrapper {
+  pointer-events: none !important;
+  z-index: 30;
+  transition: transform 70ms ease-out;
+}
+.recharts-tooltip-label {
+  margin: 0 0 2px !important;
+  font-size: 0.64rem;
+  color: var(--color-muted);
+}
+.recharts-tooltip-item-list {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.recharts-tooltip-item {
+  padding: 1px 0 !important;
+}
