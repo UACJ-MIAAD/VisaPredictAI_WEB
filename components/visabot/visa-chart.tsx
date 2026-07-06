@@ -40,11 +40,43 @@ const tip = {
 };
 const GRID = "color-mix(in srgb, var(--color-border) 70%, transparent)";
 
-// Recharts hack (unavoidable cast): returning null for [value, name] is the
-// documented way to SUPPRESS a tooltip row (here: the band areas, whose raw
-// [lo, hi] tuples would render as noise), but the Formatter type doesn't admit
-// null — so one named, documented cast instead of inline magic at each usage.
-const HIDE_TOOLTIP_ROW = [null, null] as unknown as [string, string];
+// "2026-09" -> "sep 2026" (month caption for the Glass-pill tooltip).
+const ttMonth = (label: unknown, lang: "es" | "en"): string => {
+  const m = /^(\d{4})-(\d{2})/.exec(String(label ?? ""));
+  return m ? `${(MON_ABBR[lang] || MON_ABBR.es)[Number(m[2]) - 1]} ${m[1]}` : String(label ?? "");
+};
+
+// "Glass pill" hover tooltip (chosen design): a single translucent row — series
+// dot + month caption + tabular date — that floats OVER the plot so the line,
+// bands and grid stay legible underneath (pointer-events:none, backdrop blur).
+// Replaces the default Recharts card for the date charts (line + forecast); the
+// band rows are skipped, and the tint follows the series (gold = forecast cutoff,
+// blue = historical priority date). Styled in globals.css (.vb-tt*).
+function GlassPill(props: {
+  lang: "es" | "en";
+  active?: boolean;
+  label?: string | number;
+  payload?: ReadonlyArray<{
+    value?: number | null;
+    name?: string;
+    payload?: { date?: string; fc?: number | null; hist?: number | null };
+  }>;
+}) {
+  const { active, payload, label, lang } = props;
+  if (!active || !payload?.length) return null;
+  const row = payload.find((p) => p.value != null && p.name !== "band95" && p.name !== "band80");
+  const d = row?.payload;
+  if (!d?.date) return null;
+  const tint = d.fc != null && d.hist == null ? "var(--color-accent-2)" : "var(--color-accent)";
+  return (
+    <div className="vb-tt" style={{ "--dot": tint } as React.CSSProperties}>
+      <span className="vb-tt__dot" />
+      <span className="vb-tt__month">{ttMonth(label, lang)}</span>
+      <span className="vb-tt__sep" />
+      <span className="vb-tt__date">{d.date}</span>
+    </div>
+  );
+}
 
 // Compare-two-bulletins renderer: the two bulletins side by side per cell —
 // "value in month A → value in month B" — with the change signalled by colour +
@@ -186,7 +218,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => m.slice(0, 4)} minTickGap={36} />
             <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
-            <Tooltip contentStyle={tip} separator="" labelFormatter={(m) => String(m)} formatter={(_v, _n, item) => [item?.payload?.date ?? "—", ""]} />
+            <Tooltip content={<GlassPill lang={lang} />} />
             <Area type="monotone" dataKey="year" stroke="var(--color-accent)" strokeWidth={2.4} fill="url(#vbLineFill)" dot={false} connectNulls />
           </AreaChart>
         </ResponsiveContainer>
@@ -214,18 +246,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => String(m).slice(0, 7)} minTickGap={40} />
             <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
-            <Tooltip
-              contentStyle={tip}
-              separator=""
-              labelFormatter={(m) => String(m).slice(0, 7)}
-              formatter={(value, name, item) => {
-                if (name === "band95" || name === "band80") return HIDE_TOOLTIP_ROW;
-                // Just the date, tinted by the series (gold = forecast cutoff,
-                // blue = historical priority date). Dropping the verbose label
-                // keeps the card tiny so the plot stays visible while hovering.
-                return [item?.payload?.date ?? "—", ""];
-              }}
-            />
+            <Tooltip content={<GlassPill lang={lang} />} />
             {/* prediction bands (outer 95 %, inner 80 %) */}
             <Area dataKey="band95" stroke="none" fill="var(--color-accent)" fillOpacity={0.1} isAnimationActive={false} connectNulls />
             <Area dataKey="band80" stroke="none" fill="var(--color-accent)" fillOpacity={0.2} isAnimationActive={false} connectNulls />
