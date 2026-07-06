@@ -3,10 +3,10 @@
 // gallery's sort / MASE-tercile helpers. All computed from the data — no hardcode.
 import { describe, it, expect } from "vitest";
 import { buildPanel } from "@/lib/data/panel-core";
-import { buildPanelIndex, seriesSignals, reachesPriorityDate } from "@/lib/visabot/analytics";
-import { sortSeries, maseTerciles, maseTier, attachSignals, buildGallerySeries, buildGalleryTree, type GallerySeries } from "@/lib/visabot/gallery";
+import { buildPanelIndex, seriesSignals, reachesPriorityDate, buildBasketCompare } from "@/lib/visabot/analytics";
+import { sortSeries, maseTerciles, maseTier, attachSignals, buildGallerySeries, buildGalleryTree, forecastToCsv, type GallerySeries } from "@/lib/visabot/gallery";
 import type { ForecastPoint, ForecastStore, SeriesMeta } from "@/lib/data/forecasts";
-import { linearSeriesCsv } from "./fixtures";
+import { linearSeriesCsv, PANEL_CSV } from "./fixtures";
 
 // mexico F4 FAD: 12 F months advancing +30 d/mo, last days_since_base = 9030+12*30 = 9390... (fixture starts at 9000, first +30)
 const panel = buildPanel(linearSeriesCsv(12, 30));
@@ -110,6 +110,36 @@ describe("buildGalleryTree featured (superlative, not 5×F1)", () => {
     ];
     const feat = buildGalleryTree(s).featured.find((x) => x.country === "mexico");
     expect(feat?.category).toBe("F4"); // 30 yr backlog beats 2 yr
+  });
+});
+
+describe("forecastToCsv", () => {
+  it("emits a header + one row per forecast point, columns in order", () => {
+    const csv = forecastToCsv("mexico|F4|FAD", fc.slice(0, 2));
+    const lines = csv.trim().split("\n");
+    expect(lines[0]).toBe("series,date,days,lo80,hi80,lo95,hi95");
+    expect(lines).toHaveLength(3); // header + 2 points
+    expect(lines[1]).toBe(`mexico|F4|FAD,${fc[0].date},${fc[0].days},${fc[0].lo80},${fc[0].hi80},${fc[0].lo95},${fc[0].hi95}`);
+  });
+});
+
+describe("buildBasketCompare", () => {
+  const p = buildPanel(PANEL_CSV);
+  it("overlays 2+ arbitrary dated series as a multiline spec", () => {
+    const spec = buildBasketCompare(p, [
+      { country: "mexico", category: "F1", table: "FAD" },
+      { country: "china", category: "EB5", table: "FAD" },
+    ], "es");
+    expect(spec?.kind).toBe("multiline");
+    expect(spec && spec.kind === "multiline" ? spec.series.length : 0).toBe(2);
+  });
+  it("returns null with fewer than 2 dated series", () => {
+    expect(buildBasketCompare(p, [{ country: "mexico", category: "F1", table: "FAD" }], "es")).toBeNull();
+    // india EB2 is Current (no priority date) → not enough dated series
+    expect(buildBasketCompare(p, [
+      { country: "india", category: "EB2", table: "FAD" },
+      { country: "mexico", category: "F1", table: "FAD" },
+    ], "es")).toBeNull();
   });
 });
 

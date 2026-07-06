@@ -368,8 +368,8 @@ export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lan
   // Pass both through verbatim (do NOT re-label the production model as "illustrative").
   const acc = spec.note ? ` ${spec.note}` : "";
   return lang === "en"
-    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${h}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95% band [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the 12 months shown, say so frankly and give a rough pace-based estimate with its uncertainty. Frame it as an aggregate statistical forecast, not legal advice — but DO give the estimate.`
-    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${h} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los 12 meses mostrados, dilo con franqueza y da una estimación aproximada por el ritmo, con su incertidumbre. Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la estimación.`;
+    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${h}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95% band [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the ${h} months shown, say so frankly and give a rough pace-based estimate with its uncertainty. Frame it as an aggregate statistical forecast, not legal advice — but DO give the estimate.`
+    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${h} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los ${h} meses mostrados, dilo con franqueza y da una estimación aproximada por el ritmo, con su incertidumbre. Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la estimación.`;
 }
 
 // Generic note for the non-table charts so the LLM complements the visual.
@@ -422,6 +422,37 @@ export function buildMultiLine(panel: Panel, category: string, table: string, la
     kind: "multiline",
     title: lang === "en" ? `Priority-date race · ${category} · ${table}` : `Carrera de fechas · ${category} · ${table}`,
     subtitle: lang === "en" ? "Each line is a country's priority date over time — who advances fastest" : "Cada línea es la fecha de prioridad de un país en el tiempo — quién avanza más rápido",
+    yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
+    series, data,
+  };
+}
+
+// Overlay an ARBITRARY set of series (any country/category/table mix) — the
+// user's compare basket. Each line is one series' priority date over time; the
+// multiline renderer colours by index, so composite keys are fine.
+export function buildBasketCompare(
+  panel: Panel, items: { country: string; category: string; table: string }[], lang: Lang, index?: PanelIndex,
+): ChartSpec | null {
+  const byMonth = new Map<string, Record<string, number | string | null>>();
+  const series: { key: string; label: string }[] = [];
+  for (const it of items) {
+    const key = `${it.country}|${it.category}|${it.table}`;
+    if (series.some((s) => s.key === key)) continue;
+    const rows = (index?.get(key) ?? panel.rows.filter((r) => r.country === it.country && r.category === it.category && r.table === it.table)).filter((r) => r.priorityDate);
+    if (!rows.length) continue;
+    series.push({ key, label: `${countryLabel(it.country, lang)} · ${it.category} · ${it.table}` });
+    for (const r of rows) {
+      let row = byMonth.get(r.bulletinMonth);
+      if (!row) { row = { month: r.bulletinMonth }; byMonth.set(r.bulletinMonth, row); }
+      row[key] = pdYear(r.priorityDate as string);
+    }
+  }
+  if (series.length < 2) return null;
+  const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  return {
+    kind: "multiline",
+    title: lang === "en" ? "Compare basket · priority dates" : "Cesta de comparación · fechas de prioridad",
+    subtitle: lang === "en" ? "Each line is a pinned series' priority date over time — who advances fastest" : "Cada línea es la fecha de prioridad de una serie fijada — quién avanza más rápido",
     yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
     series, data,
   };

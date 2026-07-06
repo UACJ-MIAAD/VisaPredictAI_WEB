@@ -8,6 +8,7 @@
 // panel + the pre-generated forecasts. Every count is derived (regla #0); nothing
 // references anything outside the visa domain.
 import * as React from "react";
+import { Rows2, Rows3, Layers } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
@@ -22,6 +23,7 @@ import {
 } from "@/lib/visabot/gallery";
 import { ForecastCard } from "./forecast-card";
 import { ForecastLightbox } from "./forecast-lightbox";
+import { BasketCompare } from "./basket-compare";
 
 function Select({ label, value, onChange, options }: {
   label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[];
@@ -39,10 +41,11 @@ function Select({ label, value, onChange, options }: {
 
 // One collapsible tier group (a country or a category) → grid of cards, mounted
 // only while open so sparklines don't compute for collapsed groups.
-function TierGroup({ id, title, count, open, onToggle, series, panel, forecasts, index, terciles, onOpen }: {
+function TierGroup({ id, title, count, open, onToggle, series, panel, forecasts, index, terciles, dense, pinnedSet, onPin, onOpen }: {
   id: string; title: React.ReactNode; count: number; open: boolean; onToggle: (open: boolean) => void;
   series: GallerySeries[]; panel: Panel; forecasts: ForecastStore | null; index: PanelIndex | null;
-  terciles: { t1: number; t2: number } | null; onOpen: (s: GallerySeries) => void;
+  terciles: { t1: number; t2: number } | null; dense: boolean; pinnedSet: Set<string>;
+  onPin: (key: string) => void; onOpen: (s: GallerySeries) => void;
 }) {
   const { lang } = useLang();
   return (
@@ -55,7 +58,7 @@ function TierGroup({ id, title, count, open, onToggle, series, panel, forecasts,
       </summary>
       {open && (
         <div className="grid grid-cols-1 gap-2 border-t border-border p-3 sm:grid-cols-2" id={id}>
-          {series.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={() => onOpen(s)} />)}
+          {series.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinned={pinnedSet.has(s.key)} onPin={() => onPin(s.key)} onOpen={() => onOpen(s)} />)}
         </div>
       )}
     </details>
@@ -82,9 +85,27 @@ export function Resultados() {
   const [lightbox, setLightbox] = React.useState<number | null>(null);
   const [openCountry, setOpenCountry] = React.useState<Set<string>>(new Set());
   const [openCat, setOpenCat] = React.useState<Set<string>>(new Set());
+  const [basket, setBasket] = React.useState<string[]>([]); // pinned series keys (max 4)
+  const [basketOpen, setBasketOpen] = React.useState(false);
+  const [dense, setDense] = React.useState(false);
   // a series key parsed from the URL on first load, opened once data is ready
   const pendingSeries = React.useRef<string | null>(null);
   const hydrated = React.useRef(false);
+
+  const pinnedSet = React.useMemo(() => new Set(basket), [basket]);
+  const togglePin = React.useCallback((key: string) => {
+    setBasket((b) => (b.includes(key) ? b.filter((k) => k !== key) : b.length >= 4 ? b : [...b, key]));
+  }, []);
+
+  // density persists across visits (filters/sort live in the URL instead)
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.localStorage.getItem("vp-gallery-dense") === "1") setDense(true);
+  }, []);
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !hydrated.current) return;
+    window.localStorage.setItem("vp-gallery-dense", dense ? "1" : "0");
+  }, [dense]);
 
   // Panel index (built once) — feeds buildForecast per card and the derived
   // signals, so no card re-scans the whole panel (perf).
@@ -103,6 +124,9 @@ export function Resultados() {
   const tree = React.useMemo(() => buildGalleryTree(filtered), [filtered]);
   const idx = React.useMemo(() => { const m = new Map<string, number>(); filtered.forEach((s, i) => m.set(s.key, i)); return m; }, [filtered]);
   const openLightbox = (s: GallerySeries) => setLightbox(idx.get(s.key) ?? 0);
+  // resolve pinned keys → series (in pin order), dropping any no longer present
+  const byKey = React.useMemo(() => new Map(allSeries.map((s) => [s.key, s])), [allSeries]);
+  const basketItems = React.useMemo(() => basket.map((k) => byKey.get(k)).filter(Boolean) as GallerySeries[], [basket, byKey]);
 
   // ── deep-link: hydrate filters/sort + pending series from the URL on mount
   React.useEffect(() => {
@@ -114,6 +138,8 @@ export function Resultados() {
     if (p.get("q")) setQuery(p.get("q") as string);
     const s = p.get("sort");
     if (s && ["order", "mase", "backlog", "movement"].includes(s)) setSort(s as SortKey);
+    const pin = p.get("pin");
+    if (pin) setBasket(pin.split(",").filter(Boolean).slice(0, 4));
     const series = p.get("series");
     if (series) pendingSeries.current = series;
     hydrated.current = true;
@@ -136,10 +162,11 @@ export function Resultados() {
     if (fBlock) p.set("block", fBlock);
     if (query) p.set("q", query);
     if (sort !== "order") p.set("sort", sort);
+    if (basket.length) p.set("pin", basket.join(","));
     if (lightbox != null && filtered[lightbox]) p.set("series", filtered[lightbox].key);
     const qs = p.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
-  }, [fCountry, fTable, fBlock, query, sort, lightbox, filtered]);
+  }, [fCountry, fTable, fBlock, query, sort, basket, lightbox, filtered]);
 
   const nf = (n: number) => n.toLocaleString(localeOf(lang));
   const countries = React.useMemo(() => [...new Set(allSeries.map((s) => s.country))], [allSeries]);
@@ -174,6 +201,18 @@ export function Resultados() {
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" aria-hidden />
                 {tr(lang, "resMetaThrough")} <strong className="font-semibold text-[var(--color-ink)]">{summary.lastMonth ? monthLabel(summary.lastMonth, lang) : "—"}</strong>
               </span>
+              {/* freshness: forecasts vs the panel's latest bulletin (derived) */}
+              {(() => {
+                const panelMax = panel.monthRange?.[1] ?? null;
+                const stale = summary.lastMonth && panelMax && summary.lastMonth < panelMax;
+                return stale ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-accent-2)]/50 bg-[var(--color-accent-2)]/10 px-2.5 py-1 text-[0.72rem] text-[var(--color-muted)]">
+                    {tr(lang, "resStale").replace("{f}", monthLabel(summary.lastMonth as string, lang)).replace("{p}", monthLabel(panelMax as string, lang))}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-2.5 py-1 text-[0.72rem] text-[var(--color-success)]">✓ {tr(lang, "resFresh")}</span>
+                );
+              })()}
               {chip(tr(lang, "resMetaHorizon"), tr(lang, "resHorizonVal").replace("{n}", String(forecasts.horizonMonths)))}
               {forecasts.scorecard && Number.isFinite(forecasts.scorecard.overall?.mae_days) && (
                 <span title={tr(lang, "resScoreTip")}
@@ -218,7 +257,14 @@ export function Resultados() {
                   ))}
                 </div>
               </div>
-              <span className="ml-auto inline-flex items-center rounded-full bg-[var(--color-accent)] px-2.5 py-1 text-xs font-bold text-white tabular-nums">{nf(filtered.length)}</span>
+              <div className="ml-auto flex items-center gap-2">
+                <button onClick={() => setDense((d) => !d)} aria-pressed={dense}
+                  title={tr(lang, dense ? "resDensityComfy" : "resDensityCompact")} aria-label={tr(lang, "resDensity")}
+                  className="rounded-lg border border-border p-1.5 text-[var(--color-muted)] transition hover:text-[var(--color-ink)]">
+                  {dense ? <Rows3 className="h-4 w-4" aria-hidden /> : <Rows2 className="h-4 w-4" aria-hidden />}
+                </button>
+                <span className="inline-flex items-center rounded-full bg-[var(--color-accent)] px-2.5 py-1 text-xs font-bold text-white tabular-nums">{nf(filtered.length)}</span>
+              </div>
             </div>
 
             {/* tier-nav */}
@@ -227,6 +273,27 @@ export function Resultados() {
               <a href="#res-country" className="rounded-full border border-border px-3 py-1.5 text-muted-foreground transition hover:border-[var(--color-accent)] hover:text-foreground">⊞ {tr(lang, "resTierByCountry")} <span className="tabular-nums">{tree.byCountry.length}</span></a>
               <a href="#res-category" className="rounded-full border border-border px-3 py-1.5 text-muted-foreground transition hover:border-[var(--color-accent)] hover:text-foreground">◈ {tr(lang, "resTierByCategory")} <span className="tabular-nums">{tree.byCategory.length}</span></a>
             </div>
+
+            {/* compare basket — pin 2–4 series (📌 on any card) and overlay them */}
+            {basket.length > 0 && (
+              <div className="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/[0.06] p-3">
+                <span className="text-xs font-semibold text-[var(--color-ink)]">{tr(lang, "resBasket")}</span>
+                {basketItems.map((s) => (
+                  <button key={s.key} onClick={() => togglePin(s.key)} title={tr(lang, "resUnpin")}
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[0.7rem] text-[var(--color-ink)] hover:border-[var(--color-accent)]">
+                    {countryLabel(s.country, lang)} · {s.category} · {s.table} <span className="text-[var(--color-muted)]">✕</span>
+                  </button>
+                ))}
+                <span className="text-[0.66rem] text-[var(--color-muted)]">{basket.length >= 4 ? tr(lang, "resBasketFull") : tr(lang, "resBasketHint")}</span>
+                <div className="ml-auto flex items-center gap-2">
+                  <button onClick={() => setBasket([])} className="rounded-lg border border-border px-2.5 py-1 text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">{tr(lang, "resClearBasket")}</button>
+                  <button onClick={() => setBasketOpen(true)} disabled={basket.length < 2}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-bold text-white transition disabled:opacity-40">
+                    <Layers className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "resCompareN")} ({basket.length})
+                  </button>
+                </div>
+              </div>
+            )}
 
             {filtered.length === 0 ? (
               <div className="flex h-[160px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">{tr(lang, "resEmpty")}</div>
@@ -240,7 +307,7 @@ export function Resultados() {
                     <p className="text-[0.8rem] text-[var(--color-muted)]">{tr(lang, "resTierFeaturedSub")}</p>
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {tree.featured.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={() => openLightbox(s)} />)}
+                    {tree.featured.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinned={pinnedSet.has(s.key)} onPin={() => togglePin(s.key)} onOpen={() => openLightbox(s)} />)}
                   </div>
                 </div>
 
@@ -261,7 +328,7 @@ export function Resultados() {
                     {tree.byCountry.map((g) => (
                       <TierGroup key={g.country} id={`res-c-${g.country}`} title={countryLabel(g.country, lang)} count={g.series.length}
                         open={openCountry.has(g.country)} onToggle={(o) => setOpenCountry((s) => { const n = new Set(s); if (o) n.add(g.country); else n.delete(g.country); return n; })}
-                        series={g.series} panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={openLightbox} />
+                        series={g.series} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinnedSet={pinnedSet} onPin={togglePin} onOpen={openLightbox} />
                     ))}
                   </div>
                 </div>
@@ -283,7 +350,7 @@ export function Resultados() {
                     {tree.byCategory.map((g) => (
                       <TierGroup key={g.category} id={`res-cat-${g.category}`} title={<>{g.category} <span className="text-[0.66rem] font-normal text-[var(--color-muted)]">· {blockLabel(g.block, lang)}</span></>} count={g.series.length}
                         open={openCat.has(g.category)} onToggle={(o) => setOpenCat((s) => { const n = new Set(s); if (o) n.add(g.category); else n.delete(g.category); return n; })}
-                        series={g.series} panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={openLightbox} />
+                        series={g.series} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinnedSet={pinnedSet} onPin={togglePin} onOpen={openLightbox} />
                     ))}
                   </div>
                 </div>
@@ -297,6 +364,10 @@ export function Resultados() {
         {lightbox != null && panel && filtered[lightbox] && (
           <ForecastLightbox series={filtered} index={lightbox} panel={panel} forecasts={forecasts} panelIndex={index}
             onIndex={setLightbox} onClose={() => setLightbox(null)} />
+        )}
+
+        {basketOpen && panel && basketItems.length >= 2 && (
+          <BasketCompare items={basketItems} panel={panel} panelIndex={index} onClose={() => setBasketOpen(false)} />
         )}
       </div>
     </section>

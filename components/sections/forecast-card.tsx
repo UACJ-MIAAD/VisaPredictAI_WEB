@@ -5,7 +5,7 @@
 // Clicking opens the lightbox (where the full Recharts fan chart mounts), so no
 // heavy chart renders per card — the whole grid stays light.
 import * as React from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Pin } from "lucide-react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { countryLabel } from "@/lib/data/visa-panel";
@@ -48,12 +48,15 @@ export function Sparkline({ data, w = 128, h = 34 }: { data: SparkPoint[]; w?: n
   );
 }
 
-export function ForecastCard({ series, panel, forecasts, index, terciles, onOpen }: {
+export function ForecastCard({ series, panel, forecasts, index, terciles, dense, pinned, onPin, onOpen }: {
   series: GallerySeries;
   panel: Panel;
   forecasts: ForecastStore | null;
   index?: PanelIndex | null;
   terciles?: { t1: number; t2: number } | null;
+  dense?: boolean;
+  pinned?: boolean;
+  onPin?: () => void;
   onOpen: () => void;
 }) {
   const { lang } = useLang();
@@ -69,36 +72,43 @@ export function ForecastCard({ series, panel, forecasts, index, terciles, onOpen
   const tier = maseTier(series.mase, terciles ?? null);
   const tierColor = tier === "good" ? "var(--color-success)" : tier === "weak" ? "var(--color-danger)" : "var(--color-accent-2)";
   const mv = series.movementPerYear;
+  const pad = dense ? "p-2" : "p-3";
   return (
-    <button
-      onClick={onOpen}
-      className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-border bg-card p-3 text-left transition hover:border-[var(--color-accent)] hover:shadow-sm"
-    >
-      <span className="w-1 shrink-0 self-stretch rounded-full" style={{ background: tint }} aria-hidden />
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-serif text-sm font-semibold text-[var(--color-ink)]">
-          {countryLabel(series.country, lang)} · {series.category} · {series.table}
+    <div className={`group flex w-full min-w-0 items-stretch overflow-hidden rounded-xl border bg-card text-left transition hover:shadow-sm ${pinned ? "border-[var(--color-accent)]" : "border-border hover:border-[var(--color-accent)]"}`}>
+      <button onClick={onOpen} aria-label={`${countryLabel(series.country, lang)} · ${series.category} · ${series.table}`}
+        className={`flex min-w-0 flex-1 items-center gap-3 text-left ${pad}`}>
+        <span className="w-1 shrink-0 self-stretch rounded-full" style={{ background: tint }} aria-hidden />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-serif text-sm font-semibold text-[var(--color-ink)]">
+            {countryLabel(series.country, lang)} · {series.category} · {series.table}
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.66rem] text-[var(--color-muted)]">
+            {series.mase != null && (
+              <span className="inline-flex items-center gap-1 tabular-nums">
+                {tier && <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: tierColor }} aria-hidden />}
+                MASE {series.mase.toFixed(3)}
+              </span>
+            )}
+            {series.backlogYears != null && (
+              <span className="tabular-nums">· {series.backlogYears.toFixed(1)} {tr(lang, "resYr")} {tr(lang, "resWait")}</span>
+            )}
+            {mv != null && Math.abs(mv) >= 1 && (
+              <span className="tabular-nums font-medium" style={{ color: mv >= 0 ? "var(--color-success)" : "var(--color-danger)" }}>
+                {mv >= 0 ? "▲" : "▼"} {Math.abs(Math.round(mv))} {tr(lang, "resPerYear")}
+              </span>
+            )}
+            {series.models.length > 0 && <span className="truncate">{series.models.join("+")}</span>}
+          </div>
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.66rem] text-[var(--color-muted)]">
-          {series.mase != null && (
-            <span className="inline-flex items-center gap-1 tabular-nums">
-              {tier && <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: tierColor }} aria-hidden />}
-              MASE {series.mase.toFixed(3)}
-            </span>
-          )}
-          {series.backlogYears != null && (
-            <span className="tabular-nums">· {series.backlogYears.toFixed(1)} {tr(lang, "resYr")} {tr(lang, "resWait")}</span>
-          )}
-          {mv != null && Math.abs(mv) >= 1 && (
-            <span className="tabular-nums font-medium" style={{ color: mv >= 0 ? "var(--color-success)" : "var(--color-danger)" }}>
-              {mv >= 0 ? "▲" : "▼"} {Math.abs(Math.round(mv))} {tr(lang, "resPerYear")}
-            </span>
-          )}
-          {series.models.length > 0 && <span className="truncate">{series.models.join("+")}</span>}
-        </div>
-      </div>
-      {spark && spark.kind === "forecast" ? <Sparkline data={spark.data} /> : <span className="text-[0.6rem] text-[var(--color-muted)]">—</span>}
-      <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-muted)] transition group-hover:text-[var(--color-accent)]" aria-hidden />
-    </button>
+        {!dense && (spark && spark.kind === "forecast" ? <Sparkline data={spark.data} /> : <span className="text-[0.6rem] text-[var(--color-muted)]">—</span>)}
+        <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-muted)] transition group-hover:text-[var(--color-accent)]" aria-hidden />
+      </button>
+      {onPin && (
+        <button onClick={onPin} aria-pressed={!!pinned} title={tr(lang, pinned ? "resUnpin" : "resPin")} aria-label={tr(lang, pinned ? "resUnpin" : "resPin")}
+          className={`flex shrink-0 items-center border-l border-border px-2 transition ${pinned ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}>
+          <Pin className="h-3.5 w-3.5" fill={pinned ? "currentColor" : "none"} aria-hidden />
+        </button>
+      )}
+    </div>
   );
 }
