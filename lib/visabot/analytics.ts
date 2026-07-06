@@ -65,7 +65,7 @@ export type ChartSpec =
   | { kind: "compare"; title: string; subtitle: string; data: { country: string; label: string; years: number | null; date: string | null }[] }
   | { kind: "movement"; title: string; subtitle: string; data: { month: string; movement: number }[] }
   | { kind: "status"; title: string; subtitle: string; data: { name: string; value: number; color: string }[] }
-  | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[] }
+  | { kind: "multiline"; title: string; subtitle: string; yLabel: string; series: { key: string; label: string }[]; data: Record<string, number | string | null>[]; hasForecast?: boolean }
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
   | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string; fallback?: boolean;
@@ -405,25 +405,54 @@ export function buildStatus(panel: Panel, lang: Lang, filter?: Partial<Pick<Visa
 }
 
 // multi-country priority-date race for a category/table (one line per country)
-export function buildMultiLine(panel: Panel, category: string, table: string, lang: Lang): ChartSpec | null {
+export function buildMultiLine(panel: Panel, category: string, table: string, lang: Lang, forecasts?: ForecastStore | null): ChartSpec | null {
   const byMonth = new Map<string, Record<string, number | string | null>>();
   const present = new Set<string>();
+  // last F history row per country → anchors that country's forecast baseline.
+  const lastF = new Map<string, { priorityDate: string; daysSinceBase: number; bulletinMonth: string }>();
   for (const r of panel.rows) {
     if (r.category !== category || r.table !== table || !PILOT.includes(r.country) || !r.priorityDate) continue;
     let row = byMonth.get(r.bulletinMonth);
     if (!row) { row = { month: r.bulletinMonth }; byMonth.set(r.bulletinMonth, row); }
     row[r.country] = pdYear(r.priorityDate);
+    row[`${r.country}__d`] = r.priorityDate; // real date for the tooltip (not the fractional year)
     present.add(r.country);
+    if (r.status === "F" && r.daysSinceBase != null) lastF.set(r.country, { priorityDate: r.priorityDate, daysSinceBase: r.daysSinceBase, bulletinMonth: r.bulletinMonth });
   }
-  const series = PILOT.filter((c) => present.has(c)).map((c) => ({ key: c, label: countryLabel(c) }));
+  const series = PILOT.filter((c) => present.has(c)).map((c) => ({ key: c, label: countryLabel(c, lang) }));
   if (series.length < 2) return null;
+
+  // Forecast continuation per country: a dashed same-colour line beyond each
+  // country's OWN last history point (real production-model forecast, same maths
+  // as buildForecast). Keys `${c}__fc` (value) / `${c}__fcd` (date).
+  let hasForecast = false;
+  if (forecasts) {
+    for (const { key: c } of series) {
+      const fc = forecastFor(forecasts, c, category, table);
+      const lf = lastF.get(c);
+      if (!fc?.length || !lf) continue;
+      const baseEpoch = isoDays(lf.priorityDate) - lf.daysSinceBase;
+      const seed = byMonth.get(lf.bulletinMonth);
+      if (seed) { seed[`${c}__fc`] = seed[c]; seed[`${c}__fcd`] = seed[`${c}__d`]; } // connect the dash to history
+      for (const p of fc) {
+        const mo = p.date.slice(0, 7);
+        let row = byMonth.get(mo);
+        if (!row) { row = { month: mo }; byMonth.set(mo, row); }
+        row[`${c}__fc`] = epochToYear(baseEpoch + p.days);
+        row[`${c}__fcd`] = epochToDate(baseEpoch + p.days);
+      }
+      hasForecast = true;
+    }
+  }
   const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
   return {
     kind: "multiline",
     title: lang === "en" ? `Priority-date race · ${category} · ${table}` : `Carrera de fechas · ${category} · ${table}`,
-    subtitle: lang === "en" ? "Each line is a country's priority date over time — who advances fastest" : "Cada línea es la fecha de prioridad de un país en el tiempo — quién avanza más rápido",
+    subtitle: lang === "en"
+      ? "Each line is a country's priority date over time (dashed = forecast) — who advances fastest"
+      : "Cada línea es la fecha de prioridad de un país en el tiempo (punteado = pronóstico) — quién avanza más rápido",
     yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
-    series, data,
+    series, data, hasForecast,
   };
 }
 
@@ -445,6 +474,7 @@ export function buildBasketCompare(
       let row = byMonth.get(r.bulletinMonth);
       if (!row) { row = { month: r.bulletinMonth }; byMonth.set(r.bulletinMonth, row); }
       row[key] = pdYear(r.priorityDate as string);
+      row[`${key}__d`] = r.priorityDate as string; // real date for the tooltip
     }
   }
   if (series.length < 2) return null;
