@@ -43,9 +43,10 @@ flowchart TD
         ANTE["/anteproyecto · Cap I–IV · Tablas · Reproducibilidad"]
         ING["/ingenieria · Datos · EDA · FE · MLOps · Estructura · Modelo"]
         DAT["/datos-historicos · Boletines · Pronóstico · Explorador · Scorecard"]
+        RES["/resultados · Galería de pronósticos (89 series) · filtros · lightbox"]
         REC["/recursos · Descargas · Glosario · Referencias"]
     end
-    SHELL --> HOME & ANTE & ING & DAT & REC
+    SHELL --> HOME & ANTE & ING & DAT & RES & REC
 
     subgraph CONTENT["📚 Contenido"]
         SH["SectionHTML (server)<br/>elige ES/EN → 0 JS al cliente"]
@@ -149,6 +150,7 @@ navegador**; solo la generación pasa por una función.
 | `/anteproyecto` | Capítulos I–IV · Tablas · Reproducibilidad | ~111 kB |
 | `/ingenieria` | Panel · EDA · FE · MLOps · Estructura · Modelo de datos | ~151 kB |
 | `/datos-historicos` | Boletines en vivo · pronóstico por categoría · explorador · scorecard prospectivo | ~249 kB |
+| `/resultados` | Galería de pronósticos (89 series) · filtros · tarjetas sparkline · lightbox (fan-chart, comparación) | — |
 | `/recursos` | Descargas · Glosario · Referencias IEEE | ~151 kB |
 
 ## Desarrollo
