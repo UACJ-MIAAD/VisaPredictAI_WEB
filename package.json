@@ -21,7 +21,8 @@
     "typecheck": "tsc --noEmit",
     "pretest": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\"",
     "test": "vitest run",
-    "guard:test": "node scripts/test-code-guard.mjs"
+    "guard:test": "node scripts/test-code-guard.mjs",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
@@ -46,6 +47,7 @@
     "@types/node": "^22.13.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^9.20.0",
     "eslint-config-next": "^15.2.0",
     "netlify-plugin-cache": "^1.0.3",
