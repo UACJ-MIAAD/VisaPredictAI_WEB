@@ -76,3 +76,4 @@ public/rag/
 netlify/functions/rag-hashes.json
 public/models/
 public/ort/
+.fetch-staging/

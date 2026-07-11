@@ -1,15 +1,29 @@
-// Pull the latest panel + production-model forecasts from the data repo at BUILD
-// time, so every deploy reflects the current bulletin without a manual copy. The
-// data repo's weekly Action regenerates these on a new bulletin and pings a
-// Netlify build hook → this runs → the site ships fresh data.
+// Pull the data-repo cut for this deploy. B2 (plan auditoría 2026-07-11): the loader
+// consumes the data repo's RELEASE MANIFEST (B1) — every artifact is downloaded to a
+// staging dir, verified against its SHA-256/size, and only when every critical and
+// required artifact of the SAME release_id verifies does the set swap into
+// public/data/. The site never bakes a mix of two cuts: any blocking failure keeps the
+// previous cut whole (status "stale"). The old per-file fetch survives as the legacy
+// dual-read path (manifest unavailable, or FETCH_LEGACY=1 to force the rollback), and
+// /data/release-state.json ships the outcome (fresh | stale | incompatible | legacy).
 //
-// The committed files in public/data/ are the fallback: if GitHub raw hiccups,
-// we keep whatever is already there (the panel is critical; forecasts optional).
-import { writeFile, readFile, access, mkdir, stat } from "node:fs/promises";
-import { join } from "node:path";
+// The committed files in public/data/ remain the last-resort fallback: if GitHub raw
+// hiccups entirely, the build keeps whatever is already there (panel critical).
+import { writeFile, readFile, access, mkdir, stat, rename, rm } from "node:fs/promises";
+import { join, dirname } from "node:path";
 
 import { DATA_REPO_RAW as RAW } from "../lib/repo.mjs";
+import {
+  MANIFEST_PATH,
+  SUPPORTED_SCHEMA,
+  consumedEntries,
+  planSwap,
+  releaseState,
+  verifyEntry,
+} from "../lib/release.mjs";
+
 const OUT = join(process.cwd(), "public", "data");
+const STAGING = join(process.cwd(), ".fetch-staging");
 const FILES = [
   { url: `${RAW}/data/processed/visa_panel_long.csv`, out: "visa_panel_long.csv", critical: true },
   // AZ8b — the live-bulletins feed, mirrored at build time so the Boletines
@@ -68,42 +82,140 @@ const exists = async (p) => access(p).then(() => true).catch(() => false);
 // variants yet — first run over the committed fallbacks).
 const pngChanged = new Set();
 
-let fresh = 0;
-for (const f of FILES) {
-  const dest = join(OUT, f.out);
-  try {
-    // L5: cache-buster — raw.githubusercontent sits behind a ~5-min CDN and the
-    // Netlify hook fires seconds after the data repo's push, so a build could
-    // bake the PRE-push panel and stay a month stale until the next bulletin.
-    // A unique query string forces a cache miss (the CDN keys on the full URL).
-    const r = await fetch(`${f.url}?nocache=${Date.now()}`, { redirect: "follow" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const body = Buffer.from(await r.arrayBuffer());
-    if (body.length < 32) throw new Error(`suspiciously small (${body.length}B)`);
-    // audit L1: a 200-but-corrupt body must NOT overwrite the good committed
-    // fallback — probe by content type before writing.
-    if (dest.endsWith(".json")) JSON.parse(body.toString("utf8"));
-    if (dest.endsWith(".png") && !(body[0] === 0x89 && body[1] === 0x50)) throw new Error("not a PNG");
-    if (dest.endsWith(".pdf") && body.subarray(0, 5).toString() !== "%PDF-") throw new Error("not a PDF");
-    if (dest.endsWith(".png")) {
-      const prev = await readFile(dest).catch(() => null);
-      if (!prev || !prev.equals(body)) pngChanged.add(f.out);
-    }
-    await writeFile(dest, body);
-    fresh++;
-    console.log(`  ✓ ${f.out} ← data repo (${(body.length / 1024).toFixed(0)} kB)`);
-  } catch (e) {
-    if (await exists(dest)) {
-      console.warn(`  ! ${f.out}: fetch failed (${e.message}) → keeping committed fallback`);
-    } else if (f.critical) {
-      console.error(`  ✗ ${f.out}: fetch failed and no fallback present — failing build`);
-      process.exit(1);
-    } else {
-      console.warn(`  ! ${f.out}: fetch failed (${e.message}), no fallback — the browser drift baseline will cover forecasts`);
+// L5: cache-buster — raw.githubusercontent sits behind a ~5-min CDN and the
+// Netlify hook fires seconds after the data repo's push, so a build could
+// bake the PRE-push cut and stay a month stale until the next bulletin.
+// A unique query string forces a cache miss (the CDN keys on the full URL).
+async function fetchBuf(url) {
+  const r = await fetch(`${url}?nocache=${Date.now()}`, { redirect: "follow" });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return Buffer.from(await r.arrayBuffer());
+}
+
+// Legacy dual-read path (pre-B2 behavior, kept verbatim): per-file fetch with
+// content probes and committed fallbacks. Used when the manifest is unavailable
+// or when FETCH_LEGACY=1 forces the rollback. Unverified against any release.
+async function legacyFetch() {
+  let fresh = 0;
+  for (const f of FILES) {
+    const dest = join(OUT, f.out);
+    try {
+      const body = await fetchBuf(f.url);
+      if (body.length < 32) throw new Error(`suspiciously small (${body.length}B)`);
+      // audit L1: a 200-but-corrupt body must NOT overwrite the good committed
+      // fallback — probe by content type before writing.
+      if (dest.endsWith(".json")) JSON.parse(body.toString("utf8"));
+      if (dest.endsWith(".png") && !(body[0] === 0x89 && body[1] === 0x50)) throw new Error("not a PNG");
+      if (dest.endsWith(".pdf") && body.subarray(0, 5).toString() !== "%PDF-") throw new Error("not a PDF");
+      if (dest.endsWith(".png")) {
+        const prev = await readFile(dest).catch(() => null);
+        if (!prev || !prev.equals(body)) pngChanged.add(f.out);
+      }
+      await writeFile(dest, body);
+      fresh++;
+      console.log(`  ✓ ${f.out} ← data repo (${(body.length / 1024).toFixed(0)} kB)`);
+    } catch (e) {
+      if (await exists(dest)) {
+        console.warn(`  ! ${f.out}: fetch failed (${e.message}) → keeping committed fallback`);
+      } else if (f.critical) {
+        console.error(`  ✗ ${f.out}: fetch failed and no fallback present — failing build`);
+        process.exit(1);
+      } else {
+        console.warn(`  ! ${f.out}: fetch failed (${e.message}), no fallback — the browser drift baseline will cover forecasts`);
+      }
     }
   }
+  console.log(`fetch-data: ${fresh}/${FILES.length} refreshed from the data repo (legacy path)`);
+  return fresh;
 }
-console.log(`fetch-data: ${fresh}/${FILES.length} refreshed from the data repo`);
+
+// Manifest path: staging → verify everything → atomic swap (or keep the previous cut).
+async function manifestFetch(manifest) {
+  const entries = consumedEntries(manifest);
+  await rm(STAGING, { recursive: true, force: true });
+  await mkdir(STAGING, { recursive: true });
+  const results = new Map();
+  const queue = [...entries];
+  await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      for (let e = queue.shift(); e; e = queue.shift()) {
+        try {
+          const body = await fetchBuf(`${RAW}/${e.path}`);
+          const ok = verifyEntry(e, body);
+          if (ok !== true) throw new Error(ok);
+          const staged = join(STAGING, e.out);
+          await mkdir(dirname(staged), { recursive: true });
+          await writeFile(staged, body);
+          results.set(e.out, true);
+        } catch (err) {
+          results.set(e.out, err.message);
+        }
+      }
+    }),
+  );
+  const plan = planSwap(entries, results);
+  if (!plan.swap) {
+    console.warn(`fetch-data: NO swap — ${plan.reason}; the previous cut stays whole`);
+    await rm(STAGING, { recursive: true, force: true });
+    return releaseState({ status: "stale", manifest, reason: plan.reason, missingOptional: plan.missingOptional });
+  }
+  let swapped = 0;
+  for (const e of entries) {
+    if (results.get(e.out) !== true) continue; // failed optional — old fallback stays
+    const dest = join(OUT, e.out);
+    if (e.out.endsWith(".png")) {
+      const prev = await readFile(dest).catch(() => null);
+      const next = await readFile(join(STAGING, e.out));
+      if (!prev || !prev.equals(next)) pngChanged.add(e.out);
+    }
+    await mkdir(dirname(dest), { recursive: true });
+    await rename(join(STAGING, e.out), dest);
+    swapped++;
+  }
+  await rm(STAGING, { recursive: true, force: true });
+  for (const m of plan.missingOptional) console.warn(`  ! optional degraded: ${m}`);
+  console.log(`fetch-data: release ${manifest.release_id} verified → atomic swap (${swapped} files)`);
+  return releaseState({ status: "fresh", manifest, missingOptional: plan.missingOptional });
+}
+
+let state;
+if (process.env.FETCH_LEGACY === "1") {
+  await legacyFetch();
+  state = releaseState({ status: "legacy", reason: "FETCH_LEGACY=1 (forced rollback to per-file fetch)" });
+} else {
+  let manifest = null;
+  try {
+    manifest = JSON.parse((await fetchBuf(`${RAW}/${MANIFEST_PATH}`)).toString("utf8"));
+  } catch (e) {
+    console.warn(`fetch-data: release manifest unavailable (${e.message}) → legacy per-file fetch`);
+  }
+  if (manifest && manifest.schema_version !== SUPPORTED_SCHEMA) {
+    // A manifest from the future: this loader cannot verify it. Keep the previous
+    // cut whole and say so — upgrading the loader is the fix, not guessing.
+    console.error(
+      `fetch-data: manifest schema_version ${manifest.schema_version} != supported ${SUPPORTED_SCHEMA} — keeping previous cut`,
+    );
+    state = releaseState({
+      status: "incompatible",
+      manifest,
+      reason: `manifest schema_version ${manifest.schema_version}, loader supports ${SUPPORTED_SCHEMA}`,
+    });
+  } else if (manifest) {
+    state = await manifestFetch(manifest);
+  } else {
+    const n = await legacyFetch();
+    state = releaseState({ status: "stale", reason: `manifest unavailable — legacy per-file fetch (${n} refreshed, unverified)` });
+  }
+}
+
+// Last-resort guard (unchanged contract): the panel must exist on disk — verified
+// swap, previous cut or committed fallback — or the site cannot build.
+if (!(await exists(join(OUT, "visa_panel_long.csv")))) {
+  console.error("fetch-data: panel missing and no fallback present — failing build");
+  process.exit(1);
+}
+await writeFile(join(OUT, "release-state.json"), JSON.stringify(state, null, 2) + "\n");
+console.log(`fetch-data: release-state → ${state.status}${state.release_id ? ` (${state.release_id})` : ""}`);
 
 // ── figure dimensions (audit: stop trusting hardcoded pixel dims) ───────────
 // Probe every gallery PNG actually on disk (fresh fetch or committed fallback)
