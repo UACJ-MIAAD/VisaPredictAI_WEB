@@ -120,6 +120,8 @@ const S = {
     en: "VisaPredict AI project site · Thesis proposal for the Master's in Artificial Intelligence and Data Analytics (MIAAD) at the Autonomous University of Ciudad Juárez.",
   },
   footerExternal: { es: "Externos", en: "External" },
+  // H3: provenance visible del corte servido (release-state.json es la versión máquina)
+  footerRelease: { es: "Corte de datos:", en: "Data cut:" },
 
   // nav / menu
   menu: { es: "Navegación", en: "Navigation" },
