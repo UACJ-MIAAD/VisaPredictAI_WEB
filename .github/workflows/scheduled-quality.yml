@@ -1,0 +1,56 @@
+# G2 (plan auditoría 2026-07-11): la suite COMPLETA de calidad RAG + seguridad de
+# dependencias, programada (el PR lleva el subset barato: code-guard + check-eval-sets
+# + build offline). Este workflow NO usa ningún secreto: el índice se construye desde
+# fuentes públicas y el audit lee el lockfile.
+name: Scheduled quality
+
+on:
+  schedule:
+    - cron: "17 14 * * 1"  # lunes ~08:17 CDMX — tras el watchdog del repo de datos
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Índice RAG REAL (descarga el modelo de embeddings, cacheado) + gate de retrieval
+  # por estrato: recall@6, MRR, gloss@1, acad@6, flagship y bm25-only (pre-consent).
+  rag-full-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809  # v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            node_modules/.cache
+          key: hf-e5-small-${{ runner.os }}
+      - run: npm ci
+      - name: Build the real RAG index (embeddings incluidos)
+        run: node scripts/build-rag-index.mjs
+      - name: Retrieval gate por estrato
+        run: npm run rag:gate
+      - name: Sets de evaluación (versión + estructura)
+        run: node scripts/check-eval-sets.mjs
+
+  # Supply chain (runtime deps): falla en high/critical; los moderados se reportan y
+  # viven triados con SLA en docs/SECURITY_TRIAGE.md. PROHIBIDO el auto-fix --force
+  # (propone downgrades destructivos, p. ej. next@9).
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Audit (gate en high/critical; moderados reportados)
+        run: |
+          npm audit --omit=dev || true
+          npm audit --omit=dev --audit-level=high
