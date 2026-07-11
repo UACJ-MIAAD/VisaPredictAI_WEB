@@ -15,7 +15,7 @@
     "dev": "next dev",
     "build": "next build",
     "postbuild": "node scripts/build-csp.mjs",
-    "build:offline": "FETCH_OFFLINE=1 node scripts/fetch-data.mjs && node scripts/build-stats.mjs && node scripts/extract-content.mjs && next build && node scripts/build-csp.mjs && node scripts/verify-build.mjs",
+    "build:offline": "FETCH_OFFLINE=1 node scripts/fetch-data.mjs && node scripts/build-stats.mjs && node scripts/extract-content.mjs && next build && node scripts/build-csp.mjs && node scripts/verify-build.mjs && node scripts/check-budgets.mjs",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",

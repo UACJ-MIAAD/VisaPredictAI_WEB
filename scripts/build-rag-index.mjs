@@ -516,11 +516,22 @@ function copyOrtWasm() {
   writeFileSync(join(outDir, "suggestions.json"), JSON.stringify(suggestions, null, 0));
   writeFileSync(join(outDir, "prompts.json"), JSON.stringify(buildPrompts(), null, 0));
 
+  // F4: corpus STALE jamás se indexa — la añada del feed debe existir; un índice
+  // construido sin boletín vivo serviría respuestas de un corte fantasma.
+  if (!latestMonth) throw new Error("F4: corpus sin latest_month (bulletins.json no cargó) — índice stale, se aborta");
+
   // Build manifest — `built` is the ONLY field read programmatically (the
   // deploy-freshness smoke waits for it to advance); the rest is an inspectable
   // heartbeat (curl /rag/meta.json). NOT for the console — that reads
   // suggestions.json / prompts.json (audit r4: dropped the dead byKind loop and
   // the misleading "for the assistant console" claim).
+  // F4 (plan auditoría 2026-07-11): campos de GOBERNANZA aditivos — el manifiesto
+  // declara chunking, cuantización, la huella completa de recuperación (importada de
+  // retrieval-core: única fuente) y las versiones por hash de los sets de evaluación,
+  // para que cada índice publicado sea auditable de punta a punta.
+  const { createHash: sha } = await import("node:crypto");
+  const setVersion = (f) => sha("sha256").update(readFileSync(join(root, "scripts", f))).digest("hex").slice(0, 12);
+  const { BM25_K1, BM25_B, RRF_K, POOL, MMR_LAMBDA } = await import("../lib/visabot/retrieval-core.mjs");
   writeFileSync(
     join(outDir, "meta.json"),
     JSON.stringify({
@@ -531,6 +542,16 @@ function copyOrtWasm() {
       sources: new Set(chunks.map((c) => c.source)).size,
       langs: [...new Set(chunks.map((c) => c.lang))],
       latestMonth,
+      governance: {
+        quantization: "q8",
+        chunking: { chars: CHUNK_CHARS, overlap: CHUNK_OVERLAP },
+        retrieval: { bm25_k1: BM25_K1, bm25_b: BM25_B, rrf_k: RRF_K, pool: POOL, mmr_lambda: MMR_LAMBDA },
+        eval_sets: {
+          retrieval: setVersion("rag-eval-set.json"),
+          injection: setVersion("rag-injection-set.json"),
+        },
+        generation: "netlify/functions/chat.mjs (proveedor+prompt+allowlist+fallback extractivo; timeout y stream-guards ahí)",
+      },
     }),
   );
   // F3: allowlist de hashes para netlify/functions/chat.mjs — el server solo acepta
