@@ -25,7 +25,7 @@ export type ForecastStore = {
   method: Record<string, string>; // table -> human method description
   series: Map<string, ForecastPoint[]>; // "country|category|table" -> future points
   meta: Map<string, SeriesMeta>;
-  scorecard: Scorecard | null; // prospective real-world accuracy (frozen vs realized)
+  scorecard: Scorecard | null; // prospective scorecard (leakage-free backfill: origin-truncated vs realized)
   horizonMonths: number; // forecast horizon, derived from the pipeline (0 when no forecasts shipped)
 };
 

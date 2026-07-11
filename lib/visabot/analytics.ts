@@ -325,8 +325,8 @@ export function buildForecast(panel: Panel, country: string, category: string, t
         : "";
       if (errClause || covClause) {
         note = lang === "en"
-          ? `Real-world accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs): ${errClause}${covClause}`
-          : `Precisión real, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados): ${errClause}${covClause}`;
+          ? `Verified accuracy, global across all series (${sc.n_scored} forecasts scored vs already-published cutoffs; a leakage-free backfill): ${errClause}${covClause}`
+          : `Precisión verificada, global de todas las series (${sc.n_scored} pronósticos evaluados vs cortes ya publicados; backfill sin fuga de información): ${errClause}${covClause}`;
       }
     }
   } else {
@@ -364,7 +364,7 @@ export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lan
   const fmt = (yr: number) => (yr).toFixed(1);
   const h = spec.data.length - spec.data.findIndex((d) => d.month === spec.splitMonth) - 1;
   // spec.subtitle already states whether this is the PRODUCTION model or the in-browser
-  // drift baseline; spec.note carries the real prospective track record when available.
+  // drift baseline; spec.note carries the verified out-of-sample track record (leakage-free backfill) when available.
   // Pass both through verbatim (do NOT re-label the production model as "illustrative").
   const acc = spec.note ? ` ${spec.note}` : "";
   return lang === "en"

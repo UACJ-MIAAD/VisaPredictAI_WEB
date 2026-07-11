@@ -345,9 +345,9 @@ const S = {
   resSortMase: { es: "Precisión", en: "Accuracy" },
   resSortBacklog: { es: "Espera", en: "Wait" },
   resSortMovement: { es: "Avance", en: "Movement" },
-  // scorecard chip (real prospective accuracy)
-  resScoreLabel: { es: "Precisión real", en: "Real accuracy" },
-  resScoreTip: { es: "Pronósticos congelados y calificados contra el boletín ya publicado.", en: "Forecasts frozen and graded against the already-published bulletin." },
+  // scorecard chip (verified out-of-sample accuracy; leakage-free backfill — A1)
+  resScoreLabel: { es: "Precisión verificada", en: "Verified accuracy" },
+  resScoreTip: { es: "Pronósticos calificados contra boletines ya publicados (backfill sin fuga de información).", en: "Forecasts graded against already-published bulletins (leakage-free backfill)." },
   // card face signals
   resWait: { es: "espera", en: "wait" },
   resYr: { es: "a", en: "yr" }, // años / years — compact unit
