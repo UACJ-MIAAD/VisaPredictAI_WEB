@@ -40,3 +40,36 @@ jobs:
           # en build; para el gate basta un stub vacío (el guard no usa los hashes).
           [ -f netlify/functions/rag-hashes.json ] || echo '[]' > netlify/functions/rag-hashes.json
           node scripts/test-code-guard.mjs
+
+  # G1 (plan auditoría 2026-07-11): el MISMO next build/export/CSP que corre Netlify,
+  # pero SIN red — los fallbacks commiteados en public/data son la release fixture
+  # inmutable del checkout. verify-build.mjs falla si el export pierde rutas ES/EN,
+  # el sitemap, las OG images, la CSP sin unsafe-inline o los assets del corte.
+  # (El índice RAG queda fuera de este job: necesita el modelo de embeddings — G2.)
+  build-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Offline production build + export verification
+        run: npm run build:offline
+
+  # Integración CON red (no bloqueante): ¿el manifiesto de release publicado sigue
+  # siendo alcanzable y verificable de punta a punta? Un fallo aquí señala
+  # disponibilidad del raw host o un corte a medio publicar — no veta el PR.
+  fetch-integration:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Live manifest fetch + hash verification
+        run: node scripts/fetch-data.mjs
