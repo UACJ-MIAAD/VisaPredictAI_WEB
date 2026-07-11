@@ -135,7 +135,7 @@ const run = (deltas, lang = "es") => {
 
 // 17) …but real code lines ending in braces still block
 {
-  const { out, blocked } = run(["function f() {\n", "  return 1; }\n", "listo"]);
+  const { blocked } = run(["function f() {\n", "  return 1; }\n", "listo"]);
   assert.equal(blocked, true, "real code not blocked");
 }
 

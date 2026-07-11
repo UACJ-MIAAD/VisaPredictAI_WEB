@@ -13,7 +13,10 @@ const config = [
       "out/**",
       "node_modules/**",
       "next-env.d.ts",
-      "scripts/**",
+
+      // F2: runtime ONNX vendorizado (third-party minificado) — excluido EXPLÍCITO;
+      // todo lo propio (incl. scripts/) se linta con --max-warnings=0.
+      "public/ort/**",
       "content/**",
       "lib/content/sections.generated.ts",
       "index.html",

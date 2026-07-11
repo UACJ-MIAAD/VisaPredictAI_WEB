@@ -356,7 +356,8 @@ export function makeEmojiStripper() {
   };
 }
 
-export default async (req) => {
+// F2: handler nombrado (el default anónimo era el único warning propio del lint).
+const handler = async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!originAllowed(req)) return errStream("forbidden");
 
@@ -482,3 +483,5 @@ export default async (req) => {
     },
   });
 };
+
+export default handler;

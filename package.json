@@ -17,7 +17,7 @@
     "postbuild": "node scripts/build-csp.mjs",
     "build:offline": "FETCH_OFFLINE=1 node scripts/fetch-data.mjs && node scripts/build-stats.mjs && node scripts/extract-content.mjs && next build && node scripts/build-csp.mjs && node scripts/verify-build.mjs",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "pretest": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\"",
     "test": "vitest run",
