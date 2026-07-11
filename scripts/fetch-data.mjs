@@ -179,7 +179,13 @@ async function manifestFetch(manifest) {
 }
 
 let state;
-if (process.env.FETCH_LEGACY === "1") {
+if (process.env.FETCH_OFFLINE === "1") {
+  // G1: build de CI sin red — los fallbacks commiteados en public/data SON la release
+  // fixture (inmutables al SHA del checkout). No se fetchea nada; dims y variantes de
+  // imagen se derivan de lo que hay en disco.
+  console.log("fetch-data: FETCH_OFFLINE=1 — CI fixture build sobre los fallbacks commiteados (sin red)");
+  state = releaseState({ status: "stale", reason: "FETCH_OFFLINE=1 (CI fixture build: committed fallbacks, no network)" });
+} else if (process.env.FETCH_LEGACY === "1") {
   await legacyFetch();
   state = releaseState({ status: "legacy", reason: "FETCH_LEGACY=1 (forced rollback to per-file fetch)" });
 } else {
