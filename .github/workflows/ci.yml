@@ -40,6 +40,10 @@ jobs:
           # en build; para el gate basta un stub vacío (el guard no usa los hashes).
           [ -f netlify/functions/rag-hashes.json ] || echo '[]' > netlify/functions/rag-hashes.json
           node scripts/test-code-guard.mjs
+      # G2: estructura + versión (hash de contenido) de los sets de evaluación del RAG.
+      # La suite completa (índice real + gate por estrato) corre en scheduled-quality.yml.
+      - name: Eval sets (estructura + versión)
+        run: node scripts/check-eval-sets.mjs
 
   # G1 (plan auditoría 2026-07-11): el MISMO next build/export/CSP que corre Netlify,
   # pero SIN red — los fallbacks commiteados en public/data son la release fixture
