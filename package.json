@@ -22,7 +22,8 @@
     "pretest": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\"",
     "test": "vitest run",
     "guard:test": "node scripts/test-code-guard.mjs",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "pretest:coverage": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\""
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
