@@ -9,7 +9,7 @@
 //
 // The committed files in public/data/ remain the last-resort fallback: if GitHub raw
 // hiccups entirely, the build keeps whatever is already there (panel critical).
-import { writeFile, readFile, access, mkdir, stat, rename, rm } from "node:fs/promises";
+import { writeFile, readFile, readdir, access, mkdir, stat, rename, rm } from "node:fs/promises";
 import { join, dirname } from "node:path";
 
 import { DATA_REPO_RAW as RAW } from "../lib/repo.mjs";
@@ -17,8 +17,11 @@ import {
   MANIFEST_PATH,
   SUPPORTED_SCHEMA,
   consumedEntries,
+  isContract,
   planSwap,
   releaseState,
+  validateArtifact,
+  vendoredMatches,
   verifyEntry,
 } from "../lib/release.mjs";
 
@@ -129,9 +132,25 @@ async function legacyFetch() {
   return fresh;
 }
 
+// B3: contratos vendorizados (lib/contracts/*.json), indexados por artifact path —
+// validan los payloads descargados y detectan deriva vendored-vs-publicado.
+async function loadVendoredContracts() {
+  const dir = join(process.cwd(), "lib", "contracts");
+  const byArtifact = new Map();
+  const byName = new Map();
+  for (const f of await readdir(dir).catch(() => [])) {
+    if (!f.endsWith(".json")) continue;
+    const buf = await readFile(join(dir, f));
+    byArtifact.set(JSON.parse(buf.toString("utf8")).artifact, JSON.parse(buf.toString("utf8")));
+    byName.set(f, buf);
+  }
+  return { byArtifact, byName };
+}
+
 // Manifest path: staging → verify everything → atomic swap (or keep the previous cut).
 async function manifestFetch(manifest) {
   const entries = consumedEntries(manifest);
+  const vendored = await loadVendoredContracts();
   await rm(STAGING, { recursive: true, force: true });
   await mkdir(STAGING, { recursive: true });
   const results = new Map();
@@ -143,6 +162,17 @@ async function manifestFetch(manifest) {
           const body = await fetchBuf(`${RAW}/${e.path}`);
           const ok = verifyEntry(e, body);
           if (ok !== true) throw new Error(ok);
+          // B3a — deriva de contrato: el publicado debe SER el vendorizado (por hash);
+          // un contrato nuevo que este loader no conoce = corte no consumible.
+          if (isContract(e) && !vendoredMatches(e, vendored.byName.get(e.out.slice("contracts/".length)))) {
+            throw new Error("contract drift vs vendored (actualizar lib/contracts/)");
+          }
+          // B3b — validación de payload contra el contrato vendorizado del artefacto.
+          const contract = vendored.byArtifact.get(e.path);
+          if (contract) {
+            const valid = validateArtifact(contract, body);
+            if (valid !== true) throw new Error(`contrato violado: ${valid}`);
+          }
           const staged = join(STAGING, e.out);
           await mkdir(dirname(staged), { recursive: true });
           await writeFile(staged, body);
