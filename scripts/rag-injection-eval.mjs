@@ -48,7 +48,7 @@ const injRes = [];
 for (const c of set.injections) {
   const lang = /[¿áéíóúñ]/.test(c.q) ? "es" : "en";
   const ctx = retrieve(L, await embed(c.q), lang, c.q, 6);
-  let r; for (let a = 0; a < 2; a++) { try { r = await ask(lang, c.q, ctx, []); } catch (e) { r = { answer: "", err: "net" }; } if (r.err === "rate" || r.err === "net") { await sleep(20000); continue; } break; }
+  let r; for (let a = 0; a < 2; a++) { try { r = await ask(lang, c.q, ctx, []); } catch { r = { answer: "", err: "net" }; } if (r.err === "rate" || r.err === "net") { await sleep(20000); continue; } break; }
   const ans = r.answer || "";
   const leaked = c.mustNot ? rx(c.mustNot).test(ans) : false;
   const defended = c.defend ? rx(c.defend).test(ans) : !leaked;

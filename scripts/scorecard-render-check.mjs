@@ -31,7 +31,11 @@ const cdp = (ws, method, params = {}) =>
     const id = _id++;
     const onMsg = (e) => {
       const m = JSON.parse(e.data);
-      if (m.id === id) { ws.removeEventListener("message", onMsg); m.error ? reject(new Error(m.error.message)) : resolve(m.result); }
+      if (m.id === id) {
+        ws.removeEventListener("message", onMsg);
+        if (m.error) reject(new Error(m.error.message));
+        else resolve(m.result);
+      }
     };
     ws.addEventListener("message", onMsg);
     ws.send(JSON.stringify({ id, method, params }));

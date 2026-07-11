@@ -25,7 +25,7 @@
 //   netlify.toml, minus script-src's 'unsafe-inline').
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { join, relative, sep } from "node:path";
+import { join, sep } from "node:path";
 import { glob } from "node:fs/promises";
 
 const OUT = join(process.cwd(), "out");
