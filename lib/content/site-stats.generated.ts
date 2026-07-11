@@ -8,4 +8,6 @@ export const SITE_STATS = {
   dateFirst: "2001-12",
   dateLast: "2026-07",
   horizonMonths: 12,
+  releaseId: "2026-07-5a6bac44f88c",
+  releaseStatus: "fresh",
 } as const;

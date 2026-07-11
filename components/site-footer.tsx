@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
+import { SITE_STATS } from "@/lib/content/site-stats.generated";
 
 const EXTERNAL = [
   { label: "Visa Bulletin", href: "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html" },
@@ -45,6 +46,10 @@ export function SiteFooter() {
       <div className="footer-bottom">
         © 2026 Javier Augusto Rebull Saucedo · Universidad Autónoma de Ciudad
         Juárez · MIAAD
+        <span className="footer-release">
+          {" · "}
+          {tr(lang, "footerRelease")} {SITE_STATS.releaseId} ({SITE_STATS.releaseStatus})
+        </span>
       </div>
     </footer>
   );
