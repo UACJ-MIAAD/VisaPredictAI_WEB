@@ -806,15 +806,21 @@ function copyOrtWasm() {
       },
     }),
   );
-  // F3: allowlist de hashes para netlify/functions/chat.mjs — el server solo acepta
-  // como FUENTES texto publicado en este índice (o los 2 sintéticos del console).
+  // F3 + auditoría 12-jul-2026: mapa hash → metadata CANÓNICA para
+  // netlify/functions/chat.mjs. El server solo acepta como FUENTES texto publicado en
+  // este índice (o los 2 sintéticos del console) Y ADEMÁS reescribe title/source desde
+  // ESTE mapa, ignorando los que manda el cliente — así un chunk auténtico no puede
+  // citarse con una fuente inventada ("Comunicado oficial…"). El texto del chunk es la
+  // clave; su title/source vienen del índice, no del payload.
   const fnDir = join(root, "netlify", "functions");
   mkdirSync(fnDir, { recursive: true });
-  writeFileSync(
-    join(fnDir, "rag-hashes.json"),
-    JSON.stringify(chunks.map((c) => createHash("sha256").update(c.text, "utf8").digest("hex"))),
-  );
-  console.log(`✓ wrote netlify/functions/rag-hashes.json (${chunks.length} hashes)`);
+  const hashMeta = {};
+  for (const c of chunks) {
+    const h = createHash("sha256").update(c.text, "utf8").digest("hex");
+    hashMeta[h] = { title: c.title || "", source: c.source || "", sourceId: c.sourceId || "" };
+  }
+  writeFileSync(join(fnDir, "rag-hashes.json"), JSON.stringify(hashMeta));
+  console.log(`✓ wrote netlify/functions/rag-hashes.json (${chunks.length} hash→meta entries)`);
   console.log(`✓ wrote public/rag/index.json (${chunks.length} chunks, ${EMBED_DIM}-d) — eval monolith`);
   console.log(`✓ wrote public/rag/chunks.json (${(chunksBuf.length / 1024).toFixed(0)} kB, pre-consent) + vectors.f16 (${(f16Bytes.length / 1024).toFixed(0)} kB, post-consent)`);
   console.log(`✓ wrote public/rag/suggestions.json + meta.json`);
