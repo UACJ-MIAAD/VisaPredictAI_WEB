@@ -55,7 +55,13 @@ const MAX_OUTPUT = 1024;
 // DESCRIPTORES en `body.synthetics` y el texto lo reconstruye el SERVIDOR desde datos
 // hash-verificados (lib/visabot/synthetic-context.mjs). La inyección por sintéticos
 // queda cerrada por construcción: el servidor no lee ni una cifra del cliente.
-const KNOWN_HASHES = new Set(RAG_HASHES);
+// hash del texto → metadata CANÓNICA {title, source, sourceId} del índice publicado.
+// Compat: si el artefacto viejo era una LISTA de hashes, degradamos a "solo verifica
+// existencia" (title/source vacíos) hasta que se regenere el índice.
+const RAG_META = Array.isArray(RAG_HASHES)
+  ? Object.fromEntries(RAG_HASHES.map((h) => [h, null]))
+  : RAG_HASHES;
+const KNOWN_HASHES = new Set(Object.keys(RAG_META));
 // Los labels sintéticos, conservados para (a) detectar clientes viejos que aún manden
 // texto libre (→ 400) y (b) etiquetar/validar las fuentes que el SERVIDOR genera.
 const SYNTH_PREFIXES = ["VisaPredict AI panel (", "Panel VisaPredict AI ("];
@@ -143,10 +149,22 @@ export function sanitizeContext(raw, reserved) {
   const used = new Set(reserved ?? []); // dedupe citation numbers so [n] is never ambiguous (finding 17)
   for (const c of (Array.isArray(raw) ? raw : []).slice(0, MAX_CTX)) {
     if (typeof c?.text !== "string" || !c.text || c.text.length > MAX_CHUNK) continue;
-    const source = typeof c.source === "string" ? c.source.slice(0, 120) : "";
-    if (!KNOWN_HASHES.has(createHash("sha256").update(c.text, "utf8").digest("hex"))) continue;
-    const title = typeof c.title === "string" ? c.title.slice(0, 160) : "";
-    if (!slotSafe(title) || !slotSafe(source)) continue; // chunk publicado con titulo/fuente instruccional — fuera entero
+    const h = createHash("sha256").update(c.text, "utf8").digest("hex");
+    if (!KNOWN_HASHES.has(h)) continue;
+    // ⚠️ title/source son SERVER-OWNED (auditoría 12-jul-2026): se toman del índice
+    // publicado por el hash del texto, NO del payload del cliente — un chunk auténtico
+    // no puede citarse con una fuente inventada. Fallback al cliente SOLO si el artefacto
+    // viejo (lista de hashes) no trae metadata, y aun así se pasa por slotSafe.
+    const meta = RAG_META[h];
+    let title, source;
+    if (meta) {
+      title = String(meta.title || "").slice(0, 160);
+      source = String(meta.source || "").slice(0, 120);
+    } else {
+      title = typeof c.title === "string" ? c.title.slice(0, 160) : "";
+      source = typeof c.source === "string" ? c.source.slice(0, 120) : "";
+      if (!slotSafe(title) || !slotSafe(source)) continue;
+    }
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
