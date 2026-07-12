@@ -14,19 +14,57 @@ import {
   retrieveRanked,
 } from "@/lib/visabot/retrieval-core.mjs";
 
+// Portable IEEE-754 half-precision round oracle. f16round is Node 24+ only
+// and CI runs Node 22, so the runtime built-in can't be the reference (the
+// codec would look "broken" on CI while passing locally). This is a standalone
+// round-half-to-even f16 implementation, INDEPENDENT of the code under test, so
+// the assertions still pin real f16 semantics rather than becoming tautological.
+function f16round(x: number): number {
+  if (Number.isNaN(x)) return NaN;
+  if (!Number.isFinite(x)) return x;
+  if (x === 0) return x; // preserves -0
+  const sign = x < 0 ? -1 : 1;
+  let a = Math.abs(x);
+  const MIN_NORMAL = 2 ** -14;
+  const MAX_HALF = 65504;
+  if (a >= 2 ** 16) return sign * Infinity; // overflow to ±Inf
+  let out: number;
+  if (a < MIN_NORMAL) {
+    // subnormal: quantize to a multiple of 2^-24, round half to even
+    const step = 2 ** -24;
+    const q = a / step;
+    const fl = Math.floor(q);
+    const frac = q - fl;
+    let r = fl;
+    if (frac > 0.5 || (frac === 0.5 && fl % 2 === 1)) r = fl + 1;
+    out = r * step;
+  } else {
+    const e = Math.floor(Math.log2(a));
+    const step = 2 ** (e - 10); // 10 mantissa bits
+    const q = a / step;
+    const fl = Math.floor(q);
+    const frac = q - fl;
+    let r = fl;
+    if (frac > 0.5 || (frac === 0.5 && fl % 2 === 1)) r = fl + 1;
+    out = r * step;
+    if (out > MAX_HALF) return sign * Infinity;
+  }
+  return sign * out;
+}
+
 describe("float16 codec (layered vectors)", () => {
   it("round-trips exact f16 values", () => {
     for (const x of [0, 1, -1, 0.5, -0.25, 0.099975586, 6.1e-5, -6.1e-5]) {
-      expect(f16BitsToF32(f32ToF16Bits(x))).toBe(Math.f16round(x));
+      expect(f16BitsToF32(f32ToF16Bits(x))).toBe(f16round(x));
     }
   });
 
-  it("agrees with Math.f16round on random unit-interval floats (embedding range)", () => {
+  it("agrees with f16round on random unit-interval floats (embedding range)", () => {
     let seed = 42;
     const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff) * 2 - 1;
     for (let i = 0; i < 2000; i++) {
       const x = rnd();
-      expect(f16BitsToF32(f32ToF16Bits(x))).toBe(Math.f16round(x));
+      expect(f16BitsToF32(f32ToF16Bits(x))).toBe(f16round(x));
     }
   });
 
@@ -36,7 +74,7 @@ describe("float16 codec (layered vectors)", () => {
     const sub = 3.1e-5; // below f16 normal min (6.1e-5) → subnormal, not zero
     const rt = f16BitsToF32(f32ToF16Bits(sub));
     expect(rt).toBeGreaterThan(0);
-    expect(rt).toBe(Math.f16round(sub));
+    expect(rt).toBe(f16round(sub));
   });
 
   it("encodeF16 → bytes → decodeF16 is the identity over the round-tripped array", () => {
@@ -45,7 +83,7 @@ describe("float16 codec (layered vectors)", () => {
     const bytes = new Uint8Array(enc.buffer, enc.byteOffset, enc.byteLength);
     const dec = decodeF16(bytes) as Float32Array;
     expect(dec.length).toBe(src.length);
-    for (let i = 0; i < src.length; i++) expect(dec[i]).toBe(Math.f16round(src[i]));
+    for (let i = 0; i < src.length; i++) expect(dec[i]).toBe(f16round(src[i]));
     // idempotence: encoding the round-tripped values changes nothing
     const dec2 = decodeF16(new Uint8Array(encodeF16(dec).buffer)) as Float32Array;
     expect([...dec2]).toEqual([...dec]);
