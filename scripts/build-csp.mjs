@@ -23,6 +23,9 @@
 // - style-src keeps 'unsafe-inline' (Tailwind/React inline styles).
 // - The base policy below is the single source of truth (moved verbatim from
 //   netlify.toml, minus script-src's 'unsafe-inline').
+// - Directive-by-directive rationale (why 'wasm-unsafe-eval' stays in script-src,
+//   why style-src keeps 'unsafe-inline', known gaps) is documented in
+//   docs/THREAT_MODEL.md §5 — update it in the same change as any edit to POLICY.
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join, sep } from "node:path";
