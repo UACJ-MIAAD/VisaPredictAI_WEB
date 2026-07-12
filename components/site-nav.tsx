@@ -127,8 +127,10 @@ export function SiteNav() {
             href={localePath("/", lang)}
             className="flex items-center gap-2 font-serif text-lg font-extrabold"
           >
+            {/* QW4: logo-64.png (2 kB, 64×64 from build-icons.mjs) — the 256 kB
+                original renders at 28 px here; keep the original for og/content. */}
             <Image
-              src="/LogoVisaPredictAI.png"
+              src="/logo-64.png"
               alt="VisaPredict AI"
               width={28}
               height={28}

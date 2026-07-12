@@ -277,6 +277,9 @@ const S = {
   acCompareBulletins: { es: "Comparar boletines", en: "Compare bulletins" },
   acHereDiff: { es: "Comparación de dos boletines (qué avanzó, retrocedió o cambió de estado):", en: "Comparison of two bulletins (what advanced, retrogressed or changed status):" },
   acPanelToggle: { es: "Panel", en: "Panel" },
+  // QW5 (WCAG 2.5.3 label-in-name): accessible name of the mobile toggle must
+  // CONTAIN its visible text ("Panel") — it used to be aria-label "Herramientas".
+  acPanelToggleLabel: { es: "Panel de herramientas", en: "Panel tools" },
   acCloseTools: { es: "Cerrar herramientas", en: "Close tools" },
   acExamples: { es: "Ejemplos", en: "Examples" },
   acExamplesTitle: { es: "¿Qué puedes preguntar?", en: "What can you ask?" },

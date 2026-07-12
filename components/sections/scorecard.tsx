@@ -36,14 +36,14 @@ const T = {
     cov95: "Cobertura del intervalo 95 %",
     nominal: "nominal 95 %",
     chartTitle: "Error por horizonte de pronóstico",
-    chartDesc: "El error crece con el horizonte: predecir a 12 meses es más difícil que a 1.",
+    chartDesc: "El error crece con el horizonte: predecir a {H} meses es más difícil que a 1.",
     horizon: "Horizonte (meses)",
     maeAxis: "MAE (días)",
     caveatFallback:
       "Registro tipo backfill sin fuga de información (las añadas servidas en vivo se acumulan desde jul-2026); muestra pequeña y creciente; la cobertura 80 % reportada es out-of-sample.",
     methodTitle: "Honestidad radical: a un mes, nadie le gana al random walk",
     methodBody:
-      "El marco comparativo de 24 modelos dejó un hallazgo incómodo y valioso: en el pronóstico puntual a un mes, ningún modelo supera al random walk — con cerca de {PCT} % de los meses congelados, la fila que no se mueve es difícil de vencer. El valor del sistema está en lo que el random walk no da: el horizonte de 12 meses, los intervalos calibrados y la coherencia entre tablas. El campeón desplegado (mediana de Theta+ETS+SARIMA en FAD; SARIMA en DFF) sigue en producción; el retador ingenuo pasó el gate de promoción, pero la promoción está retenida hasta confirmarse prospectivamente en todos los horizontes — su añada mensual se congela en un ledger sombra. Las bandas 80 / 95 % se escalan por horizonte con los cuantiles empíricos del propio ledger prospectivo (calibradas solo sobre fechas F, con ajuste adaptativo ACI), y cada publicación respeta un cono de coherencia (FAD ≤ DFF; país ≤ mundial).",
+      "El marco comparativo de {N} modelos dejó un hallazgo incómodo y valioso: en el pronóstico puntual a un mes, ningún modelo supera al random walk — con cerca de {PCT} % de los meses congelados, la fila que no se mueve es difícil de vencer. El valor del sistema está en lo que el random walk no da: el horizonte de {H} meses, los intervalos calibrados y la coherencia entre tablas. El campeón desplegado (mediana de Theta+ETS+SARIMA en FAD; SARIMA en DFF) sigue en producción; el retador ingenuo pasó el gate de promoción, pero la promoción está retenida hasta confirmarse prospectivamente en todos los horizontes — su añada mensual se congela en un ledger sombra. Las bandas 80 / 95 % se escalan por horizonte con los cuantiles empíricos del propio ledger prospectivo (calibradas solo sobre fechas F, con ajuste adaptativo ACI), y cada publicación respeta un cono de coherencia (FAD ≤ DFF; país ≤ mundial).",
   },
   en: {
     eyebrow: "Prospective evaluation",
@@ -57,14 +57,14 @@ const T = {
     cov95: "95% interval coverage",
     nominal: "nominal 95%",
     chartTitle: "Error by forecast horizon",
-    chartDesc: "Error grows with the horizon: forecasting 12 months out is harder than 1.",
+    chartDesc: "Error grows with the horizon: forecasting {H} months out is harder than 1.",
     horizon: "Horizon (months)",
     maeAxis: "MAE (days)",
     caveatFallback:
       "A leakage-free backfill ledger (live vintages accrue since Jul 2026); small and growing sample; the reported 80% coverage is out-of-sample.",
     methodTitle: "Radical honesty: at one month out, nothing beats the random walk",
     methodBody:
-      "The 24-model comparison surfaced an uncomfortable, valuable finding: on one-month-ahead point forecasts, no model beats the random walk — with about {PCT}% of months frozen, the row that does not move is hard to outdo. The system's value lies in what the random walk cannot give: the 12-month horizon, calibrated intervals and cross-table coherence. The deployed champion (median of Theta+ETS+SARIMA on FAD; SARIMA on DFF) stays in production; the naïve challenger passed the promotion gate, but promotion is held until it is confirmed prospectively across all horizons — its monthly vintages are frozen in a shadow ledger. The 80 / 95% bands are scaled per horizon with the empirical quantiles of the prospective ledger itself (calibrated on F-status dates only, with adaptive ACI adjustment), and every release respects a coherence cone (FAD ≤ DFF; country ≤ worldwide).",
+      "The {N}-model comparison surfaced an uncomfortable, valuable finding: on one-month-ahead point forecasts, no model beats the random walk — with about {PCT}% of months frozen, the row that does not move is hard to outdo. The system's value lies in what the random walk cannot give: the {H}-month horizon, calibrated intervals and cross-table coherence. The deployed champion (median of Theta+ETS+SARIMA on FAD; SARIMA on DFF) stays in production; the naïve challenger passed the promotion gate, but promotion is held until it is confirmed prospectively across all horizons — its monthly vintages are frozen in a shadow ledger. The 80 / 95% bands are scaled per horizon with the empirical quantiles of the prospective ledger itself (calibrated on F-status dates only, with adaptive ACI adjustment), and every release respects a coherence cone (FAD ≤ DFF; country ≤ worldwide).",
   },
 };
 
@@ -119,6 +119,14 @@ export function Scorecard() {
     );
   if (!sc) return <section id="scorecard" aria-hidden="true" />; // ledger not yet seeded
 
+  // QW7 (regla #0): every number in the copy is interpolated from SITE_STATS —
+  // {PCT} census pct_frozen, {N} model-catalog size, {H} forecast horizon.
+  const fill = (s: string) =>
+    s
+      .replaceAll("{PCT}", String(SITE_STATS.pctFrozen))
+      .replaceAll("{N}", String(SITE_STATS.nModels))
+      .replaceAll("{H}", String(SITE_STATS.horizonMonths));
+
   const o = sc.overall;
   const cov80 = sc.band80_calibration?.cov80_heldout;
   const byH = Object.entries(sc.by_horizon)
@@ -150,16 +158,16 @@ export function Scorecard() {
       <div className="mt-6 border-l-2 border-[var(--color-accent)] pl-4">
         <h3 className="font-serif text-lg font-bold text-[var(--color-ink)]">{t.methodTitle}</h3>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--color-muted)]">
-          {/* {PCT} is interpolated from the build-time census (eda_facts.json), never typed by hand. */}
-          {t.methodBody.replace("{PCT}", String(SITE_STATS.pctFrozen))}
+          {/* {PCT}/{N}/{H} interpolated from build-time stats, never typed by hand. */}
+          {fill(t.methodBody)}
         </p>
       </div>
 
       {/* chart keeps a subtle editorial rule as its container (AX1) */}
       <figure className="mt-10 border-t-2 border-[var(--color-rule)] pt-4">
         <figcaption className="mb-1 font-serif text-lg font-bold text-[var(--color-ink)]">{t.chartTitle}</figcaption>
-        <p className="mb-3 max-w-3xl text-sm text-[var(--color-muted)]">{t.chartDesc}</p>
-        <div role="img" aria-label={`${t.chartTitle}. ${t.chartDesc}`}>
+        <p className="mb-3 max-w-3xl text-sm text-[var(--color-muted)]">{fill(t.chartDesc)}</p>
+        <div role="img" aria-label={`${t.chartTitle}. ${fill(t.chartDesc)}`}>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={byH} margin={{ left: 4, right: 12, top: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
