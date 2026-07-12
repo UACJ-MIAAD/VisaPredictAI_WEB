@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { routeByPath, rLabel, rBlurb, sLabel, localePath } from "@/lib/site-map";
+import { routeByPath, rLabel, rBlurb, localePath } from "@/lib/site-map";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 
-// Editorial masthead for a route: kicker, blurb, in-page section chips.
+// Editorial masthead for a route: kicker + blurb-as-title. The in-page section
+// chips it used to render were removed in J1 — the sticky subnav in SiteNav
+// now carries the same anchors (numbered), so keeping both duplicated the menu.
 export function RouteHeader({ path }: { path: string }) {
   const { lang } = useLang();
   const route = routeByPath(path);
@@ -27,17 +29,6 @@ export function RouteHeader({ path }: { path: string }) {
         <h1 className="mt-3 max-w-[60ch] font-serif text-2xl font-bold leading-snug tracking-normal md:text-[2rem]">
           {rBlurb(route, lang)}
         </h1>
-        <nav className="mt-5 flex flex-wrap gap-2" aria-label={tr(lang, "menu")}>
-          {route.sections.map((s) => (
-            <a
-              key={s.id}
-              href={`#${s.id}`}
-              className="rounded-full border border-border px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-[var(--color-accent)] hover:text-foreground"
-            >
-              {sLabel(s, lang)}
-            </a>
-          ))}
-        </nav>
       </div>
     </header>
   );

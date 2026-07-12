@@ -146,8 +146,9 @@
   }
   html {
     scroll-behavior: smooth;
-    /* sticky-nav offset for anchor jumps */
-    scroll-padding-top: 5rem;
+    /* sticky-nav offset for anchor jumps — J1 chrome: 64px masthead + 44px
+       in-page subnav + 2px progress ≈ 110px, plus breathing room */
+    scroll-padding-top: 7.5rem;
   }
   body {
     background-color: var(--color-bg);
@@ -216,6 +217,18 @@ main:focus {
 .hairline {
   border: 0;
   border-top: 1px solid var(--color-border);
+}
+
+/* J1 in-page subnav strip (desktop): if the numbered anchors outgrow the rail
+   the STRIP scrolls (snap-assisted), never the page. Scrollbar kept subtle but
+   present (discoverability); links inside remain keyboard-reachable and the
+   browser scrolls the focused one into view natively. */
+.subnav-strip {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 /* KaTeX inherits ink color, scales sanely on mobile */
 .katex {
