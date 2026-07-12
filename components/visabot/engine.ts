@@ -13,11 +13,18 @@
 // index + BM25, so the bot is instantly usable — and stays usable — without
 // the semantic engine (AZ1: no ~150 MB download without consent).
 import type { Chunk, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
-import { buildBM25, retrieveRanked } from "@/lib/visabot/retrieval-core.mjs";
+import { buildBM25, decodeF16, retrieveRanked } from "@/lib/visabot/retrieval-core.mjs";
 
-type Index = { model: string; dim: number; built: string; chunks: Chunk[] };
+// US I6 — layered index. chunks.json (small, no vectors) loads on warmUp and
+// powers BM25; vectors.f16 (raw float16) downloads ONLY after the semantic
+// consent, alongside the model. The old monolithic index.json still exists but
+// is an EVAL artifact (rag-golden-eval / rag-eval probe it) — the browser
+// never fetches it anymore.
+type Index = { schema?: number; model: string; dim: number; chunks: Chunk[] };
 
 let _index: Promise<Loaded> | null = null;
+let _vectors: Promise<Float32Array> | null = null;
+let _vectorsReady: Float32Array | null = null;
 let _embedder: Promise<(text: string) => Promise<Float32Array>> | null = null;
 let _modelReady = false;
 // download progress (0–100) for the semantic engine, aggregated across model files
@@ -26,7 +33,6 @@ const _dlFiles = new Map<string, { loaded: number; total: number }>();
 
 type Loaded = {
   meta: Index;
-  vectors: Float32Array; // flat, chunks*dim, L2-normalized
   dim: number;
   // BM25
   docTf: Map<string, number>[];
@@ -38,25 +44,30 @@ type Loaded = {
 // tokenization + BM25/RRF/MMR live in the shared retrieval-core.mjs (imported
 // above) so the three rag-*.mjs evals rank identically to production.
 
-function decodeVectors(b64: string): Float32Array {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new Float32Array(bytes.buffer);
-}
-
 async function loadIndex(): Promise<Loaded> {
   if (_index) return _index;
   _index = (async () => {
-    const raw = await fetch("/rag/index.json");
-    if (!raw.ok) throw new Error(`index ${raw.status}`);
-    const json = (await raw.json()) as Index & { vectors: string };
-    const vectors = decodeVectors(json.vectors);
-    const dim = json.dim;
+    const raw = await fetch("/rag/chunks.json");
+    if (!raw.ok) throw new Error(`chunks ${raw.status}`);
+    const json = (await raw.json()) as Index;
     const { docTf, docLen, idf, avgdl } = buildBM25(json.chunks);
-    return { meta: json, vectors, dim, docTf, docLen, idf, avgdl };
+    return { meta: json, dim: json.dim, docTf, docLen, idf, avgdl };
   })();
   return _index;
+}
+
+// post-consent only: the dense layer (raw f16, decoded with the SAME shared
+// codec the build round-tripped through, so scores match the evals bit-for-bit)
+function ensureVectors(): Promise<Float32Array> {
+  if (_vectors) return _vectors;
+  _vectors = (async () => {
+    const res = await fetch("/rag/vectors.f16");
+    if (!res.ok) throw new Error(`vectors ${res.status}`);
+    const vecs = decodeF16(new Uint8Array(await res.arrayBuffer())) as Float32Array;
+    _vectorsReady = vecs;
+    return vecs;
+  })();
+  return _vectors;
 }
 
 // kick off model load in the background; resolves a query→vector fn
@@ -99,18 +110,19 @@ function ensureEmbedder(): Promise<(text: string) => Promise<Float32Array>> {
 }
 
 export function warmUp() {
-  // fire-and-forget: load the retrieval index (small JSON → BM25) as soon as
-  // the panel opens. Deliberately does NOT touch the embedding model — that
-  // download is ~150 MB and requires user consent (see warmUpSemantic).
+  // fire-and-forget: load the BM25 layer (chunks.json, no vectors) as soon as
+  // the panel opens. Deliberately does NOT touch the embedding model OR the
+  // dense vectors — those download only with consent (see warmUpSemantic).
   loadIndex().catch((e) => console.warn("[visabot] index load failed:", e));
 }
 
 export function warmUpSemantic() {
   // user-gesture only: start the semantic engine download (~113 MB model +
-  // ~17 MB tokenizer + ~23 MB ORT wasm). Failures are non-fatal (retrieval
-  // falls back to BM25) but log them — a silent swallow hides real load
-  // problems (CSP, worker, missing assets).
+  // ~17 MB tokenizer + ~23 MB ORT wasm + the f16 vector layer). Failures are
+  // non-fatal (retrieval falls back to BM25) but log them — a silent swallow
+  // hides real load problems (CSP, worker, missing assets).
   loadIndex().catch((e) => console.warn("[visabot] index load failed:", e));
+  ensureVectors().catch((e) => console.warn("[visabot] vector layer load failed:", e));
   ensureEmbedder().catch((e) => console.warn("[visabot] embed model load failed:", e));
 }
 
@@ -127,9 +139,10 @@ export const isSemanticStarted = () => _embedder !== null;
 
 export async function retrieve(query: string, lang: Lang, k = 6): Promise<Source[]> {
   const L = await loadIndex();
-  // dense only if the model is ready (don't block the first answer on a 129MB load)
+  // dense only if the model AND the vector layer are ready (don't block the
+  // first answer on the consent download; BM25 answers instantly meanwhile)
   let qv: Float32Array | null = null;
-  if (_modelReady && _embedder) {
+  if (_modelReady && _embedder && _vectorsReady) {
     try {
       qv = await (await _embedder)(query);
     } catch {
@@ -138,7 +151,9 @@ export async function retrieve(query: string, lang: Lang, k = 6): Promise<Source
   }
   const { selected } = retrieveRanked({
     chunks: L.meta.chunks,
-    vectors: L.vectors,
+    // with qv=null the pipeline never touches vectors (no dense pass, MMR runs
+    // score-only), so the empty array is inert pre-consent
+    vectors: _vectorsReady ?? new Float32Array(0),
     dim: L.dim,
     bm25: { docTf: L.docTf, docLen: L.docLen, idf: L.idf, avgdl: L.avgdl },
     query,
@@ -146,7 +161,7 @@ export async function retrieve(query: string, lang: Lang, k = 6): Promise<Source
     lang,
     k,
   });
-  return selected.map((i, idx) => {
+  return selected.map((i: number, idx: number) => {
     const c = L.meta.chunks[i];
     return { n: idx + 1, title: c.title, source: c.source, url: c.url, text: c.text };
   });

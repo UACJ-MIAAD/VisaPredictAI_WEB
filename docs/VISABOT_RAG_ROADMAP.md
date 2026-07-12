@@ -147,3 +147,94 @@ Se ejecutó el orden recomendado **validando cada paso contra la medición de la
 | **3.2/3.3 — multi-query / HyDE** | ⏸️ diferido | Round-trips extra de LLM para ganar recall que ya está al 100%. Sin ROI a esta escala. |
 
 **Conclusión de ingeniería:** a 600 chunks con recall@6=100% y defensa adversarial 28/28, los upgrades de alto ROI son los **baratos de build/cliente** (contextual selectivo, follow-ups, gate de CI). El reranking y las transformaciones de query son *overkill* hoy; quedan documentados y listos para reactivar con crecimiento del corpus.
+
+---
+
+## US I6 — Índice reproducible, temporal y por capas (12-jul-2026, plan auditoría 3 repos)
+
+Implementado en `scripts/build-rag-index.mjs` + `lib/visabot/retrieval-core.mjs` +
+`components/visabot/engine.ts`; verificado con los DOS gates (`rag:gate` + golden `--gate`).
+
+### Carga por capas (el navegador ya no baja el monolito)
+
+| Artefacto | Cuándo baja | Peso medido | Presupuesto |
+|---|---|---|---|
+| `public/rag/chunks.json` | `warmUp()` (pre-consentimiento, BM25) | **394 kB** | ≤600 kB (`rag_preconsent_chunks_kb`) |
+| `public/rag/vectors.f16` | `warmUpSemantic()` (solo tras consentimiento) | **494 kB** | ≤800 kB (`rag_vectors_kb`) |
+| `public/rag/index.json` | **nunca** (monolito para las evals: golden/selfcheck/rag-eval/injection lo leen local y contra prod) | 1.7 MB | dentro de `rag_index_total_mb` 3.5 |
+
+Antes: `index.json` de **1.60 MB** bajaba COMPLETO en `warmUp()` pre-consentimiento aunque
+BM25 no usa vectores. Ahora la descarga pre-consentimiento cae **~75 %** (1.60 MB → 0.39 MB).
+
+**Vectores en float16 con round-trip:** el build cuantiza los embeddings f32 → f16 y los
+**desquantiza de vuelta** antes de escribir el monolito de evals, de modo que el navegador
+(que decodifica `vectors.f16` con `decodeF16` de retrieval-core) y todas las evals puntúan
+**los mismos floats bit a bit** — cero deriva producción/eval. Costo medido de la
+cuantización: **ninguno** (MRR 0.982, recall@6 100 %, gloss@1 96 % — idénticos a f32).
+
+### Pins de fuentes y modelo
+
+- **Docs del repo de datos @ SHA del release** (`sourcePin`): el build lee el release
+  manifest (`git_sha`) y fetchea los docs RAG en `raw.githubusercontent/.../<sha>/` vía
+  `dataRepoRawAt()` de `lib/repo.mjs`. Fallback documentado a `main` SOLO si el manifest no
+  responde (o por doc que falte al SHA — se registra en `meta.json → pins.source.fallbacks`).
+  El feed de boletines (`bulletins.json`) sigue en `main` **a propósito**: es el feed de
+  frescura. `pins.source.coherent` registra si el release de los docs coincide con el corte
+  SERVIDO en `/data` (cross-check contra `data-pins.generated.mjs`, US I1).
+- **Modelo de embeddings pineado** (`MODEL_PIN`): revision HF + sha256 de los 4 archivos que
+  carga el pipeline q8; **verificación sha256 en cada build** (drift ⇒ build FALLA).
+  *Límite documentado:* la revision es metadata (pasarla a transformers.js cambiaría el layout
+  de caché que el navegador resuelve con `allowRemoteModels=false`); en runtime la integridad
+  la da el hosting same-origin + deploy atómico de Netlify (transformers.js no expone hook de
+  hash por fetch).
+
+### Metadata temporal por chunk + precedencia determinista
+
+Cada chunk lleva `source_type` (`site_academic` / `repo_doc` / `live_fact`), `release_id`
+y `valid_from` (si fechable), y los chunks del MODEL_CARD llevan `temporal: "current"` +
+`supersedes: ["capiii","capiv","tablas"]` (las secciones de la propuesta congelada de mayo
+que aún dicen "8 modelos" por diseño). `applyTemporalPrecedence` (retrieval-core, unit-
+tested) reordena la selección **antes del LLM**: el chunk vigente rankea sobre su superseded
+cuando ambos se recuperan para la misma consulta; los históricos **no se borran** del índice.
+Con esto el golden ctx recall subió **87.9 % → 90.5 %** y acad@6 **88 % → 92 %**.
+
+### Reproducibilidad (demostrada)
+
+Doble `npm run rag:build` → `chunks.json`, `vectors.f16` y `rag-hashes.json` **byte-idénticos**
+(sha256 iguales); `index.json` y `meta.json` idénticos salvo el campo `built` (única exención
+de timestamp). `meta.json → layers` publica el sha256 de las capas para auditarlo en prod.
+Determinismo asegurado: orden de archivos EN sorteado, sin `Date.now()` en el contenido,
+embeddings deterministas (verificado empíricamente).
+
+---
+
+## US I4 — Ablation de chunking semántico y reranker (12-jul-2026): **NO SE ADOPTA**
+
+Criterios de adopción (plan): context precision **+10 % rel.**, recall **−≤2 pts**, p95 **+≤400 ms**.
+Métrica de precisión: `context-precision@6` sobre las probes académicas de
+`rag-retrieval-eval.mjs` (`--json` emite la tabla; `--rerank <v>` ablata el reranker).
+
+| Variante | recall@6 | MRR | acad@6 | ctx-precision@6 | golden ctx recall | p95 retrieval |
+|---|---|---|---|---|---|---|
+| **Baseline (shipped)** | 100 % | 0.982 | 92 % | **59.0 %** | **90.5 %** | 1.2 ms |
+| Chunking semántico (`VB_CHUNK=semantic`) | 100 % | 0.982 | 92 % | 59.0 % (+0 %) | 89.0 % (**−1.5 pts**) | 0.9 ms |
+| Reranker term-coverage (`--rerank cover`) | 100 % | 0.982 | 92 % | **57.7 % (−2.2 % rel)** | — | 1.3 ms |
+| Cross-encoder tiny | — | — | — | — | — | rechazado por presupuesto (abajo) |
+
+- **Chunking semántico:** empata TODAS las métricas de retrieval y BAJA el golden ctx recall
+  1.5 pts (19→23 hallazgos): el empaquetado por oración deja fuera de contexto hechos que el
+  overlap de caracteres sí capturaba. No cumple el +10 % de precisión → **rechazado**. El
+  código queda como harness de ablation (`VB_CHUNK=semantic`, con parent/ordinal/offsets en
+  meta) para re-medirlo si el corpus crece.
+- **Reranker term-coverage:** ctx-precision **empeora** (59.0→57.7 %) — el bonus de cobertura
+  amplifica chunks largos off-target. **Rechazado**; queda `--rerank cover` para re-ablatar.
+- **Cross-encoder tiny (bge-reranker / mmarco-MiniLM):** rechazado por presupuesto SIN
+  ablation completa: pre-consentimiento es imposible por diseño (el gate de consentimiento
+  exige CERO descargas de modelo); post-consentimiento añadiría ~30–300 MB de descarga y
+  ~0.7–1.2 s por consulta (24 pares × ~30–50 ms en wasm single-thread) sobre una baseline de
+  ~1 ms — viola el techo de **+400 ms p95** por un orden de magnitud, para un corpus de ~650
+  chunks cuyo recall@6 ya es 100 %. Coincide con la decisión medida de la Época 2 (arriba).
+  Re-evaluar solo si el corpus crece 10× o si aparece un CE ≤5 MB multilingüe.
+
+**Estado shipped:** baseline de retrieval intacta + precedencia temporal (I6). Rollback de
+cualquier ablation = no pasar el flag (los defaults no cambiaron).

@@ -21,11 +21,26 @@ const vectors = new Float32Array(by.buffer); const dim = idx.dim; const chunks =
 const L = buildBM25(chunks);
 
 // Full pipeline via the shared core (expand → cross-lingual → BM25+dense → RRF →
-// rerank → MMR) so the gate measures exactly what engine.ts ships.
+// rerank → MMR) so the gate measures exactly what engine.ts ships. Every call is
+// timed (retrieval only — embedding is constant across index variants) so the
+// I4 ablation can compare p50/p95 latency between chunking/reranking variants.
+const latencies = [];
+// --rerank <variant> (I4 ablation only): score an alternative reranker without
+// touching the shipped default ("v1"). Production flips ONLY via retrieval-core.
+const rrAt = process.argv.indexOf("--rerank");
+const RERANK = rrAt >= 0 && process.argv[rrAt + 1] ? process.argv[rrAt + 1] : "v1";
+if (RERANK !== "v1") console.log(`  [ablation] rerank variant: ${RERANK}`);
 function rank(qv, lang, query) {
-  const { fused, selected } = retrieveRanked({ chunks, vectors, dim, bm25: L, query, qv, lang, k: 6 });
+  const t0 = performance.now();
+  const { fused, selected } = retrieveRanked({ chunks, vectors, dim, bm25: L, query, qv, lang, k: 6, rerankVariant: RERANK });
+  latencies.push(performance.now() - t0);
   return { fused, mmr: selected };
 }
+const pctl = (arr, q) => {
+  if (!arr.length) return 0;
+  const s = [...arr].sort((a, b) => a - b);
+  return s[Math.min(s.length - 1, Math.floor(q * s.length))];
+};
 
 const { pipeline, env } = await import("@huggingface/transformers");
 env.cacheDir = join(root, "public", "models"); env.allowRemoteModels = false;
@@ -84,21 +99,41 @@ const ACAD = [
   { q: "¿cuántos modelos compararon?", src: /model card/i, lang: "es", flagship: true },
   { q: "which is the best model?", src: /model card/i, lang: "en", flagship: true },
 ];
-let aHit = 0, aRankSum = 0, flagN = 0, flagHit = 0;
+let aHit = 0, aRankSum = 0, flagN = 0, flagHit = 0, aPrecSum = 0;
 const probeLog = [];
 for (const p of ACAD) {
-  const { fused } = rank(await embed(p.q), p.lang, p.q);
+  const { fused, mmr } = rank(await embed(p.q), p.lang, p.q);
   const r = fused.findIndex((i) => p.src.test(chunks[i].source)) + 1;
   const hit = r && r <= 6;
   if (hit) aHit++;
   else console.log(`  MISS: "${p.q}" → best-rank ${r || "none"}`);
   if (p.flagship) { flagN++; if (hit) flagHit++; }
   aRankSum += r || 99;
-  probeLog.push({ q: p.q, lang: p.lang, rank: r || null, hit: !!hit, flagship: !!p.flagship });
+  // context precision @6 (I4 ablation metric, non-gating): share of the SHOWN
+  // top-6 that matches the probe's expected source — measures how much of the
+  // context handed to the LLM is on-target, not just whether one chunk is.
+  const prec = mmr.length ? mmr.filter((i) => p.src.test(chunks[i].source)).length / mmr.length : 0;
+  aPrecSum += prec;
+  probeLog.push({ q: p.q, lang: p.lang, rank: r || null, hit: !!hit, flagship: !!p.flagship, precision6: +prec.toFixed(3) });
 }
+const ctxPrecision = aPrecSum / ACAD.length;
 console.log(`ACADEMIC/fragment probes (${ACAD.length}, where contextual helps):`);
 console.log(`  source-hit@6: ${Math.round((aHit / ACAD.length) * 100)}% (${aHit}/${ACAD.length})  mean best-rank: ${(aRankSum / ACAD.length).toFixed(1)}`);
+console.log(`  context-precision@6: ${(ctxPrecision * 100).toFixed(1)}%  ·  retrieval latency p50 ${pctl(latencies, 0.5).toFixed(1)} ms / p95 ${pctl(latencies, 0.95).toFixed(1)} ms (n=${latencies.length})`);
 console.log(`  flagship "which model wins" probes: ${flagHit}/${flagN} hit@6`);
+
+// --json <path> (I4 ablation): machine-readable metrics for the variant table.
+const jsonAt = process.argv.indexOf("--json");
+if (jsonAt >= 0 && process.argv[jsonAt + 1]) {
+  writeFileSync(process.argv[jsonAt + 1], JSON.stringify({
+    built: idx.built, chunks: chunks.length,
+    glossary: { recall1: r1 / n, recall6: r6 / n, mrr: mrrSum / n, ndcg10: ndcgSum / n, bm25Recall1: b1 / n, bm25Recall6: b6 / n },
+    academic: { hit6: aHit / ACAD.length, meanBestRank: aRankSum / ACAD.length, ctxPrecision6: ctxPrecision, flagship: flagN ? flagHit / flagN : 1 },
+    latencyMs: { p50: pctl(latencies, 0.5), p95: pctl(latencies, 0.95), n: latencies.length },
+    probes: probeLog,
+  }, null, 2));
+  console.log(`  metrics JSON → ${process.argv[jsonAt + 1]}`);
+}
 
 // Época 5 — CI gate: with --gate, fail (exit 1) if any metric regresses below
 // the frozen baseline thresholds. Keeps deploys from silently degrading retrieval.
