@@ -96,6 +96,49 @@ jobs:
       - name: Offline production build + export verification
         run: npm run build:offline
 
+  # US E3 (plan auditoría 3 repos, 2026-07-12): E2E portable de responsive,
+  # teclado y a11y (Playwright + axe) contra el MISMO export offline del job
+  # build-offline (fixture inmutable del checkout, sin red de datos). Job
+  # independiente (sin `needs`: no bloquea ni espera a los demás) pero pensado
+  # como REQUIRED en branch protection — marcarlo ahí, no aquí.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright chromium (+OS deps)
+        run: npx playwright install --with-deps chromium
+      - name: Offline production build (export under test)
+        run: npm run build:offline
+      - name: E2E suite (responsive + keyboard + axe + touch targets)
+        run: npm run test:e2e
+      # Traces + report only when something failed (debugging payload).
+      - name: Upload Playwright report (on failure)
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+      # Visual-regression captures: uploaded on EVERY run (they are artifacts
+      # to diff between runs, not compared baselines — cross-OS font
+      # rasterization makes pixel baselines flaky; see screenshots.spec.ts).
+      - name: Upload screenshots (always)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: e2e-screenshots
+          path: e2e-screenshots/
+          if-no-files-found: ignore
+          retention-days: 30
+
   # Integración CON red (no bloqueante): ¿el manifiesto de release publicado sigue
   # siendo alcanzable y verificable de punta a punta? Un fallo aquí señala
   # disponibilidad del raw host o un corte a medio publicar — no veta el PR.
