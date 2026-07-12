@@ -183,10 +183,12 @@ export function PanelTable({ rows, lang }: { rows: VisaPanelRow[]; lang: Lang })
 
       {/* AX3a: never taller than 65dvh on small screens; AX3b: .scroll-x-shadow
           (content.css) paints edge scrims that hint at horizontal overflow;
-          AY4: on ultrawide (2xl) let the table breathe up to 75dvh/1000px */}
+          AY4: on ultrawide (2xl) let the table breathe up to 75dvh/1000px;
+          J2: overscroll-contain — wheel/touch at the table's edge stays inside
+          the virtualized scroller instead of chaining to the page */}
       <div
         ref={parentRef}
-        className="scroll-x-shadow h-[min(560px,65dvh)] overflow-auto rounded-xl border border-border 2xl:h-[min(75dvh,1000px)]"
+        className="scroll-x-shadow h-[min(560px,65dvh)] overflow-auto overscroll-contain rounded-xl border border-border 2xl:h-[min(75dvh,1000px)]"
         tabIndex={0}
         aria-label={tr(lang, "tableScroll")}
       >

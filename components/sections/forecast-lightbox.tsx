@@ -171,7 +171,7 @@ export function ForecastLightbox({ series, index, panel, forecasts, panelIndex, 
                 <button
                   key={v.k}
                   onClick={() => setView(v.k)}
-                  className={`rounded-md px-2.5 py-1 text-xs transition ${view === v.k ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}
+                  className={`rounded-md px-2.5 py-1 text-xs transition ${view === v.k ? "bg-[var(--color-accent-btn)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}
                 >
                   {v.label}
                 </button>

@@ -260,7 +260,7 @@ export function Resultados() {
                 <div className="mt-1 flex rounded-lg border border-border p-0.5">
                   {([["order", "resSortOrder"], ["mase", "resSortMase"], ["backlog", "resSortBacklog"], ["movement", "resSortMovement"]] as const).map(([k, key]) => (
                     <button key={k} onClick={() => setSort(k)} aria-pressed={sort === k}
-                      className={`rounded-md px-2 py-1 text-xs transition ${sort === k ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}>
+                      className={`rounded-md px-2 py-1 text-xs transition ${sort === k ? "bg-[var(--color-accent-btn)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}>
                       {tr(lang, key)}
                     </button>
                   ))}
@@ -272,7 +272,7 @@ export function Resultados() {
                   className="rounded-lg border border-border p-1.5 text-[var(--color-muted)] transition hover:text-[var(--color-ink)]">
                   {dense ? <Rows3 className="h-4 w-4" aria-hidden /> : <Rows2 className="h-4 w-4" aria-hidden />}
                 </button>
-                <span className="inline-flex items-center rounded-full bg-[var(--color-accent)] px-2.5 py-1 text-xs font-bold text-white tabular-nums">{nf(filtered.length)}</span>
+                <span className="inline-flex items-center rounded-full bg-[var(--color-accent-btn)] px-2.5 py-1 text-xs font-bold text-white tabular-nums">{nf(filtered.length)}</span>
               </div>
             </div>
 
@@ -297,7 +297,7 @@ export function Resultados() {
                 <div className="ml-auto flex items-center gap-2">
                   <button onClick={() => setBasket([])} className="rounded-lg border border-border px-2.5 py-1 text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">{tr(lang, "resClearBasket")}</button>
                   <button onClick={() => setBasketOpen(true)} disabled={basket.length < 2}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-bold text-white transition disabled:opacity-40">
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent-btn)] px-3 py-1 text-xs font-bold text-white transition disabled:opacity-40">
                     <Layers className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "resCompareN")} ({basket.length})
                   </button>
                 </div>
