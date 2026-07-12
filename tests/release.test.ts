@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 
 import { describe, expect, it } from "vitest";
 
-import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, executeSwap, outFor, planSwap, releaseState, swapDisposition, verifyEntry } from "../lib/release.mjs";
+import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, executeDisposition, executeSwap, outFor, planSwap, releaseState, swapDisposition, verifyEntry } from "../lib/release.mjs";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
@@ -205,7 +205,9 @@ describe("executeSwap — transactional with rollback (author audit 11-jul)", ()
 
 describe("swapDisposition — the abort decision the script executes with exit(1)", () => {
   it("unrecovered ⇒ abort, even if rolledBack lied", () => {
-    const d = swapDisposition({ swapped: 0, rolledBack: false, unrecovered: ["a.csv"], error: "EIO" });
+    // Ronda 4: el estado CONTRADICTORIO real — rolledBack:true jurando exito CON
+    // unrecovered poblado. unrecovered debe mandar.
+    const d = swapDisposition({ swapped: 0, rolledBack: true, unrecovered: ["a.csv"], error: "EIO" });
     expect(d.kind).toBe("abort");
     expect(d).toHaveProperty("message", expect.stringContaining("a.csv"));
   });
@@ -215,5 +217,23 @@ describe("swapDisposition — the abort decision the script executes with exit(1
   });
   it("success ⇒ fresh", () => {
     expect(swapDisposition({ swapped: 96, rolledBack: false })).toEqual({ kind: "fresh" });
+  });
+});
+
+describe("executeDisposition — the abort EFFECT runs under test (round 4)", () => {
+  it("abort calls error then exit(1)", () => {
+    const calls: string[] = [];
+    executeDisposition(
+      { kind: "abort", message: "rollback INCOMPLETO (EIO) — sin restaurar: a.csv" },
+      { backup: "/x/.fetch-backup", error: (m: string) => calls.push(`err:${m}`), exit: (c: number) => calls.push(`exit:${c}`) },
+    );
+    expect(calls[0]).toContain("rollback INCOMPLETO");
+    expect(calls[0]).toContain("/x/.fetch-backup");
+    expect(calls[1]).toBe("exit:1");
+  });
+  it("stale and fresh never touch exit", () => {
+    const boom = () => { throw new Error("exit no debe llamarse"); };
+    executeDisposition({ kind: "stale", reason: "r" }, { backup: "b", error: () => {}, exit: boom });
+    executeDisposition({ kind: "fresh" }, { backup: "b", error: () => {}, exit: boom });
   });
 });
