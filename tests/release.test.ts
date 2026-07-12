@@ -167,6 +167,32 @@ describe("executeSwap — transactional with rollback (author audit 11-jul)", ()
     expect(files.has("out/c.png")).toBe(false);  // el artefacto nuevo no quedo a medias
     expect([...files].some((f) => f.startsWith("bak/"))).toBe(false);
   });
+  it("wounded ROLLBACK is fail-closed: reports unrecovered and PRESERVES the backup", async () => {
+    // 2a ronda audit: heridas fase B (b.json) Y la restauracion de a.csv — antes esto
+    // devolvia rolledBack:true, borraba el backup y a.csv desaparecia para siempre.
+    const files = new Set(["out/a.csv", "out/b.json", "stg/a.csv", "stg/b.json", "stg/c.png"]);
+    const fs = memFs(files, "stg/b.json");
+    const innerRename = fs.rename;
+    fs.rename = async (a: string, b: string) => {
+      if (a === "bak/a.csv") throw new Error("EIO restore a.csv");
+      return innerRename(a, b);
+    };
+    const r = await executeSwap(entries, results, { ...ctx, fs });
+    expect(r.rolledBack).toBe(false);
+    expect(r.unrecovered).toContain("a.csv");
+    expect(files.has("bak/a.csv")).toBe(true); // la unica copia sobrevive en el backup
+    expect(files.has("out/b.json")).toBe(true); // lo restaurable se restauro igual
+  });
+  it("restore overwrites a placed file (rename semantics) without false alarms", async () => {
+    // a.csv se coloca (fase B) y LUEGO falla b.json: el restore de a.csv debe sobreescribir
+    // el staged colocado y NO marcarse unrecovered por el doble estado placed+backed.
+    const files = new Set(["out/a.csv", "out/b.json", "stg/a.csv", "stg/b.json", "stg/c.png"]);
+    const fs = memFs(files, "stg/b.json");
+    const r = await executeSwap(entries, results, { ...ctx, fs });
+    expect(r).toMatchObject({ rolledBack: true });
+    expect(r.unrecovered).toBeUndefined();
+    expect(files.has("out/a.csv")).toBe(true);
+  });
   it("failed-optional entries are skipped, their old fallback survives", async () => {
     const files = new Set(["out/a.csv", "out/c.png", "stg/a.csv"]);
     const partial = new Map<string, true | string>([["a.csv", true], ["c.png", "HTTP 404"]]);
