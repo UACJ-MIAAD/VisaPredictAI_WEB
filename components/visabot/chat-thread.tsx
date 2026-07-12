@@ -13,6 +13,7 @@ import { Check, Copy, Loader2, Volume2 } from "lucide-react";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
+import { isTruncated } from "./observability";
 import type { ChatMessage, ChartPayload, Lang } from "./types";
 
 export function ChatThread({
@@ -60,6 +61,14 @@ export function ChatThread({
               {m.extractive && m.content && (
                 <p className="mt-2 text-[0.68rem] italic text-[var(--color-muted)]">
                   {tr(lang, "vbExtractiveNote")}
+                </p>
+              )}
+              {/* US I5: truncated/stopped answers are marked incomplete. When the
+                  server timeout already appended its own italic note into the
+                  content (chat.mjs truncationNote), don't render it twice. */}
+              {m.incomplete && m.content && !isTruncated(m.content) && (
+                <p className="mt-2 text-[0.68rem] italic text-[var(--color-muted)]">
+                  {tr(lang, "vbIncomplete")}
                 </p>
               )}
             </div>

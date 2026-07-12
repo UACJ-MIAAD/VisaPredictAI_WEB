@@ -190,6 +190,10 @@ const S = {
     es: "Respuesta compuesta directamente desde las fuentes (sin el modelo generativo).",
     en: "Answer composed directly from the sources (without the generative model).",
   },
+  vbIncomplete: {
+    es: "Respuesta incompleta (generación interrumpida).",
+    en: "Incomplete answer (generation interrupted).",
+  },
   vbMic: { es: "Dictar por voz", en: "Dictate by voice" },
   vbMicStop: { es: "Detener dictado", en: "Stop dictation" },
   vbSpeak: { es: "Leer en voz alta", en: "Read aloud" },

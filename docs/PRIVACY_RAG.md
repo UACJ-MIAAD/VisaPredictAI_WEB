@@ -27,8 +27,50 @@
 | Dato | Destino | Por qué | Base técnica |
 |---|---|---|---|
 | Pregunta del usuario + historial breve (cap 12 turnos) + chunks de contexto (corpus público hash-verificado) + descriptores sintéticos estructurados | Netlify Function `chat.mjs` → **Anthropic API** (streaming) | Generar la respuesta con el LLM. Es el ÚNICO flujo que envía texto del usuario fuera del dispositivo | `netlify/functions/chat.mjs`; caps `MAX_QUERY`/`MAX_HISTORY`/`MAX_CTX` |
-| IP del cliente (agregada como contador por ventana de tiempo) | Netlify Blobs (store `visabot-rate`) | Rate limiting anti-abuso; la ventana anterior se poda en cada hit | `chat.mjs` (`limitedShared`) |
-| Eventos de uso SIN contenido (p. ej. vista de pronóstico) | Plausible | Analítica agregada sin cookies | `lib/analytics.ts` — invariante: ningún evento lleva input del usuario |
+| IP del cliente (agregada como contador por ventana de tiempo) | Netlify Blobs (store `visabot-rate`) | Rate limiting anti-abuso; la ventana anterior se poda en cada hit (retención efectiva ≤ 2 min) | `chat.mjs` (`limitedShared`) |
+| Eventos de uso SIN contenido (p. ej. vista de pronóstico) | Plausible | Analítica agregada sin cookies | `lib/analytics.ts` — invariante: ningún evento lleva input del usuario, **forzado por `sanitizeProps()`** (ver §3bis) |
+
+## 3bis. Observabilidad privada del chat (US I5)
+
+Qué se mide del asistente y CÓMO se garantiza que nunca incluye texto del usuario.
+
+**Plausible (cliente, vía `track()`):**
+
+| Evento | Props (todas de llave fija) | Para qué |
+|---|---|---|
+| `VisaBot Query` | `lang`, `surface` | volumen de uso |
+| `VisaBot Answer` | `lang`, `surface`, `mode` (`bm25`/`dense`), `sources` (conteo), `no_sources` (proxy de abstención: respondió sin ninguna fuente), `extractive` (fallback), `guard` (rechazo del code-guard), `truncated` (corte por timeout), `ttft` (bucket), `total` (bucket) | calidad + latencia |
+| `VisaBot Stop` | `lang`, `surface` | tasa de cancelación |
+| `VisaBot Fallback` / `Open` / `Speak` / `Voice` / `Tool` / `Source Click` | `lang` (+ etiquetas fijas `tool`, `source`) | uso de features |
+
+Las duraciones van en **buckets** (`<0.5s` … `>30s`, `timeBucket()`); los conteos son enteros
+pequeños; el resto son booleanos o etiquetas fijas — agregado y de baja cardinalidad por diseño.
+Tres candados lo garantizan: (1) `sanitizeProps()` en `lib/analytics.ts` **descarta** llaves con
+forma de texto libre (`q|query|text|content|message|prompt|input|question|answer`) y trunca todo
+string a 120 chars; (2) `answerEventProps()` (`components/visabot/observability.ts`) tiene llaves
+fijas — la query ni siquiera es parámetro; (3) un scan de código en `tests/observability.test.ts`
+recorre TODOS los call-sites de `track()` en `components/` + `lib/` y falla ante una llave prohibida.
+
+**Log de la función (servidor, `netlify/functions/chat.mjs`):** una línea estructurada por request:
+
+```
+[chat] {"rid","lang","surface","n_synth","n_ctx","tokens_in","tokens_out",
+        "ttft_ms","total_ms","guard","truncated","error"}
+```
+
+`rid` es el mismo UUID del header `x-request-id` que llevan **todas** las respuestas (éxito,
+errores tipados y 405), de modo que un reporte de usuario se correlaciona con tiempos y errores
+del servidor **sin** registrar contenido alguno. Los tokens provienen de los frames `usage` del
+upstream cuando Anthropic los reporta. Contratos cubiertos por `tests/chat-stream.test.ts`.
+
+**Cancelación y timeouts:** el botón de detener aborta el fetch del navegador y la función
+propaga el aborto al request upstream de Anthropic (nada sigue generándose para nadie). El
+servidor corta streams con >15 s sin bytes del upstream o >90 s totales; la respuesta parcial
+se conserva y se marca **incompleta** en la interfaz (nota visible + flag `incomplete`).
+
+**Feedback:** hoy NO existe función de feedback/valoración. Si se añade, será estrictamente
+opt-in, no podrá capturar texto libre hacia analítica (el scrubber de `track()` ya lo impide)
+y este documento se actualiza primero.
 
 **Importante para el usuario:** si escribes tu priority date u otra información personal en el
 chat, ese texto viaja a la función y a la Anthropic API para generar la respuesta. El sitio no
@@ -52,8 +94,8 @@ existen cuentas).
 
 | Quién | Qué retiene | Control |
 |---|---|---|
-| Este sitio / la función | **Nada** de conversaciones (stateless); Blobs solo contadores IP:ventana efímeros | Por diseño; ver `docs/THREAT_MODEL.md` §4.2–4.3 |
-| Netlify | Logs operativos de invocación de Functions (retención estándar del proveedor) | Configuración de la cuenta Netlify |
+| Este sitio / la función | **Nada** de conversaciones (stateless); Blobs solo contadores IP:ventana efímeros (≤ 2 min) | Por diseño; ver `docs/THREAT_MODEL.md` §4.2–4.3 |
+| Netlify | Logs operativos de invocación de Functions, incluida la línea `[chat]` de §3bis (métricas agregadas, sin contenido) — retención estándar del proveedor, ≤ 30 días | Configuración de la cuenta Netlify |
 | Anthropic | Según los términos comerciales de la API vigentes | Revisión anual + ante cambio de proveedor |
 | Plausible | Métricas agregadas sin PII | Sin cookies ni IDs persistentes |
 

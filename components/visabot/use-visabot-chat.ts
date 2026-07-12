@@ -21,9 +21,26 @@ import {
   isSemanticStarted,
   downloadProgress,
 } from "./engine";
-import type { ChatMessage, ChartPayload, Lang, Source, SyntheticDescriptor } from "./types";
+import { answerEventProps, isGuardRefusal, isTruncated } from "./observability";
+import type { ChatMessage, ChartPayload, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
 
 export type Surface = "widget" | "console";
+
+// US I5: the DISPLAYED source list for an LLM answer is EXACTLY the server's
+// {t:"sources"} frame — every source that actually entered the grounded prompt
+// (rebuilt synthetics + hash-verified chunks) and nothing else. A chunk the
+// server rejected is absent from the frame, so it can never be displayed.
+// Local retrieval results contribute only the deep-link URL, matched by
+// identical text (the server verified those exact bytes) or, for synthetics,
+// by their reserved citation number.
+export function mergeServerSources(local: Source[], server: ServerSource[] | undefined): Source[] {
+  if (!server) return []; // no frame → nothing verifiably grounded the answer
+  const byText = new Map(local.map((s) => [s.text, s]));
+  return server.map((sv) => {
+    const l = byText.get(sv.text) ?? local.find((s) => s.synthetic && s.n === sv.n);
+    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? "", synthetic: l?.synthetic };
+  });
+}
 
 // localStorage flag: the user already consented to the ~150 MB semantic
 // download once — don't re-ask on later visits (AZ1).
@@ -212,13 +229,17 @@ export function useVisabotChat({
 
       const ctrl = new AbortController();
       abortRef.current = ctrl;
+      // US I5: private latency metrics (aggregate buckets — never the query).
+      const tStart = Date.now();
+      let tFirst = 0;
       try {
         const res = await generate(
           q,
           history,
           sources,
           lang,
-          (delta) =>
+          (delta) => {
+            if (!tFirst) tFirst = Date.now(); // TTFT: first streamed token
             setMessages((m) => {
               if (!alive()) return m; // a newer turn / stop / new-chat superseded this stream
               const c = [...m];
@@ -226,35 +247,49 @@ export function useVisabotChat({
               if (!last || last.role !== "assistant") return m;
               c[c.length - 1] = { ...last, content: last.content + delta };
               return c;
-            }),
+            });
+          },
           ctrl.signal,
           surface,
           synthetics,
         );
-        // US I1: the server returns the synthetic sources it ACTUALLY rebuilt
-        // and grounded the LLM with ({t:"sources"} frame) — swap them over the
-        // locally-built ones (match by n, keep the local deep-link url) so the
-        // displayed citation always equals the served grounding.
-        if (res.serverSources?.length) {
-          sources = sources.map((s) => {
-            if (!s.synthetic) return s;
-            const sv = res.serverSources!.find((x) => x.n === s.n);
-            return sv ? { ...s, title: sv.title, source: sv.source, text: sv.text } : s;
-          });
-        }
+        // US I5: for LLM answers the displayed sources are EXACTLY the server's
+        // {t:"sources"} frame (everything that entered the grounded prompt —
+        // synthetics + hash-verified chunks; rejected chunks are absent). The
+        // extractive fallback keeps the local list: it is composed client-side
+        // from those very chunks, with no server prompt involved.
+        const displayed = res.extractive ? sources : mergeServerSources(sources, res.serverSources);
+        const truncated = isTruncated(res.text); // server timeout cut (note appended by chat.mjs)
         setMessages((m) => {
           if (!alive()) return m;
           const c = [...m];
           c[c.length - 1] = {
             role: "assistant",
             content: res.text,
-            sources,
+            sources: displayed,
             extractive: res.extractive,
             chart,
+            ...(truncated ? { incomplete: true } : {}),
           };
           return c;
         });
         if (alive()) setLiveStatus(tr(lang, "vbReady"));
+        // US I5: aggregate answer metrics (TTFT / total / mode / nº sources /
+        // guard / fallback / abstention / truncation) — fixed keys, no query.
+        track(
+          "VisaBot Answer",
+          answerEventProps({
+            lang,
+            surface,
+            mode: modelReady ? "dense" : "bm25",
+            nSources: displayed.length,
+            extractive: res.extractive,
+            guard: isGuardRefusal(res.text),
+            truncated,
+            ttftMs: (tFirst || Date.now()) - tStart,
+            totalMs: Date.now() - tStart,
+          }),
+        );
         if (res.extractive)
           track("VisaBot Fallback", surface === "console" ? { lang, surface } : { lang });
       } catch {
@@ -274,11 +309,15 @@ export function useVisabotChat({
         }
       }
     },
-    [busy, lang, messages, surface, prepare],
+    [busy, lang, messages, surface, prepare, modelReady],
   );
 
   const stop = React.useCallback(() => {
     seqRef.current++; // invalidate the in-flight stream's continuations
+    const hadStream = abortRef.current !== null;
+    // US I5: aborting this signal propagates through engine.generate's fetch to
+    // the Netlify function, whose ReadableStream `cancel` aborts the upstream
+    // Anthropic request — the stop button really stops the generation.
     abortRef.current?.abort();
     abortRef.current = null;
     setBusy(false);
@@ -286,8 +325,17 @@ export function useVisabotChat({
     // If stopped before any token arrived, remove the empty assistant
     // placeholder — the seq guard now prevents the finalizers from ever filling
     // it, so otherwise the "thinking…" spinner would hang forever (audit).
-    setMessages((m) => (m.length && m[m.length - 1].role === "assistant" && !m[m.length - 1].content ? m.slice(0, -1) : m));
-  }, []);
+    // A PARTIAL answer stays visible and is marked incomplete (US I5).
+    setMessages((m) => {
+      if (!m.length || m[m.length - 1].role !== "assistant") return m;
+      const last = m[m.length - 1];
+      if (!last.content) return m.slice(0, -1);
+      const c = [...m];
+      c[c.length - 1] = { ...last, incomplete: true };
+      return c;
+    });
+    if (hadStream) track("VisaBot Stop", { lang, surface }); // aggregate cancellation count — no query
+  }, [lang, surface]);
 
   const newChat = React.useCallback(() => {
     stop();
