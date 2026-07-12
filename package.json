@@ -25,6 +25,8 @@
     "typecheck": "tsc --noEmit",
     "pretest": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\"",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:build": "npm run build:offline && playwright test",
     "guard:test": "node scripts/test-code-guard.mjs",
     "test:coverage": "vitest run --coverage",
     "pretest:coverage": "node -e \"const fs=require('fs'),p='netlify/functions/rag-hashes.json';fs.existsSync(p)||fs.writeFileSync(p,'[]')\""
@@ -47,6 +49,8 @@
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/katex": "^0.16.7",
     "@types/node": "^22.13.0",

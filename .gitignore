@@ -77,3 +77,8 @@ netlify/functions/rag-hashes.json
 public/models/
 public/ort/
 .fetch-staging/
+
+# Playwright E2E artifacts (US E3)
+playwright-report/
+test-results/
+e2e-screenshots/
