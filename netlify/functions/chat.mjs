@@ -144,7 +144,7 @@ export function validSyntheticShape(source, text) {
 // Hash-verified RAG chunks ONLY (US I1: synthetic free-text no longer enters here —
 // the handler 400s such requests before this runs; server-rebuilt synthetics are
 // prepended AFTER, with their citation numbers passed as `reserved`).
-export function sanitizeContext(raw, reserved) {
+export function sanitizeContext(raw, reserved, lang) {
   const out = [];
   const used = new Set(reserved ?? []); // dedupe citation numbers so [n] is never ambiguous (finding 17)
   for (const c of (Array.isArray(raw) ? raw : []).slice(0, MAX_CTX)) {
@@ -157,9 +157,12 @@ export function sanitizeContext(raw, reserved) {
     // viejo (lista de hashes, meta=null), la cita queda SIN etiqueta (título/fuente
     // vacíos) en vez de aceptar la del cliente: el texto sigue siendo auténtico, pero no
     // hay superficie para una fuente fabricada.
+    // Resuelve por idioma de la petición si el hash es bilingüe (~6 textos ES/EN
+    // idénticos comparten hash); si no, usa el primario. Siempre server-owned.
     const meta = RAG_META[h];
-    const title = String(meta?.title || "").slice(0, 160);
-    const source = String(meta?.source || "").slice(0, 120);
+    const langMeta = (lang && meta?.byLang?.[lang]) || meta;
+    const title = String(langMeta?.title || "").slice(0, 160);
+    const source = String(langMeta?.source || "").slice(0, 120);
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
@@ -573,7 +576,7 @@ const handler = async (req) => {
 
   const context = [
     ...synthSources,
-    ...sanitizeContext(rawCtx, synthSources.map((s) => s.n)), // F3: solo chunks hash-verificados
+    ...sanitizeContext(rawCtx, synthSources.map((s) => s.n), lang), // F3: solo chunks hash-verificados
   ];
 
   const messages = [...normalizeHistory(body?.history), { role: "user", content: query }];
