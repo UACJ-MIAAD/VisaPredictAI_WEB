@@ -49,7 +49,15 @@ export default defineConfig({
         "lib/release.mjs": { statements: 90 },
         "lib/visabot/retrieval-core.mjs": { statements: 60 },
         "lib/visabot/analytics.ts": { statements: 70 },
-        "lib/data/panel-core.ts": { statements: 88 },
+        // US I1 (#30): la lógica de panel-core.ts vive ahora en panel-core.mjs
+        // (single source con la función de Netlify) — el piso SIGUE a la lógica,
+        // no al shim de re-exports (.ts quedó en fetchPanelText + type surface).
+        "lib/data/panel-core.mjs": { statements: 88 },
+        "lib/data/forecasts-core.mjs": { statements: 90 },
+        // Módulos nuevos del recompute server-side (US I1) — pisos desde su
+        // primera medición (86.5 / 92.4), redondeados hacia abajo.
+        "lib/visabot/synthetic-builders.mjs": { statements: 80 },
+        "lib/visabot/synthetic-context.mjs": { statements: 90 },
         "lib/visabot/gallery.ts": { statements: 80 },
         "lib/data/eda-derive.ts": { statements: 90 },
         "lib/site-map.ts": { statements: 60 },

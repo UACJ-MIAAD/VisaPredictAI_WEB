@@ -21,7 +21,7 @@ import {
   isSemanticStarted,
   downloadProgress,
 } from "./engine";
-import type { ChatMessage, ChartPayload, Lang, Source } from "./types";
+import type { ChatMessage, ChartPayload, Lang, Source, SyntheticDescriptor } from "./types";
 
 export type Surface = "widget" | "console";
 
@@ -48,8 +48,10 @@ export function useVisabotChat({
   lang: Lang;
   surface: Surface;
   /** console-only hook point: builds the chart for the (follow-up-augmented)
-   *  query and prepends its synthetic grounding sources. */
-  prepare?: (rq: string, sources: Source[]) => { sources: Source[]; chart?: ChartPayload };
+   *  query, prepends its synthetic grounding sources (display + extractive
+   *  fallback only) and returns the structured descriptors the server rebuilds
+   *  the grounding text from (US I1, #30). */
+  prepare?: (rq: string, sources: Source[]) => { sources: Source[]; chart?: ChartPayload; synthetics?: SyntheticDescriptor[] };
 }) {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState("");
@@ -200,10 +202,12 @@ export function useVisabotChat({
       // follow-up-augmented query (rq), so "FAD" after "zoom india F1" still
       // resolves country+category+intent.
       let chart: ChartPayload | undefined;
+      let synthetics: SyntheticDescriptor[] | undefined;
       if (prepare) {
         const p = prepare(rq, sources);
         sources = p.sources;
         chart = p.chart;
+        synthetics = p.synthetics;
       }
 
       const ctrl = new AbortController();
@@ -225,7 +229,19 @@ export function useVisabotChat({
             }),
           ctrl.signal,
           surface,
+          synthetics,
         );
+        // US I1: the server returns the synthetic sources it ACTUALLY rebuilt
+        // and grounded the LLM with ({t:"sources"} frame) — swap them over the
+        // locally-built ones (match by n, keep the local deep-link url) so the
+        // displayed citation always equals the served grounding.
+        if (res.serverSources?.length) {
+          sources = sources.map((s) => {
+            if (!s.synthetic) return s;
+            const sv = res.serverSources!.find((x) => x.n === s.n);
+            return sv ? { ...s, title: sv.title, source: sv.source, text: sv.text } : s;
+          });
+        }
         setMessages((m) => {
           if (!alive()) return m;
           const c = [...m];

@@ -6,9 +6,12 @@
 // client can fall back to extractive mode.
 //
 // Protocol (text/event-stream):
+//   data: {"t":"sources","sources":[{n,title,source,text}]}   (US I1: server-rebuilt synthetics, first frame)
 //   data: {"t":"delta","text":"..."}
 //   data: {"t":"done"}
-//   data: {"t":"error","code":"no_key|rate|bad_request|server"}
+//   data: {"t":"error","code":"no_key|rate|bad_request|server|synthetic_descriptor_required|
+//                              release_stale|unknown_series|unknown_month|synthetic_unavailable|
+//                              synthetic_rebuild_failed"}
 
 import { createHash } from "node:crypto";
 import RAG_HASHES from "./rag-hashes.json" with { type: "json" };
@@ -16,6 +19,14 @@ import RAG_HASHES from "./rag-hashes.json" with { type: "json" };
 // plain-Node function can import it): the forecast horizon must NEVER be
 // hand-typed here (regla #0) — it comes from forecasts_meta.json end-to-end.
 import { SITE_STATS } from "../../lib/content/site-stats.generated.mjs";
+// US I1 (PENDIENTES #30): server-side recompute of the synthetic context. The
+// client sends structured DESCRIPTORS (never free text); this module validates
+// them, fetches the release artifacts from our own CDN, re-verifies them
+// against build-time sha256 pins and rebuilds the exact grounding text with
+// the same shared builders the browser renders from (single source).
+import {
+  validateDescriptors, loadSyntheticData, buildSyntheticContext, SYNTH_ERR,
+} from "../../lib/visabot/synthetic-context.mjs";
 
 // Validated forecast horizon (months) interpolated into the system prompt.
 const HORIZON = SITE_STATS.horizonMonths;
@@ -28,34 +39,31 @@ const MAX_OUTPUT = 1024;
 
 // F3: el `context` viene del cliente y se interpola en el SYSTEM prompt — sin validación
 // era inyección de system-prompt por diseño (proxy de Claude repurposable). Server-side:
-//  • un chunk se acepta si su sha256(text) está en el índice RAG publicado (allowlist
-//    generada por build-rag-index.mjs), o
-//  • si es uno de los ≤2 sintéticos legítimos del console (tabla del mes / nota del
-//    gráfico), reconocibles por su `source` literal y con tope de tamaño.
-// title/source se truncan SIEMPRE (también son texto interpolado al prompt).
+// un chunk SOLO se acepta si su sha256(text) está en el índice RAG publicado (allowlist
+// generada por build-rag-index.mjs). title/source se truncan SIEMPRE (también son texto
+// interpolado al prompt).
+//
+// US I1 (#30): el canal de TEXTO LIBRE para sintéticos MURIÓ. Un context item con
+// fuente sintética (labels/prefijos de abajo) ya no se valida por forma — la request
+// entera se rechaza con 400 `synthetic_descriptor_required`: el cliente manda
+// DESCRIPTORES en `body.synthetics` y el texto lo reconstruye el SERVIDOR desde datos
+// hash-verificados (lib/visabot/synthetic-context.mjs). La inyección por sintéticos
+// queda cerrada por construcción: el servidor no lee ni una cifra del cliente.
 const KNOWN_HASHES = new Set(RAG_HASHES);
-// The ≤2 legitimate synthetic sources the console attaches (month-table /
-// live-chart grounding). Matched by structural PREFIX, not an exact literal, so
-// the drift-prone panel year ("2001–2026") is no longer part of the security
-// allowlist — the console derives that year from SITE_STATS and this must not
-// require a byte-exact match (findings 16, 22, P5). Residual: an attacker could
-// supply ≤2×MAX_CHUNK chars under a guessable prefix, but the system prompt
-// treats SOURCES as quoted, non-instruction material and the count is capped.
+// Los labels sintéticos, conservados para (a) detectar clientes viejos que aún manden
+// texto libre (→ 400) y (b) etiquetar/validar las fuentes que el SERVIDOR genera.
 const SYNTH_PREFIXES = ["VisaPredict AI panel (", "Panel VisaPredict AI ("];
 const SYNTH_EXACT = new Set(["Live chart (real data panel)", "Gráfico en vivo (panel de datos real)"]);
-const isSynthSource = (s) => SYNTH_EXACT.has(s) || SYNTH_PREFIXES.some((p) => s.startsWith(p));
+const isSynthSource = (s) => SYNTH_EXACT.has(s) || s === "VisaPredict AI panel" || s === "Panel VisaPredict AI" || SYNTH_PREFIXES.some((p) => s.startsWith(p));
 const MAX_CHUNK = 4000; // los chunks del índice miden ≤ ~1.1k; los sintéticos, una tabla de mes
-const MAX_SYNTH = 2;
 
-// A-03 (auditoría ciega 11-jul): el prefijo de `source` es adivinable y el texto venía
-// del cliente SIN validar — 4k chars arbitrarios entraban como fuente privilegiada del
-// system prompt (reproducido por el auditor). Los sintéticos legítimos son SIEMPRE
-// salida de plantillas deterministas del cliente (monthTableText / bulletinDiffText /
-// forecastText / chartContextNote), así que su FORMA es verificable en el servidor:
-// encabezado exacto de plantilla con slots acotados + cuerpo línea-a-línea bajo la
-// gramática de tabla. Texto libre con prefijo falsificado ⇒ CERO chunks. Esto valida
-// forma, no cifras: la autenticidad plena (recomputar en servidor desde el corte
-// publicado) queda registrada como endurecimiento pendiente.
+// A-03 (auditoría ciega 11-jul) + US I1 (12-jul, cierra #30): estas gramáticas de
+// plantilla validaban la FORMA de los sintéticos que mandaba el cliente. Con el
+// recompute server-side ya NINGÚN texto sintético del cliente llega al prompt; las
+// gramáticas se CONSERVAN como self-check fail-closed del texto que el PROPIO
+// servidor reconstruye (una regresión del builder que rompa la plantilla tira la
+// request con `synthetic_rebuild_failed` en vez de interpolar texto inesperado) y
+// como contrato en tests (la nota de abstención I2 sigue pineada por skeleton).
 const VAL = "(?:C|U|—|[0-9]{1,2}[A-Z]{3}[0-9]{2,4}|\\d{4}-\\d{2}-\\d{2}|\\d{1,2} de [a-záéíóú]{3,12} de \\d{4}|[A-Za-z]{3,10} \\d{1,2}, \\d{4}|\\d{1,2} [a-záéíóú]{3,10}\\.? \\d{4})";
 const SEG = `[^;\\n]{1,45} ${VAL}(?:→${VAL})?(?: \\([+−-]?\\d{1,5}d\\))?`;
 const ROW_RX = new RegExp(`^[A-Za-z0-9_·\\- ]{1,16}: ${SEG}(?:; ${SEG})*$`);
@@ -121,31 +129,22 @@ export function validSyntheticShape(source, text) {
   return lines.slice(1).every((l) => ROW_RX.test(l));
 }
 
-export function sanitizeContext(raw) {
+// Hash-verified RAG chunks ONLY (US I1: synthetic free-text no longer enters here —
+// the handler 400s such requests before this runs; server-rebuilt synthetics are
+// prepended AFTER, with their citation numbers passed as `reserved`).
+export function sanitizeContext(raw, reserved) {
   const out = [];
-  const used = new Set(); // dedupe citation numbers so [n] is never ambiguous (finding 17)
-  let synth = 0;
+  const used = new Set(reserved ?? []); // dedupe citation numbers so [n] is never ambiguous (finding 17)
   for (const c of (Array.isArray(raw) ? raw : []).slice(0, MAX_CTX)) {
     if (typeof c?.text !== "string" || !c.text || c.text.length > MAX_CHUNK) continue;
     const source = typeof c.source === "string" ? c.source.slice(0, 120) : "";
-    const known = KNOWN_HASHES.has(createHash("sha256").update(c.text, "utf8").digest("hex"));
-    if (!known && (!isSynthSource(source) || !validSyntheticShape(source, c.text) || ++synth > MAX_SYNTH)) continue;
+    if (!KNOWN_HASHES.has(createHash("sha256").update(c.text, "utf8").digest("hex"))) continue;
+    const title = typeof c.title === "string" ? c.title.slice(0, 160) : "";
+    if (!slotSafe(title) || !slotSafe(source)) continue; // chunk publicado con titulo/fuente instruccional — fuera entero
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
-    let title = typeof c.title === "string" ? c.title.slice(0, 160) : "";
-    let src = source;
-    if (!known) {
-      // R0-02: el titulo/fuente de un sintetico eran texto libre interpolado al prompt —
-      // canal de instruccion identico al que A-03 cerro en el cuerpo. Se SOBREESCRIBEN
-      // en servidor: la fuente colapsa a su etiqueta fija y el titulo se vacia (todo el
-      // contexto util ya vive en el texto validado por plantilla).
-      title = "";
-      src = SYNTH_EXACT.has(source) ? source : source.startsWith("VisaPredict AI panel (") ? "VisaPredict AI panel" : "Panel VisaPredict AI";
-    } else if (!slotSafe(title) || !slotSafe(src)) {
-      continue; // chunk publicado con titulo/fuente instruccional — fuera entero
-    }
-    out.push({ n, title, source: src, text: c.text });
+    out.push({ n, title, source, text: c.text });
   }
   return out;
 }
@@ -235,9 +234,21 @@ async function limited(ip) {
 }
 
 const sse = (obj) => `data: ${JSON.stringify(obj)}\n\n`;
+// Typed error codes → HTTP status. Everything not listed is a 400 (bad request):
+// that includes the US I1 synthetic codes `synthetic_descriptor_required`,
+// `release_stale`, `unknown_series` and `unknown_month` (client-fixable), while
+// `synthetic_unavailable` (verified data unreachable right now) is a retryable
+// 503 and `synthetic_rebuild_failed` (server-side template regression) a 500.
+const ERR_STATUS = {
+  no_key: 503,
+  rate: 429,
+  forbidden: 403,
+  [SYNTH_ERR.unavailable]: 503,
+  [SYNTH_ERR.rebuildFailed]: 500,
+};
 const errStream = (code) =>
   new Response(sse({ t: "error", code }) , {
-    status: code === "no_key" ? 503 : code === "rate" ? 429 : code === "forbidden" ? 403 : 400,
+    status: ERR_STATUS[code] ?? 400,
     headers: { "content-type": "text/event-stream" },
   });
 
@@ -444,6 +455,18 @@ export function makeEmojiStripper() {
   };
 }
 
+// US I1: base URL the function fetches the /data/* artifacts from. Trust note:
+// this only affects AVAILABILITY — every fetched byte is re-verified against
+// the sha256 pins bundled at build time (lib/content/data-pins.generated.mjs),
+// so even a wrong/poisoned base cannot inject data. Preference order: explicit
+// override → this deploy's own URL (previews included) → production URL →
+// the request's own origin (Netlify-routed host) as last resort.
+function dataBase(req) {
+  const env = process.env.VISABOT_DATA_BASE || process.env.DEPLOY_PRIME_URL || process.env.URL;
+  if (env) return env.replace(/\/+$/, "");
+  return new URL(req.url).origin;
+}
+
 // F2: handler nombrado (el default anónimo era el único warning propio del lint).
 const handler = async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
@@ -484,9 +507,41 @@ const handler = async (req) => {
   }
   const lang = body?.lang === "en" ? "en" : "es";
   const query = typeof body?.query === "string" ? body.query.slice(0, MAX_QUERY).trim() : "";
-  const context = sanitizeContext(body?.context); // F3: solo chunks publicados o sintéticos legítimos
   const surface = body?.surface === "console" ? "console" : "widget"; // G5: el widget no renderiza charts
   if (!query) return errStream("bad_request"); // empty context is OK (greetings / chit-chat)
+
+  // US I1 (#30): clientes viejos que aún manden el TEXTO de un sintético en el
+  // context → 400 tipado (su contenido se IGNORA; jamás se interpola). El cliente
+  // desplegado se actualiza en el mismo release, así que no hay clientes viejos
+  // legítimos — esto solo puede ser un deploy a medias o un payload crafteado.
+  const rawCtx = Array.isArray(body?.context) ? body.context : [];
+  if (rawCtx.some((c) => typeof c?.source === "string" && isSynthSource(c.source.slice(0, 120))))
+    return errStream(SYNTH_ERR.descriptorRequired);
+
+  // Server-side synthetic recompute: descriptors in, verified text out.
+  let synthSources = [];
+  if (body?.synthetics !== undefined) {
+    const v = validateDescriptors(body.synthetics);
+    if (v.error) return errStream(v.error);
+    let data;
+    try {
+      data = await loadSyntheticData({ base: dataBase(req) });
+    } catch {
+      return errStream(SYNTH_ERR.unavailable); // verified artifacts unreachable — retryable
+    }
+    const built = buildSyntheticContext(v.descriptors, data, lang);
+    if (built.error) return errStream(built.error);
+    // Self-check fail-closed: the server's OWN rebuilt text must match the
+    // template grammar below (a builder regression must never reach the prompt).
+    for (const s of built.sources)
+      if (!slotSafe(s.title) || !validSyntheticShape(s.source, s.text)) return errStream(SYNTH_ERR.rebuildFailed);
+    synthSources = built.sources;
+  }
+
+  const context = [
+    ...synthSources,
+    ...sanitizeContext(rawCtx, synthSources.map((s) => s.n)), // F3: solo chunks hash-verificados
+  ];
 
   const messages = [...normalizeHistory(body?.history), { role: "user", content: query }];
 
@@ -500,6 +555,10 @@ const handler = async (req) => {
   const stream = new ReadableStream({
     async start(controller) {
       controller.enqueue(encoder.encode(": ok\n\n"));
+      // US I1: first data frame returns the server-rebuilt synthetic sources so
+      // the client can display EXACTLY what grounded the answer (title/source/
+      // text are server-generated from verified data — never echoed input).
+      if (synthSources.length) send(controller, { t: "sources", sources: synthSources });
       let upstream;
       // E-01: timeout explicito de CONEXION al upstream (25 s) — el stream posterior no
       // se corta, pero un Anthropic colgado ya no retiene la function indefinidamente.
