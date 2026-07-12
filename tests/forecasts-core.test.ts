@@ -50,3 +50,30 @@ describe("parseForecastStore fail-closed validation", () => {
     expect(parseForecastStore(HDR, {}, null).status).toBe("production_unavailable");
   });
 });
+
+describe("parseForecastStore — audit round 2 gaps", () => {
+  const HDR2 = "country,category,table,date,days,lo80,hi80,lo95,hi95";
+  const g = "mexico,F1,FAD,2026-08-01,1000,900,1100,850,1150";
+  it("rejects empty numeric fields instead of coercing them to zero", () => {
+    const bad = `${HDR2}\nmexico,F1,FAD,2026-08-01,,900,1100,850,1150`; // empty days
+    expect(parseForecastStore(bad, {}, null).status).toBe("production_unavailable");
+  });
+  it("counts truncated short rows as corruption (flood cannot hide behind one valid row)", () => {
+    const flood = [`${HDR2}`, g, "x", "y", "z", "w"].join("\n"); // 1 valid + 4 short
+    expect(parseForecastStore(flood, {}, null).status).toBe("production_unavailable");
+  });
+  it("drops a contradictory duplicate (same series+date, different numbers)", () => {
+    const dup = `${HDR2}\n${g}\nmexico,F1,FAD,2026-08-01,2000,1800,2200,1700,2300`;
+    const s = parseForecastStore(dup, {}, null);
+    // 1 kept, 1 contradictory dropped → half corrupt → unavailable (2 rows, 1 dropped, not > half)…
+    // one valid survives, one contradictory dropped: 1/2 not > 1/2, so ok with the first point only
+    expect(s.status).toBe("ok");
+    expect(s.series.get("mexico|F1|FAD")?.length).toBe(1);
+  });
+  it("keeps an identical harmless duplicate without inflating the series", () => {
+    const dup = `${HDR2}\n${g}\n${g}`;
+    const s = parseForecastStore(dup, {}, null);
+    expect(s.status).toBe("ok");
+    expect(s.series.get("mexico|F1|FAD")?.length).toBe(1);
+  });
+});

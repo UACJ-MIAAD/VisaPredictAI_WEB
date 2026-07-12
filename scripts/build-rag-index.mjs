@@ -814,13 +814,21 @@ function copyOrtWasm() {
   // clave; su title/source vienen del índice, no del payload.
   const fnDir = join(root, "netlify", "functions");
   mkdirSync(fnDir, { recursive: true });
+  // ~6 textos ES/EN idénticos colapsan a un mismo hash; guardar la metadata POR IDIOMA
+  // (byLang) para que el server resuelva por el idioma de la petición y no cite con la
+  // etiqueta del idioma equivocado (auditoría 12-jul-2026). `primary` = primer visto
+  // (determinista) como fallback cuando el idioma pedido no tiene entrada.
   const hashMeta = {};
   for (const c of chunks) {
     const h = createHash("sha256").update(c.text, "utf8").digest("hex");
-    hashMeta[h] = { title: c.title || "", source: c.source || "", sourceId: c.sourceId || "" };
+    const meta = { title: c.title || "", source: c.source || "", sourceId: c.sourceId || "" };
+    const e = hashMeta[h] || { ...meta, byLang: {} };
+    if (c.lang) e.byLang[c.lang] = meta;
+    hashMeta[h] = e;
   }
+  const collisions = Object.values(hashMeta).filter((e) => Object.keys(e.byLang).length > 1).length;
   writeFileSync(join(fnDir, "rag-hashes.json"), JSON.stringify(hashMeta));
-  console.log(`✓ wrote netlify/functions/rag-hashes.json (${chunks.length} hash→meta entries)`);
+  console.log(`✓ wrote netlify/functions/rag-hashes.json (${Object.keys(hashMeta).length} hash→meta, ${collisions} bilingües)`);
   console.log(`✓ wrote public/rag/index.json (${chunks.length} chunks, ${EMBED_DIM}-d) — eval monolith`);
   console.log(`✓ wrote public/rag/chunks.json (${(chunksBuf.length / 1024).toFixed(0)} kB, pre-consent) + vectors.f16 (${(f16Bytes.length / 1024).toFixed(0)} kB, post-consent)`);
   console.log(`✓ wrote public/rag/suggestions.json + meta.json`);

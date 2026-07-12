@@ -19,6 +19,23 @@ describe("sanitizeContext (injection allowlist — finding 13)", () => {
     expect(out[0].text).toBe(knownText);
   });
 
+  it.skipIf(!hasIndex)("resolves bilingual duplicate metadata by request language", () => {
+    // find an ES/EN identical-text chunk (they share one hash) and check each language
+    // gets its own canonical source, not the other language's.
+    const chunks = JSON.parse(readFileSync(idxPath, "utf8")).chunks as Array<{ text: string; lang: string; source: string; title: string }>;
+    const byText = new Map<string, typeof chunks>();
+    for (const c of chunks) { const g = byText.get(c.text) ?? []; g.push(c); byText.set(c.text, g); }
+    const dup = [...byText.values()].find((g) => new Set(g.map((c) => c.lang)).size > 1);
+    if (!dup) return; // no bilingual duplicate in this index build
+    const es = dup.find((c) => c.lang === "es")!;
+    const en = dup.find((c) => c.lang === "en")!;
+    const outEs = sanitizeContext([{ n: 1, title: "x", source: "x", text: es.text }], undefined, "es");
+    const outEn = sanitizeContext([{ n: 1, title: "x", source: "x", text: en.text }], undefined, "en");
+    expect(outEs[0].source).toBe(es.source);
+    expect(outEn[0].source).toBe(en.source);
+    expect(outEs[0].source).not.toBe(outEn[0].source);
+  });
+
   it.skipIf(!hasIndex)("overrides client title/source with the index's canonical metadata (finding: source falsification)", () => {
     // authentic chunk text, but the client labels it as a fabricated official source
     const canonical = JSON.parse(readFileSync(idxPath, "utf8")).chunks[0];
