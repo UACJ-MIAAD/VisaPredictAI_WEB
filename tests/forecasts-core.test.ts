@@ -33,7 +33,9 @@ describe("parseForecastStore fail-closed validation", () => {
     expect(parseForecastStore(inv, {}, null).status).toBe("production_unavailable");
   });
   it("rejects incompatible metadata (meta.series not an object)", () => {
-    expect(parseForecastStore(good, { series: "nope" }, null).status).toBe("production_unavailable");
+    // deliberately malformed runtime input (not a valid ForecastMeta) — cast to test the guard
+    const badMeta = { series: "nope" } as unknown as Parameters<typeof parseForecastStore>[1];
+    expect(parseForecastStore(good, badMeta, null).status).toBe("production_unavailable");
   });
   it("drops a minority of corrupt rows but keeps the store ok", () => {
     const mixed = `${HDR}\n` +
