@@ -19,14 +19,21 @@ function dirSize(dir) {
 }
 const mb = (b) => b / 1024 / 1024;
 
+// rag/ y ort/ los produce build-rag-index.mjs (gitignored) — el build:offline de
+// CI lo salta a propósito (sin modelo HF), así que ahí NUNCA existen: su ausencia
+// se reporta fuerte pero no falla (optional). Su existencia en el deploy path la
+// gatean build-rag-index + rag:gate; este script solo gatea TAMAÑO donde existan.
 const checks = [
-  ["next_static_total_mb", join(OUT, "_next", "static")],
-  ["data_total_mb", join(OUT, "data")],
-  ["rag_index_total_mb", join(OUT, "rag")],
-  ["ort_wasm_total_mb", join(OUT, "ort")],
+  ["next_static_total_mb", join(OUT, "_next", "static"), false],
+  ["data_total_mb", join(OUT, "data"), false],
+  ["rag_index_total_mb", join(OUT, "rag"), true],
+  ["ort_wasm_total_mb", join(OUT, "ort"), true],
 ];
-for (const [key, dir] of checks) {
-  if (!existsSync(dir)) { problems.push(`${key}: ${dir} ausente del export`); continue; }
+for (const [key, dir, optional] of checks) {
+  if (!existsSync(dir)) {
+    if (optional) { console.log(`  ~ ${key}: n/a (build-rag-index no corrió en este build)`); continue; }
+    problems.push(`${key}: ${dir} ausente del export`); continue;
+  }
   const got = mb(dirSize(dir));
   const cap = BUDGETS[key];
   console.log(`  ${got <= cap ? "✓" : "✗"} ${key}: ${got.toFixed(1)} MB (techo ${cap} MB)`);
