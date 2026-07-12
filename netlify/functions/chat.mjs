@@ -6,14 +6,20 @@
 // client can fall back to extractive mode.
 //
 // Protocol (text/event-stream):
-//   data: {"t":"sources","sources":[{n,title,source,text}]}   (US I1: server-rebuilt synthetics, first frame)
+//   data: {"t":"sources","sources":[{n,title,source,text}]}   (US I5: ALL sources that entered
+//         the grounded prompt — server-rebuilt synthetics first, then hash-verified RAG chunks;
+//         always the first data frame, even when empty. The UI renders exactly this list.)
 //   data: {"t":"delta","text":"..."}
+//   data: {"t":"truncated","reason":"idle|total"}   (US I5: stream cut by a server timeout;
+//         a visible "incomplete answer" note is appended as a delta right before it)
 //   data: {"t":"done"}
 //   data: {"t":"error","code":"no_key|rate|bad_request|server|synthetic_descriptor_required|
 //                              release_stale|unknown_series|unknown_month|synthetic_unavailable|
 //                              synthetic_rebuild_failed"}
+// Every response (success, error, 405) carries an `x-request-id` header (US I5) for
+// correlating a user report with the function's structured log line (no query text).
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import RAG_HASHES from "./rag-hashes.json" with { type: "json" };
 // Derived site stats (build-stats.mjs emits the .mjs mirror precisely so this
 // plain-Node function can import it): the forecast horizon must NEVER be
@@ -246,11 +252,21 @@ const ERR_STATUS = {
   [SYNTH_ERR.unavailable]: 503,
   [SYNTH_ERR.rebuildFailed]: 500,
 };
-const errStream = (code) =>
+const errStream = (code, rid) =>
   new Response(sse({ t: "error", code }) , {
     status: ERR_STATUS[code] ?? 400,
-    headers: { "content-type": "text/event-stream" },
+    headers: { "content-type": "text/event-stream", ...(rid ? { "x-request-id": rid } : {}) },
   });
+
+// US I5: visible marker appended when the stream is cut by the idle/total
+// timeout. The client renders it italic (markdown) and detects the marker
+// (components/visabot/observability.ts, cross-pinned in tests) to flag the
+// message incomplete and count the truncation — aggregate only, never text.
+export function truncationNote(lang) {
+  return lang === "en"
+    ? "\n\n_Incomplete answer: generation timed out._"
+    : "\n\n_Respuesta incompleta: se agotó el tiempo de generación._";
+}
 
 export function systemPrompt(lang, context, surface) {
   const hasSources = context.length > 0;
@@ -469,14 +485,18 @@ function dataBase(req) {
 
 // F2: handler nombrado (el default anónimo era el único warning propio del lint).
 const handler = async (req) => {
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
-  if (!originAllowed(req)) return errStream("forbidden");
+  // US I5: request id minted first so EVERY response — 405 included — carries it.
+  const rid = randomUUID();
+  const t0 = Date.now();
+  const err = (code) => errStream(code, rid);
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: { "x-request-id": rid } });
+  if (!originAllowed(req)) return err("forbidden");
 
   const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) return errStream("no_key");
+  if (!key) return err("no_key");
 
   const ip = req.headers.get("x-nf-client-connection-ip") || req.headers.get("x-forwarded-for") || "anon";
-  if (await limited(ip)) return errStream("rate");
+  if (await limited(ip)) return err("rate");
 
   let body;
   try {
@@ -484,9 +504,9 @@ const handler = async (req) => {
     // primero (rechazo barato) y lectura acumulada con corte a MAX_BODY para bodies
     // chunked (el await req.text() anterior materializaba MBs antes de medir).
     const MAX_BODY = 131072;
-    if (Number(req.headers.get("content-length") || 0) > MAX_BODY) return errStream("bad_request");
+    if (Number(req.headers.get("content-length") || 0) > MAX_BODY) return err("bad_request");
     const reader = req.body?.getReader();
-    if (!reader) return errStream("bad_request");
+    if (!reader) return err("bad_request");
     const dec = new TextDecoder();
     let raw = "";
     let size = 0;
@@ -496,19 +516,19 @@ const handler = async (req) => {
       size += value.byteLength;
       if (size > MAX_BODY) {
         await reader.cancel().catch(() => {});
-        return errStream("bad_request");
+        return err("bad_request");
       }
       raw += dec.decode(value, { stream: true });
     }
     raw += dec.decode();
     body = JSON.parse(raw);
   } catch {
-    return errStream("bad_request");
+    return err("bad_request");
   }
   const lang = body?.lang === "en" ? "en" : "es";
   const query = typeof body?.query === "string" ? body.query.slice(0, MAX_QUERY).trim() : "";
   const surface = body?.surface === "console" ? "console" : "widget"; // G5: el widget no renderiza charts
-  if (!query) return errStream("bad_request"); // empty context is OK (greetings / chit-chat)
+  if (!query) return err("bad_request"); // empty context is OK (greetings / chit-chat)
 
   // US I1 (#30): clientes viejos que aún manden el TEXTO de un sintético en el
   // context → 400 tipado (su contenido se IGNORA; jamás se interpola). El cliente
@@ -516,25 +536,25 @@ const handler = async (req) => {
   // legítimos — esto solo puede ser un deploy a medias o un payload crafteado.
   const rawCtx = Array.isArray(body?.context) ? body.context : [];
   if (rawCtx.some((c) => typeof c?.source === "string" && isSynthSource(c.source.slice(0, 120))))
-    return errStream(SYNTH_ERR.descriptorRequired);
+    return err(SYNTH_ERR.descriptorRequired);
 
   // Server-side synthetic recompute: descriptors in, verified text out.
   let synthSources = [];
   if (body?.synthetics !== undefined) {
     const v = validateDescriptors(body.synthetics);
-    if (v.error) return errStream(v.error);
+    if (v.error) return err(v.error);
     let data;
     try {
       data = await loadSyntheticData({ base: dataBase(req) });
     } catch {
-      return errStream(SYNTH_ERR.unavailable); // verified artifacts unreachable — retryable
+      return err(SYNTH_ERR.unavailable); // verified artifacts unreachable — retryable
     }
     const built = buildSyntheticContext(v.descriptors, data, lang);
-    if (built.error) return errStream(built.error);
+    if (built.error) return err(built.error);
     // Self-check fail-closed: the server's OWN rebuilt text must match the
     // template grammar below (a builder regression must never reach the prompt).
     for (const s of built.sources)
-      if (!slotSafe(s.title) || !validSyntheticShape(s.source, s.text)) return errStream(SYNTH_ERR.rebuildFailed);
+      if (!slotSafe(s.title) || !validSyntheticShape(s.source, s.text)) return err(SYNTH_ERR.rebuildFailed);
     synthSources = built.sources;
   }
 
@@ -547,27 +567,66 @@ const handler = async (req) => {
 
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-  const send = (controller, obj) => controller.enqueue(encoder.encode(sse(obj)));
+
+  // US I5: ONE AbortController spans connect + stream, so BOTH a client
+  // disconnect (stop button / closed tab → ReadableStream.cancel below) and
+  // the server timeouts cancel the upstream Anthropic request — no tokens are
+  // generated for an answer nobody receives. Timeouts (env-overridable for
+  // tests): idle = no upstream bytes for 15 s; total = 90 s wall clock.
+  const idleMs = Number(process.env.VISABOT_IDLE_MS) || 15_000;
+  const totalMs = Number(process.env.VISABOT_TOTAL_MS) || 90_000;
+  const upstreamCtrl = new AbortController();
+  let truncated = null; // "idle" | "total" — stream cut by a server timeout
+  let clientGone = false; // client cancelled/disconnected — stop enqueuing
+  let idleTimer = null;
+  let totalTimer = null;
+  const clearTimers = () => { clearTimeout(idleTimer); clearTimeout(totalTimer); };
+
+  // US I5: private request-scoped observability — ONE structured log line,
+  // correlatable via the x-request-id header. Aggregate metadata only: counts,
+  // timings, token usage, error class. The query text is NEVER logged.
+  const obs = { rid, lang, surface, n_synth: synthSources.length, n_ctx: context.length,
+    tokens_in: null, tokens_out: null, ttft_ms: null, total_ms: null,
+    guard: false, truncated: null, error: null };
+  let obsLogged = false;
+  const logObs = () => {
+    if (obsLogged) return;
+    obsLogged = true;
+    obs.total_ms = Date.now() - t0;
+    obs.truncated = truncated;
+    console.log("[chat]", JSON.stringify(obs));
+  };
 
   // Do the Anthropic fetch INSIDE the stream and emit an immediate heartbeat,
   // so Netlify's edge gets bytes right away and doesn't 504 on cold-start /
   // first-token latency (a comment line `:` is ignored by the SSE client).
   const stream = new ReadableStream({
     async start(controller) {
-      controller.enqueue(encoder.encode(": ok\n\n"));
-      // US I1: first data frame returns the server-rebuilt synthetic sources so
-      // the client can display EXACTLY what grounded the answer (title/source/
-      // text are server-generated from verified data — never echoed input).
-      if (synthSources.length) send(controller, { t: "sources", sources: synthSources });
+      const send = (obj) => {
+        if (clientGone) return;
+        try { controller.enqueue(encoder.encode(sse(obj))); } catch { clientGone = true; }
+      };
+      const finish = () => {
+        clearTimers();
+        send({ t: "done" });
+        try { controller.close(); } catch { /* already cancelled/closed */ }
+        logObs();
+      };
+      try { controller.enqueue(encoder.encode(": ok\n\n")); } catch { clientGone = true; }
+      // US I1+I5: the FIRST data frame lists EVERY source that actually entered
+      // the grounded prompt — server-rebuilt synthetics AND hash-verified RAG
+      // chunks, always (empty list included). The UI renders exactly this list;
+      // anything rejected server-side (unknown hash, instructional title/source,
+      // oversize) is absent from it by construction — never displayed.
+      send({ t: "sources", sources: context.map(({ n, title, source, text }) => ({ n, title, source, text })) });
       let upstream;
-      // E-01: timeout explicito de CONEXION al upstream (25 s) — el stream posterior no
-      // se corta, pero un Anthropic colgado ya no retiene la function indefinidamente.
-      const abort = new AbortController();
-      const timer = setTimeout(() => abort.abort(), 25000);
+      // E-01: timeout explicito de CONEXION al upstream (25 s, acotado por el
+      // total) — un Anthropic colgado ya no retiene la function indefinidamente.
+      const connectTimer = setTimeout(() => upstreamCtrl.abort(), Math.min(25_000, totalMs));
       try {
         upstream = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
-          signal: abort.signal,
+          signal: upstreamCtrl.signal,
           headers: {
             "x-api-key": key,
             "anthropic-version": "2023-06-01",
@@ -582,17 +641,17 @@ const handler = async (req) => {
           }),
         });
       } catch {
-        clearTimeout(timer);
-        send(controller, { t: "error", code: "server" });
-        send(controller, { t: "done" });
-        controller.close();
+        clearTimeout(connectTimer);
+        obs.error = "connect";
+        send({ t: "error", code: "server" });
+        finish();
         return;
       }
-      clearTimeout(timer);
+      clearTimeout(connectTimer);
       if (!upstream.ok || !upstream.body) {
-        send(controller, { t: "error", code: "server" });
-        send(controller, { t: "done" });
-        controller.close();
+        obs.error = `upstream_${upstream.status}`;
+        send({ t: "error", code: "server" });
+        finish();
         return;
       }
 
@@ -607,9 +666,22 @@ const handler = async (req) => {
         const out = guard.push(text);
         if (out) {
           const clean = stripEmoji(out);
-          if (clean) send(controller, { t: "delta", text: clean });
+          if (clean) {
+            if (obs.ttft_ms === null) obs.ttft_ms = Date.now() - t0;
+            send({ t: "delta", text: clean });
+          }
         }
       };
+
+      // US I5 timeouts: total wall-clock cap (measured from request start) and
+      // idle cap re-armed on every upstream chunk (Anthropic pings count — a
+      // live connection is not idle).
+      totalTimer = setTimeout(() => { truncated = "total"; upstreamCtrl.abort(); }, Math.max(0, totalMs - (Date.now() - t0)));
+      const armIdle = () => {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => { truncated = "idle"; upstreamCtrl.abort(); }, idleMs);
+      };
+      armIdle();
 
       const reader = upstream.body.getReader();
       let buf = "";
@@ -617,8 +689,9 @@ const handler = async (req) => {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
+          armIdle();
           buf += decoder.decode(value, { stream: true });
-          if (buf.length > 1_000_000) { send(controller, { t: "error", code: "server" }); break; } // runaway frame guard
+          if (buf.length > 1_000_000) { obs.error = "runaway"; send({ t: "error", code: "server" }); break; } // runaway frame guard
           const events = buf.split("\n\n");
           buf = events.pop() || "";
           for (const ev of events) {
@@ -629,24 +702,53 @@ const handler = async (req) => {
               const data = JSON.parse(payload);
               if (data.type === "content_block_delta" && data.delta?.type === "text_delta") {
                 relay(data.delta.text);
+              } else if (data.type === "message_start") {
+                // token usage when the upstream provides it (US I5, aggregate only)
+                obs.tokens_in = data.message?.usage?.input_tokens ?? obs.tokens_in;
+              } else if (data.type === "message_delta" && data.usage) {
+                obs.tokens_out = data.usage.output_tokens ?? obs.tokens_out;
               } else if (data.type === "error") {
-                send(controller, { t: "error", code: "server" });
+                obs.error = "upstream_error";
+                send({ t: "error", code: "server" });
               }
             } catch {
               /* ignore ping / keep-alive lines */
             }
           }
+          // US I5: once the code guard fired, nothing more will ever be emitted —
+          // stop paying the upstream for tokens the relay would swallow.
+          if (guard.blocked) { upstreamCtrl.abort(); break; }
         }
       } catch {
-        send(controller, { t: "error", code: "server" });
+        // AbortError from one of OURS (timeout → `truncated` set; client cancel
+        // → `clientGone`) or a genuine network drop mid-stream.
+        if (!truncated && !clientGone) { obs.error = "stream"; send({ t: "error", code: "server" }); }
       }
+      clearTimers();
       const tail = guard.flush(); // flush the held 2-char tail (unless a fence blocked)
       if (tail) {
         const clean = stripEmoji(tail);
-        if (clean) send(controller, { t: "delta", text: clean });
+        if (clean) {
+          if (obs.ttft_ms === null) obs.ttft_ms = Date.now() - t0;
+          send({ t: "delta", text: clean });
+        }
       }
-      send(controller, { t: "done" });
-      controller.close();
+      obs.guard = guard.blocked;
+      if (truncated) {
+        // Mark the cut answer as incomplete IN the answer (rendered italic by
+        // the client; skipped when the guard already closed it with a refusal).
+        if (!guard.blocked) send({ t: "delta", text: truncationNote(lang) });
+        send({ t: "truncated", reason: truncated });
+      }
+      finish();
+    },
+    cancel() {
+      // US I5: the client went away (stop button / closed tab). Propagate the
+      // cancellation to the upstream Anthropic fetch and stop all timers.
+      clientGone = true;
+      clearTimers();
+      upstreamCtrl.abort();
+      logObs();
     },
   });
 
@@ -655,6 +757,7 @@ const handler = async (req) => {
       "content-type": "text/event-stream; charset=utf-8",
       "cache-control": "no-cache",
       "x-accel-buffering": "no",
+      "x-request-id": rid,
     },
   });
 };

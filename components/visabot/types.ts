@@ -58,4 +58,7 @@ export type ChatMessage = {
   sources?: Source[];
   extractive?: boolean; // answered without the LLM (no key / offline)
   chart?: ChartPayload; // data visualization generated from the panel
+  // US I5: the answer was cut before completion — by the user's stop button
+  // (client abort) or by a server timeout (chat.mjs idle/total truncation).
+  incomplete?: boolean;
 };
