@@ -394,7 +394,7 @@ export function EdaGallery({ facts }: { facts: EdaFacts }) {
               key={f.id}
               className="2xl:mx-[calc((100%-min(1600px,90vw))/2)] 2xl:grid 2xl:w-[min(1600px,90vw)] 2xl:grid-cols-[minmax(32ch,38ch)_1fr] 2xl:items-start 2xl:gap-12"
             >
-              <figcaption className="2xl:sticky 2xl:top-24">
+              <figcaption className="2xl:sticky 2xl:top-32">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)]">
                   {t.figura} {i + 1} · {c.tag}
                 </p>

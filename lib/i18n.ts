@@ -125,6 +125,9 @@ const S = {
 
   // nav / menu
   menu: { es: "Navegación", en: "Navigation" },
+  // J1 masthead + subnav: distinct landmark labels (global vs in-page)
+  navPrimary: { es: "Navegación principal", en: "Primary navigation" },
+  navOnPage: { es: "En esta página", en: "On this page" },
   openMenu: { es: "Abrir menú", en: "Open menu" },
   closeMenu: { es: "Cerrar menú", en: "Close menu" },
   readingProgress: { es: "Progreso de lectura", en: "Reading progress" },

@@ -23,7 +23,8 @@ export function SiteShell({
         {lang === "en" ? "Skip to content" : "Saltar al contenido"}
       </a>
       <SiteNav />
-      <main id="main-content" tabIndex={-1} className="pt-16">
+      {/* J1: the header is sticky (in-flow) now, not fixed — no pt compensation */}
+      <main id="main-content" tabIndex={-1}>
         {children}
         <NextPart />
       </main>
