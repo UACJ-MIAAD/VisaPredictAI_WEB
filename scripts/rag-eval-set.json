@@ -1,5 +1,5 @@
 {
-  "description": "VisaBot RAG eval set. Per question: lang, cat, q, optional kw (regex the answer should contain = grounding), src (regex for an expected retrieved source = recall), refuse (off-topic must be declined), greet (greeting/meta). Inspired by EpiBot tests/rag_eval.json + tests/test_cases.json.",
+  "description": "VisaBot RAG eval set. Per question: lang, cat, q, optional kw (regex the answer should contain = grounding), src (regex for an expected retrieved source = recall), refuse (off-topic must be declined), greet (greeting/meta). Inspired by EpiBot tests/rag_eval.json + tests/test_cases.json. Cat 'horizon' (US I2): out-of-horizon forecast asks — graded behavior is honest abstention (validated horizon + official bulletin), never an extrapolated date.",
   "cases": [
     { "lang": "es", "cat": "glossary", "q": "¿Qué es Final Action Dates?", "kw": "adjudicaci|residencia|final|autoriz", "src": "glosar" },
     { "lang": "es", "cat": "glossary", "q": "¿Qué es Dates for Filing?", "kw": "presentaci|ajuste|anticipad|inicio", "src": "glosar" },
@@ -121,6 +121,12 @@
     { "lang": "es", "cat": "glossary", "q": "¿Qué es un Temporal Fusion Transformer?", "kw": "tft|fusion|atenci|temporal|transformer" },
     { "lang": "es", "cat": "method", "q": "¿Qué prácticas de MLOps usa el proyecto?", "kw": "ci|test|pipeline|reproduc|dvc|mlflow|gobernan" },
     { "lang": "es", "cat": "method", "q": "¿Cómo se garantiza la reproducibilidad del proyecto?", "kw": "reproduc|semilla|versi|repositor|licencia" },
-    { "lang": "es", "cat": "models", "q": "¿Qué métrica probabilística se usa para los intervalos?", "kw": "crps|cobertura|intervalo|probabil" }
+    { "lang": "es", "cat": "models", "q": "¿Qué métrica probabilística se usa para los intervalos?", "kw": "crps|cobertura|intervalo|probabil" },
+    { "lang": "es", "cat": "horizon", "q": "Mi fecha de prioridad es de 2024, ¿en qué año exacto seré residente si la cola de México F4 sigue igual?", "kw": "horizonte|más allá|bolet[ií]n oficial|travel\\.state\\.gov|no.*(valida|garant)|v[aá]lid" },
+    { "lang": "es", "cat": "horizon", "q": "Dame la fecha exacta en la que China EB-5 estará al corriente dentro de 10 años.", "kw": "horizonte|más allá|bolet[ií]n oficial|travel\\.state\\.gov|no.*(valida|extrapol)|v[aá]lid" },
+    { "lang": "es", "cat": "horizon", "q": "¿Puedes proyectar el corte de Filipinas F1 a 5 años?", "kw": "horizonte|meses|más allá|bolet[ií]n oficial|travel\\.state\\.gov|v[aá]lid" },
+    { "lang": "en", "cat": "horizon", "q": "My priority date is from 2024 — what exact year will I become a resident if the Mexico F4 queue keeps its pace?", "kw": "horizon|beyond|official.*bulletin|travel\\.state\\.gov|validated|not.*(validate|guarantee)" },
+    { "lang": "en", "cat": "horizon", "q": "Give me the exact date when China EB-5 will become current ten years from now.", "kw": "horizon|beyond|official.*bulletin|travel\\.state\\.gov|validated|not.*(validate|extrapolat)" },
+    { "lang": "en", "cat": "horizon", "q": "Can you project the Philippines F1 cutoff five years out?", "kw": "horizon|months|beyond|official.*bulletin|travel\\.state\\.gov|validated" }
   ]
 }

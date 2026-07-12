@@ -9,6 +9,8 @@
 // fallback for series with no pre-generated forecast. Source of truth:
 // /data/forecasts.csv (+ _meta).
 
+import { track } from "@/lib/analytics";
+
 export type ForecastPoint = { date: string; days: number; lo80: number; hi80: number; lo95: number; hi95: number };
 export type SeriesMeta = { models: string[]; mase: number; last_month: string };
 export type HorizonScore = { mae_days: number; mase: number; cov95: number };
@@ -27,16 +29,36 @@ export type ForecastStore = {
   meta: Map<string, SeriesMeta>;
   scorecard: Scorecard | null; // prospective scorecard (leakage-free backfill: origin-truncated vs realized)
   horizonMonths: number; // forecast horizon, derived from the pipeline (0 when no forecasts shipped)
+  // I2 fail-closed: the old silent catch returned an empty store with no signal,
+  // so consumers could not tell "no forecast for this series" from "the whole
+  // production feed failed to load". Now the failure is an explicit state; the
+  // VisaBot grounding note (analytics.forecastText) declares the outage instead
+  // of fabricating forecast context. The UI drift fallback (labelled
+  // "illustrative") keeps working exactly as before.
+  status: "ok" | "production_unavailable";
+  reason?: string; // human-readable cause when status is production_unavailable
 };
 
 const key = (country: string, category: string, table: string) => `${country}|${category}|${table}`;
 
 let cache: Promise<ForecastStore> | null = null;
 
+// Loud, detectable telemetry for a failed production-forecast load: a Plausible
+// event when the analytics helper is available (browser), always a prefixed
+// console.warn so log scrapers/tests can detect it.
+function reportUnavailable(reason: string): void {
+  console.warn(`[forecasts] production forecasts unavailable: ${reason}`);
+  track("forecast_unavailable", { reason: reason.slice(0, 120) });
+}
+
+const unavailable = (reason: string): ForecastStore => {
+  reportUnavailable(reason);
+  return { method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0, status: "production_unavailable", reason };
+};
+
 export function loadForecasts(): Promise<ForecastStore> {
   if (cache) return cache;
   cache = (async () => {
-    const empty: ForecastStore = { method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0 };
     let csv: string,
       metaJson: { method?: Record<string, string>; series?: Record<string, SeriesMeta>; horizon_months?: number },
       scorecard: Scorecard | null = null;
@@ -49,10 +71,12 @@ export function loadForecasts(): Promise<ForecastStore> {
       csv = c;
       metaJson = m;
       scorecard = sc && sc.n_scored > 0 ? (sc as Scorecard) : null;
-    } catch {
-      return empty; // no forecasts shipped → callers fall back to the drift baseline
+    } catch (e) {
+      // forecasts not shipped / fetch failed → callers fall back to the drift
+      // baseline for charts, but the state is explicit, never silent.
+      return unavailable(e instanceof Error ? e.message : String(e));
     }
-    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map(), scorecard, horizonMonths: 0 };
+    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map(), scorecard, horizonMonths: 0, status: "ok" };
     const lines = csv.split("\n");
     const h = lines[0].split(",");
     const ix = (k: string) => h.indexOf(k);
@@ -71,7 +95,7 @@ export function loadForecasts(): Promise<ForecastStore> {
     for (const a of store.series.values()) if (a.length > maxLen) maxLen = a.length;
     store.horizonMonths = (typeof metaJson.horizon_months === "number" && metaJson.horizon_months > 0) ? metaJson.horizon_months : maxLen;
     return store;
-  })().catch(() => ({ method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0 }));
+  })().catch((e) => unavailable(`parse failure: ${e instanceof Error ? e.message : String(e)}`));
   return cache;
 }
 

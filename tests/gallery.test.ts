@@ -10,7 +10,7 @@ function mockStore(keys: string[]): ForecastStore {
     series.set(k, [pt]);
     meta.set(k, { models: ["theta", "ets"], mase: 0.1, last_month: "2026-07" });
   }
-  return { method: {}, series, meta, scorecard: null, horizonMonths: 1 };
+  return { method: {}, series, meta, scorecard: null, horizonMonths: 1, status: "ok" };
 }
 
 const KEYS = [
