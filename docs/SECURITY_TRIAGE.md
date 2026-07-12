@@ -1,9 +1,16 @@
-# Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11)
+# Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12)
 
-Estado del `npm audit --omit=dev` al 2026-07-11: **8 moderadas, 0 altas/críticas**,
-que colapsan en **dos causas raíz**. El gate programado
+Estado del `npm audit --omit=dev` al 2026-07-12 (re-verificado): **8 moderadas, 0
+altas/críticas**, que colapsan en **dos causas raíz**. El gate programado
 (`.github/workflows/scheduled-quality.yml`, job `security-audit`) falla en
 high/critical y reporta las moderadas cada lunes; este documento es su triage vivo.
+El lado Python (locks del repo de datos, 9 avisos aceptados del perfil model) vive en
+`VisaPredictAI/docs/SECURITY_TRIAGE.md` con la misma política y fecha de revisión.
+
+**Verificado 2026-07-12 (A5):** `npm audit fix` SIN `--force` no cambia nada
+(dry-run JSON: 0 added / 0 removed / 0 changed) — las 8 moderadas requieren bumps
+breaking (`@netlify/blobs` 10.x es semver-major; el "fix" de next propone el
+downgrade next@9.3.3). Por política, NO se aplican; quedan bajo SLA moderate.
 
 ## Política de SLA por severidad
 
@@ -18,7 +25,22 @@ high/critical y reporta las moderadas cada lunes; este documento es su triage vi
 (hoy: next@9.3.3, tres majors atrás). Todo upgrade va por PR con la suite completa
 (vitest + typecheck + build offline) y rollback = revert del commit.
 
-## Triage vigente (2026-07-11)
+## Triage vigente (2026-07-12)
+
+Los 8 avisos, uno por fila (el detalle de superficie vive en las dos causas raíz de
+abajo). Aviso raíz: GHSA-8988-4f7v-96qf (otel) y GHSA-qx2v-qp2m-jg93 (postcss); las
+filas sin GHSA propio son paquetes marcados por depender de una versión vulnerable.
+
+| Paquete | Aviso | ¿Nos afecta? | Decisión | Owner | Revisión |
+|---|---|---|---|---|---|
+| @opentelemetry/core | GHSA-8988-4f7v-96qf (moderate) | BAJA: solo Netlify Functions (proxy VisaBot); ver causa raíz 1 | Accept; esperar bump del upstream directo | Javier | 2026-08-12 |
+| @opentelemetry/resources | depende de core vulnerable | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
+| @opentelemetry/sdk-trace-base | depende de core/resources vulnerables | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
+| @opentelemetry/sdk-trace-node | depende de core/sdk-trace-base vulnerables | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
+| @netlify/otel | depende de @opentelemetry/* vulnerables | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
+| @netlify/blobs | depende de @netlify/otel vulnerable | Ídem causa raíz 1 (única directa de la cadena) | Accept; bump cuando el fix no sea semver-major (hoy: 10.1.0, breaking) | Javier | 2026-08-12 |
+| postcss | GHSA-qx2v-qp2m-jg93 (moderate) | NO explotable: solo build-time sobre CSS propio; ver causa raíz 2 | Accept; llega con el siguiente minor de next | Javier | 2026-08-12 |
+| next | depende de postcss vulnerable | Ídem causa raíz 2 (el "fix" de npm es el downgrade next@9.3.3 — prohibido) | Accept; upgrade normal de next con suite completa | Javier | 2026-08-12 |
 
 ### 1. `@opentelemetry/core` — asignación de memoria sin cota en W3C Baggage
 
