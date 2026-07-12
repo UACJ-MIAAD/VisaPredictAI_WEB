@@ -48,7 +48,11 @@
   background: var(--color-surface-soft);
 }
 .section--deep {
-  background: var(--color-accent-strong);
+  /* Editorial deep band: white text needs a DARK blue in BOTH themes. In dark
+     mode --color-accent-strong is a light tint (#9ccbff) meant for emphasis
+     text, so reusing it as a background gave 1.69:1 on white (a11y audit
+     2026-07-12). Pin an own deep blue that keeps white text at AA everywhere. */
+  background: var(--color-deep-band, #002a75);
   color: #fff;
 }
 .section--deep .section-title,
@@ -646,7 +650,9 @@
   border: 1px solid transparent;
   transition: transform 0.15s ease;
 }
-.btn--primary { background: var(--color-accent); color: #fff; }
+/* Filled CTA carrying WHITE text: use the button-fill token so dark theme
+   stays AA (plain --color-accent is #74b2ff in dark = 2.19:1 on white). */
+.btn--primary { background: var(--color-accent-btn); color: #fff; }
 .btn--primary:hover { transform: translateY(-2px); }
 .btn--outline { border-color: var(--color-border); color: var(--color-ink); background: transparent; }
 .section--deep .btn--outline { color: #fff; border-color: rgba(255,255,255,0.6); }

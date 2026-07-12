@@ -315,7 +315,7 @@ export function SiteNav() {
                               "font-mono text-[0.65rem]",
                               isActive
                                 ? "text-[var(--color-accent)]"
-                                : "text-muted-foreground/70",
+                                : "text-muted-foreground",
                             )}
                           >
                             {s.num}
@@ -383,7 +383,7 @@ export function SiteNav() {
                                 "font-mono text-[0.65rem]",
                                 isActive
                                   ? "text-[var(--color-accent)]"
-                                  : "text-muted-foreground/70",
+                                  : "text-muted-foreground",
                               )}
                             >
                               {s.num}

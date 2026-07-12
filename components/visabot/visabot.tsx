@@ -156,7 +156,7 @@ export function VisaBot() {
           ref={launcherRef}
           onClick={() => setOpen(true)}
           aria-label={tr(lang, "vbOpen")}
-          className="vb-launcher group fixed bottom-5 right-5 z-[60] flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-accent)] px-4 py-3 text-white shadow-lg transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+          className="vb-launcher group fixed bottom-5 right-5 z-[60] flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-accent-btn)] px-4 py-3 text-white shadow-lg transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
           style={{ boxShadow: "0 8px 30px -8px color-mix(in srgb, var(--color-accent) 60%, transparent)" }}
         >
           <Sparkles className="h-5 w-5" aria-hidden />
@@ -181,7 +181,7 @@ export function VisaBot() {
           >
             {/* Header */}
             <header className="flex items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-white">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-btn)] text-white">
                 <Sparkles className="h-5 w-5" aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
