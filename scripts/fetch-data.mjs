@@ -3,8 +3,10 @@
 // staging dir, verified against its SHA-256/size, and only when every critical and
 // required artifact of the SAME release_id verifies does the set swap into
 // public/data/. The site never bakes a mix of two cuts: any blocking failure keeps the
-// previous cut whole (status "stale"). The old per-file fetch survives as the legacy
-// dual-read path (manifest unavailable, or FETCH_LEGACY=1 to force the rollback), and
+// previous cut whole (status "stale"). If the manifest is unavailable the committed
+// fallback cut is served WHOLE (auditor round 2: the automatic per-file fetch could bake
+// an unverified hybrid); the per-file path survives ONLY as the explicit operator
+// rollback (FETCH_LEGACY=1, status "legacy", identity null — unverified by design).
 // /data/release-state.json ships the outcome (fresh | stale | incompatible | legacy).
 //
 // The committed files in public/data/ remain the last-resort fallback: if GitHub raw
@@ -105,9 +107,10 @@ async function fetchBuf(url) {
   return Buffer.from(await r.arrayBuffer());
 }
 
-// Legacy dual-read path (pre-B2 behavior, kept verbatim): per-file fetch with
-// content probes and committed fallbacks. Used when the manifest is unavailable
-// or when FETCH_LEGACY=1 forces the rollback. Unverified against any release.
+// Legacy path (pre-B2 behavior, kept verbatim): per-file fetch with content probes
+// over committed fallbacks. ONLY reachable via FETCH_LEGACY=1 (explicit operator
+// rollback) since round 2 of the author audit — automatic use could bake an
+// unverified hybrid. Unverified against any release; state carries null identity.
 async function legacyFetch() {
   let fresh = 0;
   for (const f of FILES) {
@@ -227,6 +230,15 @@ async function manifestFetch(manifest) {
     },
   });
   await rm(STAGING, { recursive: true, force: true });
+  if (swap.unrecovered?.length) {
+    // 2a ronda audit 12-jul: rollback INCOMPLETO — el corte quedo en estado desconocido y
+    // el backup (.fetch-backup/) conserva la unica copia de lo no restaurado. Reventar el
+    // build es lo que garantiza que Netlify NO deploye este arbol.
+    console.error(
+      `fetch-data: rollback INCOMPLETO (${swap.error}) — sin restaurar: ${swap.unrecovered.join(", ")}; backup preservado en ${BACKUP} — FALLANDO el build`,
+    );
+    process.exit(1);
+  }
   if (swap.rolledBack) {
     console.error(`fetch-data: swap FAILED mid-flight (${swap.error}) — rolled back; the previous cut stays whole`);
     return releaseState({
@@ -274,8 +286,13 @@ if (process.env.FETCH_OFFLINE === "1") {
   } else if (manifest) {
     state = await manifestFetch(manifest);
   } else {
-    const n = await legacyFetch();
-    state = releaseState({ status: "stale", previous: PREVIOUS_STATE, reason: `manifest unavailable — legacy per-file fetch (${n} refreshed, unverified)` });
+    // 2a ronda audit 12-jul (CRITICO): aqui corria legacyFetch() automatico — una descarga
+    // parcial por-archivo mezclaba bytes nuevos con fallbacks (hibrido SIN verificar) y el
+    // build VERDE lo deployaba atribuido a la identidad del corte previo. Sin manifiesto,
+    // el corte commiteado se sirve ENTERO: coherente, atribuible, un mes stale a lo sumo.
+    // El fetch por-archivo sobrevive SOLO como rollback explicito (FETCH_LEGACY=1).
+    console.warn("fetch-data: release manifest unavailable — serving the committed fallback cut WHOLE (no unverified per-file fetch)");
+    state = releaseState({ status: "stale", previous: PREVIOUS_STATE, reason: "manifest unavailable — committed fallback cut kept whole" });
   }
 }
 
