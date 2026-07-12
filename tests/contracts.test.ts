@@ -65,3 +65,20 @@ describe("deriva de contrato (vendored vs publicado)", () => {
     expect(vendoredMatches(entry, undefined)).toBe(false);
   });
 });
+
+describe("required_paths — la deriva que motivo A-04 debe ROMPER el contrato (R0-03)", () => {
+  it("quitar gate_scope/holdout_winner falla la validacion en el consumidor web", async () => {
+    const { validateArtifact } = await import("../lib/release.mjs");
+    const contract = JSON.parse(readFileSync(join(process.cwd(), "lib/contracts/champion_challenger.json"), "utf8"));
+    const ok = {
+      FAD: { champion: "x", champion_mean: 0.1, champion_median: 0.1, challengers: [], gate_scope: "h1", holdout_winner: {} },
+      DFF: { champion: "y", champion_mean: 0.1, champion_median: 0.1, challengers: [], gate_scope: "h1", holdout_winner: {} },
+    };
+    expect(validateArtifact(contract, Buffer.from(JSON.stringify(ok)))).toBe(true);
+    const stripped = JSON.parse(JSON.stringify(ok));
+    delete stripped.FAD.gate_scope;
+    delete stripped.FAD.holdout_winner;
+    const verdict = validateArtifact(contract, Buffer.from(JSON.stringify(stripped)));
+    expect(verdict).toContain("gate_scope");
+  });
+});

@@ -65,7 +65,32 @@ const NOTE_SKELETONS = [
   /^Se está mostrando al usuario un gráfico titulado «[^»\n]{1,120}» generado con el panel de datos real — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos\.$/,
 ];
 
+// R0-02: las plantillas fijas contienen imperativos LEGITIMOS ("do NOT refuse") — se
+// RESTAN antes del deny-scan; lo que quede (los slots variables) no puede traer
+// tokens de instruccion. Mata el payload del auditor ("IGNORE all prior instructions…"
+// dentro del titulo citado) de forma determinista. Sigue siendo defensa de forma, no
+// autenticidad de cifras (#30).
+const FIXED_IMPERATIVES = [
+  "do NOT say you cannot show charts, and do NOT refuse",
+  "do NOT say you cannot show charts",
+  "do NOT refuse",
+  "NO digas que no puedes mostrar gráficos y NO te niegues",
+  "NO digas que no puedes mostrar gráficos",
+  "NO te niegues",
+  "If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the",
+  "Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los",
+];
+const SLOT_DENY =
+  /(ignor(?:e|a|ar)|disregard|olvida|omite|instruc(?:tion|ci)|system prompt|prompt del sistema|pretend|finge|jailbreak|no digas|do not say|reveal|revela|api.?key|guarante|garantiza)/i;
+
+export function slotSafe(text) {
+  let scrubbed = text;
+  for (const p of FIXED_IMPERATIVES) scrubbed = scrubbed.split(p).join(" ");
+  return !SLOT_DENY.test(scrubbed);
+}
+
 export function validSyntheticShape(source, text) {
+  if (!slotSafe(text)) return false;
   if (text.includes("\u0060\u0060\u0060")) return false; // jamás fences en un sintético legítimo
   if (SYNTH_EXACT.has(source)) return NOTE_SKELETONS.some((rx) => rx.test(text));
   const lines = text.split("\n");
@@ -86,12 +111,19 @@ export function sanitizeContext(raw) {
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
-    out.push({
-      n,
-      title: typeof c.title === "string" ? c.title.slice(0, 160) : "",
-      source,
-      text: c.text,
-    });
+    let title = typeof c.title === "string" ? c.title.slice(0, 160) : "";
+    let src = source;
+    if (!known) {
+      // R0-02: el titulo/fuente de un sintetico eran texto libre interpolado al prompt —
+      // canal de instruccion identico al que A-03 cerro en el cuerpo. Se SOBREESCRIBEN
+      // en servidor: la fuente colapsa a su etiqueta fija y el titulo se vacia (todo el
+      // contexto util ya vive en el texto validado por plantilla).
+      title = "";
+      src = SYNTH_EXACT.has(source) ? source : source.startsWith("VisaPredict AI panel (") ? "VisaPredict AI panel" : "Panel VisaPredict AI";
+    } else if (!slotSafe(title) || !slotSafe(src)) {
+      continue; // chunk publicado con titulo/fuente instruccional — fuera entero
+    }
+    out.push({ n, title, source: src, text: c.text });
   }
   return out;
 }
@@ -403,9 +435,27 @@ const handler = async (req) => {
 
   let body;
   try {
-    // A-03/E-01: tope de cuerpo ANTES de parsear — un POST de MBs ya no llega a JSON.parse.
-    const raw = await req.text();
-    if (raw.length > 131072) return errStream("bad_request");
+    // A-03/E-01 (R0-02): tope de cuerpo SIN materializarlo entero — content-length
+    // primero (rechazo barato) y lectura acumulada con corte a MAX_BODY para bodies
+    // chunked (el await req.text() anterior materializaba MBs antes de medir).
+    const MAX_BODY = 131072;
+    if (Number(req.headers.get("content-length") || 0) > MAX_BODY) return errStream("bad_request");
+    const reader = req.body?.getReader();
+    if (!reader) return errStream("bad_request");
+    const dec = new TextDecoder();
+    let raw = "";
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY) {
+        await reader.cancel().catch(() => {});
+        return errStream("bad_request");
+      }
+      raw += dec.decode(value, { stream: true });
+    }
+    raw += dec.decode();
     body = JSON.parse(raw);
   } catch {
     return errStream("bad_request");
