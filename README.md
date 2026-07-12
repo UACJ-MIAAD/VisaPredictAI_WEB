@@ -111,6 +111,20 @@ Prosa, glosario (42) y referencias (64) se preservan **literales** desde
 y se transforman en build a `lib/content/sections.*generated.ts`. Datos reales
 del repo `UACJ-MIAAD/VisaPredictAI`; sin valores inventados.
 
+## Datos por release verificado
+
+El build no copia archivos a ciegas: consume el **manifiesto de release** del
+repo de datos (`release_manifest.json`, con SHA-256 y criticidad por artefacto
+bajo un `release_id` content-addressed), descarga todo a staging, **verifica
+cada hash**, valida los payloads contra los contratos vendorizados
+(`lib/contracts/`) y solo entonces hace un **swap transaccional con rollback**
+a `public/data/`. Cualquier fallo conserva el corte anterior entero. El corte
+servido es inspeccionable en `/data/release-state.json`
+(`fresh · stale · incompatible · legacy`, con el `release_id` de los bytes que
+realmente se sirven) y el pie de página lo muestra. Presupuestos de peso del
+export (`docs/perf_budgets.json`) y la higiene de variantes de imagen se
+verifican en cada build de CI.
+
 ## Asistente VisaBot (RAG)
 
 Asistente conversacional **RAG real, cero datos inventados**, en el widget flotante
