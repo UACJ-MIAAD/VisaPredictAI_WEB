@@ -40,6 +40,40 @@ const isSynthSource = (s) => SYNTH_EXACT.has(s) || SYNTH_PREFIXES.some((p) => s.
 const MAX_CHUNK = 4000; // los chunks del índice miden ≤ ~1.1k; los sintéticos, una tabla de mes
 const MAX_SYNTH = 2;
 
+// A-03 (auditoría ciega 11-jul): el prefijo de `source` es adivinable y el texto venía
+// del cliente SIN validar — 4k chars arbitrarios entraban como fuente privilegiada del
+// system prompt (reproducido por el auditor). Los sintéticos legítimos son SIEMPRE
+// salida de plantillas deterministas del cliente (monthTableText / bulletinDiffText /
+// forecastText / chartContextNote), así que su FORMA es verificable en el servidor:
+// encabezado exacto de plantilla con slots acotados + cuerpo línea-a-línea bajo la
+// gramática de tabla. Texto libre con prefijo falsificado ⇒ CERO chunks. Esto valida
+// forma, no cifras: la autenticidad plena (recomputar en servidor desde el corte
+// publicado) queda registrada como endurecimiento pendiente.
+const VAL = "(?:C|U|—|[0-9]{1,2}[A-Z]{3}[0-9]{2,4}|\\d{4}-\\d{2}-\\d{2}|\\d{1,2} de [a-záéíóú]{3,12} de \\d{4}|[A-Za-z]{3,10} \\d{1,2}, \\d{4}|\\d{1,2} [a-záéíóú]{3,10}\\.? \\d{4})";
+const SEG = `[^;\\n]{1,45} ${VAL}(?:→${VAL})?(?: \\([+−-]?\\d{1,5}d\\))?`;
+const ROW_RX = new RegExp(`^[A-Za-z0-9_·\\- ]{1,16}: ${SEG}(?:; ${SEG})*$`);
+const TABLE_HEADERS = [
+  /^U\.S\. Visa Bulletin .{3,40}, (?:FAD|DFF) \(columns: .{3,140}\)\. C = current, U = unavailable, otherwise the priority-date cutoff:$/,
+  /^Visa Bulletin de EE\. UU\. .{3,40}, (?:FAD|DFF) \(columnas: .{3,140}\)\. C = al corriente, U = no disponible, en otro caso la fecha de corte:$/,
+  /^A BULLETIN COMPARISON chart is shown to the user right now — describe and interpret it, do NOT refuse\. .{3,50} → .{3,50}, (?:FAD|DFF) \(columns: .{3,140}\)\. Summary: \d+ advanced, \d+ retrogressed, \d+ became Current, \d+ became Unavailable, \d+ unchanged\.(?: .{3,220}\.)? These are official published cutoffs, not predictions\. Per cell \(from→to; C=current, U=unavailable\):$/,
+  /^Se está mostrando al usuario una COMPARACIÓN DE BOLETINES — descríbela e interprétala, NO te niegues\. .{3,50} → .{3,50}, (?:FAD|DFF) \(columnas: .{3,140}\)\. Resumen: \d+ avanzaron, \d+ retrocedieron, \d+ pasaron a Current, \d+ a No disponible, \d+ sin cambio\.(?: .{3,220}\.)? Son cortes oficiales publicados, no predicciones\. Por celda \(de→a; C=al corriente, U=no disponible\):$/,
+];
+const NOTE_SKELETONS = [
+  /^A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse\. .{3,160}\. .{3,220}\. Last real cutoff: .{1,40} \(.{1,20}\)\. Projection at the \d{1,2}-month horizon \(.{1,20}\): about .{1,40} \(priority year ≈ \d{4}\.\d\), 95% band \[\d{4}\.\d, \d{4}\.\d\]\.(?: .{0,600})? If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the \d{1,2} months shown, say so frankly and give a rough pace-based estimate with its uncertainty\. Frame it as an aggregate statistical forecast, not legal advice — but DO give the estimate\.$/,
+  /^Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues\. .{3,160}\. .{3,220}\. Último corte real: .{1,40} \(.{1,20}\)\. Proyección al horizonte de \d{1,2} meses \(.{1,20}\): alrededor de .{1,40} \(año de prioridad ≈ \d{4}\.\d\), banda al 95 % \[\d{4}\.\d, \d{4}\.\d\]\.(?: .{0,600})? Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los \d{1,2} meses mostrados, dilo con franqueza y da una estimación aproximada por el ritmo, con su incertidumbre\. Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la estimación\.$/,
+  /^A chart titled "[^"\n]{1,120}" is being rendered to the user from the real data panel — reference and interpret it; do NOT say you cannot show charts\.$/,
+  /^Se está mostrando al usuario un gráfico titulado «[^»\n]{1,120}» generado con el panel de datos real — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos\.$/,
+];
+
+export function validSyntheticShape(source, text) {
+  if (text.includes("\u0060\u0060\u0060")) return false; // jamás fences en un sintético legítimo
+  if (SYNTH_EXACT.has(source)) return NOTE_SKELETONS.some((rx) => rx.test(text));
+  const lines = text.split("\n");
+  if (lines.length < 2 || lines.length > 80) return false;
+  if (!TABLE_HEADERS.some((rx) => rx.test(lines[0]))) return false;
+  return lines.slice(1).every((l) => ROW_RX.test(l));
+}
+
 export function sanitizeContext(raw) {
   const out = [];
   const used = new Set(); // dedupe citation numbers so [n] is never ambiguous (finding 17)
@@ -48,7 +82,7 @@ export function sanitizeContext(raw) {
     if (typeof c?.text !== "string" || !c.text || c.text.length > MAX_CHUNK) continue;
     const source = typeof c.source === "string" ? c.source.slice(0, 120) : "";
     const known = KNOWN_HASHES.has(createHash("sha256").update(c.text, "utf8").digest("hex"));
-    if (!known && (!isSynthSource(source) || ++synth > MAX_SYNTH)) continue;
+    if (!known && (!isSynthSource(source) || !validSyntheticShape(source, c.text) || ++synth > MAX_SYNTH)) continue;
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
@@ -369,7 +403,10 @@ const handler = async (req) => {
 
   let body;
   try {
-    body = await req.json();
+    // A-03/E-01: tope de cuerpo ANTES de parsear — un POST de MBs ya no llega a JSON.parse.
+    const raw = await req.text();
+    if (raw.length > 131072) return errStream("bad_request");
+    body = JSON.parse(raw);
   } catch {
     return errStream("bad_request");
   }
@@ -392,9 +429,14 @@ const handler = async (req) => {
     async start(controller) {
       controller.enqueue(encoder.encode(": ok\n\n"));
       let upstream;
+      // E-01: timeout explicito de CONEXION al upstream (25 s) — el stream posterior no
+      // se corta, pero un Anthropic colgado ya no retiene la function indefinidamente.
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(), 25000);
       try {
         upstream = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
+          signal: abort.signal,
           headers: {
             "x-api-key": key,
             "anthropic-version": "2023-06-01",
@@ -409,11 +451,13 @@ const handler = async (req) => {
           }),
         });
       } catch {
+        clearTimeout(timer);
         send(controller, { t: "error", code: "server" });
         send(controller, { t: "done" });
         controller.close();
         return;
       }
+      clearTimeout(timer);
       if (!upstream.ok || !upstream.body) {
         send(controller, { t: "error", code: "server" });
         send(controller, { t: "done" });
