@@ -151,20 +151,15 @@ export function sanitizeContext(raw, reserved) {
     if (typeof c?.text !== "string" || !c.text || c.text.length > MAX_CHUNK) continue;
     const h = createHash("sha256").update(c.text, "utf8").digest("hex");
     if (!KNOWN_HASHES.has(h)) continue;
-    // ⚠️ title/source son SERVER-OWNED (auditoría 12-jul-2026): se toman del índice
-    // publicado por el hash del texto, NO del payload del cliente — un chunk auténtico
-    // no puede citarse con una fuente inventada. Fallback al cliente SOLO si el artefacto
-    // viejo (lista de hashes) no trae metadata, y aun así se pasa por slotSafe.
+    // ⚠️ title/source son SIEMPRE SERVER-OWNED (auditoría 12-jul-2026): se toman del
+    // índice publicado por el hash del texto, JAMÁS del payload del cliente — un chunk
+    // auténtico no puede citarse con una fuente inventada. Si el artefacto es el formato
+    // viejo (lista de hashes, meta=null), la cita queda SIN etiqueta (título/fuente
+    // vacíos) en vez de aceptar la del cliente: el texto sigue siendo auténtico, pero no
+    // hay superficie para una fuente fabricada.
     const meta = RAG_META[h];
-    let title, source;
-    if (meta) {
-      title = String(meta.title || "").slice(0, 160);
-      source = String(meta.source || "").slice(0, 120);
-    } else {
-      title = typeof c.title === "string" ? c.title.slice(0, 160) : "";
-      source = typeof c.source === "string" ? c.source.slice(0, 120) : "";
-      if (!slotSafe(title) || !slotSafe(source)) continue;
-    }
+    const title = String(meta?.title || "").slice(0, 160);
+    const source = String(meta?.source || "").slice(0, 120);
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
