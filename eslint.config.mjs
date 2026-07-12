@@ -13,6 +13,9 @@ const config = [
       "out/**",
       "node_modules/**",
       "next-env.d.ts",
+      // Auditoria 11-jul: npm run test:coverage emite coverage/ (reporter HTML con JS
+      // generado) y el lint dejaba de ser idempotente en un arbol de trabajo.
+      "coverage/**",
 
       // F2: runtime ONNX vendorizado (third-party minificado) — excluido EXPLÍCITO;
       // todo lo propio (incl. scripts/) se linta con --max-warnings=0.
