@@ -24,7 +24,7 @@ function f16round(x: number): number {
   if (!Number.isFinite(x)) return x;
   if (x === 0) return x; // preserves -0
   const sign = x < 0 ? -1 : 1;
-  let a = Math.abs(x);
+  const a = Math.abs(x);
   const MIN_NORMAL = 2 ** -14;
   const MAX_HALF = 65504;
   if (a >= 2 ** 16) return sign * Infinity; // overflow to ±Inf
