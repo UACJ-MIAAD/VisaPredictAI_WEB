@@ -38,6 +38,23 @@ await check("rag-injection-set.json", (d) => {
   return `${d.injections.length} ataques de inyección + ${nSerial} multi-turn`;
 });
 
+// US I3: golden set (evals/golden/*.json) — estructura + composición + hold-out
+// determinista. Barato: sin modelo ni red (la GENERACIÓN se gatea en scheduled).
+try {
+  const { loadGoldenSet, validateGoldenSet, checkComposition, composition } = await import("./golden-set-lib.mjs");
+  const all = loadGoldenSet("all");
+  const structural = validateGoldenSet(all);
+  for (const s of structural) problems.push(`golden: ${s}`);
+  for (const c of checkComposition(all)) problems.push(`golden: composición — ${c}`);
+  const comp = composition(all);
+  const dev = loadGoldenSet("dev").length;
+  const hold = loadGoldenSet("holdout").length;
+  console.log(`  ✓ evals/golden — ${comp.total} preguntas (ES ${comp.byLang.es || 0} / EN ${comp.byLang.en || 0}) · dev ${dev} · hold-out ${hold} (${Math.round((hold / comp.total) * 100)}%)`);
+  console.log(`    por categoría: ${Object.entries(comp.byCategory).map(([k, v]) => `${k} ${v}`).join(" · ")}`);
+} catch (e) {
+  problems.push(`golden-set-lib: ${e.message}`);
+}
+
 if (problems.length) {
   console.error(`check-eval-sets: ✗ ${problems.length} problema(s):`);
   for (const p of problems) console.error(`  - ${p}`);

@@ -1,0 +1,397 @@
+{
+  "description": "GENERATED hold-out view (multiturn.json). Do NOT edit or tune retrieval on these — see README.md. Membership = isHoldout(id), seed \"visapredict-golden-v1\". Regenerate with: node scripts/golden-holdout-split.mjs",
+  "seed": "visapredict-golden-v1",
+  "cases": [
+    {
+      "id": "mt-es-002",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "¿Qué categoría cubre a los hijos casados de ciudadanos?",
+        "¿Y a los hermanos?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "\\bf3\\b",
+          "note": "F3"
+        },
+        {
+          "pattern": "\\bf4\\b",
+          "note": "F4"
+        }
+      ],
+      "acceptable_answer": "F3 para hijos casados; F4 para hermanos.",
+      "expected_sources": [
+        [
+          "glosario",
+          "capi",
+          "tablas"
+        ]
+      ]
+    },
+    {
+      "id": "mt-es-006",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "¿Qué modelo ganó la comparación al final?",
+        "¿Y ese resultado no cambió con la evaluación más reciente?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "naive|theta|ets|sarima",
+          "note": "veredicto"
+        }
+      ],
+      "acceptable_answer": "El veredicto vigente del model card: campeón desplegado y retador naïve-1, con la evaluación prospectiva como monitoreo.",
+      "expected_sources": [
+        [
+          "model card",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-es-007",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "Hola, ¿me ayudas con el boletín de visas?",
+        "Sí: quiero entender por qué mi categoría retrocedió este año."
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "retroces|cuota|agotam",
+          "note": "retrogresión"
+        }
+      ],
+      "acceptable_answer": "Saludo breve y luego explica la retrogresión por agotamiento de cuotas.",
+      "expected_sources": [
+        [
+          "glosario",
+          "capi",
+          "eda"
+        ]
+      ]
+    },
+    {
+      "id": "mt-es-009",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "¿El proyecto usa redes neuronales?",
+        "¿Y valieron la pena frente a lo clásico?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "lstm|deep|profund|neuronal",
+          "note": "candidatos deep"
+        },
+        {
+          "pattern": "modesto|fr[aá]gil|borde|no.*(supera|gana)",
+          "note": "veredicto honesto"
+        }
+      ],
+      "acceptable_answer": "Se evaluaron modelos profundos; su borde sobre los clásicos es modesto y frágil.",
+      "expected_sources": [
+        [
+          "capii",
+          "model card",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-es-014",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "¿Quién hizo este proyecto?",
+        "¿Y tiene director de tesis o va solo?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "rebull",
+          "note": "autor"
+        },
+        {
+          "pattern": "vicente garc[ií]a",
+          "note": "director"
+        }
+      ],
+      "acceptable_answer": "Javier Rebull, dirigido por el Dr. Vicente García Jiménez (UACJ).",
+      "expected_sources": [
+        [
+          "autores"
+        ]
+      ]
+    },
+    {
+      "id": "mt-es-019",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "¿Puedo descargar los datos del proyecto?",
+        "¿En qué formato están?",
+        "¿Y con qué licencia?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "csv|parquet|duckdb",
+          "note": "formatos"
+        },
+        {
+          "pattern": "licencia|abiert|mit",
+          "note": "licencia"
+        }
+      ],
+      "acceptable_answer": "Sí: panel descargable (CSV y almacén) bajo licencia abierta.",
+      "expected_sources": [
+        [
+          "reproducibilidad",
+          "estructura",
+          "modelo",
+          "datos",
+          "contacto",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-es-022",
+      "lang": "es",
+      "category": "multiturn",
+      "turns": [
+        "¿Cuál fue el hallazgo más incómodo de la evaluación de modelos?",
+        "¿Y eso no invalida el proyecto?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "naive|random walk|piso",
+          "note": "hallazgo naïve-1"
+        },
+        {
+          "pattern": "horizonte|intervalo|gobernanza|valor",
+          "note": "reencuadre del valor"
+        }
+      ],
+      "acceptable_answer": "A un mes nadie le gana al random walk; el valor del sistema está en los horizontes largos, los intervalos y la gobernanza.",
+      "expected_sources": [
+        [
+          "model card",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-002",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "Which category covers married children of U.S. citizens?",
+        "And siblings?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "\\bf3\\b",
+          "note": "F3"
+        },
+        {
+          "pattern": "\\bf4\\b",
+          "note": "F4"
+        }
+      ],
+      "acceptable_answer": "F3 for married children; F4 for siblings.",
+      "expected_sources": [
+        [
+          "glosario",
+          "capi",
+          "tablas"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-008",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "What is the star schema you use for the data?",
+        "And where does the visa lottery live in that schema?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "dimension|fact|star|duckdb",
+          "note": "warehouse"
+        },
+        {
+          "pattern": "diversity|rank",
+          "note": "DV separate"
+        }
+      ],
+      "acceptable_answer": "A dimensional warehouse in DuckDB; the Diversity Visa is a separate rank fact.",
+      "expected_sources": [
+        [
+          "modelo",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-009",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "Does the project use neural networks at all?",
+        "Were they worth it compared to the classics?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "lstm|deep|neural",
+          "note": "deep candidates"
+        },
+        {
+          "pattern": "modest|fragile|edge",
+          "note": "honest verdict"
+        }
+      ],
+      "acceptable_answer": "Deep models were evaluated; their edge over the classics is modest and fragile.",
+      "expected_sources": [
+        [
+          "capii",
+          "model card",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-010",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "How often is the site's data refreshed?",
+        "What if a bulletin changes after being published?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "month|automat",
+          "note": "cadence"
+        },
+        {
+          "pattern": "frozen|snapshot|s3|immutable|congelad",
+          "note": "frozen HTML"
+        }
+      ],
+      "acceptable_answer": "Automatic monthly refresh; the original HTML is frozen as an immutable backup.",
+      "expected_sources": [
+        [
+          "boletines",
+          "datos",
+          "mlops",
+          "ingenieria",
+          "reproducibilidad"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-013",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "Do the site's forecasts come with intervals?",
+        "How do I know that 95% isn't just decoration?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "95|band|interval",
+          "note": "PI"
+        },
+        {
+          "ref": "scorecard:by_mode.backfill.overall.cov95",
+          "note": "measured coverage"
+        }
+      ],
+      "acceptable_answer": "Yes, 80/95% bands; empirical coverage is measured in the prospective evaluation.",
+      "expected_sources": [
+        [
+          "capiii",
+          "model card",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-016",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "Where do the bulletins come from?",
+        "And how far back could the series be rebuilt?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "travel\\.state\\.gov|department of state",
+          "note": "source"
+        },
+        {
+          "ref": "eda_facts:panel.date_first",
+          "kind": "yearmonth",
+          "note": "series start"
+        }
+      ],
+      "acceptable_answer": "From the Department of State; the homogeneous series starts in December 2001.",
+      "expected_sources": [
+        [
+          "datos",
+          "capi",
+          "eda"
+        ]
+      ]
+    },
+    {
+      "id": "mt-en-020",
+      "lang": "en",
+      "category": "multiturn",
+      "turns": [
+        "What does the letter U mean in a bulletin cell?",
+        "And C?",
+        "Does the model try to predict when those letters flip?"
+      ],
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "unavailable",
+          "note": "U"
+        },
+        {
+          "pattern": "current",
+          "note": "C"
+        },
+        {
+          "pattern": "regime|not.*(predict|target)|annotation",
+          "note": "regime out of scope"
+        }
+      ],
+      "acceptable_answer": "U = unavailable, C = current; regime flips are not a prediction target.",
+      "expected_sources": [
+        [
+          "datos",
+          "glosario",
+          "capiii"
+        ]
+      ]
+    }
+  ]
+}
