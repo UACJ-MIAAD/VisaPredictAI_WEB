@@ -13,8 +13,10 @@ import { buildPanel, fetchPanelText, type Panel, type VisaPanelRow } from "./pan
 
 export type { Panel, VisaPanelRow };
 
-// Pilot coverage (single source of truth — analytics, explorer and hero derive from it).
-export const PILOT = ["mexico", "india", "china", "philippines", "all_chargeability"];
+// Pilot coverage + country labels now live in panel-core.mjs (single source of
+// truth shared with the Netlify function — US I1); re-exported here so the many
+// existing import sites keep working unchanged.
+export { PILOT, COUNTRY_LABEL, countryLabel } from "./panel-core.mjs";
 
 const loadInline = async (): Promise<Panel> => buildPanel(await fetchPanelText());
 
@@ -55,25 +57,6 @@ export function loadPanel(): Promise<Panel> {
   return cache;
 }
 
-export const COUNTRY_LABEL: Record<string, string> = {
-  mexico: "México",
-  india: "India",
-  china: "China",
-  philippines: "Filipinas",
-  all_chargeability: "All Chargeability",
-  row: "Resto del mundo",
-};
-const COUNTRY_LABEL_EN: Record<string, string> = {
-  mexico: "Mexico",
-  india: "India",
-  china: "China",
-  philippines: "Philippines",
-  all_chargeability: "All Chargeability",
-  row: "Rest of the world",
-};
-// G3: lang opcional para no tocar a los llamadores ES; la versión EN traduce al render.
-export const countryLabel = (c: string, lang?: string) =>
-  (lang === "en" ? COUNTRY_LABEL_EN[c] : COUNTRY_LABEL[c]) || c;
 // El parseo guarda block en ES ("empleo"/"familia"); traducir SOLO al mostrar.
 const BLOCK_EN: Record<string, string> = { empleo: "employment", familia: "family" };
 export const blockLabel = (b: string, lang?: string) => (lang === "en" ? BLOCK_EN[b] || b : b);

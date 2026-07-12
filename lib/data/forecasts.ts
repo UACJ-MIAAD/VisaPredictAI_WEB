@@ -8,38 +8,17 @@
 // worldwide). The browser drift baseline (analytics.buildForecast) is only a
 // fallback for series with no pre-generated forecast. Source of truth:
 // /data/forecasts.csv (+ _meta).
+//
+// US I1: the pure parsing moved to forecasts-core.mjs, SHARED with the Netlify
+// chat function (server-side synthetic recompute, PENDIENTES #30) — this module
+// keeps the browser concerns: fetch, cache, telemetry and the fail-closed state.
 
 import { track } from "@/lib/analytics";
+import { parseForecastStore, unavailableStore, FORECAST_PATHS } from "./forecasts-core.mjs";
+import type { ForecastStore, Scorecard } from "./forecasts-core.mjs";
 
-export type ForecastPoint = { date: string; days: number; lo80: number; hi80: number; lo95: number; hi95: number };
-export type SeriesMeta = { models: string[]; mase: number; last_month: string };
-export type HorizonScore = { mae_days: number; mase: number; cov95: number };
-export type Scorecard = {
-  n_scored: number;
-  overall: { mae_days: number; mase: number; cov80: number; cov95: number };
-  by_horizon: Record<string, HorizonScore>;
-  // present in the source JSON; optional here so older fixtures still type-check
-  caveat?: string;
-  n_vintages_effective?: number;
-  band80_calibration?: { cov80_heldout?: number };
-};
-export type ForecastStore = {
-  method: Record<string, string>; // table -> human method description
-  series: Map<string, ForecastPoint[]>; // "country|category|table" -> future points
-  meta: Map<string, SeriesMeta>;
-  scorecard: Scorecard | null; // prospective scorecard (leakage-free backfill: origin-truncated vs realized)
-  horizonMonths: number; // forecast horizon, derived from the pipeline (0 when no forecasts shipped)
-  // I2 fail-closed: the old silent catch returned an empty store with no signal,
-  // so consumers could not tell "no forecast for this series" from "the whole
-  // production feed failed to load". Now the failure is an explicit state; the
-  // VisaBot grounding note (analytics.forecastText) declares the outage instead
-  // of fabricating forecast context. The UI drift fallback (labelled
-  // "illustrative") keeps working exactly as before.
-  status: "ok" | "production_unavailable";
-  reason?: string; // human-readable cause when status is production_unavailable
-};
-
-const key = (country: string, category: string, table: string) => `${country}|${category}|${table}`;
+export type { ForecastPoint, SeriesMeta, HorizonScore, Scorecard, ForecastStore } from "./forecasts-core.mjs";
+export { forecastFor, forecastMetaFor } from "./forecasts-core.mjs";
 
 let cache: Promise<ForecastStore> | null = null;
 
@@ -53,53 +32,30 @@ function reportUnavailable(reason: string): void {
 
 const unavailable = (reason: string): ForecastStore => {
   reportUnavailable(reason);
-  return { method: {}, series: new Map(), meta: new Map(), scorecard: null, horizonMonths: 0, status: "production_unavailable", reason };
+  return unavailableStore(reason);
 };
 
 export function loadForecasts(): Promise<ForecastStore> {
   if (cache) return cache;
   cache = (async () => {
     let csv: string,
-      metaJson: { method?: Record<string, string>; series?: Record<string, SeriesMeta>; horizon_months?: number },
+      metaJson: Parameters<typeof parseForecastStore>[1],
       scorecard: Scorecard | null = null;
     try {
       const [c, m, sc] = await Promise.all([
-        fetch("/data/forecasts.csv").then((r) => (r.ok ? r.text() : Promise.reject(new Error(`csv ${r.status}`)))),
-        fetch("/data/forecasts_meta.json").then((r) => (r.ok ? r.json() : {})),
-        fetch("/data/forecast_scorecard.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        fetch(FORECAST_PATHS.csv).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`csv ${r.status}`)))),
+        fetch(FORECAST_PATHS.meta).then((r) => (r.ok ? r.json() : {})),
+        fetch(FORECAST_PATHS.scorecard).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       ]);
       csv = c;
       metaJson = m;
-      scorecard = sc && sc.n_scored > 0 ? (sc as Scorecard) : null;
+      scorecard = sc as Scorecard | null;
     } catch (e) {
       // forecasts not shipped / fetch failed → callers fall back to the drift
       // baseline for charts, but the state is explicit, never silent.
       return unavailable(e instanceof Error ? e.message : String(e));
     }
-    const store: ForecastStore = { method: metaJson.method ?? {}, series: new Map(), meta: new Map(), scorecard, horizonMonths: 0, status: "ok" };
-    const lines = csv.split("\n");
-    const h = lines[0].split(",");
-    const ix = (k: string) => h.indexOf(k);
-    const I = { c: ix("country"), cat: ix("category"), t: ix("table"), d: ix("date"), days: ix("days"), lo80: ix("lo80"), hi80: ix("hi80"), lo95: ix("lo95"), hi95: ix("hi95") };
-    for (let i = 1; i < lines.length; i++) {
-      const a = lines[i].split(",");
-      if (a.length < 9 || !a[I.c]) continue;
-      const k = key(a[I.c], a[I.cat], a[I.t]);
-      const pt: ForecastPoint = { date: a[I.d], days: +a[I.days], lo80: +a[I.lo80], hi80: +a[I.hi80], lo95: +a[I.lo95], hi95: +a[I.hi95] };
-      (store.series.get(k) ?? store.series.set(k, []).get(k)!).push(pt);
-    }
-    if (metaJson.series) for (const [k, v] of Object.entries(metaJson.series)) store.meta.set(k.replace(/\//g, "|"), v);
-    // horizon derived from the pipeline: prefer the explicit meta field (only if
-    // positive — an explicit 0 must not survive), else the real point count per series
-    let maxLen = 0;
-    for (const a of store.series.values()) if (a.length > maxLen) maxLen = a.length;
-    store.horizonMonths = (typeof metaJson.horizon_months === "number" && metaJson.horizon_months > 0) ? metaJson.horizon_months : maxLen;
-    return store;
+    return parseForecastStore(csv, metaJson, scorecard);
   })().catch((e) => unavailable(`parse failure: ${e instanceof Error ? e.message : String(e)}`));
   return cache;
 }
-
-export const forecastFor = (store: ForecastStore | null, country: string, category: string, table: string) =>
-  store?.series.get(key(country, category, table)) ?? null;
-export const forecastMetaFor = (store: ForecastStore | null, country: string, category: string, table: string) =>
-  store?.meta.get(key(country, category, table)) ?? null;

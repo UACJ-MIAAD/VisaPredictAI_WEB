@@ -32,7 +32,7 @@ import { Markdown } from "./markdown";
 import { ChatThread } from "./chat-thread";
 import { SemanticConsent } from "./semantic-consent";
 import { useVisabotChat } from "./use-visabot-chat";
-import type { ChartPayload, Source } from "./types";
+import type { ChartPayload, Source, SyntheticDescriptor } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
@@ -68,9 +68,18 @@ const VisaChart = dynamic(() => import("./visa-chart"), {
   loading: () => <div className="mt-2 h-[250px] animate-pulse rounded-xl border border-border bg-[var(--color-surface-soft)]" />,
 });
 
-function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartPayload | null {
+// A chart for the query PLUS the structured descriptor the server rebuilds its
+// grounding text from (US I1, #30). The descriptor carries identifiers/months
+// only — never prose, never figures; the proxy recomputes the text from
+// hash-verified release data with the SAME shared builders.
+type ChartAndDescriptor = { chart: ChartPayload; descriptor: SyntheticDescriptor };
+
+function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartAndDescriptor | null {
   const e = detectEntities(q, panel);
   const t = e.table || "FAD";
+  const rid = SITE_STATS.releaseId;
+  const wrap = (chart: ChartPayload | null, descriptor: SyntheticDescriptor): ChartAndDescriptor | null =>
+    chart ? { chart, descriptor } : null;
   // Forecast intent — the CORE purpose of the project. Catches the explicit words AND the
   // NATURAL way people ask for a prediction ("¿cuándo llega mi turno?", "en qué mes/año",
   // "cuánto falta", "when will I be current?"), incl. when the user states their priority
@@ -79,34 +88,56 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
     /predic|pron[oó]stic|forecast|proyec|predict|futuro|zoom|abanico|fan[ -]?chart|estimaci[oó]n/i.test(q) ||
     /cu[aá]ndo|cu[aá]nto\s+(falta|tiempo|tardar|me)|qu[eé]\s+(mes|a[ñn]o|fecha)|mi\s+turno|me\s+toca|llegar[aá]?|alcanz|ponerse al d[ií]a|al corriente/i.test(q) ||
     /when|how long|my turn|be current|get current|catch up|reach my|my priority date/i.test(q);
-  if (wantsForecast && e.category)
+  if (wantsForecast && e.category) {
+    const country = e.country || "mexico";
     // horizon derived from the shipped forecasts (regla #0); 12 only as the
     // drift-fallback default inside buildForecast when no store loaded.
-    return buildForecast(panel, e.country || "mexico", e.category, t, lang, forecasts?.horizonMonths || undefined, 48, forecasts);
+    return wrap(
+      buildForecast(panel, country, e.category, t, lang, forecasts?.horizonMonths || undefined, 48, forecasts),
+      { kind: "forecast_note", country, category: e.category, table: t, release_id: rid },
+    );
+  }
   // Compare two bulletins: needs TWO months, checked BEFORE the single-month
   // table branch (so "compara el boletín de X con Y" isn't hijacked by "boletín").
   if (/compar|versus|\bvs\b|diferencia|difference|contra|frente a|cambi[oó]|changed?/i.test(q)) {
     const mm = parseTwoMonths(q, panel);
-    if (mm) return buildBulletinDiff(panel, mm[0], mm[1], t, lang);
+    if (mm)
+      return wrap(buildBulletinDiff(panel, mm[0], mm[1], t, lang),
+        { kind: "bulletin_diff", monthA: mm[0], monthB: mm[1], table: t, release_id: rid });
   }
   // Monthly bulletin snapshot: "tabla/boletín de <mes>" → full-history snapshot. Only when
   // it is NOT a forecast question (guarded above), so the word "tabla" can't hijack it.
   if (!wantsForecast && /\btabla\b|\bbolet[ií]n\b|\bbulletin\b|\btable\b|snapshot/i.test(q)) {
     const m = parseMonth(q, panel);
-    if (m) return buildMonthTable(panel, m, t, lang);
+    if (m) return wrap(buildMonthTable(panel, m, t, lang), { kind: "month_table", month: m, table: t, release_id: rid });
   }
   const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
   const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
-  if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) return buildHeatmap(panel, e.block || (e.category ? blockOf(e.category) : "familia"), t, lang);
-  if (/radar|huella|fingerprint/i.test(q)) return buildRadar(panel, t, lang);
-  if (/carrera|todos los pa[ií]s|all countr|cada pa[ií]s|\brace\b/i.test(q) && e.category) return buildMultiLine(panel, e.category, t, lang, forecasts);
-  if (e.country && e.category) {
-    if (move) return buildMovement(panel, e.country, e.category, t, lang);
-    if (status) return buildStatus(panel, lang, { country: e.country, category: e.category, table: t });
-    return buildLine(panel, e.country, e.category, t, lang);
+  if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) {
+    const block = e.block || (e.category ? blockOf(e.category) : "familia");
+    return wrap(buildHeatmap(panel, block, t, lang), { kind: "chart_note", chart: "heatmap", block, table: t, release_id: rid });
   }
-  if (e.category) return buildCompare(panel, e.category, t, lang);
-  if (e.country && status) return buildStatus(panel, lang, { country: e.country });
+  if (/radar|huella|fingerprint/i.test(q))
+    return wrap(buildRadar(panel, t, lang), { kind: "chart_note", chart: "radar", table: t, release_id: rid });
+  if (/carrera|todos los pa[ií]s|all countr|cada pa[ií]s|\brace\b/i.test(q) && e.category)
+    return wrap(buildMultiLine(panel, e.category, t, lang, forecasts),
+      { kind: "chart_note", chart: "multiline", category: e.category, table: t, release_id: rid });
+  if (e.country && e.category) {
+    if (move)
+      return wrap(buildMovement(panel, e.country, e.category, t, lang),
+        { kind: "chart_note", chart: "movement", country: e.country, category: e.category, table: t, release_id: rid });
+    if (status)
+      return wrap(buildStatus(panel, lang, { country: e.country, category: e.category, table: t }),
+        { kind: "chart_note", chart: "status", country: e.country, category: e.category, table: t, release_id: rid });
+    return wrap(buildLine(panel, e.country, e.category, t, lang),
+      { kind: "chart_note", chart: "line", country: e.country, category: e.category, table: t, release_id: rid });
+  }
+  if (e.category)
+    return wrap(buildCompare(panel, e.category, t, lang),
+      { kind: "chart_note", chart: "compare", category: e.category, table: t, release_id: rid });
+  if (e.country && status)
+    return wrap(buildStatus(panel, lang, { country: e.country }),
+      { kind: "chart_note", chart: "status", country: e.country, release_id: rid });
   return null;
 }
 
@@ -150,28 +181,37 @@ export function AssistantConsole() {
   const months = React.useMemo(() => panel ? [...new Set(panel.rows.map((r) => r.bulletinMonth))].sort().reverse() : [], [panel]);
 
   // console-only: build the chart for the query and prepend its synthetic
-  // grounding sources so the LLM interprets the rendered chart / month table.
-  const prepare = React.useCallback((rq: string, sources: Source[]): { sources: Source[]; chart?: ChartPayload } => {
-    const chart = panel ? chartForQuery(rq, panel, lang, forecasts) : null;
+  // grounding source so the LLM interprets the rendered chart / month table.
+  // US I1 (#30): the synthetic source is DISPLAY + extractive-fallback only
+  // (marked `synthetic: true`; engine.generate strips it from the POSTed
+  // context) — the server rebuilds the same text itself from the returned
+  // descriptor over hash-verified release data, and echoes what it actually
+  // used in the {t:"sources"} frame.
+  const prepare = React.useCallback((rq: string, sources: Source[]): { sources: Source[]; chart?: ChartPayload; synthetics?: SyntheticDescriptor[] } => {
+    const res = panel ? chartForQuery(rq, panel, lang, forecasts) : null;
+    const chart = res?.chart;
     // Ground the LLM in the real month data so it answers any cell and never
-    // looks "limited to recent years" — the table covers the full 2001→2026 panel.
+    // looks "limited to recent years" — the table covers the full panel range.
     if (chart?.kind === "table") {
       const ml = monthLabel(chart.month, lang);
-      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang) },
+      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang), synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart?.kind === "bulletinDiff") {
       // ground the comparison as real panel data (full per-cell transitions)
-      sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: bulletinDiffText(chart, lang) },
+      sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: bulletinDiffText(chart, lang), synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart) {
       // Tell the LLM a chart is rendered alongside its answer so it interprets
       // it instead of replying "I can't show graphs" (esp. forecasts).
       const note = chartContextNote(chart, lang);
       if (note)
-        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: localePath("/asistente", lang), text: note },
+        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: localePath("/asistente", lang), text: note, synthetic: true },
           ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     }
-    return { sources, chart: chart || undefined };
+    // Only send the descriptor when a synthetic source was actually attached
+    // (a table chart always grounds; other kinds only when their note exists).
+    const grounded = sources.some((s) => s.synthetic);
+    return { sources, chart: chart || undefined, synthetics: res && grounded ? [res.descriptor] : undefined };
   }, [panel, lang, forecasts]);
 
   const {

@@ -12,7 +12,7 @@
 // explicit user gesture (warmUpSemantic); warmUp loads just the lightweight
 // index + BM25, so the bot is instantly usable — and stays usable — without
 // the semantic engine (AZ1: no ~150 MB download without consent).
-import type { Chunk, Lang, Source } from "./types";
+import type { Chunk, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
 import { buildBM25, retrieveRanked } from "@/lib/visabot/retrieval-core.mjs";
 
 type Index = { model: string; dim: number; built: string; chunks: Chunk[] };
@@ -153,7 +153,10 @@ export async function retrieve(query: string, lang: Lang, k = 6): Promise<Source
 }
 
 // ── generation ────────────────────────────────────────────────────────────────
-export type GenResult = { text: string; extractive: boolean };
+// serverSources: the server-rebuilt synthetic sources ({t:"sources"} first SSE
+// frame, US I1) — what ACTUALLY grounded the answer; the hook swaps them into
+// the message's displayed sources.
+export type GenResult = { text: string; extractive: boolean; serverSources?: ServerSource[] };
 
 // stream Claude through the function; onDelta receives incremental text.
 export async function generate(
@@ -164,13 +167,25 @@ export async function generate(
   onDelta: (t: string) => void,
   signal?: AbortSignal,
   surface: "widget" | "console" = "widget",
+  synthetics?: SyntheticDescriptor[],
 ): Promise<GenResult> {
   let res: Response;
   try {
     res = await fetch("/.netlify/functions/chat", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ lang, query, history, context, surface }),
+      body: JSON.stringify({
+        lang,
+        query,
+        history,
+        // US I1 (#30): synthetic grounding text NEVER travels to the server —
+        // only hash-verified RAG chunks go as context; the chart grounding goes
+        // as structured descriptors and the server rebuilds the text itself
+        // from verified release data.
+        context: context.filter((s) => !s.synthetic),
+        ...(synthetics?.length ? { synthetics } : {}),
+        surface,
+      }),
       signal,
     });
   } catch {
@@ -187,6 +202,7 @@ export async function generate(
   let buf = "",
     full = "",
     erred = false;
+  let serverSources: ServerSource[] | undefined;
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -208,6 +224,8 @@ export async function generate(
         if (ev.t === "delta" && ev.text) {
           full += ev.text;
           onDelta(ev.text);
+        } else if (ev.t === "sources" && Array.isArray(ev.sources)) {
+          serverSources = ev.sources as ServerSource[]; // US I1: server-rebuilt synthetics
         } else if (ev.t === "error") {
           erred = true;
         }
@@ -217,7 +235,7 @@ export async function generate(
     }
   }
   if (erred && !full) return { text: extractive(context, lang), extractive: true };
-  return { text: full, extractive: false };
+  return { text: full, extractive: false, serverSources };
 }
 
 // extractive fallback: compose a grounded answer from the top chunks, cited.

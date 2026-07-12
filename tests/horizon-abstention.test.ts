@@ -3,16 +3,20 @@
 //   (a) the system prompt and the note templates order abstention beyond the
 //       validated horizon and contain NO instruction to extrapolate;
 //   (b) the OLD note (which ordered a pace-based extrapolation) is REJECTED by
-//       the server's synthetic-shape guard — stale/manipulated clients can no
-//       longer feed the extrapolation order back in;
+//       the server's synthetic-shape guard — and since US I1 the note is
+//       GENERATED server-side from verified data, so a stale/manipulated client
+//       cannot feed ANY note text back in at all (free-text channel dead);
 //   (c) a failed forecast fetch is an EXPLICIT state (production_unavailable)
 //       and forecastText declares the outage instead of fabricating context;
 //   (d) the horizon in the prompt is DERIVED from SITE_STATS (never hand-typed).
+// US I1 note: acceptance is asserted through validSyntheticShape — the grammar
+// chat.mjs now applies as SELF-CHECK to its own server-rebuilt text (the I2
+// abstention wording is preserved verbatim in the shared builder).
 import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { sanitizeContext, systemPrompt } from "../netlify/functions/chat.mjs";
+import { sanitizeContext, systemPrompt, validSyntheticShape } from "../netlify/functions/chat.mjs";
 import { SITE_STATS } from "../lib/content/site-stats.generated";
 import { buildPanel } from "@/lib/data/panel-core";
 import { buildForecast, forecastText, type ChartSpec } from "@/lib/visabot/analytics";
@@ -65,8 +69,8 @@ describe("(a)+(d) system prompt: derived horizon + abstention order", () => {
   });
 });
 
-describe("(a) new forecast note: abstention + last validated band, accepted by the guard", () => {
-  it.each(["es", "en"] as const)("%s note orders abstention and passes the synthetic-shape guard", (lang) => {
+describe("(a) new forecast note: abstention + last validated band, accepted by the server self-check", () => {
+  it.each(["es", "en"] as const)("%s note orders abstention and passes the synthetic-shape self-check", (lang) => {
     const note = forecastText(fspec(lang), lang);
     if (lang === "en") {
       expect(note).toContain("as the furthest validated reading");
@@ -79,8 +83,10 @@ describe("(a) new forecast note: abstention + last validated band, accepted by t
       expect(note).toContain("NO des ninguna fecha ni estimación más allá del horizonte validado");
       expect(note).not.toMatch(/estimaci[oó]n aproximada/);
     }
-    const out = sanitizeContext([{ n: 1, title: "f", source: lang === "en" ? LIVE_EN : LIVE_ES, text: note }]);
-    expect(out).toHaveLength(1);
+    // US I1: the note is server-generated; this grammar gates it before the prompt.
+    expect(validSyntheticShape(lang === "en" ? LIVE_EN : LIVE_ES, note)).toBe(true);
+    // …and the same text arriving as CLIENT context no longer enters at all.
+    expect(sanitizeContext([{ n: 1, title: "f", source: lang === "en" ? LIVE_EN : LIVE_ES, text: note }])).toHaveLength(0);
   });
 
   it("still accepts the note when the accuracy clause (spec.note) is present", () => {
@@ -88,7 +94,7 @@ describe("(a) new forecast note: abstention + last validated band, accepted by t
       fspec("en", { note: "Verified accuracy, global across all series (2944 forecasts scored)." }),
       "en",
     );
-    expect(sanitizeContext([{ n: 1, title: "f", source: LIVE_EN, text: note }])).toHaveLength(1);
+    expect(validSyntheticShape(LIVE_EN, note)).toBe(true);
   });
 });
 
@@ -111,11 +117,13 @@ describe("(b) the OLD extrapolation-ordering note is REJECTED", () => {
     "si alcanzarla queda MÁS ALLÁ de los 12 meses mostrados, dilo con franqueza y da una estimación " + "aproximada por el ritmo, con su incertidumbre. " +
     "Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la " + "estimación.";
 
-  it("rejects the old EN note (zero chunks reach the prompt)", () => {
+  it("rejects the old EN note (fails the shape guard AND the dead free-text channel)", () => {
+    expect(validSyntheticShape(LIVE_EN, OLD_EN)).toBe(false);
     expect(sanitizeContext([{ n: 1, title: "f", source: LIVE_EN, text: OLD_EN }])).toHaveLength(0);
   });
 
-  it("rejects the old ES note (zero chunks reach the prompt)", () => {
+  it("rejects the old ES note (fails the shape guard AND the dead free-text channel)", () => {
+    expect(validSyntheticShape(LIVE_ES, OLD_ES)).toBe(false);
     expect(sanitizeContext([{ n: 1, title: "f", source: LIVE_ES, text: OLD_ES }])).toHaveLength(0);
   });
 
@@ -208,8 +216,8 @@ describe("(c) fail-closed forecast store", () => {
         expect(note).not.toMatch(/Proyección al horizonte/);
       }
       expect(note).not.toMatch(/95\s?% band \[|banda al 95 % \[/); // no fabricated bands
-      const out = sanitizeContext([{ n: 1, title: "f", source: lang === "en" ? LIVE_EN : LIVE_ES, text: note }]);
-      expect(out).toHaveLength(1);
+      // US I1: the outage note is server-generated too — the self-check accepts it.
+      expect(validSyntheticShape(lang === "en" ? LIVE_EN : LIVE_ES, note)).toBe(true);
     },
   );
 
