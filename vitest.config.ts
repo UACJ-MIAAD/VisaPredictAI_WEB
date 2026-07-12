@@ -15,19 +15,37 @@ export default defineConfig({
     // (lib/release), la recuperación del bot (retrieval-core), los builders de
     // charts/galería y los helpers de datos que la suite ya cubre. Los pisos solo
     // SUBEN editando esta config (trinquete explícito en PR).
+    //
+    // E1 (cobertura honesta, plan 2026-07-12): denominador COMPLETO sobre TODO
+    // lib/ + netlify/functions — el % publicado deja de ser "85% de los 8 módulos
+    // que ya testeamos" y pasa a ser el % real sobre toda la lógica. En vitest 4
+    // `coverage.include` ya instrumenta TODOS los archivos que matchean aunque
+    // ningún test los importe (cuentan al 0%); la opción `all` fue eliminada en v4.
+    // Exclusiones documentadas (no son lógica testeable en este runner):
+    //  - Componentes React (*.tsx, aquí solo lib/og.tsx — Satori/JSX): el runner es
+    //    `environment: "node"` sin DOM ni transform JSX de app; se validan con
+    //    typecheck + next build (build-offline en CI), no con vitest.
+    //  - lib/content/*.generated.ts: módulos de DATOS auto-generados por
+    //    scripts/extract-content.mjs y build-stats.mjs (prosa académica serializada);
+    //    meterlos inflaría el denominador con líneas que no son lógica.
+    //  - netlify/functions/rag-hashes.json: artefacto de build, no código.
     coverage: {
       provider: "v8",
-      include: [
-        "lib/release.mjs",
-        "lib/repo.mjs",
-        "lib/visabot/retrieval-core.mjs",
-        "lib/visabot/analytics.ts",
-        "lib/visabot/gallery.ts",
-        "lib/data/panel-core.ts",
-        "lib/data/eda-derive.ts",
-        "lib/site-map.ts",
-      ],
+      include: ["lib/**", "netlify/functions/**"],
+      exclude: ["lib/**/*.tsx", "lib/content/*.generated.ts", "**/*.json"],
+      // json-summary → coverage/coverage-summary.json: el CI lo usa para publicar
+      // el denominador en el job summary y subir el reporte como artefacto.
+      reporter: ["text", "html", "json-summary"],
       thresholds: {
+        // Pisos GLOBALES = baseline honesta medida 2026-07-12 con este include
+        // (209 tests): statements 72.02% (1,187/1,648) · branches 58.90%
+        // (860/1,460) · functions 76.98% (291/378) · lines 73.45% (877/1,194).
+        // Redondeados hacia abajo (no aspiracionales): rompen si la cobertura CAE,
+        // no exigen subirla. Ratchet trimestral: críticos ≥80, core ≥70, global ≥60.
+        statements: 70,
+        branches: 55,
+        functions: 70,
+        lines: 70,
         "lib/release.mjs": { statements: 90 },
         "lib/visabot/retrieval-core.mjs": { statements: 60 },
         "lib/visabot/analytics.ts": { statements: 70 },
