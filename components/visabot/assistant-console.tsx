@@ -15,8 +15,7 @@ import {
   Sparkles, Send, Square, ArrowDown, RotateCcw, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
-  Lightbulb, Database, Cpu, Quote, CalendarDays, AreaChart as ForecastIcon,
-  ArrowLeftRight,
+  Lightbulb, Database, Cpu, Quote, AreaChart as ForecastIcon,
 } from "lucide-react";
 
 type PromptCat = { icon: string; cat: string; items: string[] };
@@ -30,10 +29,11 @@ import { useFocusTrap } from "@/lib/use-focus-trap";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
 import { ChatThread } from "./chat-thread";
+import { AssistantSidebar, type ToolDef, type ToolKind } from "./assistant-sidebar";
 import { SemanticConsent } from "./semantic-consent";
 import { useVisabotChat } from "./use-visabot-chat";
 import type { ChartPayload, Source, SyntheticDescriptor } from "./types";
-import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
+import { loadPanel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import {
@@ -141,19 +141,6 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
   return null;
 }
 
-function Select({ label, value, onChange, options, fmt }: {
-  label: string; value: string; onChange: (v: string) => void; options: string[]; fmt?: (v: string) => string;
-}) {
-  return (
-    <label className="flex flex-col text-[0.7rem] text-[var(--color-muted)]">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 rounded-lg border border-border bg-[var(--color-surface)] px-2.5 py-1.5 text-sm text-[var(--color-ink)]">
-        {options.map((o) => <option key={o} value={o}>{fmt ? fmt(o) : o}</option>)}
-      </select>
-    </label>
-  );
-}
-
 export function AssistantConsole() {
   const { lang } = useLang();
   const [panel, setPanel] = React.useState<Panel | null>(null);
@@ -161,6 +148,18 @@ export function AssistantConsole() {
   const [panelErr, setPanelErr] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [navOpen, setNavOpen] = React.useState(false); // mobile sidebar drawer
+  // J2 — ultra-wide (≥1920px): the sidebar splits into a controls-only left
+  // rail + an insights right rail (KPIs, quick questions). Driven by
+  // matchMedia instead of CSS-hidden duplicates so every control exists
+  // exactly once in the DOM (keeps role/text queries unambiguous for e2e).
+  const [ultra, setUltra] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1920px)");
+    const update = () => setUltra(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
   const howTrapRef = useFocusTrap<HTMLDivElement>(howOpen);
@@ -247,7 +246,7 @@ export function AssistantConsole() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const runTool = (kind: "evol" | "compare" | "move" | "status" | "race" | "heat" | "radar" | "table" | "forecast" | "diff") => {
+  const runTool = (kind: ToolKind) => {
     if (!panel) return;
     track("VisaBot Tool", { lang, tool: kind });
     setNavOpen(false);
@@ -272,84 +271,39 @@ export function AssistantConsole() {
   const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")?.content || "";
   const followUps = !busy && panel && lastMsg?.role === "assistant" && lastMsg.content
     ? buildFollowUps(lastUserMsg, lang, panel) : [];
-  const tools = [
-    { k: "forecast" as const, icon: ForecastIcon, label: tr(lang, "toolForecast") },
-    { k: "evol" as const, icon: TrendingUp, label: tr(lang, "toolEvol") },
-    { k: "compare" as const, icon: BarChart3, label: tr(lang, "toolCompare") },
-    { k: "move" as const, icon: ArrowUpDown, label: tr(lang, "toolMove") },
-    { k: "status" as const, icon: PieIcon, label: tr(lang, "toolStatus") },
-    { k: "race" as const, icon: LineIcon, label: tr(lang, "toolRace") },
-    { k: "heat" as const, icon: Grid3x3, label: tr(lang, "toolHeat") },
-    { k: "radar" as const, icon: RadarIcon, label: tr(lang, "toolRadar") },
+  const tools: ToolDef[] = [
+    { k: "forecast", icon: ForecastIcon, label: tr(lang, "toolForecast") },
+    { k: "evol", icon: TrendingUp, label: tr(lang, "toolEvol") },
+    { k: "compare", icon: BarChart3, label: tr(lang, "toolCompare") },
+    { k: "move", icon: ArrowUpDown, label: tr(lang, "toolMove") },
+    { k: "status", icon: PieIcon, label: tr(lang, "toolStatus") },
+    { k: "race", icon: LineIcon, label: tr(lang, "toolRace") },
+    { k: "heat", icon: Grid3x3, label: tr(lang, "toolHeat") },
+    { k: "radar", icon: RadarIcon, label: tr(lang, "toolRadar") },
   ];
 
-  const Sidebar = (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto p-4">
-      <div>
-        <h3 className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">{tr(lang, "acPanorama")}</h3>
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border">
-          {(panel ? kpis : Array.from({ length: 6 }, () => null)).map((k, i) => (
-            <div key={i} className="bg-[var(--color-surface)] px-3 py-2.5" title={k?.hint}>
-              <div className="font-serif text-base font-bold leading-tight text-[var(--color-ink)]">{k ? k.value : "—"}</div>
-              <div className="mt-0.5 text-[0.6rem] leading-tight text-[var(--color-muted)]">{k ? k.label : "…"}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <h3 className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">{tr(lang, "acContext")}</h3>
-        <div className="grid grid-cols-1 gap-2">
-          <Select label={tr(lang, "acSelCountry")} value={country} onChange={setCountry} options={panel?.countries ?? [country]} fmt={countryLabel} />
-          <Select label={tr(lang, "acSelCategory")} value={category} onChange={setCategory} options={panel?.categories ?? [category]} />
-          <Select label={tr(lang, "acSelTable")} value={table} onChange={setTable} options={panel?.tables ?? [table]} />
-          <Select label={tr(lang, "acSelMonth")} value={month} onChange={setMonth} options={months.length ? months : [month]} fmt={(m) => (m ? monthLabel(m, lang) : "—")} />
-          <button onClick={() => runTool("table")} disabled={!panel} className="mt-0.5 flex items-center justify-center gap-2 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50">
-            <CalendarDays className="h-4 w-4 shrink-0" aria-hidden /> {tr(lang, "acViewTable")}
-          </button>
-          <Select label={tr(lang, "acSelMonthB")} value={monthB} onChange={setMonthB} options={months.length ? months : [monthB]} fmt={(m) => (m ? monthLabel(m, lang) : "—")} />
-          <button onClick={() => runTool("diff")} disabled={!panel} className="flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] transition hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] disabled:opacity-50">
-            <ArrowLeftRight className="h-4 w-4 shrink-0" aria-hidden /> {tr(lang, "acCompareBulletins")}
-          </button>
-        </div>
-      </div>
-      <div>
-        <h3 className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">{tr(lang, "acTools")}</h3>
-        <div className="grid grid-cols-1 gap-2">
-          {tools.map((t) => (
-            <button key={t.k} onClick={() => runTool(t.k)} disabled={!panel} className="flex items-center gap-2 rounded-lg border border-border bg-[var(--color-surface)] px-3 py-2 text-left text-xs text-[var(--color-ink)] transition hover:border-[var(--color-accent)] disabled:opacity-50">
-              <t.icon className="h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
-              <span className="leading-tight">{t.label}</span>
-            </button>
-          ))}
-        </div>
-        {panelErr && <p className="mt-2 text-[0.7rem] text-[var(--color-danger)]">{tr(lang, "acDataError")}</p>}
-      </div>
-      {suggestions.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">{tr(lang, "acQuick")}</h3>
-          <div className="flex flex-col gap-1.5">
-            {suggestions.map((s) => (
-              <button key={s} onClick={() => sendQ(s)} className="vb-suggest flex items-center gap-2 text-left text-[0.8rem]">
-                <BookOpen className="h-3.5 w-3.5 shrink-0 text-[var(--color-accent)]" aria-hidden />
-                <span>{s}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <p className="mt-auto text-[0.6rem] leading-snug text-[var(--color-muted)]">{tr(lang, "vbDisclaimer")}</p>
-    </div>
-  );
+  // shared props for the three sidebar placements (drawer / left rail / ultra
+  // right rail) — the blocks themselves live in <AssistantSidebar/>
+  const sidebarProps = {
+    lang, panel, panelErr, kpis, months, suggestions, tools, runTool,
+    onAsk: sendQ,
+    country, setCountry, category, setCategory, table, setTable,
+    month, setMonth, monthB, setMonthB,
+  };
 
   return (
-    <div id="asistente" className="flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden border-t border-border bg-[var(--color-bg)]">
+    <div id="asistente" className="vb-console flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden border-t border-border bg-[var(--color-bg)]">
+      {/* J2 — centered workspace frame: full-bleed up to 1720px, then centered
+          with hairline side borders so ultra-wide monitors (1920–3440px) get a
+          bounded app frame instead of a panel glued left + dead right half. */}
+      <div data-vb-frame className="mx-auto flex h-full w-full max-w-[1720px] flex-col overflow-hidden min-[1720px]:border-x min-[1720px]:border-border">
       {/* console topbar */}
       <header className="flex items-center gap-2 border-b border-border bg-[var(--color-surface)] px-3 py-2.5 sm:px-4">
         {/* QW5 (WCAG 2.5.3): accessible name contains the visible text "Panel" */}
         <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] lg:hidden" onClick={() => setNavOpen(true)} aria-label={tr(lang, "acPanelToggleLabel")}>
           <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "acPanelToggle")}
         </button>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent)] text-white"><Sparkles className="h-4.5 w-4.5" aria-hidden /></span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent-btn)] text-white"><Sparkles className="h-4.5 w-4.5" aria-hidden /></span>
         <div className="min-w-0">
           {/* QW6: the console title is the page's single <h1> (/asistente had none);
               Tailwind preflight resets h1 margins/size so the look is unchanged. */}
@@ -360,7 +314,7 @@ export function AssistantConsole() {
           </div>
         </div>
         <div className="flex-1" />
-        <button onClick={openPrompts} className="flex items-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:px-2.5" aria-label={tr(lang, "acExamples")}>
+        <button onClick={openPrompts} className="vb-sq flex items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:px-2.5" aria-label={tr(lang, "acExamples")}>
           <Lightbulb className="h-3.5 w-3.5" aria-hidden /> <span className="hidden sm:inline">{tr(lang, "acExamples")}</span>
         </button>
         <button onClick={() => setHowOpen(true)} className="hidden items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:flex">
@@ -373,12 +327,15 @@ export function AssistantConsole() {
         )}
       </header>
 
-      {/* two-pane app body */}
+      {/* two-pane app body (three panes on ultra-wide) */}
       <div className="flex min-h-0 flex-1">
-        {/* desktop sidebar */}
-        <aside className="hidden w-[300px] shrink-0 border-r border-border bg-[var(--color-surface)] lg:block">{Sidebar}</aside>
+        {/* desktop sidebar — on ultra-wide the insights blocks move to the
+            right rail below, so this rail keeps only context + tools */}
+        <aside className="hidden w-[300px] shrink-0 border-r border-border bg-[var(--color-surface)] lg:block 2xl:w-[320px]">
+          <AssistantSidebar sections={ultra ? "controls" : "all"} {...sidebarProps} />
+        </aside>
 
-        {/* mobile drawer */}
+        {/* mobile/tablet drawer */}
         {navOpen && (
           <>
             <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />
@@ -387,7 +344,9 @@ export function AssistantConsole() {
                 <span className="font-serif text-sm font-bold">{tr(lang, "vbName")}</span>
                 <button className="vb-iconbtn" onClick={() => setNavOpen(false)} aria-label={tr(lang, "acCloseTools")}><X className="h-4 w-4" aria-hidden /></button>
               </div>
-              <div className="h-[calc(100%-3.25rem)]">{Sidebar}</div>
+              <div className="h-[calc(100%-3.25rem)]">
+                <AssistantSidebar sections="all" {...sidebarProps} />
+              </div>
             </aside>
           </>
         )}
@@ -396,8 +355,10 @@ export function AssistantConsole() {
             table scrolls inside its own box instead of widening the whole column */}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
           <p className="sr-only" role="status" aria-live="polite">{liveStatus}</p>
-          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 sm:px-6" role="log" aria-live="off">
-            <div className="mx-auto min-w-0 max-w-[820px] space-y-4">
+          {/* overscroll-contain: reaching the thread's edge never chains the
+              scroll to the page (the composer stays put on mobile) */}
+          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-5 sm:px-6" role="log" aria-live="off">
+            <div className="mx-auto min-w-0 max-w-[820px] space-y-4 2xl:max-w-[900px]">
               {messages.length === 0 ? (
                 <div className="flex min-h-[40vh] flex-col items-start justify-center gap-3">
                   <Markdown text={tr(lang, "vbWelcome")} />
@@ -431,7 +392,7 @@ export function AssistantConsole() {
           </div>
 
           {!atBottom && (
-            <button onClick={scrollToBottom} aria-label={tr(lang, "vbScrollDown")} className="absolute bottom-24 left-1/2 z-10 -translate-x-1/2 rounded-full border border-border bg-[var(--color-surface)] p-2 shadow-md">
+            <button onClick={scrollToBottom} aria-label={tr(lang, "vbScrollDown")} className="vb-sq absolute bottom-24 left-1/2 z-10 -translate-x-1/2 rounded-full border border-border bg-[var(--color-surface)] p-2 shadow-md">
               <ArrowDown className="h-4 w-4" aria-hidden />
             </button>
           )}
@@ -444,8 +405,9 @@ export function AssistantConsole() {
             onEnable={() => enableSemantic()}
           />
 
-          <div className="border-t border-border bg-[var(--color-surface)] px-4 py-3 sm:px-6">
-            <form onSubmit={(e) => { e.preventDefault(); sendQ(input); }} className="mx-auto flex max-w-[820px] items-end gap-2">
+          {/* safe-area padding so the composer clears the iOS home indicator */}
+          <div className="border-t border-border bg-[var(--color-surface)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+            <form onSubmit={(e) => { e.preventDefault(); sendQ(input); }} className="mx-auto flex max-w-[820px] items-end gap-2 2xl:max-w-[900px]">
               <textarea
                 ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendQ(input); } }}
@@ -461,13 +423,23 @@ export function AssistantConsole() {
             </form>
           </div>
         </div>
+
+        {/* ultra-wide right rail (≥1920px): KPIs + quick questions — existing
+            sidebar content relocated, so the former dead band beside the
+            thread carries the panorama instead of empty background */}
+        {ultra && (
+          <aside className="hidden w-[320px] shrink-0 border-l border-border bg-[var(--color-surface)] min-[1920px]:block">
+            <AssistantSidebar sections="insights" {...sidebarProps} />
+          </aside>
+        )}
+      </div>
       </div>
 
       {/* how-it-works modal */}
       {howOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={tr(lang, "acHowTitle")}>
           <div className="absolute inset-0 bg-black/50" onClick={() => setHowOpen(false)} aria-hidden />
-          <div ref={howTrapRef} className="relative max-h-[85vh] w-full max-w-[680px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
+          <div ref={howTrapRef} className="relative max-h-[85dvh] w-full max-w-[680px] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <span className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">{tr(lang, "acHowTag")}</span>
@@ -476,7 +448,7 @@ export function AssistantConsole() {
               </div>
               <button className="vb-iconbtn shrink-0" onClick={() => setHowOpen(false)} aria-label={tr(lang, "vbClose")}><X className="h-5 w-5" aria-hidden /></button>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid !mt-0 !gap-5 sm:grid-cols-2">
               {([1, 2, 3, 4] as const).map((n) => (
                 <div key={n} className="border-t-2 border-[var(--color-rule)] pt-3">
                   <h3 className="font-serif text-base font-bold text-[var(--color-ink)]">{tr(lang, `acStep${n}T`)}</h3>
@@ -492,7 +464,7 @@ export function AssistantConsole() {
       {promptsOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={tr(lang, "acExamplesTitle")}>
           <div className="absolute inset-0 bg-black/50" onClick={() => setPromptsOpen(false)} aria-hidden />
-          <div ref={promptsTrapRef} className="relative max-h-[85vh] w-full max-w-[760px] overflow-y-auto rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
+          <div ref={promptsTrapRef} className="relative max-h-[85dvh] w-full max-w-[760px] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-[var(--color-bg)] p-6 shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <span className="flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]"><Lightbulb className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "acExamples")}</span>
