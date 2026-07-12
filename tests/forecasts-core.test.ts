@@ -20,9 +20,20 @@ describe("parseForecastStore fail-closed validation", () => {
     const bad = `${HDR}\nmexico,F1,FAD,NOTADATE,abc,900,1100,850,1150`;
     expect(parseForecastStore(bad, {}, null).status).toBe("production_unavailable");
   });
+  it("rejects a prefix-valid but non-calendar date (2026-99-99garbage)", () => {
+    const bad = `${HDR}\nmexico,F1,FAD,2026-99-99garbage,1000,900,1100,850,1150`;
+    expect(parseForecastStore(bad, {}, null).status).toBe("production_unavailable");
+  });
+  it("rejects a point forecast outside its own 95% interval", () => {
+    const oob = `${HDR}\nmexico,F1,FAD,2026-08-01,5000,900,1100,850,1150`; // days>hi95
+    expect(parseForecastStore(oob, {}, null).status).toBe("production_unavailable");
+  });
   it("rejects inverted / incoherent prediction bands", () => {
     const inv = `${HDR}\nmexico,F1,FAD,2026-08-01,1000,1100,900,850,1150`; // lo80>hi80
     expect(parseForecastStore(inv, {}, null).status).toBe("production_unavailable");
+  });
+  it("rejects incompatible metadata (meta.series not an object)", () => {
+    expect(parseForecastStore(good, { series: "nope" }, null).status).toBe("production_unavailable");
   });
   it("drops a minority of corrupt rows but keeps the store ok", () => {
     const mixed = `${HDR}\n` +
@@ -33,7 +44,7 @@ describe("parseForecastStore fail-closed validation", () => {
     expect(s.status).toBe("ok");
     expect(s.series.get("mexico|F1|FAD")?.length).toBe(2);
   });
-  it("header-only feed stays ok with an empty store (legitimately no forecasts)", () => {
-    expect(parseForecastStore(HDR, {}, null).status).toBe("ok");
+  it("an all-header feed (zero forecasts) is a production failure, not ok", () => {
+    expect(parseForecastStore(HDR, {}, null).status).toBe("production_unavailable");
   });
 });
