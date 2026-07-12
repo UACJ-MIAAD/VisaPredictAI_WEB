@@ -94,7 +94,7 @@ describe("maseTerciles / maseTier", () => {
 describe("attachSignals", () => {
   it("enriches the leaf set with backlog + movement from the panel + store", () => {
     const meta = new Map<string, SeriesMeta>([["mexico|F4|FAD", { models: ["ets"], mase: 0.1, last_month: "2023-12" }]]);
-    const store: ForecastStore = { method: {}, series: new Map([["mexico|F4|FAD", fc]]), meta, scorecard: null, horizonMonths: 12 };
+    const store: ForecastStore = { method: {}, series: new Map([["mexico|F4|FAD", fc]]), meta, scorecard: null, horizonMonths: 12, status: "ok" };
     const enriched = attachSignals(buildGallerySeries(store), store, index);
     const s = enriched.find((x) => x.key === "mexico|F4|FAD")!;
     expect(s.backlogYears as number).toBeGreaterThan(0);

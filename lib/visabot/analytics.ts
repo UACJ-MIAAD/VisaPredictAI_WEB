@@ -69,6 +69,10 @@ export type ChartSpec =
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
   | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string; fallback?: boolean;
+      // true when the production forecast STORE failed to load (fetch error), as
+      // opposed to `fallback` (this one series has no pre-generated forecast).
+      // forecastText must then declare the outage instead of fabricating context.
+      productionUnavailable?: boolean;
       data: { month: string; hist: number | null; fc: number | null; band80: [number, number] | null; band95: [number, number] | null; date: string | null }[] }
   | { kind: "table"; title: string; subtitle: string; month: string; tableType: string;
       countries: string[];
@@ -348,6 +352,10 @@ export function buildForecast(panel: Panel, country: string, category: string, t
   }
   return {
     kind: "forecast", splitMonth: last.bulletinMonth, note, fallback: !(real && real.length),
+    // Explicit fail-closed signal (I2): the store loaded with an error state, so
+    // the drift chart may render (labelled illustrative) but the LLM grounding
+    // note must not present forecast figures as the production model's.
+    productionUnavailable: forecasts?.status === "production_unavailable" || undefined,
     title: lang === "en" ? `Forecast · ${seriesTitle({ country, category, table })}` : `Pronóstico · ${seriesTitle({ country, category, table })}`,
     subtitle,
     yLabel: lang === "en" ? "Priority year" : "Año de prioridad",
@@ -359,6 +367,16 @@ export function buildForecast(panel: Panel, country: string, category: string, t
 // it can show charts. Carries the real numbers it can quote.
 export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lang: Lang): string {
   const lastHist = [...spec.data].filter((d) => d.hist != null).pop();
+  // I2 fail-closed: the production forecast store did not load. Do NOT fabricate
+  // forecast context for the LLM — declare the outage (the UI may still show the
+  // drift chart, which is labelled "illustrative" on its own subtitle) and give
+  // only real panel facts (title + last published cutoff). Fixed template: it
+  // must keep matching its NOTE_SKELETON in netlify/functions/chat.mjs.
+  if (spec.productionUnavailable) {
+    return lang === "en"
+      ? `A FORECAST CHART could not be grounded: the production forecast feed is unavailable right now. ${spec.title}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). The interface may show an in-browser drift projection clearly labelled as illustrative, but do NOT present its figures as the system's forecast and do NOT give any projected date or estimate. Tell the user the production forecast is temporarily unavailable and refer them to the official Visa Bulletin (travel.state.gov).`
+      : `No fue posible anclar el GRÁFICO DE PRONÓSTICO: el pronóstico del modelo de producción no está disponible en este momento. ${spec.title}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). La interfaz puede mostrar una proyección de deriva en el navegador claramente etiquetada como ilustrativa, pero NO presentes sus cifras como el pronóstico del sistema y NO des ninguna fecha proyectada ni estimación. Indica al usuario que el pronóstico de producción no está disponible temporalmente y remítelo al boletín oficial (travel.state.gov).`;
+  }
   const end = spec.data[spec.data.length - 1];
   const b95 = bandOf(end.band95);
   const fmt = (yr: number) => (yr).toFixed(1);
@@ -366,10 +384,13 @@ export function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lan
   // spec.subtitle already states whether this is the PRODUCTION model or the in-browser
   // drift baseline; spec.note carries the verified out-of-sample track record (leakage-free backfill) when available.
   // Pass both through verbatim (do NOT re-label the production model as "illustrative").
+  // I2: beyond the h validated months the note orders ABSTENTION — last validated
+  // band + official bulletin — never a pace-extrapolated guess (the old wording
+  // that ordered such an estimate is dead and rejected by the server skeletons).
   const acc = spec.note ? ` ${spec.note}` : "";
   return lang === "en"
-    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${h}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95% band [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} If the user gave a priority date, say whether this projected cutoff reaches it within the horizon; if reaching it lies BEYOND the ${h} months shown, say so frankly and give a rough pace-based estimate with its uncertainty. Frame it as an aggregate statistical forecast, not legal advice — but DO give the estimate.`
-    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${h} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte; si alcanzarla queda MÁS ALLÁ de los ${h} meses mostrados, dilo con franqueza y da una estimación aproximada por el ritmo, con su incertidumbre. Enmárcalo como pronóstico estadístico agregado, no asesoría legal — pero SÍ da la estimación.`;
+    ? `A FORECAST CHART is being shown to the user right now — describe and interpret it; do NOT say you cannot show charts, and do NOT refuse. ${spec.title}. ${spec.subtitle}. Last real cutoff: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Projection at the ${h}-month horizon (${end.month}): about ${end.date} (priority year ≈ ${fmt(end.fc as number)}), 95% band [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} If the user gave a priority date, say whether this projected cutoff reaches it within the ${h}-month horizon. If reaching it lies BEYOND the ${h} months shown, say so frankly, give the ${h}-month projection above (with its 95% band) as the furthest validated reading, refer the user to the official Visa Bulletin (travel.state.gov) for anything past the horizon, and do NOT give any date or estimate beyond the validated horizon. Frame it as an aggregate statistical forecast, not legal advice.`
+    : `Se está mostrando al usuario un GRÁFICO DE PRONÓSTICO en este momento — descríbelo e interprétalo; NO digas que no puedes mostrar gráficos y NO te niegues. ${spec.title}. ${spec.subtitle}. Último corte real: ${lastHist?.date ?? "—"} (${lastHist?.month ?? "—"}). Proyección al horizonte de ${h} meses (${end.month}): alrededor de ${end.date} (año de prioridad ≈ ${fmt(end.fc as number)}), banda al 95 % [${fmt(b95[0])}, ${fmt(b95[1])}].${acc} Si el usuario dio su fecha de prioridad, di si el corte proyectado la alcanza dentro del horizonte de ${h} meses. Si alcanzarla queda MÁS ALLÁ de los ${h} meses mostrados, dilo con franqueza, ofrece como última lectura validada la proyección al mes ${h} de arriba (con su banda al 95 %), remite al usuario al boletín oficial (travel.state.gov) para lo que quede más allá del horizonte y NO des ninguna fecha ni estimación más allá del horizonte validado. Enmárcalo como pronóstico estadístico agregado, no asesoría legal.`;
 }
 
 // Generic note for the non-table charts so the LLM complements the visual.
