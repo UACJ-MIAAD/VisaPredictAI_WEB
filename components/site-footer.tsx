@@ -28,8 +28,10 @@ export function SiteFooter() {
   return (
     <footer className="footer">
       <div className="footer-top">
-        <Link href={localePath("/", lang)} className="footer-brand-row" aria-label="VisaPredict AI">
-          <Image src="/LogoVisaPredictAI.png" alt="" width={22} height={22} />
+        {/* QW5: accessible name must match the visible text "VisaPredictAI"
+            (WCAG 2.5.3 label-in-name). QW4: 2 kB logo-64 for a 22 px render. */}
+        <Link href={localePath("/", lang)} className="footer-brand-row" aria-label="VisaPredictAI">
+          <Image src="/logo-64.png" alt="" width={22} height={22} />
           <b>
             VisaPredict<span>AI</span>
           </b>

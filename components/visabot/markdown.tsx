@@ -18,6 +18,9 @@ export function Markdown({ text, sources }: { text: string; sources?: Source[] }
   const html = React.useMemo(() => {
     if (!mounted) return "";
     let out = marked.parse(text, { async: false }) as string;
+    // QW6: the assistant page has exactly ONE <h1> (the console title). A "# "
+    // markdown heading in a streamed answer must not mint another — demote to h2.
+    out = out.replace(/<(\/?)h1(\s[^>]*)?>/gi, "<$1h2$2>");
     if (sources?.length) {
       const byN = new Map(sources.map((s) => [s.n, s]));
       out = out.replace(/\[(\d+)\]/g, (m, d) => {
@@ -35,8 +38,10 @@ export function Markdown({ text, sources }: { text: string; sources?: Source[] }
       // code. Backstop to "VisaBot never shows code" that holds even when the stream
       // guard's heuristic misses a markerless case. (Markdown like `F2A` simply renders
       // as F2A, which is fine — categories don't need monospace.)
+      // h1 is NOT allowed (QW6): chat markdown must never mint a page heading —
+      // marked's h1 output is demoted to h2 above; DOMPurify unwraps any stray one.
       ALLOWED_TAGS: [
-        "a", "b", "strong", "i", "em", "p", "br", "ul", "ol", "li", "h1", "h2",
+        "a", "b", "strong", "i", "em", "p", "br", "ul", "ol", "li", "h2",
         "h3", "h4", "blockquote", "table", "thead", "tbody", "tr",
         "th", "td", "hr", "span",
       ],

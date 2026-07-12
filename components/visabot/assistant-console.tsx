@@ -80,7 +80,9 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
     /cu[aá]ndo|cu[aá]nto\s+(falta|tiempo|tardar|me)|qu[eé]\s+(mes|a[ñn]o|fecha)|mi\s+turno|me\s+toca|llegar[aá]?|alcanz|ponerse al d[ií]a|al corriente/i.test(q) ||
     /when|how long|my turn|be current|get current|catch up|reach my|my priority date/i.test(q);
   if (wantsForecast && e.category)
-    return buildForecast(panel, e.country || "mexico", e.category, t, lang, 12, 48, forecasts);
+    // horizon derived from the shipped forecasts (regla #0); 12 only as the
+    // drift-fallback default inside buildForecast when no store loaded.
+    return buildForecast(panel, e.country || "mexico", e.category, t, lang, forecasts?.horizonMonths || undefined, 48, forecasts);
   // Compare two bulletins: needs TWO months, checked BEFORE the single-month
   // table branch (so "compara el boletín de X con Y" isn't hijacked by "boletín").
   if (/compar|versus|\bvs\b|diferencia|difference|contra|frente a|cambi[oó]|changed?/i.test(q)) {
@@ -212,7 +214,7 @@ export function AssistantConsole() {
     let chart: ChartPayload | null = null, lead = "";
     if (kind === "table") { chart = buildMonthTable(panel, month || months[0], table, lang); lead = tr(lang, "acHereTable"); }
     else if (kind === "diff") { chart = buildBulletinDiff(panel, month || months[0], monthB || months[Math.min(12, months.length - 1)], table, lang); lead = tr(lang, "acHereDiff"); }
-    else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang, 12, 48, forecasts); lead = tr(lang, "acHereForecast"); }
+    else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang, forecasts?.horizonMonths || undefined, 48, forecasts); lead = tr(lang, "acHereForecast"); }
     else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
     else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
     else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
@@ -303,12 +305,15 @@ export function AssistantConsole() {
     <div id="asistente" className="flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden border-t border-border bg-[var(--color-bg)]">
       {/* console topbar */}
       <header className="flex items-center gap-2 border-b border-border bg-[var(--color-surface)] px-3 py-2.5 sm:px-4">
-        <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] lg:hidden" onClick={() => setNavOpen(true)} aria-label={tr(lang, "acTools")}>
+        {/* QW5 (WCAG 2.5.3): accessible name contains the visible text "Panel" */}
+        <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] lg:hidden" onClick={() => setNavOpen(true)} aria-label={tr(lang, "acPanelToggleLabel")}>
           <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "acPanelToggle")}
         </button>
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent)] text-white"><Sparkles className="h-4.5 w-4.5" aria-hidden /></span>
         <div className="min-w-0">
-          <div className="font-serif text-sm font-bold leading-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</div>
+          {/* QW6: the console title is the page's single <h1> (/asistente had none);
+              Tailwind preflight resets h1 margins/size so the look is unchanged. */}
+          <h1 className="font-serif text-sm font-bold leading-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</h1>
           <div className="flex items-center gap-1.5 text-[0.58rem] uppercase tracking-wide text-[var(--color-muted)]">
             <span className={`inline-block h-1.5 w-1.5 rounded-full ${modelReady ? "bg-[var(--color-success)]" : semantic ? "bg-[var(--color-accent-2)]" : "bg-[var(--color-muted)]"}`} />
             {modelReady ? tr(lang, "vbEngineReady") : semantic ? `${tr(lang, "vbLoadingEngine")}${dlProgress ? ` ${dlProgress} %` : ""}` : tr(lang, "vbSemanticOff")}

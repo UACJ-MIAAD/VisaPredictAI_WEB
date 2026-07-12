@@ -1579,6 +1579,9 @@
           <text x="120" y="335" font-family="DM Sans" font-size="10" fill="#555559">Pronóstico mensual por país × categoría × tabla (h = 1, 3, 6, 12 meses) con intervalos de predicción al 95 %, 8 modelos comparados, repositorio reproducible bajo licencia abierta.</text>
         </svg>
       </div>
+      <p>
+        <em>Nota (julio 2026): la figura es la arquitectura tentativa literal del anteproyecto (mayo 2026), cuyo marco comparativo planteaba ese conjunto inicial de modelos candidatos. El marco realmente ejecutado creció durante el desarrollo — el conteo vigente se deriva del catálogo gobernado de modelos y se reporta en la <a href="/datos-historicos/#scorecard">evaluación prospectiva</a>.</em>
+      </p>
 
       <h4>3.1.3 · Cobertura analítica en tres niveles</h4>
       <p>
@@ -1713,7 +1716,7 @@
         <span class="card-tag">Fase 3 · CRISP-DM 3+4</span>
         <h3 class="card-title">Preparación &amp; modelado</h3>
         <p class="card-text">
-          Construcción del panel multiserie $y_{p,c,b,t}$ y entrenamiento de los 8 modelos de la <a href="#tablas">Tabla&nbsp;3</a>: lineales (naïve, ARIMA, SARIMA, Prophet), no lineales locales (LSTM, ARIMA-LSTM) y globales/tabulares (DeepAR, XGBoost). Selección de hiperparámetros sin <em>data leakage</em>; generación de intervalos de predicción al 95&nbsp;% por tres mecanismos.
+          Construcción del panel multiserie $y_{p,c,b,t}$ y entrenamiento de los 8 modelos planteados en la <a href="#tablas">Tabla&nbsp;3</a>: lineales (naïve, ARIMA, SARIMA, Prophet), no lineales locales (LSTM, ARIMA-LSTM) y globales/tabulares (DeepAR, XGBoost). Selección de hiperparámetros sin <em>data leakage</em>; generación de intervalos de predicción al 95&nbsp;% por tres mecanismos.
         </p>
       </div>
       <div class="card reveal reveal--d3">
