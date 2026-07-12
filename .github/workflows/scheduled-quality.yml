@@ -37,6 +37,29 @@ jobs:
         run: npm run rag:gate
       - name: Sets de evaluación (versión + estructura)
         run: node scripts/check-eval-sets.mjs
+      # US I3: gate GENERATIVO sobre el golden set curado a mano (evals/golden/).
+      # Corre la MISMA recuperación desplegada + evalúa grounding-por-construcción,
+      # abstención y guards de envenenamiento de forma determinista (sin LLM).
+      # Falla si context recall < 0.85, cualquier poisoning pasa el guard, o una
+      # forecast_out no abstiene. La split de dev es la que se gatea; el hold-out
+      # NO entra a CI (se corre a mano, ver evals/golden/holdout/README.md).
+      - name: Golden gate generativo (dev)
+        env:
+          GOLDEN_EVAL_OUT: ${{ runner.temp }}
+        run: npm run rag:golden:gate
+      - name: Golden hold-out (informativo, no bloqueante)
+        if: always()
+        env:
+          GOLDEN_EVAL_OUT: ${{ runner.temp }}
+        run: npm run rag:golden:holdout || true
+      - name: Subir reportes del golden eval (JSON + MD)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: golden-eval
+          path: ${{ runner.temp }}/visabot-golden-eval.*
+          if-no-files-found: ignore
+          retention-days: 30
 
   # Supply chain (runtime deps): falla en high/critical; los moderados se reportan y
   # viven triados con SLA en docs/SECURITY_TRIAGE.md. PROHIBIDO el auto-fix --force

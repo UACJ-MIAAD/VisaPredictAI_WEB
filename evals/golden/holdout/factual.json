@@ -1,0 +1,340 @@
+{
+  "description": "GENERATED hold-out view (factual.json). Do NOT edit or tune retrieval on these — see README.md. Membership = isHoldout(id), seed \"visapredict-golden-v1\". Regenerate with: node scripts/golden-holdout-split.mjs",
+  "seed": "visapredict-golden-v1",
+  "cases": [
+    {
+      "id": "fact-es-002",
+      "lang": "es",
+      "category": "factual",
+      "question": "¿Cuántos boletines mensuales lleva acumulados el proyecto?",
+      "answerable": true,
+      "facts": [
+        {
+          "ref": "eda_facts:panel.n_months",
+          "note": "meses completos"
+        }
+      ],
+      "acceptable_answer": "La serie mensual homogénea cubre el número vigente de boletines completos, sin huecos.",
+      "expected_sources": [
+        [
+          "datos",
+          "eda",
+          "capi",
+          "inicio"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-016",
+      "lang": "es",
+      "category": "factual",
+      "question": "Me dijeron que la fecha de prioridad funciona como un boleto de turno, ¿es así?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "turno|cola|registro",
+          "note": "definición priority date"
+        }
+      ],
+      "acceptable_answer": "Sí: es la fecha oficial de registro de la petición y funciona como turno en la cola de procesamiento.",
+      "expected_sources": [
+        [
+          "glosario"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-019",
+      "lang": "es",
+      "category": "factual",
+      "question": "¿Cuáles son las categorías basadas en empleo que cubre el boletín?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "eb-?1|eb-?5|empleo",
+          "note": "EB-1 a EB-5"
+        }
+      ],
+      "acceptable_answer": "Las preferencias laborales EB-1 a EB-5, con sus subcategorías.",
+      "expected_sources": [
+        [
+          "glosario",
+          "capi"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-026",
+      "lang": "es",
+      "category": "factual",
+      "question": "¿Siguen alguna metodología formal de ciencia de datos o van improvisando?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "crisp",
+          "note": "CRISP-DM nominada"
+        }
+      ],
+      "acceptable_answer": "El trabajo se estructura con CRISP-DM, mapeando las fases del proyecto a sus seis fases.",
+      "expected_sources": [
+        [
+          "capiv",
+          "resumen",
+          "capi"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-028",
+      "lang": "es",
+      "category": "factual",
+      "question": "¿El sistema avisa cuándo una categoría va a pasar a 'Current'?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "no.*(promete|predice)|r[eé]gimen|anotaci[oó]n",
+          "note": "cambios de régimen fuera de alcance"
+        }
+      ],
+      "acceptable_answer": "No: el sistema no promete predecir cambios de régimen (C↔F↔U); solo pronostica fechas en estado F.",
+      "expected_sources": [
+        [
+          "capiii",
+          "datos",
+          "model card"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-032",
+      "lang": "es",
+      "category": "factual",
+      "question": "¿Quién firma esta tesis y quién la dirige?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "rebull",
+          "note": "autor"
+        },
+        {
+          "pattern": "vicente garc[ií]a",
+          "note": "director"
+        }
+      ],
+      "acceptable_answer": "Javier Augusto Rebull Saucedo, dirigido por el Dr. Vicente García Jiménez.",
+      "expected_sources": [
+        [
+          "autores"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-033",
+      "lang": "es",
+      "category": "factual",
+      "question": "¿En qué universidad y en qué posgrado se está haciendo este trabajo?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "uacj|ciudad ju[aá]rez",
+          "note": "UACJ"
+        },
+        {
+          "pattern": "maestr[ií]a|miaad",
+          "note": "programa"
+        }
+      ],
+      "acceptable_answer": "En la Maestría en Inteligencia Artificial y Analítica de Datos (MIAAD) de la UACJ.",
+      "expected_sources": [
+        [
+          "autores",
+          "capi",
+          "inicio"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-034",
+      "lang": "es",
+      "category": "factual",
+      "question": "Quiero reproducir los resultados, ¿dónde está publicado el código?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "github|repositorio",
+          "note": "repo público"
+        }
+      ],
+      "acceptable_answer": "El repositorio público del proyecto en GitHub, con pipeline reproducible.",
+      "expected_sources": [
+        [
+          "reproducibilidad",
+          "estructura",
+          "contacto",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "fact-es-035",
+      "lang": "es",
+      "category": "factual",
+      "question": "Al final, ¿cuántos modelos entraron a la comparación?",
+      "answerable": true,
+      "facts": [
+        {
+          "ref": "site_stats:nModels",
+          "note": "catálogo de modelos evaluados"
+        }
+      ],
+      "acceptable_answer": "El marco comparativo ejecutado evaluó el catálogo vigente de modelos bajo el mismo protocolo walk-forward.",
+      "expected_sources": [
+        [
+          "model card",
+          "ingenieria"
+        ]
+      ]
+    },
+    {
+      "id": "fact-en-001",
+      "lang": "en",
+      "category": "factual",
+      "question": "How many rows are in the visa panel right now?",
+      "answerable": true,
+      "facts": [
+        {
+          "ref": "eda_facts:panel.n_obs",
+          "note": "panel observations"
+        }
+      ],
+      "acceptable_answer": "The multi-series panel holds the current total of country × category × table × month observations.",
+      "expected_sources": [
+        [
+          "datos",
+          "eda",
+          "model card",
+          "inicio"
+        ]
+      ]
+    },
+    {
+      "id": "fact-en-006",
+      "lang": "en",
+      "category": "factual",
+      "question": "If the government site ever removes an old bulletin, is the data lost?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "s3|frozen|snapshot|congelad",
+          "note": "frozen HTML backup"
+        }
+      ],
+      "acceptable_answer": "No: the original HTML is frozen as an immutable backup and parsing is reproducible offline.",
+      "expected_sources": [
+        [
+          "ingenieria",
+          "reproducibilidad",
+          "datos",
+          "mlops"
+        ]
+      ]
+    },
+    {
+      "id": "fact-en-017",
+      "lang": "en",
+      "category": "factual",
+      "question": "Which family category covers siblings of U.S. citizens?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "\\bf4\\b|sibling",
+          "note": "F4"
+        }
+      ],
+      "acceptable_answer": "Category F4 (siblings of U.S. citizens).",
+      "expected_sources": [
+        [
+          "glosario",
+          "capi",
+          "tablas"
+        ]
+      ]
+    },
+    {
+      "id": "fact-en-021",
+      "lang": "en",
+      "category": "factual",
+      "question": "How does the evaluation avoid peeking at future data?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "walk-?forward|leakage|temporal",
+          "note": "temporal validation"
+        }
+      ],
+      "acceptable_answer": "Walk-forward validation: training only sees the past and evaluation rolls forward month by month.",
+      "expected_sources": [
+        [
+          "glosario",
+          "capiii",
+          "capiv"
+        ]
+      ]
+    },
+    {
+      "id": "fact-en-027",
+      "lang": "en",
+      "category": "factual",
+      "question": "Which countries does the pilot start with?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "mexico",
+          "note": "MX"
+        },
+        {
+          "pattern": "india",
+          "note": "IN"
+        },
+        {
+          "pattern": "china",
+          "note": "CN"
+        },
+        {
+          "pattern": "philippines",
+          "note": "PH"
+        }
+      ],
+      "acceptable_answer": "Mexico, India, China, the Philippines and the residual All Chargeability area; Mexico is the initial pilot, not the whole scope.",
+      "expected_sources": [
+        [
+          "capi",
+          "capiii",
+          "datos",
+          "tablas"
+        ]
+      ]
+    },
+    {
+      "id": "fact-en-031",
+      "lang": "en",
+      "category": "factual",
+      "question": "Which university hosts this graduate project?",
+      "answerable": true,
+      "facts": [
+        {
+          "pattern": "uacj|ciudad ju[aá]rez",
+          "note": "UACJ"
+        }
+      ],
+      "acceptable_answer": "The Autonomous University of Ciudad Juárez (UACJ), MIAAD master's program.",
+      "expected_sources": [
+        [
+          "autores",
+          "capi",
+          "inicio"
+        ]
+      ]
+    }
+  ]
+}

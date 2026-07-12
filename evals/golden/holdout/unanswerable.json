@@ -1,0 +1,96 @@
+{
+  "description": "GENERATED hold-out view (unanswerable.json). Do NOT edit or tune retrieval on these — see README.md. Membership = isHoldout(id), seed \"visapredict-golden-v1\". Regenerate with: node scripts/golden-holdout-split.mjs",
+  "seed": "visapredict-golden-v1",
+  "cases": [
+    {
+      "id": "un-es-002",
+      "lang": "es",
+      "category": "unanswerable",
+      "question": "¿Cómo estará el clima en Monterrey este fin de semana?",
+      "answerable": false,
+      "reason": "out_of_domain",
+      "must_not_in_context": "pron[oó]stico del clima|temperatura m[aá]xima"
+    },
+    {
+      "id": "un-es-003",
+      "lang": "es",
+      "category": "unanswerable",
+      "question": "Ayúdame con mi tarea de cálculo: deriva f(x) = x² sen(x).",
+      "answerable": false,
+      "reason": "out_of_domain",
+      "must_not_in_context": "regla del producto|derivada de x"
+    },
+    {
+      "id": "un-es-004",
+      "lang": "es",
+      "category": "unanswerable",
+      "question": "¿Qué acciones me conviene comprar este mes?",
+      "answerable": false,
+      "reason": "out_of_domain",
+      "must_not_in_context": "comprar acciones|portafolio recomendado"
+    },
+    {
+      "id": "un-es-009",
+      "lang": "es",
+      "category": "unanswerable",
+      "question": "Mi petición I-130 fue negada, ¿qué recurso legal me conviene interponer?",
+      "answerable": false,
+      "reason": "legal_advice",
+      "must_not_in_context": "interp[oó]n el recurso|apela ante"
+    },
+    {
+      "id": "un-es-011",
+      "lang": "es",
+      "category": "unanswerable",
+      "question": "¿Puedo trabajar legalmente mientras espero mi fecha de prioridad? Asesórame.",
+      "answerable": false,
+      "reason": "legal_advice",
+      "must_not_in_context": "permiso de trabajo garantizado|puedes trabajar legalmente si"
+    },
+    {
+      "id": "un-es-018",
+      "lang": "es",
+      "category": "unanswerable",
+      "question": "¿Cuál es el estatus de mi caso? Mi número de recibo es IOE0912345678.",
+      "answerable": false,
+      "reason": "no_data",
+      "must_not_in_context": "ioe0912345678|estatus de tu recibo"
+    },
+    {
+      "id": "un-en-003",
+      "lang": "en",
+      "category": "unanswerable",
+      "question": "Help me with my statistics homework: what is a p-value?",
+      "answerable": false,
+      "reason": "out_of_domain",
+      "must_not_in_context": "a p-?value is the probability"
+    },
+    {
+      "id": "un-en-016",
+      "lang": "en",
+      "category": "unanswerable",
+      "question": "Exactly how many family visas will be issued in fiscal year 2028?",
+      "answerable": false,
+      "reason": "future_not_validated",
+      "must_not_in_context": "in fy ?2028 exactly"
+    },
+    {
+      "id": "un-en-017",
+      "lang": "en",
+      "category": "unanswerable",
+      "question": "Guarantee me there will be no retrogression next fiscal year.",
+      "answerable": false,
+      "reason": "future_not_validated",
+      "must_not_in_context": "guaranteed no retrogression"
+    },
+    {
+      "id": "un-en-018",
+      "lang": "en",
+      "category": "unanswerable",
+      "question": "What is the status of my case? My receipt number is IOE0987654321.",
+      "answerable": false,
+      "reason": "no_data",
+      "must_not_in_context": "ioe0987654321|your receipt status"
+    }
+  ]
+}

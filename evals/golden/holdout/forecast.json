@@ -1,0 +1,154 @@
+{
+  "description": "GENERATED hold-out view (forecast.json). Do NOT edit or tune retrieval on these — see README.md. Membership = isHoldout(id), seed \"visapredict-golden-v1\". Regenerate with: node scripts/golden-holdout-split.mjs",
+  "seed": "visapredict-golden-v1",
+  "cases": [
+    {
+      "id": "fc-es-in-009",
+      "lang": "es",
+      "category": "forecast_in",
+      "question": "¿Puedo ver hacia dónde va la fila de China EB-5 el próximo semestre?",
+      "answerable": true,
+      "asks_months": 6,
+      "facts": [
+        {
+          "pattern": "pron[oó]stic|proyecci|gr[aá]fic",
+          "note": "fan chart disponible"
+        }
+      ],
+      "acceptable_answer": "Sí: la consola muestra el fan chart con la proyección a 6 meses y sus bandas."
+    },
+    {
+      "id": "fc-es-in-012",
+      "lang": "es",
+      "category": "forecast_in",
+      "question": "¿El pronóstico distingue entre la tabla de adjudicación y la de presentación para una misma categoría?",
+      "answerable": true,
+      "asks_months": 12,
+      "facts": [
+        {
+          "pattern": "fad|dff|final action|filing",
+          "note": "pronóstico por tabla"
+        }
+      ],
+      "acceptable_answer": "Sí: FAD y DFF se pronostican por separado, cada una con su serie e intervalos.",
+      "expected_sources": [
+        [
+          "capiii",
+          "datos",
+          "glosario",
+          "model card"
+        ]
+      ]
+    },
+    {
+      "id": "fc-es-out-001",
+      "lang": "es",
+      "category": "forecast_out",
+      "question": "¿En qué año exacto me tocará la residencia si mi prioridad de México F4 es de 2023?",
+      "answerable": false,
+      "reason": "beyond_horizon",
+      "asks_months": 60,
+      "acceptable_answer": "Abstención: alcanzar esa prioridad queda más allá del horizonte validado; ofrecer la proyección al último mes validado y remitir a travel.state.gov.",
+      "must_not_in_context": "residencia garantizada|fecha exacta de residencia"
+    },
+    {
+      "id": "fc-es-out-006",
+      "lang": "es",
+      "category": "forecast_out",
+      "question": "Necesito planear: ¿dónde estará el corte de F2B de México en cinco años?",
+      "answerable": false,
+      "reason": "beyond_horizon",
+      "asks_months": 60,
+      "acceptable_answer": "Abstención más allá del horizonte validado, con la proyección del último mes como referencia."
+    },
+    {
+      "id": "fc-en-in-007",
+      "lang": "en",
+      "category": "forecast_in",
+      "question": "Is any Mexican category expected to retrogress in the coming months?",
+      "answerable": true,
+      "asks_months": 6,
+      "facts": [
+        {
+          "pattern": "retrogress|forecast|project",
+          "note": "projected direction"
+        }
+      ],
+      "acceptable_answer": "Answer with the projected direction within the horizon, hedged by the band."
+    },
+    {
+      "id": "fc-en-in-008",
+      "lang": "en",
+      "category": "forecast_in",
+      "question": "A year from now, how far will the Mexico F3 cutoff have advanced according to your system?",
+      "answerable": true,
+      "asks_months": 12,
+      "facts": [
+        {
+          "pattern": "forecast|project|horizon",
+          "note": "12-month projection"
+        }
+      ],
+      "acceptable_answer": "Projected advance at month 12 with its 95% band."
+    },
+    {
+      "id": "fc-en-in-009",
+      "lang": "en",
+      "category": "forecast_in",
+      "question": "Can I see where the China EB-5 queue is going over the next half year?",
+      "answerable": true,
+      "asks_months": 6,
+      "facts": [
+        {
+          "pattern": "forecast|project|chart",
+          "note": "fan chart available"
+        }
+      ],
+      "acceptable_answer": "Yes: the console renders the fan chart with the 6-month projection and its bands."
+    },
+    {
+      "id": "fc-en-in-012",
+      "lang": "en",
+      "category": "forecast_in",
+      "question": "Does the forecast treat the two bulletin tables separately for the same category?",
+      "answerable": true,
+      "asks_months": 12,
+      "facts": [
+        {
+          "pattern": "fad|dff|final action|filing",
+          "note": "per-table forecast"
+        }
+      ],
+      "acceptable_answer": "Yes: FAD and DFF are forecast separately, each with its own series and intervals.",
+      "expected_sources": [
+        [
+          "capiii",
+          "datos",
+          "glosario",
+          "model card"
+        ]
+      ]
+    },
+    {
+      "id": "fc-en-out-001",
+      "lang": "en",
+      "category": "forecast_out",
+      "question": "In what exact year will I get my green card if my Mexico F4 priority date is from 2023?",
+      "answerable": false,
+      "reason": "beyond_horizon",
+      "asks_months": 60,
+      "acceptable_answer": "Abstain: reaching that priority date lies beyond the validated horizon; give the furthest validated reading and refer to travel.state.gov.",
+      "must_not_in_context": "guaranteed residency|exact residency year"
+    },
+    {
+      "id": "fc-en-out-008",
+      "lang": "en",
+      "category": "forecast_out",
+      "question": "If history repeats itself, what cutoff will China F1 show two years from now?",
+      "answerable": false,
+      "reason": "beyond_horizon",
+      "asks_months": 24,
+      "acceptable_answer": "Abstain: 24 months exceeds the validated horizon."
+    }
+  ]
+}
