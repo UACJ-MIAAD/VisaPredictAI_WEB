@@ -4,13 +4,30 @@
 // Builds a REAL, canonical RAG index with ZERO hand-written facts. Every chunk
 // comes from a live source:
 //   1. The site's own academic content   (content/source.html + content/en/*.html)
-//   2. Docs from the data repo via GitHub raw (data dictionary, schema, README…)
-//   3. Live facts from data/processed/bulletins.json (latest month movements)
+//   2. Docs from the data repo via GitHub raw — PINNED at the release git SHA
+//      (US I6: resolved from the release manifest; `main` only as documented
+//      fallback when the manifest is unreachable)
+//   3. Live facts from data/processed/bulletins.json (latest month movements —
+//      deliberately fetched from `main`: it is the freshness feed)
 //
 // Output (gitignored, regenerated each build → updates flow automatically):
-//   public/rag/index.json        chunks + dense vectors (base64 Float32)
+//   public/rag/index.json        chunks + dense vectors (base64 f32) — the EVAL
+//                                monolith: rag-golden-eval / rag-selfcheck /
+//                                rag-eval / rag-injection-eval read this file.
+//                                The BROWSER no longer downloads it (US I6).
+//   public/rag/chunks.json       chunks WITHOUT vectors (BM25 layer) — what the
+//                                client loads on warmUp, pre-consent. Byte-
+//                                reproducible (no timestamp).
+//   public/rag/vectors.f16       raw little-endian float16 vectors — loaded
+//                                ONLY after semantic consent. The build round-
+//                                trips the f32 embeddings through f16 so the
+//                                monolith (evals) and this file carry BIT-
+//                                IDENTICAL values (no production/eval drift).
+//   public/rag/meta.json         build heartbeat + governance + source/model
+//                                pins + per-layer content hashes.
 //   public/rag/suggestions.json  data-derived starter prompts (ES/EN)
-//   public/models/<model>/…       self-hosted embedding model (CSP-clean)
+//   public/models/<model>/…       self-hosted embedding model (CSP-clean),
+//                                sha256-verified against MODEL_PIN every build.
 //
 // No API keys needed: embeddings are computed locally with Transformers.js.
 // Network failures degrade gracefully (local content always yields an index).
@@ -19,7 +36,10 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { DATA_REPO_RAW as REPO_RAW } from "../lib/repo.mjs";
+import { createHash } from "node:crypto";
+import { DATA_REPO_RAW as REPO_RAW, dataRepoRawAt } from "../lib/repo.mjs";
+import { MANIFEST_PATH } from "../lib/release.mjs";
+import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -28,6 +48,75 @@ const EMBED_MODEL = "Xenova/multilingual-e5-small";
 const EMBED_DIM = 384;
 const CHUNK_CHARS = 900; // target chunk size
 const CHUNK_OVERLAP = 150;
+
+// ── model pin (US I6) ────────────────────────────────────────────────────────
+// revision = the HF repo commit the self-hosted copy was taken from; files =
+// sha256 of every file the q8 pipeline loads. VERIFIED at build after the
+// pipeline ran (fresh CI download or cached copy alike): any drift fails the
+// build loudly — a silently swapped embedding model would skew every vector.
+// DOCUMENTED LIMIT: the revision is metadata, not a loader argument — passing
+// `revision` to transformers.js would change its cache layout away from the
+// plain public/models/<model>/ tree the BROWSER resolves (engine.ts,
+// allowRemoteModels=false), so integrity is enforced by these sha256 pins at
+// build; at runtime the trust boundary is same-origin hosting + the atomic
+// Netlify deploy (no per-fetch hash hook exists inside transformers.js).
+// Refresh: recompute `shasum -a 256` over public/models/<model>/** and update.
+const MODEL_PIN = {
+  name: EMBED_MODEL,
+  revision: "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+  files: {
+    "config.json": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+    "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+    "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+    "onnx/model_quantized.onnx": "f80102d3f2a1229f387d3c81909990d8945513e347b0eab049f7de3c6f98c193",
+  },
+};
+
+// ── data-repo source pin (US I6) ────────────────────────────────────────────
+// RAG docs are read at the release manifest's git_sha instead of `main`, so the
+// indexed knowledge is attributable to ONE repo state and a rebuild reads the
+// same bytes. The pin cross-checks lib/content/data-pins.generated.mjs (US I1:
+// the release actually SERVED under /data) — `coherent: true` means docs and
+// data describe the same release; a mismatch is recorded, never hidden.
+const sourcePin = {
+  ref: "main", // effective fetch ref: git_sha when resolved, else main (documented fallback)
+  git_sha: null,
+  release_id: null,
+  generated_at: null,
+  served_release_id: null,
+  served_release_status: null,
+  coherent: false,
+  fallbacks: [], // docs that had to fall back to main (missing at the pinned SHA)
+};
+async function resolveSourcePin() {
+  try {
+    const { DATA_PINS } = await import("../lib/content/data-pins.generated.mjs");
+    sourcePin.served_release_id = DATA_PINS?.releaseId ?? null;
+    sourcePin.served_release_status = DATA_PINS?.releaseStatus ?? null;
+  } catch {
+    console.warn("  ! data-pins.generated.mjs not built yet (run build-stats) — served-release cross-check skipped");
+  }
+  try {
+    const r = await fetch(`${REPO_RAW}/${MANIFEST_PATH}`);
+    if (!r.ok) throw new Error(`${r.status}`);
+    const m = await r.json();
+    if (m.git_sha) {
+      sourcePin.ref = m.git_sha;
+      sourcePin.git_sha = m.git_sha;
+      sourcePin.release_id = m.release_id ?? null;
+      sourcePin.generated_at = m.generated_at ?? null;
+      sourcePin.coherent = !!sourcePin.served_release_id && sourcePin.served_release_id === sourcePin.release_id;
+      console.log(
+        `  source pin: docs @ ${m.git_sha} (release ${m.release_id})` +
+          (sourcePin.coherent ? " — coherent with served /data cut" : ` — served cut is ${sourcePin.served_release_id ?? "n/d"} (recorded, not hidden)`),
+      );
+      return;
+    }
+    throw new Error("manifest has no git_sha");
+  } catch (e) {
+    console.warn(`  ! release manifest unavailable (${e.message}) — docs fall back to main (unpinned, recorded in meta.json)`);
+  }
+}
 
 // ── tiny HTML/markdown → text helpers ──────────────────────────────────────
 const decodeEntities = (s) =>
@@ -115,6 +204,51 @@ function splitByLength(text, title) {
   return out.map((text, i) => ({ title: out.length > 1 ? `${title} (${i + 1}/${out.length})` : title, text }));
 }
 
+// ── I4 ablation variant: semantic (sentence-boundary) chunker ────────────────
+// Selected with VB_CHUNK=semantic (ablation builds only — NOT the default; see
+// docs/VISABOT_RAG_ROADMAP.md for the measured decision). Packs WHOLE sentences
+// up to CHUNK_CHARS (never cuts mid-sentence, unlike splitByLength's char-tail
+// overlap), overlap = the last full sentence when it fits CHUNK_OVERLAP, and
+// carries parent/ordinal/character-offset metadata per chunk.
+function splitBySentences(text, title) {
+  const sents = [];
+  const re = /[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g;
+  let m;
+  while ((m = re.exec(text))) {
+    const t = m[0].trim();
+    if (t) sents.push({ t, start: m.index, end: m.index + m[0].length });
+  }
+  const packs = [];
+  let cur = [], curLen = 0;
+  const flush = () => {
+    if (!cur.length) return;
+    const body = cur.map((s) => s.t).join(" ");
+    if (body.length > 40) packs.push({ text: body, start: cur[0].start, end: cur[cur.length - 1].end });
+    cur = []; curLen = 0;
+  };
+  for (const s of sents) {
+    if (curLen + s.t.length + 1 > CHUNK_CHARS && cur.length) {
+      const lastSent = cur[cur.length - 1];
+      flush();
+      if (lastSent.t.length <= CHUNK_OVERLAP) { cur = [lastSent]; curLen = lastSent.t.length; } // sentence-overlap
+    }
+    cur.push(s); // an oversized single sentence ships alone rather than being cut
+    curLen += s.t.length + 1;
+  }
+  flush();
+  return packs.map((c, i) => ({
+    title: packs.length > 1 ? `${title} (${i + 1}/${packs.length})` : title,
+    text: c.text,
+    parent: title,
+    ordinal: i,
+    span_start: c.start,
+    span_end: c.end,
+  }));
+}
+
+// active chunker for prose (baseline unless the ablation env is set)
+const chunkText = process.env.VB_CHUNK === "semantic" ? splitBySentences : splitByLength;
+
 // split an HTML section into [{heading, html}] by h2/h3/h4 boundaries
 function splitByHeadings(html) {
   const parts = [];
@@ -137,13 +271,16 @@ const add = (c) => chunks.push({ id: `c${nextId++}`, ...c });
 
 function addSectionHtml(id, sectionLabel, html, lang) {
   const url = sectionUrl(id, lang);
+  // US I6 chunk metadata: the site's academic content is the FROZEN proposal
+  // (source_type "site_academic"); it carries no data-release identity.
+  const meta = { source_type: "site_academic" };
   // glossary: one atomic chunk per term
   if (/gloss-item/.test(html)) {
     for (const g of html.matchAll(/<div class="gloss-item"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/g)) {
       const term = (g[1].match(/gloss-term"[^>]*>([\s\S]*?)<\/div>/) || [, ""])[1];
       const def = (g[1].match(/gloss-def"[^>]*>([\s\S]*?)$/) || [, g[1]])[1];
       const t = stripTags(term), d = stripTags(def);
-      if (t && d) add({ lang, kind: "glossary", source: sectionLabel, sourceId: id, url, title: t, text: `${t}: ${d}` });
+      if (t && d) add({ lang, kind: "glossary", ...meta, source: sectionLabel, sourceId: id, url, title: t, text: `${t}: ${d}` });
     }
     return;
   }
@@ -151,7 +288,7 @@ function addSectionHtml(id, sectionLabel, html, lang) {
   if (/ref-item/.test(html)) {
     for (const r of html.matchAll(/<li class="ref-item"[^>]*data-n="(\d+)"[^>]*>([\s\S]*?)<\/li>/g)) {
       const txt = stripTags(r[2]);
-      if (txt) add({ lang, kind: "reference", source: sectionLabel, sourceId: id, url, title: `[${r[1]}]`, text: txt });
+      if (txt) add({ lang, kind: "reference", ...meta, source: sectionLabel, sourceId: id, url, title: `[${r[1]}]`, text: txt });
     }
     return;
   }
@@ -160,12 +297,12 @@ function addSectionHtml(id, sectionLabel, html, lang) {
     const text = stripTags(part.html);
     if (text.length < 40) continue;
     const title = part.heading || sectionLabel;
-    for (const ch of splitByLength(text, title))
-      add({ lang, kind: "academic", source: sectionLabel, sourceId: id, url, title: ch.title, text: ch.text });
+    for (const ch of chunkText(text, title))
+      add({ lang, kind: "academic", ...meta, source: sectionLabel, sourceId: id, url, ...chunkMeta(ch), title: ch.title, text: ch.text });
   }
 }
 
-function addMarkdown(name, md, sourceUrl, langs = ["es"]) {
+function addMarkdown(name, md, sourceUrl, langs = ["es"], extra = {}) {
   // split markdown by ##/### headings
   const blocks = [];
   const re = /^#{1,4}\s+(.+)$/gm;
@@ -184,11 +321,32 @@ function addMarkdown(name, md, sourceUrl, langs = ["es"]) {
       .replace(/[ \t]+/g, " ")
       .trim();
     if (text.length < 40) continue;
-    for (const ch of splitByLength(text, b.heading))
+    for (const ch of chunkText(text, b.heading))
       for (const lang of langs)
-        add({ lang, kind: "docs", source: `Repo · ${name}`, sourceId: "ingenieria", url: sourceUrl, title: ch.title, text: ch.text });
+        add({ lang, kind: "docs", source: `Repo · ${name}`, sourceId: "ingenieria", url: sourceUrl, ...chunkMeta(ch), title: ch.title, text: ch.text, ...extra });
   }
 }
+
+// semantic-chunker metadata (parent/ordinal/offsets) — empty under the baseline
+const chunkMeta = ({ parent, ordinal, span_start, span_end }) =>
+  parent === undefined ? {} : { parent, ordinal, span_start, span_end };
+
+// US I6 chunk metadata shared by every repo-doc chunk: fetched at the pinned
+// SHA → attributable to that release; fell back to main → identity stays null.
+const repoDocMeta = (pinned) => ({
+  source_type: "repo_doc",
+  release_id: pinned ? sourcePin.release_id ?? undefined : undefined,
+  valid_from: pinned ? (sourcePin.generated_at ?? "").slice(0, 10) || undefined : undefined,
+});
+
+// Temporal precedence (US I6): the model card carries the EXECUTED campaign
+// results and therefore supersedes the frozen May-2026 proposal's model PLAN —
+// the sections that still say "8 modelos" by design (historia no reescrita):
+// capiii (producto esperado), capiv (metodología, entrenamiento planteado) and
+// tablas (Tabla 3, modelos de referencia). Precedence is RANK-ONLY and applies
+// only when chunks of both sides are retrieved for the same query
+// (retrieval-core.applyTemporalPrecedence); the historical chunks stay indexed.
+const MODEL_CARD_SUPERSEDES = ["capiii", "capiv", "tablas"];
 
 // ── 1. local academic content (ES from source.html, EN from content/en/*) ───
 function collectLocal() {
@@ -209,7 +367,9 @@ function collectLocal() {
   }
   let nEn = 0;
   const enDir = join(root, "content", "en");
-  for (const file of readdirSync(enDir)) {
+  // sorted: readdir order is filesystem-dependent — chunk order (and therefore
+  // vector order / layer bytes) must be reproducible across machines (US I6).
+  for (const file of readdirSync(enDir).sort()) {
     if (!file.endsWith(".html")) continue;
     const id = file.replace(/\.html$/, "");
     const before = chunks.length;
@@ -233,19 +393,40 @@ const REPO_DOCS = [
   // auto-regenerated home (MCS, champion, prospective scorecard).
   ["reports/governance/MODEL_CARD.md", "Model card · modelo campeón desplegado, cuál gana y evaluación"],
 ];
+// Fetch one repo doc at the pinned SHA; if the file is missing AT THAT SHA
+// (e.g. a release sealed from a dirty worktree), fall back to main and RECORD
+// the fallback — never silently mix trust levels.
+async function fetchRepoDoc(path) {
+  const tryRef = async (ref) => {
+    const r = await fetch(`${dataRepoRawAt(ref)}/${path}`);
+    if (!r.ok) throw new Error(`${r.status}`);
+    return r.text();
+  };
+  try {
+    return { txt: await tryRef(sourcePin.ref), pinned: sourcePin.ref !== "main" };
+  } catch (e) {
+    if (sourcePin.ref === "main") throw e;
+    const txt = await tryRef("main");
+    sourcePin.fallbacks.push(path);
+    console.warn(`  ! ${path}: missing at pinned ${sourcePin.ref} (${e.message}) — fell back to main (recorded)`);
+    return { txt, pinned: false };
+  }
+}
+
 async function collectRepoDocs() {
   let ok = 0;
   for (const [path, name] of REPO_DOCS) {
     try {
-      const r = await fetch(`${REPO_RAW}/${path}`);
-      if (!r.ok) throw new Error(`${r.status}`);
-      const txt = await r.text();
+      const { txt, pinned } = await fetchRepoDoc(path);
+      const docMeta = repoDocMeta(pinned);
+      // Human deep-link stays on blob/main (readable, follows the repo head);
+      // the INDEXED BYTES' provenance lives in the chunk meta + meta.json pin.
       const url = `https://github.com/UACJ-MIAAD/VisaPredictAI/blob/main/${path}`;
       if (path.endsWith(".sql")) {
         // SQL: chunk by statement/comment blocks
         const text = txt.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/[ \t]+/g, " ");
-        for (const ch of splitByLength(text, name))
-          add({ lang: "es", kind: "docs", source: `Repo · ${name}`, sourceId: "modelo", url, title: ch.title, text: ch.text });
+        for (const ch of chunkText(text, name))
+          add({ lang: "es", kind: "docs", source: `Repo · ${name}`, sourceId: "modelo", url, ...chunkMeta(ch), title: ch.title, text: ch.text, ...docMeta });
       } else if (path.endsWith("MODEL_CARD.md")) {
         // Audit round 2: the card must be retrievable in BOTH language pools
         // (the engine filters chunks by lang) and needs query-shaped keywords —
@@ -263,7 +444,10 @@ async function collectRepoDocs() {
           "retador, evaluación prospectiva del pronóstico. Model comparison: which " +
           "model wins, which is the best model, how many models were compared, " +
           "winner, deployed champion, challenger, prospective forecast evaluation.\n\n";
-        addMarkdown(name, kw + txt, url, ["es", "en"]);
+        // temporal: "current" + supersedes → executed results outrank the frozen
+        // proposal's model plan whenever both are retrieved (US I6).
+        const cardMeta = { ...docMeta, temporal: "current", supersedes: MODEL_CARD_SUPERSEDES };
+        addMarkdown(name, kw + txt, url, ["es", "en"], cardMeta);
         // Lexical-only retrieval (pre-consent BM25) needs the VERDICT and the
         // query terms in the SAME chunk: a synthetic chunk pairs the keywords
         // with the card's evaluation section VERBATIM (no hand-typed claims —
@@ -277,12 +461,12 @@ async function collectRepoDocs() {
           const evalText = (kw + legend + evalSec[1]).replace(/[*_`>#|]/g, " ").replace(/[ \t]+/g, " ").trim();
           for (const lang of ["es", "en"])
             add({ lang, kind: "docs", source: `Repo · ${name}`, sourceId: "ingenieria", url,
-                  title: "Evaluación — qué modelo gana / which model wins", text: evalText });
+                  title: "Evaluación — qué modelo gana / which model wins", text: evalText, ...cardMeta });
         } else {
           console.warn("  ! MODEL_CARD: sección 5 (Evaluación) no encontrada — chunk sintético omitido");
         }
       } else {
-        addMarkdown(name, txt, url);
+        addMarkdown(name, txt, url, ["es"], docMeta);
       }
       ok++;
     } catch (e) {
@@ -324,7 +508,9 @@ async function collectFacts() {
         lang === "es"
           ? `Boletín más reciente del Visa Bulletin: ${lbl}. Se publicaron ${rows.length} series. Avanzaron ${adv.length} y retrocedieron ${ret.length}. Avances destacados: ${fmtList(adv)}. Retrocesos: ${fmtList(ret)}. Estas son fechas oficiales publicadas, no predicciones del modelo.`
           : `Most recent U.S. Visa Bulletin: ${lbl}. ${rows.length} series published. ${adv.length} advanced and ${ret.length} retrogressed. Notable advances: ${fmtList(adv)}. Retrogressions: ${fmtList(ret)}. These are official published dates, not model predictions.`;
-      add({ lang, kind: "fact", source: lang === "es" ? "Boletín en vivo" : "Live bulletin", sourceId: "boletines", url, title: `Boletín ${lbl}`, text });
+      // source_type "live_fact" + valid_from = the bulletin month (US I6): the
+      // ONE feed deliberately read from `main` — it exists to track freshness.
+      add({ lang, kind: "fact", source_type: "live_fact", valid_from: feed.latest_month, source: lang === "es" ? "Boletín en vivo" : "Live bulletin", sourceId: "boletines", url, title: `Boletín ${lbl}`, text });
     }
     console.log(`  live facts: latest bulletin ${feed.latest_month}`);
   } catch (e) {
@@ -371,7 +557,36 @@ async function embedAll() {
     process.stdout.write(`\r  embedding ${Math.min(i + BATCH, chunks.length)}/${chunks.length}`);
   }
   process.stdout.write("\n");
-  return Buffer.from(vecs.buffer).toString("base64");
+  // US I6: quantize to f16 and round-trip back to f32 — vectors.f16 (browser)
+  // and the base64 f32 monolith (evals) then carry BIT-IDENTICAL values, so
+  // production and every gate score the same floats. Little-endian byte order
+  // (every supported build/runtime target is LE; decodeF16 reads LE explicitly).
+  const f16 = encodeF16(vecs);
+  const roundTripped = decodeF16(new Uint8Array(f16.buffer, f16.byteOffset, f16.byteLength));
+  return {
+    vectorsB64: Buffer.from(roundTripped.buffer).toString("base64"),
+    f16Bytes: Buffer.from(f16.buffer, f16.byteOffset, f16.byteLength),
+  };
+}
+
+// ── model pin verification (US I6) ──────────────────────────────────────────
+// Runs AFTER the pipeline (files exist whether they came from cache or a fresh
+// download). sha256 drift = supply-chain alarm → fail the build.
+function verifyModelPin() {
+  const base = join(root, "public", "models", MODEL_PIN.name);
+  const bad = [];
+  const verified = {};
+  for (const [rel, expected] of Object.entries(MODEL_PIN.files)) {
+    const p = join(base, rel);
+    if (!existsSync(p)) { bad.push(`${rel}: missing`); continue; }
+    const got = createHash("sha256").update(readFileSync(p)).digest("hex");
+    verified[rel] = got;
+    if (got !== expected) bad.push(`${rel}: sha256 ${got.slice(0, 12)}… != pinned ${expected.slice(0, 12)}…`);
+  }
+  if (bad.length)
+    throw new Error(`MODEL PIN VIOLATION (${MODEL_PIN.name} @ ${MODEL_PIN.revision}):\n  ${bad.join("\n  ")}\n  If the upgrade is intentional, update MODEL_PIN in scripts/build-rag-index.mjs.`);
+  console.log(`  model pin: ${Object.keys(verified).length} files sha256-verified (${MODEL_PIN.name} @ ${MODEL_PIN.revision.slice(0, 12)})`);
+  return verified;
 }
 
 // ── 5. data-derived starter prompts (not hand-written facts) ────────────────
@@ -492,24 +707,47 @@ function copyOrtWasm() {
 (async () => {
   console.log("VisaBot · building RAG knowledge index…");
   copyOrtWasm();
+  await resolveSourcePin();
   collectLocal();
   await collectRepoDocs();
   await collectFacts();
   console.log(`  total chunks: ${chunks.length}`);
   if (chunks.length === 0) throw new Error("no chunks collected — aborting");
 
-  const vectorsB64 = await embedAll();
+  const { vectorsB64, f16Bytes } = await embedAll();
+  const modelFilesVerified = verifyModelPin();
   const suggestions = buildSuggestions();
 
   const outDir = join(root, "public", "rag");
   mkdirSync(outDir, { recursive: true });
+  // ONE serialization of the chunk list feeds both layers — chunks.json (client,
+  // pre-consent BM25) and index.json (eval monolith) can never drift.
+  const serialChunks = chunks.map(
+    ({ id, lang, source, sourceId, url, title, text, kind, embedCtx, source_type, release_id, valid_from, temporal, supersedes, parent, ordinal, span_start, span_end }) =>
+      ({ id, lang, source, sourceId, url, title, text, kind, embedCtx, source_type, release_id, valid_from, temporal, supersedes, parent, ordinal, span_start, span_end }),
+  );
+  // Layer 1 (pre-consent): chunks only, NO timestamp → byte-reproducible.
+  const chunksBuf = Buffer.from(
+    JSON.stringify({
+      schema: 1,
+      model: EMBED_MODEL,
+      dim: EMBED_DIM,
+      vectors: { file: "vectors.f16", dtype: "f16", count: chunks.length },
+      chunks: serialChunks,
+    }),
+  );
+  writeFileSync(join(outDir, "chunks.json"), chunksBuf);
+  // Layer 2 (post-consent): raw f16 vectors, byte-reproducible.
+  writeFileSync(join(outDir, "vectors.f16"), f16Bytes);
+  // Eval monolith (rag-golden-eval / rag-selfcheck / rag-eval / rag-injection-eval
+  // + the deployed copies they probe over HTTP). Not fetched by the browser.
   writeFileSync(
     join(outDir, "index.json"),
     JSON.stringify({
       model: EMBED_MODEL,
       dim: EMBED_DIM,
       built: new Date().toISOString(),
-      chunks: chunks.map(({ id, lang, source, sourceId, url, title, text, kind, embedCtx }) => ({ id, lang, source, sourceId, url, title, text, kind, embedCtx })),
+      chunks: serialChunks,
       vectors: vectorsB64,
     }),
   );
@@ -529,9 +767,9 @@ function copyOrtWasm() {
   // declara chunking, cuantización, la huella completa de recuperación (importada de
   // retrieval-core: única fuente) y las versiones por hash de los sets de evaluación,
   // para que cada índice publicado sea auditable de punta a punta.
-  const { createHash: sha } = await import("node:crypto");
-  const setVersion = (f) => sha("sha256").update(readFileSync(join(root, "scripts", f))).digest("hex").slice(0, 12);
+  const setVersion = (f) => createHash("sha256").update(readFileSync(join(root, "scripts", f))).digest("hex").slice(0, 12);
   const { BM25_K1, BM25_B, RRF_K, POOL, MMR_LAMBDA } = await import("../lib/visabot/retrieval-core.mjs");
+  const layerHash = (buf) => ({ sha256: createHash("sha256").update(buf).digest("hex"), bytes: buf.length });
   writeFileSync(
     join(outDir, "meta.json"),
     JSON.stringify({
@@ -542,10 +780,24 @@ function copyOrtWasm() {
       sources: new Set(chunks.map((c) => c.source)).size,
       langs: [...new Set(chunks.map((c) => c.lang))],
       latestMonth,
+      // US I6 — pins: WHICH repo state the docs were read at and WHICH exact
+      // model embedded them. `layers` carries content hashes of the timestamp-
+      // free artifacts: two builds of the same sources must produce the same
+      // sha256 here (reproducibility gate; `built` above is the only exempt field).
+      pins: {
+        source: sourcePin,
+        model: { name: MODEL_PIN.name, revision: MODEL_PIN.revision, files: modelFilesVerified, verified: true },
+      },
+      layers: {
+        "chunks.json": layerHash(chunksBuf),
+        "vectors.f16": layerHash(f16Bytes),
+      },
       governance: {
         quantization: "q8",
+        vector_dtype: "f16-roundtrip", // f32 embeddings quantized to f16, round-tripped: evals and browser score identical floats
         chunking: { chars: CHUNK_CHARS, overlap: CHUNK_OVERLAP },
         retrieval: { bm25_k1: BM25_K1, bm25_b: BM25_B, rrf_k: RRF_K, pool: POOL, mmr_lambda: MMR_LAMBDA },
+        temporal_precedence: { model_card_supersedes: MODEL_CARD_SUPERSEDES },
         eval_sets: {
           retrieval: setVersion("rag-eval-set.json"),
           injection: setVersion("rag-injection-set.json"),
@@ -556,7 +808,6 @@ function copyOrtWasm() {
   );
   // F3: allowlist de hashes para netlify/functions/chat.mjs — el server solo acepta
   // como FUENTES texto publicado en este índice (o los 2 sintéticos del console).
-  const { createHash } = await import("node:crypto");
   const fnDir = join(root, "netlify", "functions");
   mkdirSync(fnDir, { recursive: true });
   writeFileSync(
@@ -564,7 +815,8 @@ function copyOrtWasm() {
     JSON.stringify(chunks.map((c) => createHash("sha256").update(c.text, "utf8").digest("hex"))),
   );
   console.log(`✓ wrote netlify/functions/rag-hashes.json (${chunks.length} hashes)`);
-  console.log(`✓ wrote public/rag/index.json (${chunks.length} chunks, ${EMBED_DIM}-d)`);
+  console.log(`✓ wrote public/rag/index.json (${chunks.length} chunks, ${EMBED_DIM}-d) — eval monolith`);
+  console.log(`✓ wrote public/rag/chunks.json (${(chunksBuf.length / 1024).toFixed(0)} kB, pre-consent) + vectors.f16 (${(f16Bytes.length / 1024).toFixed(0)} kB, post-consent)`);
   console.log(`✓ wrote public/rag/suggestions.json + meta.json`);
   if (!existsSync(join(root, "public", "models", EMBED_MODEL)))
     console.warn("  ! model dir not found under public/models — runtime will need it");

@@ -40,6 +40,31 @@ for (const [key, dir, optional] of checks) {
   if (got > cap) problems.push(`${key}: ${got.toFixed(1)} MB > techo ${cap} MB`);
 }
 
+// US I6 — capa por capa del RAG (solo si el build de deploy lo produjo): el
+// índice se sirve por capas y cada una tiene su presupuesto propio —
+//   chunks.json   pre-consentimiento (warmUp, BM25): DEBE ser ≪ el monolito.
+//   vectors.f16   post-consentimiento (motor semántico): f16 crudo.
+//   index.json    monolito para las evals (rag-golden-eval / rag-eval / selfcheck
+//                 lo leen local y contra prod) — el navegador NO lo descarga.
+// Si out/rag existe, las tres capas deben existir (un deploy sin chunks.json
+// dejaría al bot sin arranque léxico).
+if (existsSync(join(OUT, "rag"))) {
+  const kb = (p) => statSync(p).size / 1024;
+  for (const [file, capKey] of [
+    ["chunks.json", "rag_preconsent_chunks_kb"],
+    ["vectors.f16", "rag_vectors_kb"],
+    ["index.json", null], // presencia: lo consumen las evals desplegadas; su peso lo gatea rag_index_total_mb
+  ]) {
+    const p = join(OUT, "rag", file);
+    if (!existsSync(p)) { problems.push(`rag/${file} ausente del export (capa I6)`); continue; }
+    if (!capKey) continue;
+    const got = kb(p);
+    const cap = BUDGETS[capKey];
+    console.log(`  ${got <= cap ? "✓" : "✗"} ${capKey}: ${got.toFixed(0)} kB (techo ${cap} kB)`);
+    if (got > cap) problems.push(`${capKey}: ${got.toFixed(0)} kB > techo ${cap} kB`);
+  }
+}
+
 // Chunk JS más pesado.
 const chunksDir = join(OUT, "_next", "static", "chunks");
 let biggest = 0;

@@ -1,8 +1,10 @@
 {
-  "_doc": "F3 (plan auditoría 2026-07-11): presupuestos de peso del export, TECHOS versionados sobre lo medido con margen (~25%). Subir un techo = editar este archivo en un PR con justificación. scripts/check-budgets.mjs los aplica tras verify-build en el job build-offline.",
+  "_doc": "F3 (plan auditoría 2026-07-11): presupuestos de peso del export, TECHOS versionados sobre lo medido con margen (~25%). Subir un techo = editar este archivo en un PR con justificación. scripts/check-budgets.mjs los aplica tras verify-build en el job build-offline. US I6: el RAG se sirve por capas — rag_preconsent_chunks_kb gatea chunks.json (lo UNICO que baja el navegador antes del consentimiento; el monolito index.json queda para las evals) y rag_vectors_kb gatea vectors.f16 (post-consentimiento). rag_index_total_mb sube 3.0→3.5 porque out/rag ahora carga monolito+capas (medido ~2.6 MB, margen ~25%).",
   "next_static_total_mb": 5.0,
   "largest_js_chunk_kb": 450,
   "data_total_mb": 45.0,
-  "rag_index_total_mb": 3.0,
-  "ort_wasm_total_mb": 25.0
+  "rag_index_total_mb": 3.5,
+  "ort_wasm_total_mb": 25.0,
+  "rag_preconsent_chunks_kb": 600,
+  "rag_vectors_kb": 800
 }
