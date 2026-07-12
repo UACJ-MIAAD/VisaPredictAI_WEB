@@ -26,7 +26,7 @@ export function NextPart() {
   return (
     <nav aria-label={tr(lang, "nextLabel")} className="border-t border-border px-6 py-10">
       <div className="section-inner">
-        <Link href={localePath(next.path, lang)} className="group inline-flex flex-wrap items-baseline gap-x-2">
+        <Link href={localePath(next.path, lang)} className="group inline-flex min-h-11 flex-wrap items-center gap-x-2 py-1.5">
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {tr(lang, "nextLabel")}:
           </span>

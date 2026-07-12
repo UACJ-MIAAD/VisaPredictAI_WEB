@@ -21,6 +21,8 @@
   --color-muted: #5a6472; /* cool gray, AA */
   --color-accent: #0a4da8; /* vivid UACJ blue restored */
   --color-accent-strong: #003ca6; /* full UACJ blue for emphasis */
+  --color-accent-btn: #0a4da8; /* filled control that carries WHITE text (AA) */
+  --color-deep-band: #002a75; /* editorial deep band bg (white text, AA both themes) */
   --color-accent-2: #9a6a12; /* AA-compliant ochre/gold */
   --color-border: #e3e7ee;
   --color-rule: #14181f; /* strong editorial module rule (= ink in light) */
@@ -67,6 +69,9 @@
   --color-muted: #98a2b3; /* cool gray, AA on bg */
   --color-accent: #74b2ff; /* soft confident blue, AA, doesn't vibrate */
   --color-accent-strong: #9ccbff;
+  --color-accent-btn: #2563c4; /* deeper blue: WHITE text on a filled control
+                                  needs AA here (#74b2ff gives only 2.2:1) */
+  --color-deep-band: #002a75; /* deep band stays dark for white text in dark */
   --color-accent-2: #e4b45e; /* warm gold pop */
   --color-border: #262d39; /* subtle, just-visible hairline */
   --color-rule: #475160; /* editorial rule: visible, never glaring white */
@@ -393,6 +398,25 @@ main:focus {
   color: var(--color-accent);
   border-color: var(--color-accent);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+/* ── J2: /asistente console touch ergonomics (320–480px) ──────
+   Every interactive control in the FULL-PAGE console reaches a real
+   ≥44×44 px box on touch-sized screens (WCAG 2.5.5). Scoped to
+   .vb-console so the floating widget keeps its compact metrics.
+   min-height floors the textarea's JS auto-resize too (it sets
+   style.height, and min-height wins). .vb-sq marks icon-only round/
+   square controls that also need the width floor. */
+@media (max-width: 480px) {
+  .vb-console :is(button, select, summary) {
+    min-height: 2.75rem;
+  }
+  .vb-console textarea {
+    min-height: 2.75rem;
+  }
+  .vb-console :is(.vb-sendbtn, .vb-iconbtn, .vb-sq) {
+    min-width: 2.75rem;
+  }
 }
 
 /* VisaChart (Recharts) tooltip — compact + non-blocking (bot + galería). The
