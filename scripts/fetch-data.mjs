@@ -19,6 +19,7 @@ import {
   MANIFEST_PATH,
   SUPPORTED_SCHEMA,
   consumedEntries,
+  executeDisposition,
   executeSwap,
   isContract,
   planSwap,
@@ -232,13 +233,10 @@ async function manifestFetch(manifest) {
   });
   await rm(STAGING, { recursive: true, force: true });
   const disposition = swapDisposition(swap);
-  if (disposition.kind === "abort") {
-    // Ronda 3 audit: la DECISION de abortar vive en release.mjs y esta testeada
-    // (unrecovered ⇒ abort); aqui queda solo la linea incondicional que la ejecuta —
-    // reventar el build garantiza que Netlify NO deploye un arbol en estado desconocido.
-    console.error(`fetch-data: ${disposition.message}; backup preservado en ${BACKUP} — FALLANDO el build`);
-    process.exit(1);
-  }
+  // Rondas 3-4 audit: decision (swapDisposition) Y efecto (executeDisposition: error +
+  // exit(1)) viven en release.mjs bajo test; aqui solo se enlazan console.error y
+  // process.exit. Un build muerto es el no-deploy garantizado de Netlify.
+  executeDisposition(disposition, { backup: BACKUP, error: console.error, exit: process.exit });
   if (disposition.kind === "stale") {
     console.error(`fetch-data: swap FAILED mid-flight (${swap.error}) — rolled back; the previous cut stays whole`);
     return releaseState({
