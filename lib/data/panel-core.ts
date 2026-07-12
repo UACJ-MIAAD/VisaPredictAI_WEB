@@ -5,13 +5,11 @@
 // no server/client divergence. This module keeps the typed TS surface (types in
 // panel-core.d.mts) plus the browser-only fetch helper.
 
-export { parseCsv, computeMovement, buildPanel, PANEL_CSV_URL } from "./panel-core.mjs";
+export {
+  parseCsv,
+  computeMovement,
+  buildPanel,
+  fetchPanelText,
+  PANEL_CSV_URL,
+} from "./panel-core.mjs";
 export type { Panel, VisaPanelRow } from "./panel-core.mjs";
-
-import { PANEL_CSV_URL } from "./panel-core.mjs";
-
-export async function fetchPanelText(): Promise<string> {
-  const r = await fetch(PANEL_CSV_URL);
-  if (!r.ok) throw new Error(`CSV HTTP ${r.status}`);
-  return r.text();
-}
