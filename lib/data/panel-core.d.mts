@@ -33,3 +33,4 @@ export declare function computeMovement(rows: VisaPanelRow[]): void;
 export declare function buildPanel(text: string): Panel;
 
 export declare const PANEL_CSV_URL: string;
+export declare function fetchPanelText(): Promise<string>;

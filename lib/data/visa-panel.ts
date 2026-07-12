@@ -31,7 +31,11 @@ function loadViaWorker(): Promise<Panel> {
     ) => {
       done();
       if (ev.data.ok) resolve(ev.data.panel);
-      else reject(new Error(ev.data.error)); // fetch/parse failed — inline would fail the same way
+      // ok:false can be a genuine fetch/parse failure (inline fails the same
+      // way, cheap retry) OR a worker-bundle-specific defect — the 2026-07-12
+      // incident shipped a worker whose chunk lost fetchPanelText while the
+      // inline path was fine. Always try inline before giving up.
+      else loadInline().then(resolve, reject);
     };
     worker.onerror = () => {
       // worker INFRA failed (script load, CSP...) — the data may still be
