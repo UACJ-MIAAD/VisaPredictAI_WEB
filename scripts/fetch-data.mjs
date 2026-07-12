@@ -23,6 +23,7 @@ import {
   isContract,
   planSwap,
   releaseState,
+  swapDisposition,
   validateArtifact,
   vendoredMatches,
   verifyEntry,
@@ -230,22 +231,21 @@ async function manifestFetch(manifest) {
     },
   });
   await rm(STAGING, { recursive: true, force: true });
-  if (swap.unrecovered?.length) {
-    // 2a ronda audit 12-jul: rollback INCOMPLETO — el corte quedo en estado desconocido y
-    // el backup (.fetch-backup/) conserva la unica copia de lo no restaurado. Reventar el
-    // build es lo que garantiza que Netlify NO deploye este arbol.
-    console.error(
-      `fetch-data: rollback INCOMPLETO (${swap.error}) — sin restaurar: ${swap.unrecovered.join(", ")}; backup preservado en ${BACKUP} — FALLANDO el build`,
-    );
+  const disposition = swapDisposition(swap);
+  if (disposition.kind === "abort") {
+    // Ronda 3 audit: la DECISION de abortar vive en release.mjs y esta testeada
+    // (unrecovered ⇒ abort); aqui queda solo la linea incondicional que la ejecuta —
+    // reventar el build garantiza que Netlify NO deploye un arbol en estado desconocido.
+    console.error(`fetch-data: ${disposition.message}; backup preservado en ${BACKUP} — FALLANDO el build`);
     process.exit(1);
   }
-  if (swap.rolledBack) {
+  if (disposition.kind === "stale") {
     console.error(`fetch-data: swap FAILED mid-flight (${swap.error}) — rolled back; the previous cut stays whole`);
     return releaseState({
       status: "stale",
       manifest,
       previous: PREVIOUS_STATE,
-      reason: `swap rollback: ${swap.error}`,
+      reason: disposition.reason,
       missingOptional: plan.missingOptional,
     });
   }
@@ -269,7 +269,7 @@ if (process.env.FETCH_OFFLINE === "1") {
   try {
     manifest = JSON.parse((await fetchBuf(`${RAW}/${MANIFEST_PATH}`)).toString("utf8"));
   } catch (e) {
-    console.warn(`fetch-data: release manifest unavailable (${e.message}) → legacy per-file fetch`);
+    console.warn(`fetch-data: release manifest unavailable (${e.message}) → committed fallback cut kept whole`);
   }
   if (manifest && manifest.schema_version !== SUPPORTED_SCHEMA) {
     // A manifest from the future: this loader cannot verify it. Keep the previous

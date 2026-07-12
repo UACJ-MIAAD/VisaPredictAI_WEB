@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 
 import { describe, expect, it } from "vitest";
 
-import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, executeSwap, outFor, planSwap, releaseState, verifyEntry } from "../lib/release.mjs";
+import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, executeSwap, outFor, planSwap, releaseState, swapDisposition, verifyEntry } from "../lib/release.mjs";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
@@ -200,5 +200,20 @@ describe("executeSwap — transactional with rollback (author audit 11-jul)", ()
     const r = await executeSwap(entries, partial, { ...ctx, fs });
     expect(r).toMatchObject({ swapped: 1, rolledBack: false });
     expect(files.has("out/c.png")).toBe(true);
+  });
+});
+
+describe("swapDisposition — the abort decision the script executes with exit(1)", () => {
+  it("unrecovered ⇒ abort, even if rolledBack lied", () => {
+    const d = swapDisposition({ swapped: 0, rolledBack: false, unrecovered: ["a.csv"], error: "EIO" });
+    expect(d.kind).toBe("abort");
+    expect(d).toHaveProperty("message", expect.stringContaining("a.csv"));
+  });
+  it("clean rollback ⇒ stale with the rollback reason", () => {
+    const d = swapDisposition({ swapped: 0, rolledBack: true, error: "EIO b.json" });
+    expect(d).toEqual({ kind: "stale", reason: "swap rollback: EIO b.json" });
+  });
+  it("success ⇒ fresh", () => {
+    expect(swapDisposition({ swapped: 96, rolledBack: false })).toEqual({ kind: "fresh" });
   });
 });
