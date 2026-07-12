@@ -17,6 +17,7 @@ import {
   MANIFEST_PATH,
   SUPPORTED_SCHEMA,
   consumedEntries,
+  executeSwap,
   isContract,
   planSwap,
   releaseState,
@@ -27,6 +28,15 @@ import {
 
 const OUT = join(process.cwd(), "public", "data");
 const STAGING = join(process.cwd(), ".fetch-staging");
+const BACKUP = join(process.cwd(), ".fetch-backup");
+
+// Provenance (author audit 11-jul): whatever state shipped with the checkout describes
+// the bytes currently in public/data (the committed fallback cut, or the last verified
+// swap in a dev tree). Any non-fresh outcome keeps those bytes -- and must keep their
+// identity too, with the refused manifest recorded apart as rejected_release_id.
+const PREVIOUS_STATE = await readFile(join(OUT, "release-state.json"), "utf8")
+  .then((t) => JSON.parse(t))
+  .catch(() => null);
 const FILES = [
   { url: `${RAW}/data/processed/visa_panel_long.csv`, out: "visa_panel_long.csv", critical: true },
   // AZ8b — the live-bulletins feed, mirrored at build time so the Boletines
@@ -187,24 +197,48 @@ async function manifestFetch(manifest) {
   if (!plan.swap) {
     console.warn(`fetch-data: NO swap — ${plan.reason}; the previous cut stays whole`);
     await rm(STAGING, { recursive: true, force: true });
-    return releaseState({ status: "stale", manifest, reason: plan.reason, missingOptional: plan.missingOptional });
+    return releaseState({
+      status: "stale",
+      manifest,
+      previous: PREVIOUS_STATE,
+      reason: plan.reason,
+      missingOptional: plan.missingOptional,
+    });
   }
-  let swapped = 0;
+  // AZ3a bookkeeping BEFORE the swap: compare staged bytes against the current cut
+  // while both still exist (the transactional swap moves the old files aside).
   for (const e of entries) {
-    if (results.get(e.out) !== true) continue; // failed optional — old fallback stays
-    const dest = join(OUT, e.out);
-    if (e.out.endsWith(".png")) {
-      const prev = await readFile(dest).catch(() => null);
-      const next = await readFile(join(STAGING, e.out));
-      if (!prev || !prev.equals(next)) pngChanged.add(e.out);
-    }
-    await mkdir(dirname(dest), { recursive: true });
-    await rename(join(STAGING, e.out), dest);
-    swapped++;
+    if (results.get(e.out) !== true || !e.out.endsWith(".png")) continue;
+    const prev = await readFile(join(OUT, e.out)).catch(() => null);
+    const next = await readFile(join(STAGING, e.out));
+    if (!prev || !prev.equals(next)) pngChanged.add(e.out);
   }
+  const swap = await executeSwap(entries, results, {
+    out: OUT,
+    staging: STAGING,
+    backup: BACKUP,
+    joinPath: join,
+    dirOf: dirname,
+    fs: {
+      rename,
+      mkdir: (p) => mkdir(p, { recursive: true }),
+      rm: (p) => rm(p, { recursive: true, force: true }),
+      exists,
+    },
+  });
   await rm(STAGING, { recursive: true, force: true });
+  if (swap.rolledBack) {
+    console.error(`fetch-data: swap FAILED mid-flight (${swap.error}) — rolled back; the previous cut stays whole`);
+    return releaseState({
+      status: "stale",
+      manifest,
+      previous: PREVIOUS_STATE,
+      reason: `swap rollback: ${swap.error}`,
+      missingOptional: plan.missingOptional,
+    });
+  }
   for (const m of plan.missingOptional) console.warn(`  ! optional degraded: ${m}`);
-  console.log(`fetch-data: release ${manifest.release_id} verified → atomic swap (${swapped} files)`);
+  console.log(`fetch-data: release ${manifest.release_id} verified → transactional swap (${swap.swapped} files)`);
   return releaseState({ status: "fresh", manifest, missingOptional: plan.missingOptional });
 }
 
@@ -214,10 +248,10 @@ if (process.env.FETCH_OFFLINE === "1") {
   // fixture (inmutables al SHA del checkout). No se fetchea nada; dims y variantes de
   // imagen se derivan de lo que hay en disco.
   console.log("fetch-data: FETCH_OFFLINE=1 — CI fixture build sobre los fallbacks commiteados (sin red)");
-  state = releaseState({ status: "stale", reason: "FETCH_OFFLINE=1 (CI fixture build: committed fallbacks, no network)" });
+  state = releaseState({ status: "stale", previous: PREVIOUS_STATE, reason: "FETCH_OFFLINE=1 (CI fixture build: committed fallbacks, no network)" });
 } else if (process.env.FETCH_LEGACY === "1") {
   await legacyFetch();
-  state = releaseState({ status: "legacy", reason: "FETCH_LEGACY=1 (forced rollback to per-file fetch)" });
+  state = releaseState({ status: "legacy", reason: "FETCH_LEGACY=1 (forced rollback to per-file fetch)" });  // legacy bytes are per-file/unverified: no release identity to inherit
 } else {
   let manifest = null;
   try {
@@ -234,13 +268,14 @@ if (process.env.FETCH_OFFLINE === "1") {
     state = releaseState({
       status: "incompatible",
       manifest,
+      previous: PREVIOUS_STATE,
       reason: `manifest schema_version ${manifest.schema_version}, loader supports ${SUPPORTED_SCHEMA}`,
     });
   } else if (manifest) {
     state = await manifestFetch(manifest);
   } else {
     const n = await legacyFetch();
-    state = releaseState({ status: "stale", reason: `manifest unavailable — legacy per-file fetch (${n} refreshed, unverified)` });
+    state = releaseState({ status: "stale", previous: PREVIOUS_STATE, reason: `manifest unavailable — legacy per-file fetch (${n} refreshed, unverified)` });
   }
 }
 

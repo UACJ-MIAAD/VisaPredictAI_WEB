@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 
 import { describe, expect, it } from "vitest";
 
-import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, outFor, planSwap, releaseState, verifyEntry } from "../lib/release.mjs";
+import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, executeSwap, outFor, planSwap, releaseState, verifyEntry } from "../lib/release.mjs";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
@@ -99,5 +99,80 @@ describe("consumedEntries + releaseState", () => {
   it("pins the manifest path and schema the loader supports", () => {
     expect(MANIFEST_PATH).toBe("reports/release/release_manifest.json");
     expect(SUPPORTED_SCHEMA).toBe(1);
+  });
+});
+
+describe("releaseState — provenance of the SERVED bytes (author audit 11-jul)", () => {
+  const next = { release_id: "2026-07-new", panel_vintage: "2026-07", generated_at: "t2" };
+  const prev = { release_id: "2026-06-old", panel_vintage: "2026-06", generated_at: "t1" };
+  it("stale attributes the kept bytes to the PREVIOUS release, refused id apart", () => {
+    const s = releaseState({ status: "stale", manifest: next, previous: prev, reason: "blocking failed" });
+    expect(s.release_id).toBe("2026-06-old");
+    expect(s.panel_vintage).toBe("2026-06");
+    expect(s.rejected_release_id).toBe("2026-07-new");
+  });
+  it("incompatible follows the same rule", () => {
+    const s = releaseState({ status: "incompatible", manifest: next, previous: prev });
+    expect(s.release_id).toBe("2026-06-old");
+    expect(s.rejected_release_id).toBe("2026-07-new");
+  });
+  it("fresh serves the new manifest and rejects nothing", () => {
+    const s = releaseState({ status: "fresh", manifest: next, previous: prev });
+    expect(s.release_id).toBe("2026-07-new");
+    expect(s.rejected_release_id).toBeNull();
+  });
+  it("stale without a previous state degrades to null, never the refused id", () => {
+    const s = releaseState({ status: "stale", manifest: next });
+    expect(s.release_id).toBeNull();
+    expect(s.rejected_release_id).toBe("2026-07-new");
+  });
+});
+
+describe("executeSwap — transactional with rollback (author audit 11-jul)", () => {
+  // In-memory fs: files es un Set de rutas existentes; rename mueve, rm borra prefijos.
+  function memFs(files: Set<string>, failOnRename?: string) {
+    return {
+      calls: [] as string[],
+      rename: async (a: string, b: string) => {
+        if (failOnRename && a === failOnRename) throw new Error(`EIO ${a}`);
+        if (!files.has(a)) throw new Error(`ENOENT ${a}`);
+        files.delete(a);
+        files.add(b);
+      },
+      mkdir: async () => {},
+      rm: async (p: string) => {
+        for (const f of [...files]) if (f === p || f.startsWith(p + "/")) files.delete(f);
+      },
+      exists: async (p: string) => files.has(p),
+    };
+  }
+  const entries = [{ out: "a.csv" }, { out: "b.json" }, { out: "c.png" }];
+  const results = new Map<string, true | string>([["a.csv", true], ["b.json", true], ["c.png", true]]);
+  const ctx = { out: "out", staging: "stg", backup: "bak", joinPath: (...p: string[]) => p.join("/"), dirOf: (p: string) => p.split("/").slice(0, -1).join("/") };
+
+  it("success: every winner lands, backup cleaned", async () => {
+    const files = new Set(["out/a.csv", "out/b.json", "stg/a.csv", "stg/b.json", "stg/c.png"]);
+    const fs = memFs(files);
+    const r = await executeSwap(entries, results, { ...ctx, fs });
+    expect(r).toMatchObject({ swapped: 3, rolledBack: false });
+    expect([...files].sort()).toEqual(["out/a.csv", "out/b.json", "out/c.png"]);
+  });
+  it("mid-flight failure rolls the WHOLE previous cut back (no hybrid)", async () => {
+    const files = new Set(["out/a.csv", "out/b.json", "stg/a.csv", "stg/b.json", "stg/c.png"]);
+    const fs = memFs(files, "stg/b.json"); // phase B falla en el 2o archivo: a.csv ya colocado
+    const r = await executeSwap(entries, results, { ...ctx, fs });
+    expect(r.rolledBack).toBe(true);
+    expect(files.has("out/a.csv")).toBe(true);   // el viejo a.csv RESTAURADO, no el staged
+    expect(files.has("out/b.json")).toBe(true);  // b.json intacto
+    expect(files.has("out/c.png")).toBe(false);  // el artefacto nuevo no quedo a medias
+    expect([...files].some((f) => f.startsWith("bak/"))).toBe(false);
+  });
+  it("failed-optional entries are skipped, their old fallback survives", async () => {
+    const files = new Set(["out/a.csv", "out/c.png", "stg/a.csv"]);
+    const partial = new Map<string, true | string>([["a.csv", true], ["c.png", "HTTP 404"]]);
+    const fs = memFs(files);
+    const r = await executeSwap(entries, partial, { ...ctx, fs });
+    expect(r).toMatchObject({ swapped: 1, rolledBack: false });
+    expect(files.has("out/c.png")).toBe(true);
   });
 });
