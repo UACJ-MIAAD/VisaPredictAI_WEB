@@ -62,18 +62,29 @@ describe("parseForecastStore — audit round 2 gaps", () => {
     const flood = [`${HDR2}`, g, "x", "y", "z", "w"].join("\n"); // 1 valid + 4 short
     expect(parseForecastStore(flood, {}, null).status).toBe("production_unavailable");
   });
-  it("drops a contradictory duplicate (same series+date, different numbers)", () => {
+  it("a contradictory duplicate in a 2-row feed is 50% corrupt → unavailable", () => {
     const dup = `${HDR2}\n${g}\nmexico,F1,FAD,2026-08-01,2000,1800,2200,1700,2300`;
-    const s = parseForecastStore(dup, {}, null);
-    // 1 kept, 1 contradictory dropped → half corrupt → unavailable (2 rows, 1 dropped, not > half)…
-    // one valid survives, one contradictory dropped: 1/2 not > 1/2, so ok with the first point only
+    expect(parseForecastStore(dup, {}, null).status).toBe("production_unavailable");
+  });
+  it("a contradictory duplicate amid enough valid rows drops only that point", () => {
+    const feed = `${HDR2}\n${g}\nmexico,F1,FAD,2026-09-01,1010,910,1110,860,1160\n` +
+      "mexico,F1,FAD,2026-10-01,1020,920,1120,870,1170\nmexico,F1,FAD,2026-08-01,9,9,9,9,9"; // dup contradiction
+    const s = parseForecastStore(feed, {}, null); // 4 rows, 1 dropped → 25% < 50% → ok
     expect(s.status).toBe("ok");
-    expect(s.series.get("mexico|F1|FAD")?.length).toBe(1);
+    expect(s.series.get("mexico|F1|FAD")?.length).toBe(3);
   });
   it("keeps an identical harmless duplicate without inflating the series", () => {
     const dup = `${HDR2}\n${g}\n${g}`;
     const s = parseForecastStore(dup, {}, null);
     expect(s.status).toBe("ok");
     expect(s.series.get("mexico|F1|FAD")?.length).toBe(1);
+  });
+  it("rejects horizon_months = Infinity", () => {
+    expect(parseForecastStore(g ? `${HDR2}\n${g}` : "", { horizon_months: Infinity } as never, null).status)
+      .toBe("production_unavailable");
+  });
+  it("rejects a feed that is exactly 50% corrupt", () => {
+    const feed = `${HDR2}\n${g}\nmexico,F1,FAD,BADDATE,x,1,1,1,1`; // 2 rows, 1 corrupt = 50%
+    expect(parseForecastStore(feed, {}, null).status).toBe("production_unavailable");
   });
 });
