@@ -1231,7 +1231,7 @@
       <div class="hero-stats">
         <div><div class="hero-stat-val">8</div><div class="hero-stat-lbl">Modelos comparados</div></div>
         <div><div class="hero-stat-val">5</div><div class="hero-stat-lbl">Países/áreas piloto</div></div>
-        <div><div class="hero-stat-val">296</div><div class="hero-stat-lbl">Obs FAD por serie</div></div>
+        <div><div class="hero-stat-val">298</div><div class="hero-stat-lbl">Obs FAD por serie</div></div>
       </div>
     </div>
   </div>
@@ -1305,7 +1305,7 @@
         La <em>Immigration and Nationality Act</em> (INA) de 1965 [10] establece el sistema actual de cuotas anuales por categoría con un límite estatutario del 7&nbsp;% por país (<em>per-country limit</em>) que es el origen primario de la retrogresión severa observada en países de alta demanda como México, India, China y Filipinas [6].
       </p>
       <p>
-        El Departamento de Estado publica mensualmente el <em>Visa Bulletin</em> [7] con dos calendarios: <strong>Final Action Dates</strong> (FAD, publicadas desde 1992; la serie mensual homogénea del pipeline abarca dic-2001&ndash;hoy, 296 obs) que autoriza la adjudicación final, y <strong>Dates for Filing</strong> (DFF, desde octubre&nbsp;de 2015, ≈130 obs) que autoriza el inicio anticipado del trámite de ajuste. Bier [60] documenta que las categorías basadas en empleo de países con límite efectivo, en particular India, han experimentado retrogresiones de varios años en periodos recientes.
+        El Departamento de Estado publica mensualmente el <em>Visa Bulletin</em> [7] con dos calendarios: <strong>Final Action Dates</strong> (FAD, publicadas desde 1992; la serie mensual homogénea del pipeline abarca dic-2001&ndash;hoy, 298 obs) que autoriza la adjudicación final, y <strong>Dates for Filing</strong> (DFF, desde octubre&nbsp;de 2015, ≈132 obs) que autoriza el inicio anticipado del trámite de ajuste. Bier [60] documenta que las categorías basadas en empleo de países con límite efectivo, en particular India, han experimentado retrogresiones de varios años en periodos recientes.
       </p>
       <p>
         Trabajos previos: Vegesana [11] aplica clasificadores discriminativos al pronóstico de aprobación; Jain et al. [12] proponen un híbrido ARIMA-LSTM para series con dinámica compleja; Carammia et al. [13] y Pu et al. [9] integran aprendizaje automático con datos a escala en flujos migratorios.
@@ -1470,7 +1470,7 @@
         <div class="card-icon">H</div>
         <h3 class="card-title">Pronóstico multiserie y heterogeneidad</h3>
         <p class="card-text">
-          Modelos locales (entrenados por celda), globales (DeepAR [22] sobre el panel) y tabulares (XGBoost [56]). La elección entre regímenes es una pregunta empírica que el proyecto responde con datos, dado el régimen de datos pequeño por serie (296 obs FAD, 130 obs DFF).
+          Modelos locales (entrenados por celda), globales (DeepAR [22] sobre el panel) y tabulares (XGBoost [56]). La elección entre regímenes es una pregunta empírica que el proyecto responde con datos, dado el régimen de datos pequeño por serie (298 obs FAD, 132 obs DFF).
         </p>
       </div>
 
@@ -1626,7 +1626,7 @@
           <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Limitaciones · 5</span>
           <h4 class="card-title" style="font-size:1rem;">Factores externos</h4>
           <ul style="margin-top:0.4rem;">
-            <li><strong>Datos:</strong> 296 obs FAD, 130 obs DFF por serie</li>
+            <li><strong>Datos:</strong> 298 obs FAD, 132 obs DFF por serie</li>
             <li><strong>Discontinuidades estructurales</strong> del marco regulatorio</li>
             <li><strong>Composición variable</strong> de <em>All Chargeability</em></li>
             <li><strong>Recursos computacionales</strong> académicos (no productivos)</li>
@@ -1756,8 +1756,8 @@
     <div class="metrics">
       <div class="metrics-inner">
         <div class="metric reveal"><div class="metric-num">194</div><div class="metric-lbl">Series país&times;categoría&times;tabla</div></div>
-        <div class="metric reveal reveal--d1"><div class="metric-num">27,611</div><div class="metric-lbl">Observaciones mensuales</div></div>
-        <div class="metric reveal reveal--d2"><div class="metric-num">296</div><div class="metric-lbl">Boletines · dic-2001 &rarr; 2026</div></div>
+        <div class="metric reveal reveal--d1"><div class="metric-num">27,911</div><div class="metric-lbl">Observaciones mensuales</div></div>
+        <div class="metric reveal reveal--d2"><div class="metric-num">298</div><div class="metric-lbl">Boletines · dic-2001 &rarr; 2026</div></div>
         <div class="metric reveal reveal--d3"><div class="metric-num">21</div><div class="metric-lbl">Categorías canónicas</div></div>
         <div class="metric reveal reveal--d4"><div class="metric-num">APTO</div><div class="metric-lbl">Veredicto mega-auditoría</div></div>
       </div>
@@ -1773,13 +1773,13 @@
         <span class="pill pill--y">5 países: MX · IN · CN · PH · All&nbsp;Charg.</span>
         <span class="pill pill--y">16 categorías de empleo · 5 familiares</span>
         <span class="pill pill--y">2 tablas: FAD &amp; DFF (separadas)</span>
-        <span class="pill pill--green">15,931 obs entrenables (estado F · 58&nbsp;%)</span>
+        <span class="pill pill--green">16,117 obs entrenables (estado F · 58&nbsp;%)</span>
       </div>
       <div class="grid grid--4 mt-2">
-        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Empleo · FAD</span><div class="metric-num" style="font-size:1.6rem;">11,548</div><p style="font-size:0.82rem;color:var(--gris);">desde dic-2001</p></div>
-        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Empleo · DFF</span><div class="metric-num" style="font-size:1.6rem;">5,698</div><p style="font-size:0.82rem;color:var(--gris);">desde oct-2015</p></div>
-        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Familiar · FAD</span><div class="metric-num" style="font-size:1.6rem;">7,115</div><p style="font-size:0.82rem;color:var(--gris);">desde dic-2001</p></div>
-        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Familiar · DFF</span><div class="metric-num" style="font-size:1.6rem;">3,250</div><p style="font-size:0.82rem;color:var(--gris);">desde oct-2015</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Empleo · FAD</span><div class="metric-num" style="font-size:1.6rem;">11,648</div><p style="font-size:0.82rem;color:var(--gris);">desde dic-2001</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Empleo · DFF</span><div class="metric-num" style="font-size:1.6rem;">5,798</div><p style="font-size:0.82rem;color:var(--gris);">desde oct-2015</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Familiar · FAD</span><div class="metric-num" style="font-size:1.6rem;">7,165</div><p style="font-size:0.82rem;color:var(--gris);">desde dic-2001</p></div>
+        <div class="card"><span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Familiar · DFF</span><div class="metric-num" style="font-size:1.6rem;">3,300</div><p style="font-size:0.82rem;color:var(--gris);">desde oct-2015</p></div>
       </div>
     </div>
 
@@ -1799,7 +1799,7 @@
           <text x="85" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">1. Fuente</text>
           <text x="85" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">Visa Bulletin HTML</text>
           <text x="85" y="134" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">travel.state.gov</text>
-          <text x="85" y="162" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">296 boletines</text>
+          <text x="85" y="162" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">298 boletines</text>
           <text x="85" y="178" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">dic-2001 &rarr; 2026</text>
           <!-- 2 Scraper -->
           <rect x="173" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
@@ -1826,7 +1826,7 @@
           <text x="717" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">5. Panel</text>
           <text x="717" y="116" text-anchor="middle" font-family="DM Sans" font-size="10" fill="#FFD600" font-style="italic">y(p,c,b,t)</text>
           <text x="717" y="146" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">194 series</text>
-          <text x="717" y="164" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">27,611 obs</text>
+          <text x="717" y="164" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">27,911 obs</text>
           <text x="717" y="186" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">CSV licencia abierta</text>
           <!-- 6 Auditoría -->
           <rect x="805" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
@@ -1944,17 +1944,17 @@
     <div class="subsec reveal">
       <h3><span class="num">05</span> Búsqueda profunda de boletines faltantes</h3>
       <p>
-        Se enumeró cada mes esperado y se sondeó tanto la URL construida como el <em>Wayback Machine</em>. La cobertura a nivel boletín es de <strong>296 de 296 meses (100&nbsp;%)</strong>. Los cinco boletines retirados de travel.state.gov (marzo, septiembre, octubre y noviembre de 2009; octubre de 2012) se recuperaron manualmente del archivo histórico, se congelaron junto al resto de instantáneas y forman parte del panel.
+        Se enumeró cada mes esperado y se sondeó tanto la URL construida como el <em>Wayback Machine</em>. La cobertura a nivel boletín es de <strong>298 de 298 meses (100&nbsp;%)</strong>. Los cinco boletines retirados de travel.state.gov (marzo, septiembre, octubre y noviembre de 2009; octubre de 2012) se recuperaron manualmente del archivo histórico, se congelaron junto al resto de instantáneas y forman parte del panel.
       </p>
       <div class="pill-row">
-        <span class="pill pill--green">296 / 296 meses presentes</span>
+        <span class="pill pill--green">298 / 298 meses presentes</span>
         <span class="pill pill--y">5 boletines recuperados del archivo</span>
         <span class="pill pill--g">0 huecos no explicados</span>
       </div>
       <div class="callout mt-2">
         <div class="callout-head">🗓️ Alcance temporal honesto</div>
         <p>
-          Las <em>Final Action Dates</em> se publican desde 1992&nbsp;[14], pero la serie mensual estructuralmente homogénea que el módulo consolida desde el HTML del boletín abarca de forma continua <strong>diciembre&nbsp;de&nbsp;2001&nbsp;&ndash;&nbsp;2026 (296&nbsp;meses completos por serie)</strong>. El periodo 1992&ndash;2001 existe en fuentes estadísticas y de archivo, reservado a integración posterior. Las <em>Dates for Filing</em> sólo existen desde octubre&nbsp;de&nbsp;2015 (130&nbsp;observaciones).
+          Las <em>Final Action Dates</em> se publican desde 1992&nbsp;[14], pero la serie mensual estructuralmente homogénea que el módulo consolida desde el HTML del boletín abarca de forma continua <strong>diciembre&nbsp;de&nbsp;2001&nbsp;&ndash;&nbsp;2026 (298&nbsp;meses completos por serie)</strong>. El periodo 1992&ndash;2001 existe en fuentes estadísticas y de archivo, reservado a integración posterior. Las <em>Dates for Filing</em> sólo existen desde octubre&nbsp;de&nbsp;2015 (132&nbsp;observaciones).
         </p>
       </div>
     </div>
@@ -1972,9 +1972,9 @@
           <rect x="40" y="34" width="485" height="46" fill="#003CA6"/>
           <rect x="525" y="34" width="338" height="46" fill="#9aa0a6"/>
           <rect x="863" y="34" width="17" height="46" fill="#E6BD00"/>
-          <text x="282" y="62" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">F · 15,931 · 58 %</text>
-          <text x="694" y="62" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">C · 10,896 · 40 %</text>
-          <text x="40" y="104" font-family="DM Sans" font-size="10" fill="#555559">F = fecha específica (objetivo) · C = Current · U = Unavailable (568 · 2 %)</text>
+          <text x="282" y="62" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">F · 16,117 · 58 %</text>
+          <text x="694" y="62" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">C · 11,168 · 40 %</text>
+          <text x="40" y="104" font-family="DM Sans" font-size="10" fill="#555559">F = fecha específica (objetivo) · C = Current · U = Unavailable (625 · 2 %)</text>
         </svg>
       </div>
 
@@ -2059,7 +2059,7 @@
     <span class="section-tag">Análisis exploratorio · Censo del panel</span>
     <h2 class="section-title">Análisis exploratorio de datos (EDA)</h2>
     <p class="section-sub">
-      Censo automático, serie por serie, del panel completo: 27,611 observaciones en 194 series estructurales (136 con al menos una fecha específica y 74 evaluables), sobre 296/296 boletines desde diciembre de 2001. El 58&nbsp;% del panel es entrenable (15,931 obs entrenables, estado F); el censo documenta además 382 retrogresiones históricas y las 1,647 filas del sorteo de visas de diversidad (DV). Las pruebas de estacionariedad ADF, KPSS y DF-GLS indican que 71 de las 74 series evaluables exigen diferenciación. Una galería comentada de once figuras acompaña el censo &mdash;del mapa de régimen del panel completo a las trayectorias familiares, la brecha FAD&ndash;DFF y el pulso del año fiscal&mdash;. El reporte completo es un PDF descargable que se regenera automáticamente con cada boletín nuevo.
+      Censo automático, serie por serie, del panel completo: 27,911 observaciones en 194 series estructurales (136 con al menos una fecha específica y 74 evaluables), sobre 298/298 boletines desde diciembre de 2001. El 58&nbsp;% del panel es entrenable (16,117 obs entrenables, estado F); el censo documenta además 382 retrogresiones históricas y las 1,659 filas del sorteo de visas de diversidad (DV). Las pruebas de estacionariedad ADF, KPSS y DF-GLS indican que 71 de las 74 series evaluables exigen diferenciación. Una galería comentada de once figuras acompaña el censo &mdash;del mapa de régimen del panel completo a las trayectorias familiares, la brecha FAD&ndash;DFF y el pulso del año fiscal&mdash;. El reporte completo es un PDF descargable que se regenera automáticamente con cada boletín nuevo.
     </p>
     <p class="section-sub">
       Los hallazgos anotados de la galería: en cerca de la mitad de los meses con fecha la fila no se mueve &mdash;la razón de que el pronóstico ingenuo sea tan difícil de vencer&mdash;; las retrogresiones son terremotos administrativos capaces de borrar más de una década en un solo boletín (el peor episodio: México&nbsp;&middot;&nbsp;F3, agosto de 2006); los atrasos vigentes más profundos superan el cuarto de siglo en el bloque familiar (México&nbsp;&middot;&nbsp;F4) y la década en el de empleo (India); el calendario de presentación (DFF) siempre antecede a la acción final (FAD) por meses; el año fiscal apenas late &mdash;sin estacionalidad explotable: un hallazgo, no una carencia&mdash;; ninguna área anticipa a otra (la mejor correlación cruzada entre países ocurre en el retardo cero, sin indicadores adelantados); y ninguna serie evaluable es estacionaria en nivel: el panel es integrado de orden&nbsp;1.
@@ -2725,7 +2725,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
         <span class="matrix-legend-item" style="margin-left:auto;color:var(--text-muted);font-size:0.72rem;">* Composición variable · advertencia explícita</span>
       </div>
     </div>
-    <p class="tbl-caption">FAD publicado desde 1992; serie homogénea del pipeline dic-2001&ndash;hoy (296 obs). DFF desde octubre 2015 (130 obs). Cada celda piloto se reporta agregada y desagregada. Fuente: elaboración propia.</p>
+    <p class="tbl-caption">FAD publicado desde 1992; serie homogénea del pipeline dic-2001&ndash;hoy (298 obs). DFF desde octubre 2015 (132 obs). Cada celda piloto se reporta agregada y desagregada. Fuente: elaboración propia.</p>
   </div>
 </section>
 

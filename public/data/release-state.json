@@ -1,10 +1,10 @@
 {
-  "status": "stale",
-  "reason": "FETCH_OFFLINE=1 (CI fixture build: committed fallbacks, no network)",
-  "release_id": "2026-07-4c92ba93ce7d",
-  "panel_vintage": "2026-07",
-  "generated_at": "2026-07-12T02:12:49+00:00",
+  "status": "fresh",
+  "reason": null,
+  "release_id": "2026-09-158ec972c234",
+  "panel_vintage": "2026-09",
+  "generated_at": "2026-09-01T04:07:03+00:00",
   "rejected_release_id": null,
-  "fetched_at": "2026-07-12T15:13:08.670Z",
+  "fetched_at": "2026-09-01T04:07:31Z",
   "missing_optional": []
 }
