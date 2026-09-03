@@ -1,16 +1,17 @@
-# Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12)
+# Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02)
 
-Estado del `npm audit --omit=dev` al 2026-07-12 (re-verificado): **8 moderadas, 0
-altas/críticas**, que colapsan en **dos causas raíz**. El gate programado
-(`.github/workflows/scheduled-quality.yml`, job `security-audit`) falla en
-high/critical y reporta las moderadas cada lunes; este documento es su triage vivo.
-El lado Python (locks del repo de datos, 9 avisos aceptados del perfil model) vive en
+Estado del `npm audit` al 2026-09-02 (verificado sobre `main@9d0929d`): **0 avisos en
+todas las severidades**, con y sin `devDependencies` (`npm audit --omit=dev
+--audit-level=high` sale 0). El gate programado (`.github/workflows/scheduled-quality.yml`,
+job `security-audit`) falla en high/critical y reporta las moderadas cada lunes; este
+documento es su triage vivo. El lado Python (locks del repo de datos) vive en
 `VisaPredictAI/docs/SECURITY_TRIAGE.md` con la misma política y fecha de revisión.
 
-**Verificado 2026-07-12 (A5):** `npm audit fix` SIN `--force` no cambia nada
-(dry-run JSON: 0 added / 0 removed / 0 changed) — las 8 moderadas requieren bumps
-breaking (`@netlify/blobs` 10.x es semver-major; el "fix" de next propone el
-downgrade next@9.3.3). Por política, NO se aplican; quedan bajo SLA moderate.
+**Línea base real que cerró este triage (run `33434549803` del job `security-audit`,
+registrada el 1-sep-2026 al abrir la higiene post-A7): 17 avisos de producción, 10 high y
+7 moderate, 0 critical.** El triage anterior ("8 moderadas", 2026-07-12) había quedado
+obsoleto: el audit semanal ya reportaba high sin dueño. Se conserva la política; el triage
+histórico se retira de este documento (queda en el historial de git).
 
 ## Política de SLA por severidad
 
@@ -25,45 +26,33 @@ downgrade next@9.3.3). Por política, NO se aplican; quedan bajo SLA moderate.
 (hoy: next@9.3.3, tres majors atrás). Todo upgrade va por PR con la suite completa
 (vitest + typecheck + build offline) y rollback = revert del commit.
 
-## Triage vigente (2026-07-12)
+## Triage vigente (2026-09-02): sin avisos abiertos
 
-Los 8 avisos, uno por fila (el detalle de superficie vive en las dos causas raíz de
-abajo). Aviso raíz: GHSA-8988-4f7v-96qf (otel) y GHSA-qx2v-qp2m-jg93 (postcss); las
-filas sin GHSA propio son paquetes marcados por depender de una versión vulnerable.
+No hay filas de triage: el audit completo es 0/0/0/0/0. La próxima fila la abre el job
+semanal cuando aparezca un aviso nuevo; el SLA de la tabla anterior aplica desde esa fecha.
 
-| Paquete | Aviso | ¿Nos afecta? | Decisión | Owner | Revisión |
-|---|---|---|---|---|---|
-| @opentelemetry/core | GHSA-8988-4f7v-96qf (moderate) | BAJA: solo Netlify Functions (proxy VisaBot); ver causa raíz 1 | Accept; esperar bump del upstream directo | Javier | 2026-08-12 |
-| @opentelemetry/resources | depende de core vulnerable | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
-| @opentelemetry/sdk-trace-base | depende de core/resources vulnerables | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
-| @opentelemetry/sdk-trace-node | depende de core/sdk-trace-base vulnerables | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
-| @netlify/otel | depende de @opentelemetry/* vulnerables | Ídem causa raíz 1 | Ídem | Javier | 2026-08-12 |
-| @netlify/blobs | depende de @netlify/otel vulnerable | Ídem causa raíz 1 (única directa de la cadena) | Accept; bump cuando el fix no sea semver-major (hoy: 10.1.0, breaking) | Javier | 2026-08-12 |
-| postcss | GHSA-qx2v-qp2m-jg93 (moderate) | NO explotable: solo build-time sobre CSS propio; ver causa raíz 2 | Accept; llega con el siguiente minor de next | Javier | 2026-08-12 |
-| next | depende de postcss vulnerable | Ídem causa raíz 2 (el "fix" de npm es el downgrade next@9.3.3 — prohibido) | Accept; upgrade normal de next con suite completa | Javier | 2026-08-12 |
+### Remediación H1 (PR #2, squash → `main@9d0929d`, 2026-09-02)
 
-### 1. `@opentelemetry/core` — asignación de memoria sin cota en W3C Baggage
+Los 17 avisos colapsaban en cinco cadenas; todas se cerraron con upgrades reales, ninguna
+con `--force` ni con excepción:
 
-- **Cadena:** `@netlify/blobs` (directa) → `@netlify/otel` → `@opentelemetry/*`
-  (6 de los 8 hallazgos son esta única cadena transitiva).
-- **Dónde corre:** solo en las Netlify Functions (el proxy del VisaBot usa Blobs para
-  rate-limiting). No entra al bundle del navegador ni al export estático.
-- **Explotabilidad real:** BAJA. Un header `baggage` malicioso podría inflar memoria de
-  UNA invocación de función (aislada y efímera en serverless); el rate-limit por IP del
-  propio proxy acota el volumen. No hay path a datos ni a RCE.
-- **Owner:** Javier (bump de `@netlify/blobs` cuando el upstream suba su otel).
-- **Acción:** esperar release del upstream directo dentro del SLA moderate; el job
-  semanal detecta el fix disponible.
+| Cadena (línea base) | Severidad | Remediación |
+|---|---|---|
+| `next` (DoS en Server Actions del App Router; SSRF en Server Actions) → `postcss` vendorizado (XSS por `</style>`; lectura arbitraria de archivos) | high | `next` → `^15.5.25`; override `postcss` → `^8.5.26` |
+| `@netlify/blobs` → `@netlify/dev-utils` → `image-size` (DoS en parsers ICNS/JXL/HEIF) y `@netlify/otel` → `@opentelemetry/*` (asignación sin cota en W3C Baggage) | high + moderate | `@netlify/blobs` → `^10.7.13` (arrastra otel/dev-utils/image-size corregidos) |
+| `@huggingface/transformers` → `sharp` 0.34.x anidado (CVEs heredados de libvips, CVE-2026-33327) y `onnxruntime-node` → `adm-zip` (ZIP que fuerza 4 GB de memoria) | high | `sharp` `^0.35.4` como `devDependency` + `overrides` `sharp` → `^0.35.4` y `adm-zip` → `^0.6.0` (el `sharp` anidado desaparece del lockfile) |
+| `dompurify` (bypass de `CUSTOM_ELEMENT_HANDLING`; subárbol suelto tras `IN_PLACE`) | moderate | `dompurify` → `^3.4.14` |
+| `nanoid` (bucles infinitos con tamaños negativos/custom) y `protobufjs` (DoS por bucle en `.proto`) | high + moderate | lockfile regenerado: `nanoid` 3.3.18, `protobufjs` 7.6.6 |
 
-### 2. `postcss < 8.5.10` — XSS por `</style>` sin escapar en output CSS
-
-- **Cadena:** `next` (directa) → `postcss` vendorizado.
-- **Dónde corre:** SOLO en build time, procesando el CSS propio del repo (Tailwind).
-  No procesa CSS de terceros ni input de usuario; el sitio exportado no incluye postcss.
-- **Explotabilidad real:** NO explotable en este pipeline (requeriría CSS atacante en
-  el árbol de fuentes, que ya implicaría compromiso del repo).
-- **Owner:** Javier (bump de `next` en el siguiente minor que actualice su postcss).
-- **Acción:** SLA moderate vía upgrade normal de next con suite completa.
+- `brace-expansion` y `js-yaml` se actualizaron en el lockfile **como dev-only** y así se
+  conservan: no forman parte de la superficie de producción (`--omit=dev`).
+- Verificación: `npm ci` reproducible (lockfile v3, Node 22.23.2 / npm 10.9.8); suite web
+  (vitest + typecheck + build offline) verde en la PR; CI de push `33590123625` verde;
+  **Scheduled quality `33592819714` verde** sobre `main@9d0929d` (ejecución manual del
+  2-sep-2026 tras el merge); readback local `npm audit --json` → `{info:0, low:0,
+  moderate:0, high:0, critical:0}`.
+- Evidencia de la remediación (auditoría antes/después, diff del lockfile, clasificación de
+  los rojos): `Anteproyecto/Prompts/HIGIENE_2026-09-01/` (fuera de este repo).
 
 ## Cobertura relacionada
 
