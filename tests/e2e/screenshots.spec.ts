@@ -1,4 +1,4 @@
-// US E3 — visual regression captures: 4 routes × {375, 1280} × {light, dark},
+// US E3 — visual regression captures: key routes × {375, 1280} × {light, dark},
 // ES. Deliberately ARTIFACTS, not compared snapshots: the suite runs on
 // macOS locally and Linux in CI, and cross-platform font rasterization makes
 // pixel-diff baselines permanently flaky — the plan allows either and asks
