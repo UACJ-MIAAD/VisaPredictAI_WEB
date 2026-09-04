@@ -9,11 +9,12 @@ import { expect } from "@playwright/test";
 export type ThemeName = "light" | "dark";
 export type LangName = "es" | "en";
 
-/** The four routes under test (plan criterion), by base path (ES). */
+/** The key routes under test (plan criterion), by base path (ES). */
 export const ROUTES = [
   { id: "home", es: "/", en: "/en/" },
   { id: "datos-historicos", es: "/datos-historicos/", en: "/en/datos-historicos/" },
   { id: "resultados", es: "/resultados/", en: "/en/resultados/" },
+  { id: "plan", es: "/plan/", en: "/en/plan/" },
   { id: "asistente", es: "/asistente/", en: "/en/asistente/" },
 ] as const;
 

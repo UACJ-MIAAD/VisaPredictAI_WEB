@@ -1,4 +1,4 @@
-// US E3 — axe-core sweep: 0 serious/critical violations on the four key
+// US E3 — axe-core sweep: 0 serious/critical violations on the key
 // routes × {ES, EN} × {light, dark}. Moderate/minor findings do not gate
 // (plan criterion is serious/critical). No exclusions: the three contrast
 // findings this sweep originally surfaced (subnav digits, VisaBot launcher in

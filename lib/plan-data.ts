@@ -1,0 +1,290 @@
+import type { Lang } from "@/lib/site-map";
+
+export type PlanStatus =
+  | "done"
+  | "observing"
+  | "active"
+  | "planned"
+  | "deferred"
+  | "paused";
+
+type Copy = { es: string; en: string };
+
+export type PlanStory = {
+  id: string;
+  title: Copy;
+  outcome: Copy;
+  status: PlanStatus;
+  evidence?: string;
+};
+
+export type PlanEpic = {
+  id: string;
+  title: Copy;
+  summary: Copy;
+  status: PlanStatus;
+  stories: PlanStory[];
+};
+
+export type PlanUpdate = {
+  date: string;
+  title: Copy;
+  detail: Copy;
+  status: PlanStatus;
+};
+
+const c = (es: string, en: string): Copy => ({ es, en });
+const story = (
+  id: string,
+  title: Copy,
+  outcome: Copy,
+  status: PlanStatus,
+  evidence?: string,
+): PlanStory => ({ id, title, outcome, status, evidence });
+
+export const PLAN_META = {
+  updatedAt: "2026-09-04",
+  dataMain: "80b3bfbf872db60683f1a53732223a270fd5528f",
+  webMain: "7b4e4c9656380984ee4437c4fe724453fa13c3c5",
+  releaseId: "2026-09-158ec972c234",
+  releaseStatus: "fresh",
+  currentEpic: "D",
+  observation: { current: 0, target: 2 },
+} as const;
+
+export const PLAN_EPICS: PlanEpic[] = [
+  {
+    id: "0",
+    title: c("Preparar main sin perder nada", "Prepare main without losing work"),
+    summary: c(
+      "Base aislada, backports, CI mínimo e higiene con recuperación demostrada.",
+      "Isolated baseline, backports, minimum CI and cleanup with proven recovery.",
+    ),
+    status: "done",
+    stories: [
+      story("0.1", c("Worktree de integración", "Integration worktree"), c("Aislar main del trabajo R9 preservado.", "Keep main isolated from the preserved R9 work."), "done"),
+      story("0.2", c("Reauditar el diagrama ER", "Re-audit the ER diagram"), c("Portar el diagrama y su generador con equivalencia visual.", "Port the diagram and generator with visual equivalence."), "done"),
+      story("0.3", c("Backports LaTeX", "LaTeX backports"), c("Integrar y compilar los documentos sin perder ramas.", "Integrate and compile the documents without losing branches."), "done"),
+      story("0.4", c("CI mínimo viable", "Minimum viable CI"), c("Mantener un ci-gate estricto y una historia lineal.", "Keep a strict ci-gate and linear history."), "done"),
+      story("0.5", c("Preservar PR #4", "Preserve PR #4"), c("Mantener R9 abierto y en draft hasta una decisión independiente.", "Keep R9 open and in draft pending an independent decision."), "done"),
+      story("0.6", c("Higiene verificable", "Verifiable cleanup"), c("Limpiar sólo blancos acreditados y conservar recibos de recuperación.", "Clean only accredited targets and retain recovery receipts."), "done"),
+      story("0.7", c("Documentación de estado", "State documentation"), c("Registrar únicamente hechos consumados y SHAs comprobados.", "Record only completed facts and verified SHAs."), "done"),
+    ],
+  },
+  {
+    id: "A",
+    title: c("Carga del boletín", "Bulletin ingestion"),
+    summary: c(
+      "Ingesta manual segura y cron resiliente ante el bloqueo de la fuente oficial.",
+      "Safe manual ingestion and a cron resilient to the official source being blocked.",
+    ),
+    status: "done",
+    stories: [
+      story("A1", c("Puerto único de red", "Single network port"), c("Inyectar el fetcher, aplicar un retry y tipar el bloqueo WAF.", "Inject the fetcher, apply one retry and type WAF blocking."), "done"),
+      story("A2", c("Ingesta manual validada", "Validated manual ingestion"), c("Validar, promover atómicamente y subir a S3 en modo create-only.", "Validate, promote atomically and upload to S3 in create-only mode."), "done"),
+      story("A3", c("Cron resiliente", "Resilient cron"), c("Separar el acceso a la fuente de los gates, CI y publicación.", "Separate source access from gates, CI and publishing."), "done"),
+      story("A4", c("Señal honesta", "Honest signal"), c("Versionar el estado de fuente y mantener una issue canónica.", "Version source state and maintain one canonical issue."), "done"),
+      story("A5", c("Pruebas sin red", "Offline tests"), c("Cubrir fetch, freeze e ingesta sin depender de Internet.", "Cover fetch, freeze and ingestion without depending on the Internet."), "done"),
+      story("A6", c("BrowserFetcher", "BrowserFetcher"), c("Spike opcional y acotado; el ritual manual sigue siendo la ruta fiable.", "Optional time-boxed spike; the manual ritual remains the reliable path."), "deferred"),
+      story("A7", c("Corte agosto–septiembre", "August–September cut"), c("Publicar 300 snapshots, 298 meses y el corte 2026-09 con regla cero.", "Publish 300 snapshots, 298 months and the 2026-09 cut under rule zero."), "done", "release/2026-09-158ec972c234"),
+    ],
+  },
+  {
+    id: "B",
+    title: c("CI verde y seguridad mínima", "Green CI and minimum security"),
+    summary: c(
+      "Protección de main, autenticación del cron, supply chain y seguridad web.",
+      "Main protection, cron authentication, supply chain and web security.",
+    ),
+    status: "done",
+    stories: [
+      story("B0", c("Publicación protegida", "Protected publishing"), c("Usar una GitHub App de alcance mínimo para publicar con gates.", "Use a least-privilege GitHub App to publish through gates."), "done"),
+      story("B1", c("Supply chain mínima", "Minimum supply chain"), c("Conservar locks, contratos, triage y acciones fijadas por SHA.", "Retain locks, contracts, triage and SHA-pinned actions."), "done"),
+      story("B2", c("Contratos de locks", "Lock contracts"), c("Verificar toolchain y locks dentro de los jobs vivos.", "Verify toolchain and locks inside live jobs."), "done"),
+      story("B3", c("ci-gate estricto", "Strict ci-gate"), c("Exigir success de política, consistencia, lint y modelado.", "Require policy, consistency, lint and modeling success."), "done"),
+      story("B4", c("Seguridad web", "Web security"), c("Reducir 17 avisos de producción a cero y documentar el triage.", "Reduce 17 production advisories to zero and document triage."), "done"),
+      story("B5", c("Watchdog de fuente", "Source watchdog"), c("Distinguir fuente bloqueada de pipeline roto sin perder alertas.", "Distinguish blocked source from broken pipeline without losing alerts."), "done"),
+      story("B6", c("Medición base", "Baseline measurement"), c("Medir el camino crítico real del CI sobre un SHA publicado.", "Measure the real CI critical path on a published SHA."), "done"),
+    ],
+  },
+  {
+    id: "D",
+    title: c("Plataforma MLOps que paga", "MLOps platform that earns its keep"),
+    summary: c(
+      "Integridad del release, observabilidad y operación reproducible antes de entrenar más modelos.",
+      "Release integrity, observability and reproducible operations before training more models.",
+    ),
+    status: "active",
+    stories: [
+      story("D1", c("Fricción DVC", "DVC friction"), c("Bloquear pushes cuando el lock no representa el DAG.", "Block pushes when the lock does not represent the DAG."), "done", "f67edf9"),
+      story("D2", c("Advisories visibles", "Visible advisories"), c("Rechazar artefactos vacíos y convertir warnings y advisories en contratos.", "Reject empty artifacts and turn warnings and advisories into contracts."), "done", "0092af0"),
+      story("D3", c("Estado de ingesta", "Ingestion state"), c("Mantener un feed cerrado, atómico y fail-closed.", "Maintain a closed, atomic and fail-closed state feed."), "done", "004e478"),
+      story("D4", c("Un solo release_id", "One release_id"), c("Romper el ciclo tarjeta–manifiesto con identidad normalizada.", "Break the card–manifest cycle with normalized identity."), "done", "f9c22a2"),
+      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Retirarlo únicamente tras la campaña causal F2; nunca a mano.", "Remove it only after the causal F2 campaign; never by hand."), "deferred"),
+      story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
+      story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
+      story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "planned"),
+      story("D9", c("Arquitectura MLOps", "MLOps architecture"), c("Publicar una página y un SVG del sistema completo con cifras canónicas.", "Publish a one-page system overview and SVG using canonical figures."), "planned"),
+    ],
+  },
+  {
+    id: "C",
+    title: c("Clean code con factura", "Clean code with a measured payoff"),
+    summary: c(
+      "Reducir duplicación y complejidad sólo donde existe una prueba de valor.",
+      "Reduce duplication and complexity only where value is demonstrated.",
+    ),
+    status: "planned",
+    stories: [
+      story("C1", c("Taxonomía única", "Single taxonomy"), c("Centralizar categorías y metadatos con golden master.", "Centralize categories and metadata with a golden master."), "planned"),
+      story("C2", c("Extracción común", "Shared extraction"), c("Eliminar la duplicación entre scrapers con funciones puras.", "Remove scraper duplication with pure functions."), "planned"),
+      story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "planned"),
+      story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "planned"),
+      story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "planned"),
+      story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "planned"),
+      story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "planned"),
+      story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "planned"),
+      story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "planned"),
+      story("C9", c("LOC por rol", "LOC by role"), c("Impedir que tooling vuelva a superar la mitad del producto.", "Prevent tooling from again exceeding half the product."), "planned"),
+    ],
+  },
+  {
+    id: "F",
+    title: c("Sincronía total", "Full synchronization"),
+    summary: c(
+      "Una misma verdad canónica en datos, paper, web, RAG, tarjeta y producción.",
+      "One canonical truth across data, paper, web, RAG, model card and production.",
+    ),
+    status: "planned",
+    stories: [
+      story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "planned"),
+      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "planned"),
+      story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "planned"),
+      story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "planned"),
+      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "planned"),
+      story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "planned"),
+      story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "planned"),
+      story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "planned"),
+    ],
+  },
+  {
+    id: "E",
+    title: c("Cohortes, DeepAR y router", "Cohorts, DeepAR and router"),
+    summary: c(
+      "Responder la hipótesis de estabilidad con evaluación pre-registrada y resultados positivos o negativos.",
+      "Answer the stability hypothesis with preregistered evaluation and positive or negative results.",
+    ),
+    status: "planned",
+    stories: [
+      story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "planned"),
+      story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "planned"),
+      story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "planned"),
+      story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "planned"),
+      story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "planned"),
+      story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "planned"),
+      story("E6", c("Limpieza pagada", "Paid-for cleanup"), c("Unificar universos y corregir catálogo y docstrings fósiles.", "Unify universes and correct stale catalog entries and docstrings."), "planned"),
+    ],
+  },
+  {
+    id: "G",
+    title: c("Cierre académico", "Academic closeout"),
+    summary: c(
+      "Convertir la plataforma y sus resultados en tesis, paper y defensa reproducibles.",
+      "Turn the platform and its results into a reproducible thesis, paper and defense.",
+    ),
+    status: "planned",
+    stories: [
+      story("G1", c("Overleaf", "Overleaf"), c("Actualizar y revisar visualmente ambos documentos.", "Update and visually review both documents."), "planned"),
+      story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar Cloudflare y la ingesta semiautomática.", "Document Cloudflare and semi-automatic ingestion."), "planned"),
+      story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "planned"),
+      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "planned"),
+      story("G5", c("Deck de defensa", "Defense deck"), c("Generar cifras de la presentación desde key_facts.", "Generate presentation figures from key_facts."), "planned"),
+      story("G6", c("Siguiente revisión", "Next review"), c("Llevar a Chente cohortes, multi-horizonte y decisiones abiertas.", "Bring cohorts, multi-horizon results and open decisions to Chente."), "planned"),
+    ],
+  },
+];
+
+export const PAUSED_TRACK = {
+  id: "R9/B233",
+  title: c("Entornos reproducibles content-addressed", "Content-addressed reproducible environments"),
+  detail: c(
+    "Preservado en 025154d con nueve entradas locales y PR #4 en draft. Gate Q lo mantiene fuera del denominador del plan activo hasta una decisión humana.",
+    "Preserved at 025154d with nine local entries and PR #4 in draft. Gate Q keeps it outside the active-plan denominator until a human decision.",
+  ),
+  status: "paused" as const,
+};
+
+export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-04",
+    title: c("D7 llegó a main", "D7 reached main"),
+    detail: c("Tracking mensual mergeado con CI 5/5; comienza la observación de dos rebuilds reales (0/2).", "Monthly tracking merged with 5/5 CI; observation over two real rebuilds begins (0/2)."),
+    status: "observing",
+  },
+  {
+    date: "2026-09-04",
+    title: c("D4 cerró el ciclo de identidad", "D4 closed the identity cycle"),
+    detail: c("El contrato de release_id único está en main y se activará con el próximo boletín real.", "The single release_id contract is on main and will activate with the next real bulletin."),
+    status: "done",
+  },
+  {
+    date: "2026-09-04",
+    title: c("D2 completo", "D2 complete"),
+    detail: c("Artefactos vacíos, advisories y warnings quedaron bajo contratos visibles y CI verde.", "Empty artifacts, advisories and warnings are now covered by visible contracts and green CI."),
+    status: "done",
+  },
+  {
+    date: "2026-09-03",
+    title: c("D1 y B4 completos", "D1 and B4 complete"),
+    detail: c("El hook DVC bloquea locks rancios y la auditoría web registra cero vulnerabilidades.", "The DVC hook blocks stale locks and the web audit records zero vulnerabilities."),
+    status: "done",
+  },
+  {
+    date: "2026-09-02",
+    title: c("Higiene 100/100", "Cleanup 100/100"),
+    detail: c("Repositorios, plataforma, evidencia y recuperación quedaron verificados sin perder trabajo.", "Repositories, platform, evidence and recovery were verified without losing work."),
+    status: "done",
+  },
+  {
+    date: "2026-09-01",
+    title: c("Corte 2026-09 publicado", "2026-09 cut published"),
+    detail: c("Producción quedó fresh con 300 boletines y un release inmutable.", "Production became fresh with 300 bulletins and an immutable release."),
+    status: "done",
+  },
+];
+
+export const STATUS_WEIGHT: Record<PlanStatus, number> = {
+  done: 1,
+  observing: 0.75,
+  active: 0.5,
+  planned: 0,
+  deferred: 0,
+  paused: 0,
+};
+
+export function planStats(epics = PLAN_EPICS) {
+  const stories = epics.flatMap((epic) => epic.stories);
+  const completed = stories.filter((item) => item.status === "done").length;
+  const advanced = stories.filter((item) =>
+    ["done", "observing", "active"].includes(item.status),
+  ).length;
+  const points = stories.reduce((sum, item) => sum + STATUS_WEIGHT[item.status], 0);
+  return {
+    total: stories.length,
+    completed,
+    advanced,
+    observing: stories.filter((item) => item.status === "observing").length,
+    deferred: stories.filter((item) => item.status === "deferred").length,
+    planned: stories.filter((item) => item.status === "planned").length,
+    percent: Math.round((points / stories.length) * 100),
+  };
+}
+
+export function epicStats(epic: PlanEpic) {
+  const total = epic.stories.length;
+  const completed = epic.stories.filter((item) => item.status === "done").length;
+  const points = epic.stories.reduce((sum, item) => sum + STATUS_WEIGHT[item.status], 0);
+  return { total, completed, percent: Math.round((points / total) * 100) };
+}
+
+export const copy = (value: Copy, lang: Lang) => value[lang];

@@ -120,6 +120,24 @@ export const ROUTES: Route[] = [
     ],
   },
   {
+    path: "/plan",
+    label: "Plan y avance",
+    labelEn: "Plan and progress",
+    short: "Plan",
+    shortEn: "Plan",
+    blurb:
+      "Estado verificable del plan MLOps: avance, épicas, historias de usuario, ruta de ejecución y evidencia reciente.",
+    blurbEn:
+      "Verifiable MLOps plan status: progress, epics, user stories, execution route and recent evidence.",
+    sections: [
+      { id: "tablero", label: "Tablero", labelEn: "Dashboard" },
+      { id: "ruta", label: "Ruta", labelEn: "Route" },
+      { id: "epicas", label: "Épicas", labelEn: "Epics" },
+      { id: "detalle", label: "Plan por US", labelEn: "Story plan" },
+      { id: "bitacora", label: "Bitácora", labelEn: "Progress log" },
+    ],
+  },
+  {
     path: "/asistente",
     label: "Asistente",
     labelEn: "Assistant",
