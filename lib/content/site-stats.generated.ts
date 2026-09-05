@@ -10,5 +10,5 @@ export const SITE_STATS = {
   horizonMonths: 12,
   nModels: 24,
   releaseId: "2026-09-158ec972c234",
-  releaseStatus: "stale",
+  releaseStatus: "fresh",
 } as const;
