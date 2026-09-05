@@ -44,8 +44,8 @@ const story = (
 
 export const PLAN_META = {
   updatedAt: "2026-09-04",
-  dataMain: "25722fe280482a9b12947d7b4c3bdd315e74bc1e",
-  webMain: "ad3a0a0403112ca2a621fca5842ed0585db34830",
+  dataMain: "c35febf5055b847c2c4358cb208f0e66e4a017af",
+  webMain: "ea1fee47ff61d43b7e6d7fb1417bac5a2306fc73",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   currentEpic: "D",
