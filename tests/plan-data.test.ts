@@ -128,13 +128,19 @@ describe("public MLOps plan", () => {
     expect(c1).toMatchObject({ status: "done", evidence: "5fa14fa" });
   });
 
-  it("points dataMain at the most recent delivered story, not at an older one", () => {
-    // `dataMain` es el corte de datos vigente: debe coincidir con la evidencia de ALGUNA
-    // historia entregada (la última que se mergeó), no con la de cualquiera.
-    const delivered = PLAN_EPICS.flatMap((epic) => epic.stories)
-      .filter((item) => item.status === "done" && item.evidence)
-      .map((item) => item.evidence as string);
-    expect(delivered.some((sha) => PLAN_META.dataMain.startsWith(sha))).toBe(true);
+  it("never lets a story point at a data main that moved past it", () => {
+    // `dataMain` es el corte de datos VIGENTE y no siempre corresponde a una historia: también
+    // avanza con mantenimiento (p. ej. endurecer una regla del guardián). Lo que sí debe
+    // cumplirse es que, si una evidencia coincide con él, esa historia esté entregada.
+    const stories = PLAN_EPICS.flatMap((epic) => epic.stories);
+    const pointing = stories.filter((item) => item.evidence && PLAN_META.dataMain.startsWith(item.evidence));
+    for (const story of pointing) {
+      expect(story.status).toBe("done");
+    }
+    // y ninguna evidencia de historia entregada puede ser un prefijo vacío o de otra longitud
+    for (const story of stories.filter((s) => s.status === "done" && s.evidence)) {
+      expect(story.evidence).toMatch(/^(?:[0-9a-f]{7}|release\/[\w.-]+)$/);
+    }
   });
 
   it("shows D8 as delivered with the squash that carries it on main", () => {
@@ -150,8 +156,8 @@ describe("public MLOps plan", () => {
   it("names the two commits the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe; `webMain` es el commit del sitio
     // desde el que se escribió esta versión (siempre el anterior al que la publica).
-    expect(PLAN_META.dataMain).toBe("25722fe280482a9b12947d7b4c3bdd315e74bc1e");
-    expect(PLAN_META.webMain).toBe("ad3a0a0403112ca2a621fca5842ed0585db34830");
+    expect(PLAN_META.dataMain).toBe("c35febf5055b847c2c4358cb208f0e66e4a017af");
+    expect(PLAN_META.webMain).toBe("ea1fee47ff61d43b7e6d7fb1417bac5a2306fc73");
     for (const sha of [PLAN_META.dataMain, PLAN_META.webMain]) {
       expect(sha).toMatch(/^[0-9a-f]{40}$/);
     }
