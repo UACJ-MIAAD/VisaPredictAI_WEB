@@ -44,8 +44,8 @@ const story = (
 
 export const PLAN_META = {
   updatedAt: "2026-09-04",
-  dataMain: "5dd424b6a396a43d15484bdd650565ec41389f2a",
-  webMain: "520a7c2907b5552d6bd1074670ce244e07dbb2d0",
+  dataMain: "5fa14fa7582deb98a54a072a8d42c6674de9ed08",
+  webMain: "2aecf6a4420b414283e29b89b3b1d9176e10f850",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   currentEpic: "D",
@@ -136,7 +136,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     status: "planned",
     stories: [
-      story("C1", c("Taxonomía única", "Single taxonomy"), c("Centralizar categorías y metadatos con golden master.", "Centralize categories and metadata with a golden master."), "planned"),
+      story("C1", c("Taxonomía única", "Single taxonomy"), c("Centralizar categorías y metadatos con golden master.", "Centralize categories and metadata with a golden master."), "done", "5fa14fa"),
       story("C2", c("Extracción común", "Shared extraction"), c("Eliminar la duplicación entre scrapers con funciones puras.", "Remove scraper duplication with pure functions."), "planned"),
       story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "planned"),
       story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "planned"),
@@ -215,6 +215,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-05",
+    title: c("C1 unifica la taxonomía", "C1 unifies the taxonomy"),
+    detail: c(
+      "Las reglas de categoría migratoria, los dominios y la metadatos dejan de vivir en tres sitios y pasan a una autoridad única, con equivalencia probada contra los clasificadores anteriores sobre las etiquetas reales de 24 años y las salidas del pipeline byte-idénticas.",
+      "Category rules, domains and metadata stop living in three places and move to a single authority, with equivalence proven against the previous classifiers over 24 years of real labels and byte-identical pipeline outputs.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-05",
     title: c("D8 ordena la documentación", "D8 orders the documentation"),
