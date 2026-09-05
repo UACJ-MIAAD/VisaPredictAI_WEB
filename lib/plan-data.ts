@@ -284,7 +284,10 @@ export const PLAN_UPDATES: PlanUpdate[] = [
   {
     date: "2026-09-01",
     title: c("Corte 2026-09 publicado", "2026-09 cut published"),
-    detail: c("Producción quedó fresh con 300 boletines y un release inmutable.", "Production became fresh with 300 bulletins and an immutable release."),
+    detail: c(
+      "Producción fue verificada como fresh, con el archivo de instantáneas, los meses del panel y el release inmutable alineados.",
+      "Production was verified as fresh, with the snapshot archive, the panel months and the immutable release all aligned.",
+    ),
     status: "done",
   },
 ];
