@@ -203,8 +203,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             <p>
               <strong>{es ? "Ahora:" : "Now:"}</strong>{" "}
               {es
-                ? "La arquitectura ya está publicada y vigilada por el guardián; D7 acumula sus dos rebuilds reales en paralelo y el siguiente cambio de producto es D8. D5 espera la campaña causal F2."
-                : "The architecture is published and watched by the guard; D7 accumulates its two real rebuilds in parallel and the next product change is D8. D5 waits for the causal F2 campaign."}
+                ? "La plataforma queda documentada y vigilada de punta a punta; D7 acumula sus dos rebuilds reales y después se decide sobre su tracking. D5 espera la campaña causal F2."
+                : "The platform is now documented and watched end to end; D7 accumulates its two real rebuilds before its tracking is decided. D5 waits for the causal F2 campaign."}
             </p>
           </div>
         </div>
