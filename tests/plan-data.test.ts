@@ -118,6 +118,11 @@ describe("public MLOps plan", () => {
     }
   });
 
+  it("shows C3 as delivered with the squash that carries it on main", () => {
+    const c3 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "C3");
+    expect(c3).toMatchObject({ status: "done", evidence: "bb64647" });
+  });
+
   it("shows C2 as delivered with the squash that carries it on main", () => {
     const c2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "C2");
     expect(c2).toMatchObject({ status: "done", evidence: "25722fe" });
@@ -156,8 +161,8 @@ describe("public MLOps plan", () => {
   it("names the two commits the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe; `webMain` es el commit del sitio
     // desde el que se escribió esta versión (siempre el anterior al que la publica).
-    expect(PLAN_META.dataMain).toBe("c35febf5055b847c2c4358cb208f0e66e4a017af");
-    expect(PLAN_META.webMain).toBe("ea1fee47ff61d43b7e6d7fb1417bac5a2306fc73");
+    expect(PLAN_META.dataMain).toBe("bb64647848af2e5cc1768cfda622b5c9d415dd72");
+    expect(PLAN_META.webMain).toBe("a3f3651334054b015dc970f02b6df6d6c73e9fe0");
     for (const sha of [PLAN_META.dataMain, PLAN_META.webMain]) {
       expect(sha).toMatch(/^[0-9a-f]{40}$/);
     }
