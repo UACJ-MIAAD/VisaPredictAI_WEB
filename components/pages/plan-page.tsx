@@ -203,8 +203,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             <p>
               <strong>{es ? "Ahora:" : "Now:"}</strong>{" "}
               {es
-                ? "La limpieza de código arrancó con la taxonomía migratoria ya unificada; sigue la extracción común de los scrapers. D7 acumula sus dos rebuilds reales y D5 espera la campaña causal F2."
-                : "The code cleanup started with the migration taxonomy already unified; shared scraper extraction comes next. D7 accumulates its two real rebuilds and D5 waits for the causal F2 campaign."}
+                ? "La taxonomía y la extracción por país ya viven en un solo sitio; sigue la auditoría reejecutable. D7 acumula sus dos rebuilds reales y D5 espera la campaña causal F2."
+                : "The taxonomy and per-country extraction now live in one place; the re-runnable audit comes next. D7 accumulates its two real rebuilds and D5 waits for the causal F2 campaign."}
             </p>
           </div>
         </div>
