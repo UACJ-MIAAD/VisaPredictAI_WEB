@@ -44,8 +44,8 @@ const story = (
 
 export const PLAN_META = {
   updatedAt: "2026-09-04",
-  dataMain: "494bcfd89e333777a028e9c6b610ac15ee7cbbac",
-  webMain: "f392bd7122e81dcac1bf66acb54149a4d6e0219e",
+  dataMain: "5dd424b6a396a43d15484bdd650565ec41389f2a",
+  webMain: "520a7c2907b5552d6bd1074670ce244e07dbb2d0",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   currentEpic: "D",
@@ -123,7 +123,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Retirarlo únicamente tras la campaña causal F2; nunca a mano.", "Remove it only after the causal F2 campaign; never by hand."), "deferred"),
       story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
       story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
-      story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "planned"),
+      story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "done", "5dd424b"),
       story("D9", c("Arquitectura MLOps", "MLOps architecture"), c("Publicar una página y un SVG del sistema completo con cifras canónicas.", "Publish a one-page system overview and SVG using canonical figures."), "done", "494bcfd"),
     ],
   },
@@ -215,6 +215,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-05",
+    title: c("D8 ordena la documentación", "D8 orders the documentation"),
+    detail: c(
+      "Un índice normativo declara, por documento, su clase, su autoridad y sus consumidores; una prueba falla si un enlace se rompe, si dos documentos reclaman lo mismo o si falta el enlace de vuelta. Ningún documento se borró.",
+      "A normative index declares each document's class, authority and consumers; a test fails on a broken link, on two documents claiming the same authority, or on a missing backlink. No document was deleted.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-04",
     title: c("D9 dibuja la arquitectura", "D9 draws the architecture"),
