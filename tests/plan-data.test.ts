@@ -46,6 +46,33 @@ describe("public MLOps plan", () => {
     expect(new Set(storyIds).size).toBe(storyIds.length);
   });
 
+  it("never calls the archived snapshots bulletins", () => {
+    // 300 son INSTANTÁNEAS archivadas; los meses del panel son 298 (hecho canónico
+    // `n_months`). Llamar «boletines» a las 300 confunde dos hechos distintos, y el guardián
+    // de consistencia del repo de datos rechaza esa forma desde M33.
+    const prose = [
+      ...PLAN_EPICS.flatMap((epic) => [
+        epic.title.es, epic.title.en, epic.summary.es, epic.summary.en,
+        ...epic.stories.flatMap((s) => [s.title.es, s.title.en, s.outcome.es, s.outcome.en]),
+      ]),
+      ...PLAN_UPDATES.flatMap((u) => [u.title.es, u.title.en, u.detail.es, u.detail.en]),
+    ];
+    const offenders = prose.filter((line) => /\b300\s+(?:boletines|bulletins)\b/i.test(line));
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the A7 story as the only place that states both counts", () => {
+    const stories = PLAN_EPICS.flatMap((epic) => epic.stories);
+    const withCounts = stories.filter((s) => /\b300\b/.test(s.outcome.es) || /\b300\b/.test(s.outcome.en));
+    expect(withCounts.map((s) => s.id)).toEqual(["A7"]);
+    const a7 = withCounts[0];
+    // los dos números, cada uno con su unidad correcta
+    expect(a7.outcome.es).toMatch(/300\s+snapshots/);
+    expect(a7.outcome.es).toMatch(/298\s+meses/);
+    expect(a7.outcome.en).toMatch(/300\s+snapshots/);
+    expect(a7.outcome.en).toMatch(/298\s+months/);
+  });
+
   it("has complete bilingual copy", () => {
     for (const epic of PLAN_EPICS) {
       expect(epic.title.es).toBeTruthy();
