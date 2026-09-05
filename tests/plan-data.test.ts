@@ -3,6 +3,7 @@ import {
   PAUSED_TRACK,
   PLAN_EPICS,
   PLAN_META,
+  PLAN_UPDATES,
   STATUS_WEIGHT,
   epicStats,
   planStats,
@@ -13,12 +14,12 @@ describe("public MLOps plan", () => {
     const stats = planStats();
     expect(stats).toEqual({
       total: 61,
-      completed: 25,
-      advanced: 26,
+      completed: 26,
+      advanced: 27,
       observing: 1,
       deferred: 2,
-      planned: 33,
-      percent: 42,
+      planned: 32,
+      percent: 44,
     });
   });
 
@@ -50,6 +51,11 @@ describe("public MLOps plan", () => {
     expect(PLAN_META.observation).toEqual({ current: 0, target: 2 });
   });
 
+  it("never advertises work as local or pending integration on the public plan", () => {
+    const surfaces = PLAN_EPICS.flatMap((epic) => epic.stories).map((item) => item.evidence ?? "");
+    expect(surfaces.some((value) => /local|pendiente|pending/i.test(value))).toBe(false);
+  });
+
   it("keeps the paused R9 track outside the active denominator", () => {
     expect(PAUSED_TRACK.status).toBe("paused");
     expect(PLAN_EPICS.some((epic) => epic.id === PAUSED_TRACK.id)).toBe(false);
@@ -58,6 +64,22 @@ describe("public MLOps plan", () => {
 
   it("derives each epic percentage with the same public weighting", () => {
     const platform = PLAN_EPICS.find((epic) => epic.id === "D");
-    expect(platform && epicStats(platform)).toEqual({ total: 9, completed: 5, percent: 64 });
+    expect(platform && epicStats(platform)).toEqual({ total: 9, completed: 6, percent: 75 });
+  });
+
+  it("shows D9 as delivered with the squash that carries it on main", () => {
+    const d9 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "D9");
+    expect(d9).toMatchObject({ status: "done", evidence: "494bcfd" });
+  });
+
+  it("points the web dashboard at the web main that actually serves it", () => {
+    expect(PLAN_META.webMain).toBe("f392bd7122e81dcac1bf66acb54149a4d6e0219e");
+    expect(PLAN_META.dataMain).toBe("494bcfd89e333777a028e9c6b610ac15ee7cbbac");
+  });
+
+  it("leads the updates feed with the D9 architecture entry", () => {
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-09-04", status: "done" });
+    expect(PLAN_UPDATES[0].title.es).toContain("D9");
+    expect(PLAN_UPDATES[0].title.en).toContain("D9");
   });
 });

@@ -44,8 +44,8 @@ const story = (
 
 export const PLAN_META = {
   updatedAt: "2026-09-04",
-  dataMain: "80b3bfbf872db60683f1a53732223a270fd5528f",
-  webMain: "7b4e4c9656380984ee4437c4fe724453fa13c3c5",
+  dataMain: "494bcfd89e333777a028e9c6b610ac15ee7cbbac",
+  webMain: "f392bd7122e81dcac1bf66acb54149a4d6e0219e",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   currentEpic: "D",
@@ -124,7 +124,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
       story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
       story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "planned"),
-      story("D9", c("Arquitectura MLOps", "MLOps architecture"), c("Publicar una página y un SVG del sistema completo con cifras canónicas.", "Publish a one-page system overview and SVG using canonical figures."), "planned"),
+      story("D9", c("Arquitectura MLOps", "MLOps architecture"), c("Publicar una página y un SVG del sistema completo con cifras canónicas.", "Publish a one-page system overview and SVG using canonical figures."), "done", "494bcfd"),
     ],
   },
   {
@@ -215,6 +215,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-04",
+    title: c("D9 dibuja la arquitectura", "D9 draws the architecture"),
+    detail: c(
+      "Una página y un SVG generados desde las fuentes canónicas explican el DAG, el cron, campeón y sombra, los gates, la deriva, el guardián y el manifiesto; el guardián vigila ahora también el diagrama.",
+      "A page and an SVG generated from canonical sources explain the DAG, the cron, champion and shadow, the gates, drift, the guard and the manifest; the guard now watches the diagram too.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-04",
     title: c("D7 llegó a main", "D7 reached main"),
