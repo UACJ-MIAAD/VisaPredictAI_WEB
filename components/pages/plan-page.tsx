@@ -14,6 +14,7 @@ import {
   PLAN_UPDATES,
   copy,
   epicStats,
+  planFocus,
   planStats,
   type PlanStatus,
 } from "@/lib/plan-data";
@@ -81,8 +82,31 @@ function SectionHeading({
   );
 }
 
+// «A6, D5 y D8» en vez de «A6 y D5 y D8»: la lista corrida necesita el conector sólo al final.
+const list = (items: { id: string }[], conjunction: string) => {
+  const ids = items.map((item) => item.id);
+  if (ids.length <= 1) return ids.join("");
+  return `${ids.slice(0, -1).join(", ")} ${conjunction} ${ids[ids.length - 1]}`;
+};
+
+// El resultado de una historia ya empieza en mayúscula porque se lee suelto en la tarjeta;
+// dentro de una frase corrida hay que bajarla, sin tocar siglas como «DVC» o «MASE».
+const lower = (text: string) =>
+  /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text;
+
+// El estado de cada tramo de la ruta sale de sus épicas, no de una etiqueta escrita a mano:
+// así el diagrama no puede volver a decir «planificado» sobre una fase ya entregada.
+const roadmapStatus = (ids: string[]): PlanStatus => {
+  const stories = PLAN_EPICS.filter((epic) => ids.includes(epic.id)).flatMap((epic) => epic.stories);
+  if (stories.length === 0) return "planned";
+  if (stories.every((item) => item.status === "done")) return "done";
+  if (stories.some((item) => ["done", "observing", "active"].includes(item.status))) return "active";
+  return "planned";
+};
+
 export function PlanPage({ lang }: { lang: Lang }) {
   const stats = planStats();
+  const focus = planFocus();
   const es = lang === "es";
   const locale = es ? "es-MX" : "en-US";
 
@@ -129,13 +153,29 @@ export function PlanPage({ lang }: { lang: Lang }) {
             <div className={styles.metrics}>
               <article>
                 <span>{es ? "Fase actual" : "Current phase"}</span>
-                <strong>D · MLOps</strong>
-                <small>{es ? "D7 observación 0/2" : "D7 observation 0/2"}</small>
+                <strong>
+                  {focus.epic.id} · {copy(focus.epic.title, lang)}
+                </strong>
+                <small>
+                  {focus.observing.length > 0
+                    ? `${focus.observing.map((item) => item.id).join(", ")} ${
+                        es ? "observación" : "observation"
+                      } ${PLAN_META.observation.current}/${PLAN_META.observation.target}`
+                    : es
+                      ? "sin historias en observación"
+                      : "no stories under observation"}
+                </small>
               </article>
               <article>
                 <span>{es ? "Siguiente" : "Next"}</span>
-                <strong>D9 → D8</strong>
-                <small>{es ? "arquitectura y documentación" : "architecture and documentation"}</small>
+                <strong>{focus.next ? focus.next.id : es ? "Plan cerrado" : "Plan complete"}</strong>
+                <small>
+                  {focus.next
+                    ? copy(focus.next.title, lang)
+                    : es
+                      ? "ninguna historia por empezar"
+                      : "no stories left to start"}
+                </small>
               </article>
               <article>
                 <span>{es ? "Producción" : "Production"}</span>
@@ -150,7 +190,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
                     month: "short",
                     year: "numeric",
                     timeZone: "UTC",
-                  }).format(new Date(`${PLAN_META.updatedAt}T00:00:00Z`))}
+                  }).format(new Date(`${focus.updatedAt}T00:00:00Z`))}
                 </strong>
                 <small>data main · {PLAN_META.dataMain.slice(0, 7)}</small>
               </article>
@@ -181,15 +221,15 @@ export function PlanPage({ lang }: { lang: Lang }) {
 
           <div className={styles.roadmap} aria-label={es ? "Ruta del plan" : "Plan route"}>
             {[
-              { id: "0+A+B", label: es ? "Fundación" : "Foundation", status: "done" as const },
-              { id: "D", label: es ? "Plataforma MLOps" : "MLOps platform", status: "active" as const },
-              { id: "C", label: es ? "Clean code" : "Clean code", status: "planned" as const },
-              { id: "F", label: es ? "Sincronía total" : "Full synchronization", status: "planned" as const },
-              { id: "E", label: es ? "Cohortes y modelos" : "Cohorts and models", status: "planned" as const },
-              { id: "G", label: es ? "Cierre académico" : "Academic closeout", status: "planned" as const },
+              { id: "0+A+B", label: es ? "Fundación" : "Foundation", epics: ["0", "A", "B"] },
+              { id: "D", label: es ? "Plataforma MLOps" : "MLOps platform", epics: ["D"] },
+              { id: "C", label: es ? "Clean code" : "Clean code", epics: ["C"] },
+              { id: "F", label: es ? "Sincronía total" : "Full synchronization", epics: ["F"] },
+              { id: "E", label: es ? "Cohortes y modelos" : "Cohorts and models", epics: ["E"] },
+              { id: "G", label: es ? "Cierre académico" : "Academic closeout", epics: ["G"] },
             ].map((step, index, all) => (
               <div className={styles.roadmapStep} key={step.id}>
-                <div className={styles.roadmapNode} data-status={step.status}>
+                <div className={styles.roadmapNode} data-status={roadmapStatus(step.epics)}>
                   <span>{step.id}</span>
                   <strong>{step.label}</strong>
                 </div>
@@ -202,9 +242,21 @@ export function PlanPage({ lang }: { lang: Lang }) {
             <Route aria-hidden />
             <p>
               <strong>{es ? "Ahora:" : "Now:"}</strong>{" "}
-              {es
-                ? "La taxonomía y la extracción por país ya viven en un solo sitio; sigue la auditoría reejecutable. D7 acumula sus dos rebuilds reales y D5 espera la campaña causal F2."
-                : "The taxonomy and per-country extraction now live in one place; the re-runnable audit comes next. D7 accumulates its two real rebuilds and D5 waits for the causal F2 campaign."}
+              {focus.next
+                ? es
+                  ? `Sigue ${focus.next.id} en la épica ${focus.epic.id}: ${lower(copy(focus.next.outcome, lang))}`
+                  : `${focus.next.id} is next in epic ${focus.epic.id}: ${lower(copy(focus.next.outcome, lang))}`
+                : es
+                  ? "No queda ninguna historia por empezar."
+                  : "No stories are left to start."}
+              {focus.observing.length > 0 &&
+                (es
+                  ? ` ${list(focus.observing, "y")} ${focus.observing.length > 1 ? "siguen" : "sigue"} en observación (${PLAN_META.observation.current}/${PLAN_META.observation.target}).`
+                  : ` ${list(focus.observing, "and")} ${focus.observing.length > 1 ? "remain" : "remains"} under observation (${PLAN_META.observation.current}/${PLAN_META.observation.target}).`)}
+              {focus.deferred.length > 0 &&
+                (es
+                  ? ` ${list(focus.deferred, "y")} ${focus.deferred.length > 1 ? "quedan diferidas" : "queda diferida"}.`
+                  : ` ${list(focus.deferred, "and")} ${focus.deferred.length > 1 ? "stay" : "stays"} deferred.`)}
             </p>
           </div>
         </div>
@@ -264,7 +316,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
             {PLAN_EPICS.map((epic) => {
               const progress = epicStats(epic);
               return (
-                <details key={epic.id} open={epic.id === PLAN_META.currentEpic}>
+                <details key={epic.id} open={epic.id === focus.epic.id}>
                   <summary>
                     <span className={styles.detailCode}>{epic.id}</span>
                     <span className={styles.detailTitle}>

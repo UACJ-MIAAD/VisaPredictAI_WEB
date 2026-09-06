@@ -42,13 +42,13 @@ const story = (
   evidence?: string,
 ): PlanStory => ({ id, title, outcome, status, evidence });
 
+// Sólo hechos que ningún dato del plan puede derivar. La fase actual, la siguiente historia y la
+// fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
+// anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  updatedAt: "2026-09-04",
   dataMain: "bb64647848af2e5cc1768cfda622b5c9d415dd72",
-  webMain: "a3f3651334054b015dc970f02b6df6d6c73e9fe0",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
-  currentEpic: "D",
   observation: { current: 0, target: 2 },
 } as const;
 
@@ -333,6 +333,46 @@ export function epicStats(epic: PlanEpic) {
   const completed = epic.stories.filter((item) => item.status === "done").length;
   const points = epic.stories.reduce((sum, item) => sum + STATUS_WEIGHT[item.status], 0);
   return { total, completed, percent: Math.round((points / total) * 100) };
+}
+
+export type PlanFocus = {
+  /** Épica que contiene la siguiente historia accionable; es la fase en curso. */
+  epic: PlanEpic;
+  /** Primera historia sin empezar, en el orden en que el plan las declara. */
+  next: PlanStory | null;
+  /** Historias entregadas que siguen bajo observación operacional. */
+  observing: PlanStory[];
+  /** Historias diferidas a una fase posterior. */
+  deferred: PlanStory[];
+  /** Fecha real más reciente del feed, no una constante que haya que recordar mover. */
+  updatedAt: string;
+};
+
+/**
+ * Deriva del propio plan lo que la cabecera anuncia. Todo lo que aquí se calcula solía estar
+ * cableado en el componente, y por eso el tablero siguió prometiendo épicas ya entregadas.
+ *
+ * Es una función pura: recibe el plan y el feed, no lee estado global, y no muta sus argumentos.
+ */
+export function planFocus(
+  epics: PlanEpic[] = PLAN_EPICS,
+  updates: PlanUpdate[] = PLAN_UPDATES,
+): PlanFocus {
+  const stories = epics.flatMap((epic) => epic.stories);
+  // «Accionable» es lo que todavía no se ha empezado. Lo diferido y lo pausado esperan otra
+  // decisión, así que no encabezan el plan aunque aparezcan antes en el orden declarado.
+  const next = stories.find((item) => item.status === "planned") ?? null;
+  const epic =
+    (next && epics.find((item) => item.stories.some((story) => story.id === next.id))) ??
+    epics[epics.length - 1];
+  const dates = updates.map((item) => item.date).sort();
+  return {
+    epic,
+    next,
+    observing: stories.filter((item) => item.status === "observing"),
+    deferred: stories.filter((item) => item.status === "deferred"),
+    updatedAt: dates[dates.length - 1] ?? "",
+  };
 }
 
 export const copy = (value: Copy, lang: Lang) => value[lang];
