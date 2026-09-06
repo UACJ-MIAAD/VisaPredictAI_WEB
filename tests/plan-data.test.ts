@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PlanStatus } from "@/lib/plan-data";
+import type { PlanEpic, PlanStatus, PlanUpdate } from "@/lib/plan-data";
 import {
   PAUSED_TRACK,
   PLAN_EPICS,
@@ -7,8 +7,18 @@ import {
   PLAN_UPDATES,
   STATUS_WEIGHT,
   epicStats,
+  planFocus,
   planStats,
 } from "@/lib/plan-data";
+
+/** Copia profunda del plan: las mutaciones de una prueba jamás tocan el plan publicado. */
+const clonePlan = (): PlanEpic[] => structuredClone(PLAN_EPICS) as PlanEpic[];
+const cloneUpdates = (): PlanUpdate[] => structuredClone(PLAN_UPDATES) as PlanUpdate[];
+const findStory = (epics: PlanEpic[], id: string) => {
+  const story = epics.flatMap((epic) => epic.stories).find((item) => item.id === id);
+  if (!story) throw new Error(`la historia ${id} no existe en el plan`);
+  return story;
+};
 
 describe("public MLOps plan", () => {
   it("derives every published counter from the stories and the public weighting", () => {
@@ -158,14 +168,23 @@ describe("public MLOps plan", () => {
     expect(d9).toMatchObject({ status: "done", evidence: "494bcfd" });
   });
 
-  it("names the two commits the plan reports on, in full", () => {
-    // `dataMain` es el corte de datos que el plan describe; `webMain` es el commit del sitio
-    // desde el que se escribió esta versión (siempre el anterior al que la publica).
+  it("names the data commit the plan reports on, in full", () => {
+    // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
+    // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
     expect(PLAN_META.dataMain).toBe("bb64647848af2e5cc1768cfda622b5c9d415dd72");
-    expect(PLAN_META.webMain).toBe("a3f3651334054b015dc970f02b6df6d6c73e9fe0");
-    for (const sha of [PLAN_META.dataMain, PLAN_META.webMain]) {
-      expect(sha).toMatch(/^[0-9a-f]{40}$/);
-    }
+    expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
+    expect(PLAN_META).not.toHaveProperty("webMain");
+  });
+
+  it("keeps in PLAN_META only what the plan cannot derive", () => {
+    // Cablear aquí la fase, la siguiente historia o la fecha es lo que dejó la cabecera
+    // anunciando «D9 → D8» meses después de entregar ambas épicas.
+    expect(Object.keys(PLAN_META).sort()).toEqual([
+      "dataMain",
+      "observation",
+      "releaseId",
+      "releaseStatus",
+    ]);
   });
 
   it("leads the updates feed with the newest entry and keeps it in step with the epics", () => {
@@ -176,5 +195,81 @@ describe("public MLOps plan", () => {
       latest.title.es.startsWith(item.id),
     );
     expect(story?.status).toBe(latest.status); // el titular no puede adelantar al estado real
+  });
+
+  describe("focus derived from the plan itself", () => {
+    it("points at the first story nobody has started, and at the epic holding it", () => {
+      const focus = planFocus();
+      expect(focus.next?.id).toBe("C4");
+      expect(focus.epic.id).toBe("C");
+      // El literal que este selector sustituye anunciaba «D9 → D8», ambas ya entregadas.
+      expect(focus.next?.status).toBe("planned");
+    });
+
+    it("advances to C5 when C4 is delivered, with no edit to the component", () => {
+      const epics = clonePlan();
+      findStory(epics, "C4").status = "done";
+      const focus = planFocus(epics, cloneUpdates());
+      expect(focus.next?.id).toBe("C5");
+      expect(focus.epic.id).toBe("C");
+      expect(planFocus().next?.id).toBe("C4"); // el plan publicado no se movió
+    });
+
+    it("moves to the next epic once every story in this one is delivered", () => {
+      const epics = clonePlan();
+      for (const story of epics.find((epic) => epic.id === "C")!.stories) {
+        story.status = "done";
+      }
+      const focus = planFocus(epics, cloneUpdates());
+      expect(focus.epic.id).not.toBe("C");
+      expect(focus.next?.status).toBe("planned");
+    });
+
+    it("never proposes deferred or paused work as the next step", () => {
+      const epics = clonePlan();
+      findStory(epics, "C4").status = "deferred";
+      expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C5");
+    });
+
+    it("says the plan is complete instead of inventing a next story", () => {
+      const epics = clonePlan();
+      for (const story of epics.flatMap((epic) => epic.stories)) {
+        if (story.status === "planned") story.status = "done";
+      }
+      const focus = planFocus(epics, cloneUpdates());
+      expect(focus.next).toBeNull();
+      expect(focus.epic).toBeDefined(); // la cabecera sigue teniendo una fase que mostrar
+    });
+
+    it("reports the stories under observation and the deferred ones", () => {
+      const focus = planFocus();
+      expect(focus.observing.map((item) => item.id)).toEqual(["D7"]);
+      expect(focus.deferred.map((item) => item.id)).toEqual(["A6", "D5"]);
+      expect(PLAN_META.observation).toEqual({ current: 0, target: 2 });
+    });
+
+    it("takes the update date from the feed, so a newer entry moves it on its own", () => {
+      const focus = planFocus();
+      const newest = [...PLAN_UPDATES.map((item) => item.date)].sort().pop();
+      expect(focus.updatedAt).toBe(newest);
+
+      const updates = cloneUpdates();
+      updates.unshift({ ...updates[0], date: "2026-10-01" });
+      expect(planFocus(clonePlan(), updates).updatedAt).toBe("2026-10-01");
+      expect(planFocus().updatedAt).toBe(newest); // el feed publicado no se movió
+    });
+
+    it("reads the newest date even when the feed is out of order", () => {
+      const updates = cloneUpdates();
+      updates.push({ ...updates[0], date: "2026-12-31" });
+      expect(planFocus(clonePlan(), updates).updatedAt).toBe("2026-12-31");
+    });
+
+    it("does not mutate the plan it receives", () => {
+      const epics = clonePlan();
+      const before = JSON.stringify(epics);
+      planFocus(epics, cloneUpdates());
+      expect(JSON.stringify(epics)).toBe(before);
+    });
   });
 });
