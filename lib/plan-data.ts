@@ -44,8 +44,8 @@ const story = (
 
 export const PLAN_META = {
   updatedAt: "2026-09-04",
-  dataMain: "c35febf5055b847c2c4358cb208f0e66e4a017af",
-  webMain: "ea1fee47ff61d43b7e6d7fb1417bac5a2306fc73",
+  dataMain: "bb64647848af2e5cc1768cfda622b5c9d415dd72",
+  webMain: "a3f3651334054b015dc970f02b6df6d6c73e9fe0",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   currentEpic: "D",
@@ -138,7 +138,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     stories: [
       story("C1", c("Taxonomía única", "Single taxonomy"), c("Centralizar categorías y metadatos con golden master.", "Centralize categories and metadata with a golden master."), "done", "5fa14fa"),
       story("C2", c("Extracción común", "Shared extraction"), c("Eliminar la duplicación entre scrapers con funciones puras.", "Remove scraper duplication with pure functions."), "done", "25722fe"),
-      story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "planned"),
+      story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "done", "bb64647"),
       story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "planned"),
       story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "planned"),
       story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "planned"),
@@ -215,6 +215,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-05",
+    title: c("C3 hace reejecutable la auditoría", "C3 makes the audit re-runnable"),
+    detail: c(
+      "El informe deja de vivir en dos listas globales que se acumulaban entre corridas y pasa a ser un objeto por invocación. La selección de series más cortas se desempata por la clave completa con orden estable, así que ya no depende del orden de entrada. Severidades y veredicto quedan intactos.",
+      "The report stops living in two module-level lists that accumulated between runs and becomes one object per invocation. The shortest-series selection now breaks ties on the full key with a stable sort, so it no longer depends on input order. Severities and verdict are unchanged.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-05",
     title: c("C2 unifica la extracción", "C2 unifies the extraction"),
