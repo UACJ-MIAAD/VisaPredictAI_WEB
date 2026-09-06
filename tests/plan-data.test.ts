@@ -171,7 +171,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("bb64647848af2e5cc1768cfda622b5c9d415dd72");
+    expect(PLAN_META.dataMain).toBe("c4aebde13d49c9fac7c6781a6e44d05ef22a0245");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -198,12 +198,20 @@ describe("public MLOps plan", () => {
   });
 
   describe("focus derived from the plan itself", () => {
-    it("points at the first story nobody has started, and at the epic holding it", () => {
+    it("points at the story in flight, and at the epic holding it", () => {
       const focus = planFocus();
       expect(focus.next?.id).toBe("C4");
       expect(focus.epic.id).toBe("C");
       // El literal que este selector sustituye anunciaba «D9 → D8», ambas ya entregadas.
-      expect(focus.next?.status).toBe("planned");
+      expect(focus.next?.status).toBe("active");
+    });
+
+    it("prefers the story in flight over the first one nobody has started", () => {
+      const epics = clonePlan();
+      // Mientras C4 está en curso, la siguiente historia es C4, no la que viene después.
+      expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C4");
+      findStory(epics, "C4").status = "done";
+      expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C5");
     });
 
     it("advances to C5 when C4 is delivered, with no edit to the component", () => {
@@ -213,6 +221,11 @@ describe("public MLOps plan", () => {
       expect(focus.next?.id).toBe("C5");
       expect(focus.epic.id).toBe("C");
       expect(planFocus().next?.id).toBe("C4"); // el plan publicado no se movió
+    });
+
+    it("marks C4 as the work in flight, pointing at the local data commit", () => {
+      const c4 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "C4");
+      expect(c4).toMatchObject({ status: "active", evidence: "c4aebde · local" });
     });
 
     it("moves to the next epic once every story in this one is delivered", () => {
@@ -234,7 +247,7 @@ describe("public MLOps plan", () => {
     it("says the plan is complete instead of inventing a next story", () => {
       const epics = clonePlan();
       for (const story of epics.flatMap((epic) => epic.stories)) {
-        if (story.status === "planned") story.status = "done";
+        if (story.status === "planned" || story.status === "active") story.status = "done";
       }
       const focus = planFocus(epics, cloneUpdates());
       expect(focus.next).toBeNull();

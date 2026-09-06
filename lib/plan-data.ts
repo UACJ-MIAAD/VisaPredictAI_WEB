@@ -46,7 +46,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "bb64647848af2e5cc1768cfda622b5c9d415dd72",
+  dataMain: "c4aebde13d49c9fac7c6781a6e44d05ef22a0245",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -139,7 +139,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C1", c("Taxonomía única", "Single taxonomy"), c("Centralizar categorías y metadatos con golden master.", "Centralize categories and metadata with a golden master."), "done", "5fa14fa"),
       story("C2", c("Extracción común", "Shared extraction"), c("Eliminar la duplicación entre scrapers con funciones puras.", "Remove scraper duplication with pure functions."), "done", "25722fe"),
       story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "done", "bb64647"),
-      story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "planned"),
+      story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "active", "c4aebde · local"),
       story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "planned"),
       story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "planned"),
       story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "planned"),
@@ -215,6 +215,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-06",
+    title: c("C4 tipa los errores del pipeline", "C4 types the pipeline errors"),
+    detail: c(
+      "Las seis capturas amplias de los scrapers pasan a excepciones específicas: un fallo de la fuente o del formato se agrega al reporte mensual con etapa, mes y país, y un defecto de programación ya no se disfraza de mes perdido, sino que escapa y pone el proceso en rojo. El trinquete de deuda deja de contarse a sí mismo y baja las capturas sin justificar a cero. Trabajo local, todavía sin publicar.",
+      "The scrapers' six broad catches become specific exceptions: a source or format failure joins the monthly report with stage, month and country, while a programming defect no longer masquerades as a lost month and instead escapes and turns the run red. The debt ratchet stops counting itself and brings unjustified catches down to zero. Local work, not published yet.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-09-05",
     title: c("C3 hace reejecutable la auditoría", "C3 makes the audit re-runnable"),
@@ -338,7 +347,7 @@ export function epicStats(epic: PlanEpic) {
 export type PlanFocus = {
   /** Épica que contiene la siguiente historia accionable; es la fase en curso. */
   epic: PlanEpic;
-  /** Primera historia sin empezar, en el orden en que el plan las declara. */
+  /** La historia en la que se trabaja ahora: la que está en curso, o la primera sin empezar. */
   next: PlanStory | null;
   /** Historias entregadas que siguen bajo observación operacional. */
   observing: PlanStory[];
@@ -359,9 +368,13 @@ export function planFocus(
   updates: PlanUpdate[] = PLAN_UPDATES,
 ): PlanFocus {
   const stories = epics.flatMap((epic) => epic.stories);
-  // «Accionable» es lo que todavía no se ha empezado. Lo diferido y lo pausado esperan otra
-  // decisión, así que no encabezan el plan aunque aparezcan antes en el orden declarado.
-  const next = stories.find((item) => item.status === "planned") ?? null;
+  // «Accionable» es la historia en curso si la hay, y si no la primera sin empezar: mientras
+  // algo está activo, ESO es lo siguiente, no lo que viene después. Lo diferido y lo pausado
+  // esperan otra decisión, así que no encabezan el plan aunque aparezcan antes en el orden.
+  const next =
+    stories.find((item) => item.status === "active") ??
+    stories.find((item) => item.status === "planned") ??
+    null;
   const epic =
     (next && epics.find((item) => item.stories.some((story) => story.id === next.id))) ??
     epics[epics.length - 1];
