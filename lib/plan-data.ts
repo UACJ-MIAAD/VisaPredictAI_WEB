@@ -46,7 +46,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "68bf843d19732469529c07e110be26ce50302efb",
+  dataMain: "7e1cda826a03a020e4b96a0b3dd3a79f5e6a4957",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -141,7 +141,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "done", "bb64647"),
       story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "done", "df597ff"),
       story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "done", "68bf843"),
-      story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "planned"),
+      story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "active", "7e1cda8 · local"),
       story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "planned"),
       story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "planned"),
       story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "planned"),
@@ -215,6 +215,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-07",
+    title: c("C6 parte el almacén en tres", "C6 splits the warehouse build in three"),
+    detail: c(
+      "El módulo que construía el almacén hacía tres trabajos distintos en mil líneas: aplicar la cadena de migraciones, cargar y canonizar las filas, y registrar la identidad del corte. Ahora son tres módulos con una responsabilidad cada uno, y el punto de entrada y su interfaz pública quedan intactos. La huella de contenido del almacén sale idéntica con la misma identidad de build, y el Parquet byte a byte. Trabajo local, todavía sin publicar.",
+      "The module that built the warehouse did three different jobs across a thousand lines: applying the migration chain, loading and canonicalising rows, and recording the build identity. They are now three modules with one responsibility each, with the entry point and its public surface untouched. The warehouse content fingerprint comes out identical under the same build identity, and the Parquet byte for byte. Local work, not published yet.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-09-07",
     title: c("C5 extrae el kit común de figuras", "C5 extracts the shared figure kit"),

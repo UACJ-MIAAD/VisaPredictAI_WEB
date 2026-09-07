@@ -171,7 +171,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("68bf843d19732469529c07e110be26ce50302efb");
+    expect(PLAN_META.dataMain).toBe("7e1cda826a03a020e4b96a0b3dd3a79f5e6a4957");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -203,13 +203,12 @@ describe("public MLOps plan", () => {
       expect(focus.next?.id).toBe("C6");
       expect(focus.epic.id).toBe("C");
       // El literal que este selector sustituye anunciaba «D9 → D8», ambas ya entregadas.
-      expect(focus.next?.status).toBe("planned");
+      expect(focus.next?.status).toBe("active");
     });
 
     it("prefers the story in flight over the first one nobody has started", () => {
       const epics = clonePlan();
       // Con C5 en curso, la siguiente historia sería C5 y no la que viene después.
-      findStory(epics, "C6").status = "active";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C6");
       findStory(epics, "C6").status = "done";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C7");
@@ -232,6 +231,11 @@ describe("public MLOps plan", () => {
     it("shows C5 as delivered with the squash that carries it on main", () => {
       const c5 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "C5");
       expect(c5).toMatchObject({ status: "done", evidence: "68bf843" });
+    });
+
+    it("marks C6 as the work in flight, pointing at the local data commit", () => {
+      const c6 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "C6");
+      expect(c6).toMatchObject({ status: "active", evidence: "7e1cda8 · local" });
     });
 
     it("moves to the next epic once every story in this one is delivered", () => {
