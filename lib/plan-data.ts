@@ -33,6 +33,11 @@ export type PlanUpdate = {
   status: PlanStatus;
 };
 
+export type PlanDay = {
+  date: string;
+  updates: PlanUpdate[];
+};
+
 const c = (es: string, en: string): Copy => ({ es, en });
 const story = (
   id: string,
@@ -46,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "7e1cda826a03a020e4b96a0b3dd3a79f5e6a4957",
+  dataMain: "17d0ebf88bcbd47462f81301e195b9452d0c7df2",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -141,7 +146,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "done", "bb64647"),
       story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "done", "df597ff"),
       story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "done", "68bf843"),
-      story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "active", "7e1cda8 · local"),
+      story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "done", "17d0ebf"),
       story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "planned"),
       story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "planned"),
       story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "planned"),
@@ -219,10 +224,10 @@ export const PLAN_UPDATES: PlanUpdate[] = [
     date: "2026-09-07",
     title: c("C6 parte el almacén en tres", "C6 splits the warehouse build in three"),
     detail: c(
-      "El módulo que construía el almacén hacía tres trabajos distintos en mil líneas: aplicar la cadena de migraciones, cargar y canonizar las filas, y registrar la identidad del corte. Ahora son tres módulos con una responsabilidad cada uno, y el punto de entrada y su interfaz pública quedan intactos. La huella de contenido del almacén sale idéntica con la misma identidad de build, y el Parquet byte a byte. Trabajo local, todavía sin publicar.",
-      "The module that built the warehouse did three different jobs across a thousand lines: applying the migration chain, loading and canonicalising rows, and recording the build identity. They are now three modules with one responsibility each, with the entry point and its public surface untouched. The warehouse content fingerprint comes out identical under the same build identity, and the Parquet byte for byte. Local work, not published yet.",
+      "El módulo que construía el almacén hacía tres trabajos distintos en mil líneas: aplicar la cadena de migraciones, cargar y canonizar las filas, y registrar la identidad del corte. Ahora son tres módulos con una responsabilidad cada uno, y el punto de entrada y su interfaz pública quedan intactos. La huella de contenido del almacén sale idéntica con la misma identidad de build, y el Parquet byte a byte. Está en main con la integración continua en verde.",
+      "The module that built the warehouse did three different jobs across a thousand lines: applying the migration chain, loading and canonicalising rows, and recording the build identity. They are now three modules with one responsibility each, with the entry point and its public surface untouched. The warehouse content fingerprint comes out identical under the same build identity, and the Parquet byte for byte. It is on main with continuous integration green.",
     ),
-    status: "active",
+    status: "done",
   },
   {
     date: "2026-09-07",
@@ -336,6 +341,23 @@ export const STATUS_WEIGHT: Record<PlanStatus, number> = {
   deferred: 0,
   paused: 0,
 };
+
+/**
+ * Agrupa la bitácora por día sin mutar el feed ni reordenar los avances dentro de
+ * una misma fecha. Los días sí salen del más reciente al más antiguo aunque el
+ * llamador entregue el feed desordenado.
+ */
+export function groupUpdatesByDay(updates: PlanUpdate[] = PLAN_UPDATES): PlanDay[] {
+  const byDate = new Map<string, PlanUpdate[]>();
+  for (const update of updates) {
+    const day = byDate.get(update.date);
+    if (day) day.push(update);
+    else byDate.set(update.date, [update]);
+  }
+  return [...byDate.entries()]
+    .sort(([left], [right]) => right.localeCompare(left))
+    .map(([date, dailyUpdates]) => ({ date, updates: dailyUpdates }));
+}
 
 export function planStats(epics = PLAN_EPICS) {
   const stories = epics.flatMap((epic) => epic.stories);

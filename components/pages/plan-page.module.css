@@ -424,27 +424,61 @@
   font-size: 0.7rem;
 }
 
+.dailyLog {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.daySection {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-top: 3px solid var(--color-accent);
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
+}
+
+.dayHeader h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  text-transform: capitalize;
+}
+
+.dayHeader span {
+  flex: none;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .timeline {
   margin: 0;
-  padding: 0;
+  padding: 0 1.2rem;
   list-style: none;
 }
 
 .timeline > li {
-  display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr);
-  gap: 1.5rem;
   padding: 1.3rem 0;
-  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.timeline time {
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+.timeline > li:last-child {
+  border-bottom: 0;
 }
 
-.timeline h3 {
+.timeline h4 {
   margin: 0;
   font-family: var(--font-serif);
   font-size: 1.05rem;
@@ -525,9 +559,13 @@
     flex-direction: column;
   }
 
-  .timeline > li {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+  .dayHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .timelineTitle {
+    align-items: flex-start;
   }
 }
 
