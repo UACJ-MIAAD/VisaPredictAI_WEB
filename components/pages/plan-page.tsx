@@ -11,9 +11,9 @@ import {
   PAUSED_TRACK,
   PLAN_EPICS,
   PLAN_META,
-  PLAN_UPDATES,
   copy,
   epicStats,
+  groupUpdatesByDay,
   planFocus,
   planStats,
   type PlanStatus,
@@ -107,6 +107,7 @@ const roadmapStatus = (ids: string[]): PlanStatus => {
 export function PlanPage({ lang }: { lang: Lang }) {
   const stats = planStats();
   const focus = planFocus();
+  const updateDays = groupUpdatesByDay();
   const es = lang === "es";
   const locale = es ? "es-MX" : "en-US";
 
@@ -352,32 +353,59 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "Últimos avances" : "Latest progress"}
             lead={
               es
-                ? "Esta bitácora cambia únicamente cuando existe evidencia verificable: commit, CI, release o recibo."
-                : "This log changes only when verifiable evidence exists: a commit, CI, release or receipt."
+                ? "Cada día tiene su propia sección para mostrar qué avanzó. La bitácora cambia únicamente cuando existe evidencia verificable: commit, CI, release o recibo."
+                : "Each day has its own section showing what moved forward. The log changes only when verifiable evidence exists: a commit, CI, release or receipt."
             }
           />
 
-          <ol className={styles.timeline}>
-            {PLAN_UPDATES.map((update) => (
-              <li key={`${update.date}-${update.title.es}`}>
-                <time dateTime={update.date}>
-                  {new Intl.DateTimeFormat(locale, {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    timeZone: "UTC",
-                  }).format(new Date(`${update.date}T00:00:00Z`))}
-                </time>
-                <div>
-                  <div className={styles.timelineTitle}>
-                    <h3>{copy(update.title, lang)}</h3>
-                    <StatusBadge status={update.status} lang={lang} />
-                  </div>
-                  <p>{copy(update.detail, lang)}</p>
-                </div>
-              </li>
+          <div className={styles.dailyLog}>
+            {updateDays.map((day) => (
+              <section
+                className={styles.daySection}
+                data-plan-day={day.date}
+                key={day.date}
+                aria-labelledby={`plan-day-${day.date}`}
+              >
+                <header className={styles.dayHeader}>
+                  <h3 id={`plan-day-${day.date}`}>
+                    <time dateTime={day.date}>
+                      {new Intl.DateTimeFormat(locale, {
+                        weekday: "long",
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                        timeZone: "UTC",
+                      }).format(new Date(`${day.date}T00:00:00Z`))}
+                    </time>
+                  </h3>
+                  <span>
+                    {day.updates.length}{" "}
+                    {es
+                      ? day.updates.length === 1
+                        ? "avance"
+                        : "avances"
+                      : day.updates.length === 1
+                        ? "update"
+                        : "updates"}
+                  </span>
+                </header>
+
+                <ol className={styles.timeline}>
+                  {day.updates.map((update) => (
+                    <li key={`${update.date}-${update.title.es}`}>
+                      <div>
+                        <div className={styles.timelineTitle}>
+                          <h4>{copy(update.title, lang)}</h4>
+                          <StatusBadge status={update.status} lang={lang} />
+                        </div>
+                        <p>{copy(update.detail, lang)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
             ))}
-          </ol>
+          </div>
 
           <aside className={styles.updateContract}>
             <strong>{es ? "Contrato de actualización" : "Update contract"}</strong>
