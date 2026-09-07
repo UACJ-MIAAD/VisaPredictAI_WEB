@@ -46,7 +46,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "839746c6991c8c03d3bab561722927e68409df1f",
+  dataMain: "68bf843d19732469529c07e110be26ce50302efb",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -140,7 +140,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C2", c("Extracción común", "Shared extraction"), c("Eliminar la duplicación entre scrapers con funciones puras.", "Remove scraper duplication with pure functions."), "done", "25722fe"),
       story("C3", c("Mega-audit reejecutable", "Re-runnable mega-audit"), c("Sustituir globals mutables por un AuditReport testeable.", "Replace mutable globals with a testable AuditReport."), "done", "bb64647"),
       story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "done", "df597ff"),
-      story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "active", "839746c · local"),
+      story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "done", "68bf843"),
       story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "planned"),
       story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "planned"),
       story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "planned"),
@@ -222,7 +222,7 @@ export const PLAN_UPDATES: PlanUpdate[] = [
       "El idioma y el tema dejan de vivir en variables globales que alguien re-vinculaba antes de cada pasada: viajan como un contexto inmutable que cada figura recibe, y los ajustes de dibujo se restauran solos aunque algo falle. Importar un generador ya no reconfigura Matplotlib para todo el proceso. Las 72 variantes de las galerías, las figuras de resultados y las 81 páginas de los reportes salen idénticas a las anteriores. Trabajo local, todavía sin publicar.",
       "Language and theme stop living in global variables that had to be rebound before each pass: they travel as an immutable context each figure receives, and drawing settings restore themselves even when something fails. Importing a generator no longer reconfigures Matplotlib for the whole process. All 72 gallery variants, the result figures and the 81 report pages come out identical to the previous ones. Local work, not published yet.",
     ),
-    status: "active",
+    status: "done",
   },
   {
     date: "2026-09-06",
