@@ -216,7 +216,7 @@ export const PAUSED_TRACK = {
 
 export const PLAN_UPDATES: PlanUpdate[] = [
   {
-    date: "2026-09-06",
+    date: "2026-09-07",
     title: c("C5 extrae el kit común de figuras", "C5 extracts the shared figure kit"),
     detail: c(
       "El idioma y el tema dejan de vivir en variables globales que alguien re-vinculaba antes de cada pasada: viajan como un contexto inmutable que cada figura recibe, y los ajustes de dibujo se restauran solos aunque algo falle. Importar un generador ya no reconfigura Matplotlib para todo el proceso. Las 72 variantes de las galerías, las figuras de resultados y las 81 páginas de los reportes salen idénticas a las anteriores, y también la salida por consola y el orden en que se emiten. Está en main con la integración continua en verde.",
