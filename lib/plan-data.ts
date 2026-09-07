@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "17d0ebf88bcbd47462f81301e195b9452d0c7df2",
+  dataMain: "f6e7f85b2e00c07f72f337ea08d60143350b8334",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -147,8 +147,8 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C4", c("Errores específicos", "Specific errors"), c("Eliminar silencios y registrar país y mes de cada salto.", "Remove silent failures and log country and month for every skip."), "done", "df597ff"),
       story("C5", c("Kit de figuras", "Figure kit"), c("Extraer tema, idioma y guardado común de tres generadores.", "Extract shared theme, language and saving from three generators."), "done", "68bf843"),
       story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "done", "17d0ebf"),
-      story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "planned"),
-      story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "planned"),
+      story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "active", "9c7e458 · local"),
+      story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "active", "f6e7f85 · local"),
       story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "planned"),
       story("C9", c("LOC por rol", "LOC by role"), c("Impedir que tooling vuelva a superar la mitad del producto.", "Prevent tooling from again exceeding half the product."), "planned"),
     ],
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-07",
+    title: c("C7 y C7b retiran dos caminos muertos", "C7 and C7b remove two dead paths"),
+    detail: c(
+      "Las bandas del demostrador tenían un respaldo heredado: si faltaba el archivo de cuantilas o una celda, se estimaba con una raíz cuadrada y un escalar fijo. No era una alternativa equivalente, infra-cubría, y el consumidor no distinguía una banda medida de una estimada; ahora las cuantilas empíricas son obligatorias y una celda ausente detiene el build diciendo cuál falta. Y la pregunta «¿el árbol está sucio?» tenía tres respuestas escritas por separado: pasa a tener una sola, con el alcance restringido documentado en un sitio en vez de deducirse leyendo tres funciones. Trabajo local, todavía sin publicar.",
+      "The demonstrator's bands had a legacy fallback: when the quantile file or a cell was missing, they were estimated with a square root and a fixed scalar. It was not an equivalent alternative, it under-covered, and consumers could not tell a measured band from an estimated one; the empirical quantiles are now mandatory and a missing cell stops the build naming it. And the question «is the tree dirty?» had three separately written answers: it now has one, with the narrower scope documented in a single place instead of inferred from three functions. Local work, not published yet.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-09-07",
     title: c("C6 parte el almacén en tres", "C6 splits the warehouse build in three"),

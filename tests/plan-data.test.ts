@@ -172,7 +172,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("17d0ebf88bcbd47462f81301e195b9452d0c7df2");
+    expect(PLAN_META.dataMain).toBe("f6e7f85b2e00c07f72f337ea08d60143350b8334");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -233,13 +233,12 @@ describe("public MLOps plan", () => {
       expect(focus.next?.id).toBe("C7");
       expect(focus.epic.id).toBe("C");
       // El literal que este selector sustituye anunciaba «D9 → D8», ambas ya entregadas.
-      expect(focus.next?.status).toBe("planned");
+      expect(focus.next?.status).toBe("active");
     });
 
     it("prefers the story in flight over the first one nobody has started", () => {
       const epics = clonePlan();
       // Con C5 en curso, la siguiente historia sería C5 y no la que viene después.
-      findStory(epics, "C7").status = "active";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C7");
       findStory(epics, "C7").status = "done";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C7b");
@@ -267,6 +266,12 @@ describe("public MLOps plan", () => {
     it("shows C6 as delivered with the squash that carries it on main", () => {
       const c6 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "C6");
       expect(c6).toMatchObject({ status: "done", evidence: "17d0ebf" });
+    });
+
+    it("marks C7 and C7b as the work in flight, pointing at their local commits", () => {
+      const porId = new Map(PLAN_EPICS.flatMap((epic) => epic.stories).map((s) => [s.id, s]));
+      expect(porId.get("C7")).toMatchObject({ status: "active", evidence: "9c7e458 · local" });
+      expect(porId.get("C7b")).toMatchObject({ status: "active", evidence: "f6e7f85 · local" });
     });
 
     it("moves to the next epic once every story in this one is delivered", () => {
