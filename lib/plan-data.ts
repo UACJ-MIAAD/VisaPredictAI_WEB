@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "309e2148e621081d87a65230bba0c475924b3d3e",
+  dataMain: "817afc3eed226d5694cb8549fbde70d97018e245",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -150,7 +150,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "done", "10b100d"),
       story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "done", "10b100d"),
       story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "done", "309e214"),
-      story("C9", c("LOC por rol", "LOC by role"), c("Impedir que tooling vuelva a superar la mitad del producto.", "Prevent tooling from again exceeding half the product."), "planned"),
+      story("C9", c("LOC por rol", "LOC by role"), c("Impedir que tooling vuelva a superar la mitad del producto.", "Prevent tooling from again exceeding half the product."), "done", "817afc3"),
     ],
   },
   {
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("C9 le pone un papel a cada archivo", "C9 gives every file a role"),
+    detail: c(
+      "La afirmación que abrió esta épica —que las herramientas habían llegado a pesar casi el doble que el producto— se midió a mano una tarde de agosto y nunca volvió a comprobarse. Nada en el repositorio contaba su propio tamaño. Ahora cada archivo versionado tiene exactamente un papel declarado —producto, pruebas, herramientas, experimentos, generados, y además evidencia, datos, prosa, configuración y código de terceros—, y el reparto se rompe si un archivo se queda sin papel, si dos reglas se lo disputan, si una excepción se declara dos veces o si señala a un archivo que ya no existe. Los entornos quedan fuera porque no están versionados, y eso se comprueba en lugar de suponerse. La razón entre herramientas y producto se mide en cada corrida contra el techo que fijó el autor.",
+      "The claim that opened this epic —that tooling had grown to nearly twice the product— was measured by hand one afternoon in August and never checked again. Nothing in the repository counted its own size. Now every versioned file has exactly one declared role —product, tests, tooling, experiments, generated, plus evidence, data, prose, configuration and third-party code— and the split breaks if a file ends up with no role, if two rules claim it, if an exception is declared twice, or if it points at a file that no longer exists. Environments fall outside because they are not versioned, and that is checked rather than assumed. The tooling-to-product ratio is measured on every run against the ceiling the author set.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("C8 mide lo que decía medir", "C8 measures what it claimed to measure"),
