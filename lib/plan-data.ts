@@ -166,7 +166,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "17eb7a9 · activa en el próximo corte gobernado"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
-      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "planned"),
+      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "7925dae · reglas puestas; los facts esperan la campaña causal"),
       story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "planned"),
       story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "planned"),
       story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("F5 pone reglas donde el paper citaba de memoria", "F5 puts rules where the paper quoted from memory"),
+    detail: c(
+      "El manuscrito cita decenas de cifras y el guardián solo miraba cuatro de las que tienen dueño en los datos: el error prospectivo del sistema, que aparece cinco veces, no lo vigilaba nadie, ni la cobertura empírica, ni el punto de partida de la comparación. Ahora tres reglas los atan a su fuente, y cada ancla se probó para que capture su cifra y ninguna otra: la versión ingenua de la primera se tragaba también el error de otro modelo. Además, el descargo que reconoce las cifras como provisionales deja de ser prosa suelta: el protocolo bajo el que se midieron se declara, y el guardián exige que el texto lo acompañe —obligatorio mientras precedan a la corrección causal, prohibido en cuanto se re-deriven—, con los dos sentidos probados sin ejecutar la campaña. Lo que falta depende de esa campaña, así que la historia queda en observación.",
+      "The manuscript cites dozens of figures and the guard watched only four of those with an owner in the data: the system's prospective error, which appears five times, was watched by nobody, nor the empirical coverage, nor the starting point of the comparison. Three rules now tie them to their source, and each anchor was tested to capture its own figure and no other: the naive version of the first also swallowed another model's error. The disclaimer acknowledging the figures as provisional also stops being loose prose: the protocol they were measured under is declared, and the guard requires the text to follow —mandatory while they predate the causal correction, forbidden once they are re-derived— with both directions tested without running the campaign. What remains depends on that campaign, so the story stays under observation.",
+    ),
+    status: "observing",
+  },
   {
     date: "2026-09-08",
     title: c("F4 hace que el asistente lea las cifras, no las recuerde", "F4 makes the assistant read the figures instead of recalling them"),
