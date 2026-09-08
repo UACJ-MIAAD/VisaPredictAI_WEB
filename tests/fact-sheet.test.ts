@@ -53,7 +53,10 @@ describe("it fails closed instead of guessing", () => {
   });
 
   it("refuses key_facts with no v2 block", () => {
-    const { v2: _v2, ...sinV2 } = KEY;
+    // Sin variable descartada: se copia y se borra la clave, que además es lo que ocurriría
+    // de verdad si un corte emitiera el artefacto sin su bloque `v2`.
+    const sinV2 = structuredClone(KEY);
+    delete sinV2.v2;
     expect(() => collectFactSheet(sinV2, EDA)).toThrow(/`v2`/);
   });
 
