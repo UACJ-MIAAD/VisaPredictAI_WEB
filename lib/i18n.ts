@@ -41,8 +41,32 @@ const S = {
   blnTag: { es: "Datos en vivo · U.S. Visa Bulletin", en: "Live data · U.S. Visa Bulletin" },
   blnTitle: { es: "Boletines", en: "Bulletins" },
   blnSub: {
-    es: "Cada mes el Departamento de Estado de EE. UU. publica un nuevo Visa Bulletin. En cuanto aparece, el pipeline lo congela, reconstruye el panel y actualiza este feed automáticamente. Las fechas son datos oficiales publicados —no predicciones del modelo— con el movimiento respecto al mes anterior.",
-    en: "Each month the U.S. Department of State publishes a new Visa Bulletin. As soon as it appears, the pipeline freezes it, rebuilds the panel and updates this feed automatically. The dates are official published data —not model predictions— with the movement relative to the previous month.",
+    es: "Cada mes el Departamento de Estado de EE. UU. publica un nuevo Visa Bulletin. Cuando el pipeline logra ingerirlo, congela el boletín y reconstruye el panel; el estado de esa ingesta se informa arriba. Las fechas son datos oficiales publicados —no predicciones del modelo— con el movimiento respecto al mes anterior.",
+    en: "Each month the U.S. Department of State publishes a new Visa Bulletin. When the pipeline manages to ingest it, it freezes the bulletin and rebuilds the panel; the state of that ingestion is reported above. The dates are official published data —not model predictions— with the movement relative to the previous month.",
+  },
+  srcHeading: { es: "Estado de la fuente", en: "Source status" },
+  srcOk: {
+    es: "La ingesta automática está operando: el último intento sobre el Visa Bulletin fue correcto.",
+    en: "Automatic ingestion is operating: the last attempt against the Visa Bulletin succeeded.",
+  },
+  srcBlocked: {
+    es: "La fuente oficial está rechazando la ingesta automática. Los datos que ves siguen siendo oficiales y verificados; lo que no puede prometerse es que el próximo boletín entre solo.",
+    en: "The official source is refusing automatic ingestion. The data you see is still official and verified; what cannot be promised is that the next bulletin will arrive on its own.",
+  },
+  srcPartial: {
+    es: "La ingesta automática entró solo en parte. Falta al menos un mes por incorporar.",
+    en: "Automatic ingestion only partly succeeded. At least one month is still missing.",
+  },
+  srcOffline: {
+    es: "No se pudo alcanzar la fuente oficial en el último intento de ingesta.",
+    en: "The official source could not be reached on the last ingestion attempt.",
+  },
+  srcSince: { es: "Desde", en: "Since" },
+  srcExpected: { es: "Mes esperado", en: "Expected month" },
+  srcMissing: { es: "Meses pendientes", en: "Months pending" },
+  srcInvalid: {
+    es: "El estado de la fuente no se pudo verificar: el registro publicado no es legible. No se muestra un diagnóstico inventado.",
+    en: "The source status could not be verified: the published record is unreadable. No invented diagnosis is shown.",
   },
   blnBadge: { es: "Nuevo boletín", en: "New bulletin" },
   blnOf: { es: "Boletín de", en: "Bulletin for" },
