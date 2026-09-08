@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { modelCount } from "../lib/release.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const facts = JSON.parse(readFileSync(resolve(root, "public/data/eda_facts.json"), "utf8"));
@@ -21,15 +22,15 @@ const fmeta = JSON.parse(readFileSync(resolve(root, "public/data/forecasts_meta.
 const horizonMonths = fmeta?.horizon_months;
 if (!Number.isFinite(horizonMonths) || horizonMonths <= 0) throw new Error("forecasts_meta.json: horizon_months missing or non-positive — refusing to emit stale horizon");
 
-// n_models — size of the governed model catalog (comparison framework). The
-// authoritative source lives in the DATA repo (reports/governance/key_facts.json
-// → n_models, mirrored from docs/model_catalog.json), but NONE of the artifacts
-// fetch-data currently downloads carries it (checked: eda_facts, fe_facts,
-// forecasts_meta, forecast_scorecard_meta). Typed fallback so the number still
-// has a SINGLE source inside this repo instead of being hand-typed in components.
-// TODO(QW7): add reports/governance/key_facts.json to the data repo's release
-// manifest + BASE_MAP in lib/release.mjs, then derive this from the fetched fact.
-const nModels = 24;
+// n_models — tamaño del catálogo gobernado de modelos (marco comparativo). Ya NO se
+// teclea: el artefacto autoritativo (reports/governance/key_facts.json, `critical` en
+// el manifiesto) se consume como key_facts.json y `modelCount` lo valida contra su
+// contrato vendorizado antes de leer el campo. Sin fallback: si falta el archivo, el
+// contrato se viola o el valor no es un entero positivo, el build se detiene diciendo
+// por qué. Un número de portada equivocado es peor que un build roto.
+const keyFactsBuf = readFileSync(resolve(root, "public/data/key_facts.json"));
+const keyFactsContract = JSON.parse(readFileSync(resolve(root, "lib/contracts/key_facts.json"), "utf8"));
+const nModels = modelCount(keyFactsContract, keyFactsBuf);
 
 // H3: provenance del corte servido — el loader B2 escribe release-state.json SIEMPRE
 // (fresh/stale/legacy/incompatible); el footer lo muestra y el JSON queda
