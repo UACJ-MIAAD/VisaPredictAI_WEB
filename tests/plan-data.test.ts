@@ -208,7 +208,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("1c81b6fd57ae74429c75d294b3e5caef91ac782b");
+    expect(PLAN_META.dataMain).toBe("816d088dc58cb92b8db1230282601a570a1b8c96");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });

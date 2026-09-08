@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "1c81b6fd57ae74429c75d294b3e5caef91ac782b",
+  dataMain: "816d088dc58cb92b8db1230282601a570a1b8c96",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -181,7 +181,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     status: "planned",
     stories: [
-      story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "planned"),
+      story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "done", "816d088"),
       story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "planned"),
       story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "planned"),
       story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("E0 deja una sola escala para el MASE, y dos copias dejan de mentir", "E0 leaves a single MASE scale, and two copies stop lying"),
+    detail: c(
+      "El número por el que se divide todo error para volverlo comparable entre series vivía copiado en cuatro sitios. Tres coincidían; dos de ellos, los que puntúan a los modelos fundacionales, hacían algo distinto cuando la serie no daba para calcularlo: en vez de admitir que la escala no existe, devolvían un uno. Dividir por uno no falla, no avisa y deja un número que parece una métrica comparable cuando en realidad son días, mil veces más grande, contaminando cualquier promedio que lo incluya. Antes de tocar nada se midieron las cuatro sobre once series: en las seis que sí tienen escala coinciden hasta el último decimal, y en las cinco que no, dos mentían. Ahora hay una sola implementación, no depende de las bibliotecas de modelado, y las dos que mentían excluyen esa serie en lugar de inventarle un número. De paso, un periodo estacional imposible dejó de calcularse en silencio y ahora se rechaza, y la prueba de la que cuelga toda cifra de precisión publicada —que hasta hoy se saltaba entera cuando faltaban esas bibliotecas— por fin se ejecuta.",
+      "The number every error is divided by to make it comparable across series lived copied in four places. Three agreed; two of them, the ones scoring the foundation models, did something different when a series was too degenerate to compute it: instead of admitting the scale does not exist, they returned a one. Dividing by one does not fail, does not warn, and leaves a number that looks like a comparable metric when it is really days, a thousand times larger, contaminating any average that includes it. Before touching anything the four were measured over eleven series: on the six that do have a scale they agree to the last decimal, and on the five that do not, two were lying. There is now a single implementation, it does not depend on the modelling libraries, and the two that lied exclude that series instead of inventing a number for it. Along the way, an impossible seasonal period stopped being computed in silence and is now rejected, and the test on which every published accuracy figure hangs —which until today was skipped entirely when those libraries were missing— finally runs.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("F7 y F8 limpian la documentación y fijan el orden de publicación", "F7 and F8 clean the documentation and fix the publication order"),
