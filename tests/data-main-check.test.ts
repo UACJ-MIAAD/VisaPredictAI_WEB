@@ -8,12 +8,20 @@
  * resolver y ser ancestro o igual a ese main. Nada se descarga: se opera sobre repos de juguete.
  */
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { verifyDataMain } from "../lib/data-main-check.mjs";
+import {
+  DATA_MAIN_REF,
+  DATA_REPO_URL,
+  LS_REMOTE_TIMEOUT_MS,
+  parseLsRemote,
+  readDeclaredDataMain,
+  verifyAgainstRemote,
+  verifyDataMain,
+} from "../lib/data-main-check.mjs";
 
 function repoDeJuguete(): { dir: string; commits: string[] } {
   const dir = mkdtempSync(join(tmpdir(), "datos-"));
@@ -112,5 +120,95 @@ describe("story evidence must resolve and be an ancestor", () => {
     const { dir, commits } = repoDeJuguete();
     const historias = [{ id: "F5", evidence: `${commits[1].slice(0, 7)} · reglas puestas; los facts esperan` }];
     expect(verifyDataMain(gitDe(dir), commits[2], historias)).toEqual([]);
+  });
+});
+
+
+describe("the remote pointer check is one bounded query, and hermetic in tests", () => {
+  const SHA = "1c81b6fd57ae74429c75d294b3e5caef91ac782b";
+  const linea = (sha = SHA, ref = DATA_MAIN_REF) => `${sha}\t${ref}\n`;
+
+  it("asks exactly once, with a constant URL, a constant ref and a bounded timeout", () => {
+    const llamadas: Array<{ url: string; ref: string; timeoutMs: number }> = [];
+    const runner = (args: { url: string; ref: string; timeoutMs: number }) => {
+      llamadas.push(args);
+      return linea();
+    };
+    expect(verifyAgainstRemote(runner, SHA)).toEqual([]);
+    expect(llamadas).toHaveLength(1);
+    expect(llamadas[0].url).toBe(DATA_REPO_URL);
+    expect(llamadas[0].ref).toBe(DATA_MAIN_REF);
+    expect(llamadas[0].timeoutMs).toBe(LS_REMOTE_TIMEOUT_MS);
+    expect(LS_REMOTE_TIMEOUT_MS).toBeGreaterThan(0);
+  });
+
+  it("no test touches the network: the executor is injected", () => {
+    const fuente = readFileSync(new URL("./data-main-check.test.ts", import.meta.url), "utf8");
+    expect(fuente).not.toMatch(/execFileSync\(\s*"git",\s*\[\s*"ls-remote"/);
+  });
+
+  it("accepts the exact SHA of the remote main", () => {
+    expect(verifyAgainstRemote(() => linea(), SHA)).toEqual([]);
+  });
+
+  it("rejects a stale pointer, naming both sides", () => {
+    const viejo = "17eb7a9593d512387dcb6babb60549deecdd3ab8";
+    const problemas = verifyAgainstRemote(() => linea(), viejo);
+    expect(problemas).toHaveLength(1);
+    expect(problemas[0]).toMatch(/rancio/);
+    expect(problemas[0]).toContain(viejo.slice(0, 12));
+    expect(problemas[0]).toContain(SHA.slice(0, 12));
+  });
+
+  it("accepts a maintenance advance once the pointer follows", () => {
+    const nuevo = "0123456789abcdef0123456789abcdef01234567";
+    expect(verifyAgainstRemote(() => linea(nuevo), nuevo)).toEqual([]);
+    // …y el puntero anterior deja de valer en cuanto el main avanza.
+    expect(verifyAgainstRemote(() => linea(nuevo), SHA)).toHaveLength(1);
+  });
+
+  it.each([
+    ["timeout", () => { throw new Error("ETIMEDOUT"); }],
+    ["fallo del proceso", () => { throw new Error("git murió"); }],
+  ])("fails closed on %s", (_caso, runner) => {
+    expect(verifyAgainstRemote(runner as () => string, SHA)[0]).toMatch(/ls-remote falló/);
+  });
+
+  it.each([
+    ["vacía", ""],
+    ["solo espacios", "   \n"],
+    ["duplicada", linea() + linea("0".repeat(40))],
+    ["mal formada", "solo-un-campo\n"],
+    ["sha inválido", `zzzz\t${DATA_MAIN_REF}\n`],
+    ["otra ref", linea(SHA, "refs/heads/otra")],
+  ])("fails closed on a %s response", (_caso, salida) => {
+    expect(() => parseLsRemote(salida as string)).toThrow();
+    expect(verifyAgainstRemote(() => salida as string, SHA)).toHaveLength(1);
+  });
+
+  it.each(["1c81b6f", "", "z".repeat(40)])("refuses a declared pointer that is %s", (valor) => {
+    expect(verifyAgainstRemote(() => linea(), valor)[0]).toMatch(/sha completo/);
+  });
+});
+
+describe("the declared pointer is read from the plan, fail-closed", () => {
+  it("reads a well-formed pointer", () => {
+    expect(readDeclaredDataMain('dataMain: "1c81b6fd57ae74429c75d294b3e5caef91ac782b",')).toBe(
+      "1c81b6fd57ae74429c75d294b3e5caef91ac782b",
+    );
+  });
+
+  it.each([
+    ["sin dataMain", "export const PLAN_META = {};"],
+    ["corto", 'dataMain: "1c81b6f",'],
+    ["vacío", 'dataMain: "",'],
+  ])("throws on a plan %s", (_caso, texto) => {
+    expect(() => readDeclaredDataMain(texto)).toThrow();
+  });
+
+  it("reads the real plan and matches PLAN_META", async () => {
+    const { PLAN_META } = await import("../lib/plan-data");
+    const texto = readFileSync(new URL("../lib/plan-data.ts", import.meta.url), "utf8");
+    expect(readDeclaredDataMain(texto)).toBe(PLAN_META.dataMain);
   });
 });
