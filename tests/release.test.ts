@@ -9,6 +9,10 @@ import { MANIFEST_PATH, SUPPORTED_SCHEMA, consumedEntries, executeDisposition, e
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
 describe("outFor — repo path → public/data name", () => {
+  it("consumes the governed facts artifact that carries the model catalog (F1)", () => {
+    expect(outFor("reports/governance/key_facts.json")).toBe("key_facts.json");
+  });
+
   it("maps the 11 base artifacts to their legacy out names", () => {
     expect(outFor("data/processed/visa_panel_long.csv")).toBe("visa_panel_long.csv");
     expect(outFor("reports/prospective/web_forecasts.csv")).toBe("forecasts.csv");
@@ -25,7 +29,9 @@ describe("outFor — repo path → public/data name", () => {
   it("returns null for release artifacts the site build does not consume", () => {
     expect(outFor("reports/prospective/forecast_log.csv")).toBeNull();
     expect(outFor("reports/governance/MODEL_CARD.md")).toBeNull();
-    expect(outFor("reports/governance/key_facts.json")).toBeNull();
+    // F1 lo sacó de esta lista: key_facts.json SÍ se consume, y por eso el conteo de
+    // modelos dejó de estar tecleado en build-stats.
+    expect(outFor("reports/governance/MODEL_CARD.md")).toBeNull();
   });
 });
 

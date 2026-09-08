@@ -159,6 +159,16 @@ describe("public MLOps plan", () => {
     }
   });
 
+  it("cites no data commit for work that lives entirely in the web repo", () => {
+    // Precedente de la épica B, cuyas seis historias son de este repositorio: `evidence` es
+    // opcional y se omite. Poner un sha de este repo lo haría pasar por uno del de datos, y
+    // el lector iría a buscarlo donde no está.
+    const porId = new Map(PLAN_EPICS.flatMap((epic) => epic.stories).map((item) => [item.id, item]));
+    expect(porId.get("F1")).toMatchObject({ status: "done" });
+    expect(porId.get("F1")?.evidence).toBeUndefined();
+    expect(porId.get("B4")?.evidence).toBeUndefined();
+  });
+
   it("shows D8 as delivered with the squash that carries it on main", () => {
     const d8 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "D8");
     expect(d8).toMatchObject({ status: "done", evidence: "5dd424b" });
@@ -234,11 +244,19 @@ describe("public MLOps plan", () => {
     it("points at the first story nobody has started, and at the epic holding it", () => {
       // Propiedad, no literal: nombrar la historia obligaba a editar esta prueba en cada
       // entrega, y ya se hizo en C5, C7, C8 y C9. Lo que se afirma es el orden.
+      // La regla del selector: manda la historia EN CURSO si la hay, y si no la primera sin
+      // empezar. Se afirma esa propiedad, no un identificador: nombrarlo obligaba a editar
+      // esta prueba en cada entrega, y ya pasó en C5, C7, C8 y C9.
       const focus = planFocus();
       const orden = PLAN_EPICS.flatMap((epic) => epic.stories);
-      const posicion = orden.findIndex((story) => story.id === focus.next?.id);
-      expect(focus.next?.status).toBe("planned");
-      expect(orden.slice(0, posicion).every((story) => story.status !== "planned")).toBe(true);
+      const enCurso = orden.filter((story) => story.status === "active");
+      if (enCurso.length > 0) {
+        expect(focus.next?.id).toBe(enCurso[0].id);
+      } else {
+        const posicion = orden.findIndex((story) => story.id === focus.next?.id);
+        expect(focus.next?.status).toBe("planned");
+        expect(orden.slice(0, posicion).every((story) => story.status !== "planned")).toBe(true);
+      }
       expect(focus.epic.stories.some((story) => story.id === focus.next?.id)).toBe(true);
     });
 
@@ -291,7 +309,8 @@ describe("public MLOps plan", () => {
       }
       const focus = planFocus(epics, cloneUpdates());
       expect(focus.epic.id).not.toBe("C");
-      expect(focus.next?.status).toBe("planned");
+      // Lo que importa es que no proponga trabajo ya entregado; puede estar en curso.
+      expect(focus.next?.status).not.toBe("done");
     });
 
     it("never proposes deferred or paused work as the next step", () => {
