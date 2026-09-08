@@ -172,7 +172,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("309e2148e621081d87a65230bba0c475924b3d3e");
+    expect(PLAN_META.dataMain).toBe("bd8956d847602d7f412a8377b690b960b468101e");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -236,13 +236,12 @@ describe("public MLOps plan", () => {
       expect(focus.next?.id).toBe("C9");
       expect(focus.epic.id).toBe("C");
       // El literal que este selector sustituye anunciaba «D9 → D8», ambas ya entregadas.
-      expect(focus.next?.status).toBe("planned");
+      expect(focus.next?.status).toBe("active");
     });
 
     it("prefers the story in flight over the first one nobody has started", () => {
       const epics = clonePlan();
       // Con C8 en curso, la siguiente historia sería C8 y no la que viene después.
-      findStory(epics, "C9").status = "active";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C9");
       findStory(epics, "C9").status = "done";
       expect(planFocus(epics, cloneUpdates()).epic.id).not.toBe("C");
