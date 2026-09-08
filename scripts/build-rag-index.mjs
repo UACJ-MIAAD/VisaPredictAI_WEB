@@ -34,6 +34,7 @@
 // Run: npm run build:rag   (also runs in `prebuild`)
 // ─────────────────────────────────────────────────────────────────────────
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, unlinkSync } from "node:fs";
+import { assertPinCoherent, collectFactSheet } from "../lib/fact-sheet.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
@@ -392,6 +393,12 @@ const REPO_DOCS = [
   // carried the current campaign results - the model card is their canonical,
   // auto-regenerated home (MCS, champion, prospective scorecard).
   ["reports/governance/MODEL_CARD.md", "Model card · modelo campeón desplegado, cuál gana y evaluación"],
+  // F4: el asistente respondía de oídas sobre evaluación, limpieza, promoción e ingeniería
+  // porque ninguna fuente indexada las cubría. Se traen al SHA pinneado, sin resumirlas aquí.
+  ["docs/FORECAST_EVAL.md", "Protocolo de evaluación · walk-forward, métricas y hold-out"],
+  ["docs/CLEANING.md", "Decisiones de limpieza · qué se imputa, qué se descarta y por qué"],
+  ["docs/PROMOTION_POLICY.md", "Política de promoción · gate, campeón y retador"],
+  ["docs/ENGINEERING.md", "Índice normativo de la documentación de ingeniería"],
 ];
 // Fetch one repo doc at the pinned SHA; if the file is missing AT THAT SHA
 // (e.g. a release sealed from a dirty worktree), fall back to main and RECORD
@@ -489,6 +496,18 @@ const CN = {
   all_chargeability: { es: "Resto del mundo", en: "All chargeability areas" },
 };
 let latestMonth = null;
+// F4 · Las cifras entran al índice DERIVADAS de los artefactos gobernados, no de prosa.
+function collectFactSheetChunks() {
+  const kf = JSON.parse(readFileSync(join(root, "public/data/key_facts.json"), "utf8"));
+  const eda = JSON.parse(readFileSync(join(root, "public/data/eda_facts.json"), "utf8"));
+  for (const c of collectFactSheet(kf, eda)) {
+    add({ lang: c.lang, section: "cifras", title: c.title, url: localePath("/ingenieria", c.lang), text: c.text });
+  }
+  const estado = assertPinCoherent(sourcePin);
+  console.log(`  fact sheet: 4 chunks derivados · corte servido ${estado}`);
+}
+
+
 async function collectFacts() {
   try {
     const r = await fetch(`${REPO_RAW}/data/processed/bulletins.json`);
@@ -711,6 +730,7 @@ function copyOrtWasm() {
   collectLocal();
   await collectRepoDocs();
   await collectFacts();
+  collectFactSheetChunks();
   console.log(`  total chunks: ${chunks.length}`);
   if (chunks.length === 0) throw new Error("no chunks collected — aborting");
 

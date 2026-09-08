@@ -165,7 +165,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
       story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "17eb7a9 · activa en el próximo corte gobernado"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
-      story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "planned"),
+      story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "planned"),
       story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "planned"),
       story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("F4 hace que el asistente lea las cifras, no las recuerde", "F4 makes the assistant read the figures instead of recalling them"),
+    detail: c(
+      "El asistente respondía cifras de oídas: su índice se construía solo con prosa —la página, la tarjeta del modelo, la auditoría— y nunca abría los archivos donde viven los números. Por eso una frase corregida en el sitio podía seguir contestándose vieja durante días. Ahora una tarjeta en las dos lenguas se deriva de esos archivos, con la unidad y la población al lado de cada cifra, de modo que un error de medida no se cite como si fuera universal; si falta un dato, una sección o el valor no es del tipo esperado, la construcción se detiene en vez de rellenar con prosa. Se suman cuatro documentos de ingeniería que nadie indexaba —evaluación, limpieza, promoción y el índice normativo—, traídos de la versión exacta del corte, sin resumirlos. Y cuando el sitio declara datos frescos, un índice apuntando a otro corte deja de ser una nota en consola y pasa a detener la construcción.",
+      "The assistant answered figures from memory: its index was built only from prose —the page, the model card, the audit— and never opened the files where the numbers live. That is why a sentence corrected on the site could keep being answered stale for days. A card in both languages is now derived from those files, with the unit and the population next to each figure, so a measurement is not quoted as if it were universal; if a field, a section or a type is wrong, the build stops instead of filling in with prose. Four engineering documents nobody indexed join in —evaluation, cleaning, promotion and the normative index— fetched at the cut's exact version, not summarised. And when the site reports fresh data, an index pointing at a different cut stops being a console note and becomes a build failure.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("F2 retira una promesa que había dejado de ser cierta", "F2 withdraws a promise that had stopped being true"),
