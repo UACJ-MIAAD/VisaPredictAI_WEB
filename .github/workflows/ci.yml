@@ -154,3 +154,7 @@ jobs:
       - run: npm ci
       - name: Live manifest fetch + hash verification
         run: node scripts/fetch-data.mjs
+      # F7-R4: el puntero del plan contra el main gobernado. Una sola consulta `ls-remote`,
+      # sin clone ni checkout, con URL y ref constantes y timeout acotado.
+      - name: Plan pointer matches the governed data main
+        run: node scripts/check-data-main.mjs
