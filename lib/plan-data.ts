@@ -167,7 +167,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "7925dae · reglas puestas; los facts esperan la campaña causal"),
-      story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "planned"),
+      story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "done"),
       story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "planned"),
       story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "planned"),
     ],
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("F6 deja listo el gancho de cohorte, sin inventarla", "F6 leaves the cohort hook ready, without inventing one"),
+    detail: c(
+      "La dirección de la tesis pide partir el panel en series estables y no estables y entrenar cada grupo por su lado. Eso llegará como un campo del corte publicado, y hoy ese campo no existe en ninguna de las series. Así que se deja el gancho puesto y nada más: si el corte declara la cohorte de una serie, la galería la muestra tal cual la diga el archivo; mientras no la declare, la interfaz queda exactamente como está, sin una sola insignia. Un valor vacío, de otro tipo o con una estructura ambigua tampoco pinta nada: una etiqueta inventada sería peor que ninguna. La insignia lee el mismo dato que la tarjeta ya tiene, sin descargar nada aparte, y conserva los enlaces profundos, el orden y el modo compacto.",
+      "The thesis direction asks to split the panel into stable and unstable series and train each group separately. That will arrive as a field of the published cut, and today no series carries it. So the hook is left in place and nothing more: if the cut declares a series' cohort, the gallery shows it exactly as the file says; while it does not, the interface stays exactly as it is, without a single badge. An empty value, another type or an ambiguous structure renders nothing either: an invented label would be worse than none. The badge reads the same data the card already holds, downloading nothing extra, and keeps deep links, ordering and the dense mode.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("F5 pone reglas donde el paper citaba de memoria", "F5 puts rules where the paper quoted from memory"),

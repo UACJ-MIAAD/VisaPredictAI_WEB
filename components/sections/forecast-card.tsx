@@ -13,6 +13,7 @@ import { buildForecast, type PanelIndex } from "@/lib/visabot/analytics";
 import type { Panel } from "@/lib/data/panel-core";
 import type { ForecastStore } from "@/lib/data/forecasts";
 import { maseTier, type GallerySeries } from "@/lib/visabot/gallery";
+import { CohortBadge } from "@/components/ui/cohort-badge";
 
 type SparkPoint = { hist: number | null; fc: number | null; band95: [number, number] | null };
 
@@ -98,6 +99,8 @@ export function ForecastCard({ series, panel, forecasts, index, terciles, dense,
               </span>
             )}
             {series.models.length > 0 && <span className="truncate">{series.models.join("+")}</span>}
+            {/* F6: gancho opcional. Sin cohorte declarada en el corte, esto no pinta nada. */}
+            <CohortBadge meta={series} />
           </div>
         </div>
         {!dense && (spark && spark.kind === "forecast" ? <Sparkline data={spark.data} /> : <span className="text-[0.6rem] text-[var(--color-muted)]">—</span>)}
