@@ -159,6 +159,11 @@ describe("public MLOps plan", () => {
     }
   });
 
+  it.each(["F7", "F8"])("shows %s as delivered with the squash that carries it on main", (id) => {
+    const historia = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === id);
+    expect(historia).toMatchObject({ status: "done", evidence: "1c81b6f" });
+  });
+
   it("keeps F5 under observation, with its dependency named", () => {
     // La parte viable está puesta; lo que falta depende de la campaña causal (F2-causal/#33),
     // así que declararla entregada sería adelantarse a un resultado que no existe.

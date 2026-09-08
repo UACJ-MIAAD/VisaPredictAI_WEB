@@ -168,8 +168,8 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "7925dae · reglas puestas; los facts esperan la campaña causal"),
       story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "done"),
-      story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "planned"),
-      story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "planned"),
+      story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "done", "1c81b6f"),
+      story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "done", "1c81b6f"),
     ],
   },
   {
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("F7 y F8 limpian la documentación y fijan el orden de publicación", "F7 and F8 clean the documentation and fix the publication order"),
+    detail: c(
+      "Varias páginas de documentación seguían contando boletines en prosa, un número que cambia con cada corte y ya había cambiado; ahora dicen lo que quieren decir sin el conteo, que vive donde se genera. El documento que explica el guardián ilustraba su tolerancia tipográfica con una cifra muerta y describía cuatro clases de regla cuando hay siete. Las entradas fechadas de los registros se dejan como están: son historia, no afirmaciones. Y el orden de publicación —primero los datos, después el sitio, después producción— deja de ser costumbre: queda escrito con sus precondiciones, sus condiciones de parada, cómo se verifica cada etapa y cómo se deshace, y una orden de solo lectura lo comprueba antes de mover nada. Bloquea si algún árbol está sucio, si un artefacto crítico falta o fue manipulado, si el sitio declara un corte distinto del publicado o si va por delante de los datos; que el repositorio del sitio no esté disponible es un fallo, no un permiso.",
+      "Several documentation pages still counted bulletins in prose, a number that changes with every cut and had already changed; they now say what they mean without the count, which lives where it is generated. The document explaining the guard illustrated its typographic tolerance with a dead figure and described four kinds of rule when there are seven. The dated log entries are left as they are: they are history, not claims. And the publication order —data first, then the site, then production— stops being a habit: it is written down with its preconditions, stopping conditions, how each stage is verified and how it is undone, and a read-only command checks it before anything moves. It blocks if either tree is dirty, if a critical artifact is missing or tampered with, if the site declares a different cut than the published one, or if it runs ahead of the data; the site repository being unavailable is a failure, not a permission.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("F6 deja listo el gancho de cohorte, sin inventarla", "F6 leaves the cohort hook ready, without inventing one"),
