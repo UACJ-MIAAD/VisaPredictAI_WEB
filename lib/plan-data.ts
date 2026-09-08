@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "817afc3eed226d5694cb8549fbde70d97018e245",
+  dataMain: "17eb7a9593d512387dcb6babb60549deecdd3ab8",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -163,7 +163,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     status: "planned",
     stories: [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
-      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "planned"),
+      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "17eb7a9 · activa en el próximo corte gobernado"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "planned"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "planned"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("F2 retira una promesa que había dejado de ser cierta", "F2 withdraws a promise that had stopped being true"),
+    detail: c(
+      "El sitio decía que en cuanto aparece un boletín el pipeline lo congela y actualiza este feed automáticamente. Dejó de ser verdad el 6 de agosto: la fuente quedó tras un cortafuegos y los dos últimos boletines se cargaron a mano. La frase desaparece de las dos lenguas y también del corpus con el que responde el asistente, donde seguía viva palabra por palabra. En su lugar el sitio informará lo que el pipeline registra, leyéndolo del propio archivo de estado en vez de deducirlo de un texto: si el archivo falta se calla, si está y es ilegible dice que no pudo verificarlo, y nunca inventa un bloqueo. Ese archivo todavía no viaja en el corte publicado y regenerarlo cambiaría el corte que sirve producción, así que entra en el que viene y la historia queda en observación hasta entonces.",
+      "The site said that as soon as a bulletin appears the pipeline freezes it and updates this feed automatically. That stopped being true on 6 August: the source went behind a firewall and the last two bulletins were loaded by hand. The sentence is gone from both languages and from the corpus the assistant answers with, where it was still alive word for word. In its place the site will report what the pipeline records, reading it from the state file itself rather than inferring it from prose: if the file is missing it stays quiet, if it is present and unreadable it says it could not verify it, and it never invents a block. That file does not travel in the published cut yet, and regenerating it would change the cut production serves, so it joins the next one and the story stays under observation until then.",
+    ),
+    status: "observing",
+  },
   {
     date: "2026-09-08",
     title: c("F1 deja de teclear cuántos modelos hay", "F1 stops typing how many models there are"),
