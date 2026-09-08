@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "10b100de668b323a3370b23f49df92f33bb75deb",
+  dataMain: "309e2148e621081d87a65230bba0c475924b3d3e",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -149,7 +149,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("C6", c("Base de datos modular", "Modular database build"), c("Separar migraciones, carga y gobernanza preservando el fingerprint.", "Separate migrations, loading and governance while preserving the fingerprint."), "done", "17d0ebf"),
       story("C7", c("Código muerto", "Dead code"), c("Retirar caminos sin consumidores con guardianes anti-resurrección.", "Remove consumerless paths with anti-resurrection guards."), "done", "10b100d"),
       story("C7b", c("Semántica tree-dirty", "Tree-dirty semantics"), c("Usar una sola definición comprobable de árbol sucio.", "Use one verifiable definition of a dirty tree."), "done", "10b100d"),
-      story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "planned"),
+      story("C8", c("Tooling honesto", "Honest tooling"), c("Medir cobertura y complejidad sobre el producto real.", "Measure coverage and complexity across the real product."), "done", "309e214"),
       story("C9", c("LOC por rol", "LOC by role"), c("Impedir que tooling vuelva a superar la mitad del producto.", "Prevent tooling from again exceeding half the product."), "planned"),
     ],
   },
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("C8 mide lo que decía medir", "C8 measures what it claimed to measure"),
+    detail: c(
+      "Tres reglas que el repositorio ya daba por supuestas no estaban encendidas, así que lo que el tooling afirmaba gobernar y lo que gobernaba eran cosas distintas: 133 supresiones no suprimían nada (sobre todo un orden de imports en archivos que dejaron de manipular la ruta de búsqueda), la política de capturas amplias se apoyaba en una directiva que nunca disparaba, y la complejidad no se medía en ninguna parte. Ahora se mide sobre el producto, con el umbral puesto en el máximo REAL y no en una meta inventada. Además el trinquete deja de publicar un total de supresiones que sumaba deudas de naturaleza distinta: cada regla lleva su contador, y las capturas peores (un except desnudo, un except de BaseException) dejan de ser invisibles con métricas propias. Doce salieron a la luz; el linter señalaba una.",
+      "Three rules this repository already presupposed were never enabled, so what the tooling claimed to govern and what it governed were different things: 133 suppressions silenced nothing (mostly an import order in files that no longer manipulate the search path), the broad-catch policy leaned on a directive that never fired, and complexity was measured nowhere. It is now measured across the product, with the threshold set at the REAL maximum rather than an invented goal. The ratchet also stops publishing a suppression total that summed unrelated debts: each rule carries its own counter, and the worse catches (a bare except, a BaseException one) stop being invisible with metrics of their own. Twelve came to light; the linter flagged one.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-07",
     title: c("C7 y C7b retiran dos caminos muertos", "C7 and C7b remove two dead paths"),
