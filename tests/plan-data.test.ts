@@ -178,7 +178,10 @@ describe("public MLOps plan", () => {
     // regenera: la historia no puede declararse entregada hasta que un corte lo publique.
     const f2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F2");
     expect(f2).toMatchObject({ status: "observing" });
-    expect(PLAN_META.dataMain.startsWith(String(f2?.evidence).split(" ")[0])).toBe(true);
+    // Antes esto exigía que la evidencia de F2 fuera prefijo de `dataMain`. Solo era cierto
+    // porque `dataMain` se había quedado congelado en el corte de F2: la prueba consagraba el
+    // fallo. La propiedad real es que F2 declara SU corte y su dependencia, no la punta de main.
+    expect(f2?.evidence).toMatch(/^[0-9a-f]{7} · /);
     expect(f2?.evidence).toMatch(/corte gobernado$/);
   });
 
@@ -205,7 +208,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("17eb7a9593d512387dcb6babb60549deecdd3ab8");
+    expect(PLAN_META.dataMain).toBe("1c81b6fd57ae74429c75d294b3e5caef91ac782b");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
