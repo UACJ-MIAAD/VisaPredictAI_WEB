@@ -162,7 +162,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     status: "planned",
     stories: [
-      story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "planned"),
+      story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
       story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "planned"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "planned"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-08",
+    title: c("F1 deja de teclear cuántos modelos hay", "F1 stops typing how many models there are"),
+    detail: c(
+      "El número de modelos del marco comparativo era el último dato de portada escrito a mano en el sitio, con una nota que explicaba por qué: el archivo que lo lleva no se descargaba. Resultó que sí viajaba en el corte publicado, y como artefacto crítico; lo único que faltaba era consumirlo. Ahora el sitio lo lee de ahí, validando el artefacto contra su contrato antes de mirarlo, y si el archivo falta, el contrato se incumple o el valor no es un entero positivo, la construcción se detiene diciendo cuál de las tres cosas pasó. No hay respaldo: un número de portada equivocado es peor que una construcción rota. El valor servido no cambia, porque el que estaba tecleado coincidía con el del artefacto.",
+      "The number of models in the comparison framework was the last headline figure typed by hand on the site, with a note explaining why: the file carrying it was not being downloaded. It turned out it did travel in the published cut, and as a critical artifact; all that was missing was consuming it. The site now reads it from there, validating the artifact against its contract before looking at it, and if the file is missing, the contract is broken or the value is not a positive integer, the build stops naming which of the three happened. There is no fallback: a wrong headline number is worse than a broken build. The served value does not change, because the typed one matched the artifact.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("C9 le pone un papel a cada archivo", "C9 gives every file a role"),
