@@ -172,7 +172,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("10b100de668b323a3370b23f49df92f33bb75deb");
+    expect(PLAN_META.dataMain).toBe("1d6232b9df17300b633031d82b9dfd4cc7dcd898");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -212,10 +212,13 @@ describe("public MLOps plan", () => {
 
     it("sorts unordered days but preserves the editorial order within each day", () => {
       const updates = cloneUpdates();
-      const firstDay = updates.filter((update) => update.date === "2026-09-07");
+      // Derivado del propio registro: el día más reciente y las entradas que le pertenecen.
+      // Fijar la fecha a mano obligaba a editar esta prueba en cada entrada nueva.
+      const masReciente = [...updates].map((update) => update.date).sort().at(-1);
+      const firstDay = updates.filter((update) => update.date === masReciente);
       const unordered = [updates.at(-1)!, ...updates.slice(0, -1)];
       const days = groupUpdatesByDay(unordered);
-      expect(days[0].date).toBe("2026-09-07");
+      expect(days[0].date).toBe(masReciente);
       expect(days[0].updates).toEqual(firstDay);
     });
 
@@ -233,13 +236,12 @@ describe("public MLOps plan", () => {
       expect(focus.next?.id).toBe("C8");
       expect(focus.epic.id).toBe("C");
       // El literal que este selector sustituye anunciaba «D9 → D8», ambas ya entregadas.
-      expect(focus.next?.status).toBe("planned");
+      expect(focus.next?.status).toBe("active");
     });
 
     it("prefers the story in flight over the first one nobody has started", () => {
       const epics = clonePlan();
       // Con C8 en curso, la siguiente historia sería C8 y no la que viene después.
-      findStory(epics, "C8").status = "active";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C8");
       findStory(epics, "C8").status = "done";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe("C9");
