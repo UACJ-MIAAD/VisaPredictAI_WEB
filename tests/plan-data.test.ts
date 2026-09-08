@@ -159,6 +159,15 @@ describe("public MLOps plan", () => {
     }
   });
 
+  it("keeps F2 under observation until a governed cut publishes the feed", () => {
+    // El paso de datos entró (spec + gate), pero el corte vigente no trae el artefacto y no se
+    // regenera: la historia no puede declararse entregada hasta que un corte lo publique.
+    const f2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F2");
+    expect(f2).toMatchObject({ status: "observing" });
+    expect(PLAN_META.dataMain.startsWith(String(f2?.evidence).split(" ")[0])).toBe(true);
+    expect(f2?.evidence).toMatch(/corte gobernado$/);
+  });
+
   it("cites no data commit for work that lives entirely in the web repo", () => {
     // Precedente de la épica B, cuyas seis historias son de este repositorio: `evidence` es
     // opcional y se omite. Poner un sha de este repo lo haría pasar por uno del de datos, y
@@ -182,7 +191,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("817afc3eed226d5694cb8549fbde70d97018e245");
+    expect(PLAN_META.dataMain).toBe("17eb7a9593d512387dcb6babb60549deecdd3ab8");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -330,9 +339,17 @@ describe("public MLOps plan", () => {
     });
 
     it("reports the stories under observation and the deferred ones", () => {
+      // Derivado: nombrar las historias obligaba a editar esta prueba cada vez que una entra
+      // en observación, y F2 fue la segunda. Se afirma que el selector no se inventa nada.
+      const todas = PLAN_EPICS.flatMap((epic) => epic.stories);
       const focus = planFocus();
-      expect(focus.observing.map((item) => item.id)).toEqual(["D7"]);
-      expect(focus.deferred.map((item) => item.id)).toEqual(["A6", "D5"]);
+      expect(focus.observing.map((item) => item.id)).toEqual(
+        todas.filter((item) => item.status === "observing").map((item) => item.id),
+      );
+      expect(focus.deferred.map((item) => item.id)).toEqual(
+        todas.filter((item) => item.status === "deferred").map((item) => item.id),
+      );
+      expect(focus.observing.length).toBeGreaterThan(0);
       expect(PLAN_META.observation).toEqual({ current: 0, target: 2 });
     });
 
