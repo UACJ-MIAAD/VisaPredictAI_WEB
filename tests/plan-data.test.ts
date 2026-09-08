@@ -159,6 +159,15 @@ describe("public MLOps plan", () => {
     }
   });
 
+  it("keeps F5 under observation, with its dependency named", () => {
+    // La parte viable está puesta; lo que falta depende de la campaña causal (F2-causal/#33),
+    // así que declararla entregada sería adelantarse a un resultado que no existe.
+    const f5 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F5");
+    expect(f5).toMatchObject({ status: "observing" });
+    expect(f5?.evidence).toMatch(/^7925dae · /);
+    expect(f5?.evidence).toMatch(/campa[ñn]a causal/);
+  });
+
   it("keeps F2 under observation until a governed cut publishes the feed", () => {
     // El paso de datos entró (spec + gate), pero el corte vigente no trae el artefacto y no se
     // regenera: la historia no puede declararse entregada hasta que un corte lo publique.
