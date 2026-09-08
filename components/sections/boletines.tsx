@@ -7,6 +7,7 @@ import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { BULLETINS_FEED as FEED } from "@/lib/repo.mjs";
+import { SourceBanner, loadSourceState, type Vista } from "@/components/sections/source-banner";
 
 // AZ8b — same-origin mirror, refreshed at build by scripts/fetch-data.mjs (plus
 // a committed fallback): if the raw host is blocked/unreachable the section
@@ -52,6 +53,8 @@ export function Boletines() {
   const [error, setError] = React.useState(false);
   const [month, setMonth] = React.useState("");
   const [filter, setFilter] = React.useState("");
+  // F2 · el estado de la fuente se carga aparte: su ausencia no debe romper la sección.
+  const [sourceState, setSourceState] = React.useState<Vista>({ kind: "absent" });
   const ref = React.useRef<HTMLElement | null>(null);
   const loaded = React.useRef(false);
 
@@ -74,6 +77,8 @@ export function Boletines() {
         es.forEach((e) => {
           if (e.isIntersecting && !loaded.current) {
             loaded.current = true;
+            // El estado de la fuente viaja aparte del feed: si no está publicado, `absent`.
+            loadSourceState().then(setSourceState);
             fetchFeed()
               .then((d) => {
                 setData(d);
@@ -123,6 +128,7 @@ export function Boletines() {
       <div className="section-inner">
         <span className="section-tag">{tr(lang, "blnTag")}</span>
         <h2 className="section-title">{tr(lang, "blnTitle")}</h2>
+        <SourceBanner state={sourceState} />
         <p className="section-sub">{tr(lang, "blnSub")}</p>
 
         {error ? (
