@@ -132,6 +132,16 @@ describe("the false promise is gone and does not come back", () => {
     expect(tr("en", "srcBlocked")).toMatch(/still official and verified/);
   });
 
+  it("no shipped source repeats the promise, not even the RAG's own corpus", () => {
+    // La primera versión de F2 la quitó del diccionario y la dejó VIVA en content/source.html,
+    // que es de donde el VisaBot construye su índice: el sitio callaba y el bot seguía
+    // prometiendo. Se escanean las dos fuentes que llegan al usuario.
+    const PROMESA = /actualiza este feed autom|updates this feed automatically/i;
+    for (const ruta of ["lib/i18n.ts", "content/source.html"]) {
+      expect(readFileSync(resolve(__dirname, "..", ruta), "utf8")).not.toMatch(PROMESA);
+    }
+  });
+
   it("every status has copy in both languages", () => {
     for (const clave of ["srcOk", "srcBlocked", "srcPartial", "srcOffline", "srcInvalid", "srcHeading"] as const) {
       expect(tr("es", clave).length).toBeGreaterThan(0);
