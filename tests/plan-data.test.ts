@@ -211,7 +211,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("a53202e3c5d8db93e89eb3c8f12863e5e06d9e81");
+    expect(PLAN_META.dataMain).toBe("51a83ff5788341367c4a13ff460b1489d5e39945");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -304,7 +304,20 @@ describe("public MLOps plan", () => {
       for (const story of epics.find((epic) => epic.id === epica)!.stories) {
         story.status = "done";
       }
-      expect(planFocus(epics, cloneUpdates()).epic.id).not.toBe(epica);
+      // La invariante NO es «cambia de épica»: con el foco ya en la ÚLTIMA no hay adónde ir, y
+      // exigirlo hacía fallar al plan por haber avanzado. Lo que no puede pasar es que el
+      // selector siga apuntando a una historia de una épica ya terminada.
+      const despues = planFocus(epics, cloneUpdates());
+      const terminadas = new Set(
+        epics.find((epic) => epic.id === epica)!.stories.map((story) => story.id),
+      );
+      expect(despues.next === null || !terminadas.has(despues.next.id)).toBe(true);
+      const ultima = epics[epics.length - 1].id;
+      if (epica !== ultima) {
+        expect(despues.epic.id).not.toBe(epica);
+      } else {
+        expect(despues.next).toBeNull(); // no queda nada que señalar
+      }
       expect(planFocus().epic.id).toBe(epica); // el plan publicado no se movió
     });
 

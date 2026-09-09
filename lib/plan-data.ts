@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "a53202e3c5d8db93e89eb3c8f12863e5e06d9e81",
+  dataMain: "51a83ff5788341367c4a13ff460b1489d5e39945",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -187,7 +187,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "done", "850d4bd"),
       story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "done", "2ff4d07"),
       story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "observing", "a53202e"),
-      story("E6", c("Limpieza pagada", "Paid-for cleanup"), c("Unificar universos y corregir catálogo y docstrings fósiles.", "Unify universes and correct stale catalog entries and docstrings."), "planned"),
+      story("E6", c("Limpieza pagada", "Paid-for cleanup"), c("Unificar universos y corregir catálogo y docstrings fósiles.", "Unify universes and correct stale catalog entries and docstrings."), "done", "51a83ff"),
     ],
   },
   {
@@ -220,6 +220,16 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-09",
+    title: c("E6 pone una sola autoridad y retira lo que ya no era cierto", "E6 sets one authority and retires what had stopped being true")
+    ,
+    detail: c(
+      "El primer hallazgo fue tranquilizador y conviene decirlo tal cual: las seis maneras en que el sistema decidía qué series entran al análisis daban exactamente el mismo resultado, las mismas setenta y cuatro. No había ninguna discrepancia escondida. Lo que sí había era la posibilidad de que se separaran algún día sin que nadie lo notara, y algunos números escritos a mano que lo habrían tapado; ahora hay una sola autoridad que lo calcula y una comprobación que, si alguna copia se desvía, dice cuál y en qué. Después vinieron tres correcciones de cosas que habían dejado de ser verdad. Un modelo estaba archivado como «no funciona aquí» por una razón que el paso anterior desmintió al medirlo bien; vuelve a la categoría de evaluado, sin entrar por eso al ciclo de producción ni acercarse al despliegue. Un modelo híbrido no produce ningún resultado en una de las dos tablas, y eso queda escrito como limitación observada, con la fuente y el alcance exactos, sin rellenar el hueco ni borrar la fila. Y tres comentarios del código afirmaban que cierto método gana a plazos largos cuando el propio archivo de medición del repositorio dice que gana otro; la afirmación se retira y se apunta a donde se mide, en vez de cambiarla por un nombre nuevo que volvería a envejecer.",
+      "The first finding was reassuring and worth stating plainly: the six ways the system decided which series enter the analysis all gave exactly the same result, the same seventy-four. There was no hidden discrepancy. What there was, was the possibility of them drifting apart one day without anyone noticing, and a few hand-written numbers that would have masked it; there is now a single authority that computes it and a check that, if any copy strays, says which one and by what. Then came three corrections of things that had stopped being true. One model was shelved as «does not work here» for a reason the previous step disproved by measuring it properly; it returns to the evaluated category, without thereby entering the production cycle or getting near deployment. A hybrid model produces no result at all on one of the two tables, and that is written down as an observed limitation, with its exact source and scope, without filling the gap or deleting the row. And three code comments claimed a certain method wins at long horizons when the repository's own measurement file says another one does; the claim is retired and points at where it is measured, rather than being swapped for a new name that would age just the same.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-09",
     title: c("E5 hace que todas las cifras de la épica salgan de un solo archivo", "E5 makes every figure in the epic come from a single file"),
