@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "816d088dc58cb92b8db1230282601a570a1b8c96",
+  dataMain: "967dfcb66c509eb17beb84505d32fc92cc226558",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -182,7 +182,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     status: "planned",
     stories: [
       story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "done", "816d088"),
-      story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "planned"),
+      story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "done", "967dfcb"),
       story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "planned"),
       story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "planned"),
       story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-09",
+    title: c("E1 separa series estables de inestables sin mirar el futuro", "E1 separates stable from unstable series without looking at the future"),
+    detail: c(
+      "El director pidió entrenar por separado las series estables y las que no lo son. El riesgo de hacerlo mal es sutil: si para decidir qué serie es estable se mira el tramo final que después se usa para evaluar, cualquier ventaja posterior está comprada de antemano. Aquí la partición se calcula únicamente con lo anterior a ese tramo, y la prueba que lo garantiza sustituye el tramo final entero por basura de cuatro maneras distintas y exige que ni una sola medida ni una sola etiqueta se muevan. La regla quedó escrita y congelada antes de mirar ningún resultado, y es deliberadamente pobre: dos condiciones sobre la frecuencia y el tamaño de los retrocesos. Había una trampa medida en agosto: llamar estables a las series sin retrocesos elegía veintitrés que están quietas más de la mitad del tiempo, y una serie quieta es fácil de predecir por definición. Por eso la quietud no decide nada y viaja como anotación aparte: de las treinta y nueve estables, veintiocho están quietas y once avanzan de verdad. También se dice lo que no luce: el segundo umbral no descarta hoy ninguna serie por sí solo. Nada de esto es todavía una conclusión: es la preparación, registrada por escrito para que la comparación que viene después no pueda acomodarse al resultado.",
+      "The director asked for stable and unstable series to be trained separately. The subtle risk is this: if deciding which series is stable involves looking at the final stretch later used for evaluation, any advantage found afterwards was bought in advance. Here the split is computed only from what precedes that stretch, and the test guaranteeing it replaces the entire final stretch with garbage in four different ways and demands that not one measure and not one label move. The rule was written down and frozen before looking at any result, and it is deliberately poor: two conditions on how often and how large the backward jumps are. There was a trap measured in August: calling series without backward jumps stable picked twenty-three that sit still more than half the time, and a series that sits still is easy to predict by definition. So stillness decides nothing and travels as a separate annotation: of the thirty-nine stable ones, twenty-eight sit still and eleven genuinely advance. What does not flatter is also stated: the second threshold today rules out no series on its own. None of this is a conclusion yet: it is the preparation, put on the record so the comparison that follows cannot be fitted to its own result.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-08",
     title: c("E0 deja una sola escala para el MASE, y dos copias dejan de mentir", "E0 leaves a single MASE scale, and two copies stop lying"),
