@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "e8b46298432aa4ea9ae341e9e517d9dd4a042405",
+  dataMain: "850d4bd61385a80aefb50d3cf3fc64b94a2b9dad",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -184,7 +184,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "done", "816d088"),
       story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "done", "967dfcb"),
       story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "done", "e8b4629"),
-      story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "planned"),
+      story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "done", "850d4bd"),
       story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "planned"),
       story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "planned"),
       story("E6", c("Limpieza pagada", "Paid-for cleanup"), c("Unificar universos y corregir catálogo y docstrings fósiles.", "Unify universes and correct stale catalog entries and docstrings."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-09",
+    title: c("E3 entrena de verdad, apunta antes de disparar, y falla", "E3 actually trains, calls its shot first, and fails"),
+    detail: c(
+      "El paso anterior había mirado resultados viejos; este entrena. Antes de encender nada se escribió y se guardó qué se iba a probar: tres recetas y ni una más, con todos sus ajustes fijados, más una lista de modelos de contexto que no pueden ascender a respuesta después. El programa no acepta una receta que no esté en esa lista, así que cambiar de idea a mitad deja huella. Corrieron cuarenta y dos entrenamientos en el procesador de una computadora portátil, sin tarjeta gráfica, cada uno con un recibo que dice qué se corrió, con qué materiales, cuánto tardó, cuánta memoria usó y qué archivos dejó. Los cuarenta y dos terminaron. Ninguno le gana al método de repetir el último valor conocido dentro de su propio grupo. Dos cosas sí quedaron aclaradas, y quedaron porque se apuntó antes: la configuración vieja, que en julio se descontrolaba hasta dar errores diez veces peores, se descontrolaba por cómo estaba armada —cambiarle la forma de medir el error y de escalar los datos la arregla—; y entrenar sobre el cambio mes a mes, en vez de sobre el nivel, importa por sí solo, a veces al doble. Arreglar el descontrol no basta para ganar. El resultado negativo se publica igual, porque un experimento que solo se cuenta cuando sale bien no es un experimento.",
+      "The previous step looked at old results; this one trains. Before switching anything on, what would be tried was written down and saved: three recipes and not one more, with every setting fixed, plus a list of context models that cannot be promoted to answers afterwards. The program refuses a recipe that is not on that list, so changing your mind halfway leaves a trace. Forty-two training runs went through a laptop processor, with no graphics card, each leaving a receipt saying what ran, on what material, how long it took, how much memory it used and which files it wrote. All forty-two finished. None beats the method of repeating the last known value within its own group. Two things did get settled, and they got settled because the shot was called first: the old configuration, which back in July spiralled into errors ten times worse, spiralled because of how it was built —changing how it measures error and scales the data fixes it—; and training on the month-to-month change rather than the level matters on its own, sometimes by a factor of two. Fixing the spiral is not enough to win. The negative result is published all the same, because an experiment you only report when it goes your way is not an experiment.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-09",
     title: c("E2 pregunta si separar las series sirve de algo, y la respuesta es que no", "E2 asks whether splitting the series helps at all, and the answer is no"),
