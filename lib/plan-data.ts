@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "967dfcb66c509eb17beb84505d32fc92cc226558",
+  dataMain: "e8b46298432aa4ea9ae341e9e517d9dd4a042405",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -183,7 +183,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     stories: [
       story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "done", "816d088"),
       story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "done", "967dfcb"),
-      story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "planned"),
+      story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "done", "e8b4629"),
       story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "planned"),
       story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "planned"),
       story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "planned"),
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-09",
+    title: c("E2 pregunta si separar las series sirve de algo, y la respuesta es que no", "E2 asks whether splitting the series helps at all, and the answer is no"),
+    detail: c(
+      "Con las series ya separadas en estables e inestables, tocaba la pregunta barata: entre los modelos que ya se habían evaluado, ¿alguno le gana al método más tonto posible —repetir el último valor conocido— dentro de su propio grupo? La comparación se hizo grupo por grupo y contra el método tonto de ESE grupo, nunca contra un promedio de todos: el listón de un grupo que apenas se mueve y el de uno que avanza cada mes son números distintos, y compararse contra la media de los dos es no compararse contra nada. Las reglas del contraste se escribieron antes de mirar ningún número, y se comprobaron enumerando a mano todos los casos posibles en muestras pequeñas. De sesenta y ocho comparaciones concluyentes, sesenta y ocho salieron peor que el método tonto y ninguna mejor. Un cuarto grupo tiene solo cinco series, demasiado pocas para que la prueba pueda decir nada, y así queda escrito en vez de forzar una conclusión. También se publica un detalle incómodo: en uno de los grupos, un modelo es idéntico al método tonto hasta la novena cifra decimal, y la prueba lo declara significativamente peor porque solo mira el sentido de la diferencia, no su tamaño; el veredicto se deja como estaba y se publica al lado de qué tamaño tiene realmente esa diferencia. El resultado es negativo y se conserva: separar por estabilidad, por sí solo y a un mes de distancia, no cambia quién gana.",
+      "With the series already split into stable and unstable, the cheap question came next: among the models already evaluated, does any of them beat the dumbest possible method —repeating the last known value— within its own group? The comparison was done group by group and against THAT group's dumb method, never against an average over all of them: the bar for a group that barely moves and one that advances every month are different numbers, and comparing against the average of the two is comparing against nothing. The rules of the contrast were written before looking at any number, and were checked by enumerating every possible case by hand on small samples. Of sixty-eight conclusive comparisons, sixty-eight came out worse than the dumb method and none better. A fourth group has only five series, too few for the test to say anything, and that is written down rather than forced into a conclusion. One uncomfortable detail is also published: in one group a model is identical to the dumb method down to the ninth decimal, and the test declares it significantly worse because it only looks at the direction of the difference, not its size; the verdict is left as it stood and published alongside how big that difference actually is. The result is negative and it is kept: splitting by stability, on its own and one month ahead, does not change who wins.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-09",
     title: c("E1 separa series estables de inestables sin mirar el futuro", "E1 separates stable from unstable series without looking at the future"),
