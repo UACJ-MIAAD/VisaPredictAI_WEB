@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "2ff4d07d9934ef4eda2d79060d907a751f938529",
+  dataMain: "a53202e3c5d8db93e89eb3c8f12863e5e06d9e81",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -186,7 +186,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "done", "e8b4629"),
       story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "done", "850d4bd"),
       story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "done", "2ff4d07"),
-      story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "planned"),
+      story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "observing", "a53202e"),
       story("E6", c("Limpieza pagada", "Paid-for cleanup"), c("Unificar universos y corregir catálogo y docstrings fósiles.", "Unify universes and correct stale catalog entries and docstrings."), "planned"),
     ],
   },
@@ -220,6 +220,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-09",
+    title: c("E5 hace que todas las cifras de la épica salgan de un solo archivo", "E5 makes every figure in the epic come from a single file"),
+    detail: c(
+      "Cuando un mismo número vive en la tesis, en una tabla, en una figura, en la ficha del modelo y en el sitio, tarde o temprano cuatro de esos cinco quedan desactualizados y nadie lo nota. Aquí se cerró esa puerta: hay un solo archivo con las cifras de toda la etapa, derivado de los cuatro pasos anteriores, y todo lo demás se genera desde él. Ni un conteo, ni un promedio, ni un veredicto se copia a mano, y una comprobación automática recorre el texto nuevo de la tesis y falla si encuentra un número escrito a pulso. La redacción conserva el resultado como salió, que sigue siendo negativo: ningún enrutador gana; en una tabla las mejoras a seis y doce meses no bastan porque a tres no llegan; en otra la mejora grande a doce meses no salva a la celda, que pierde a tres; y el grupo más pequeño no aporta evidencia. El sitio y el asistente quedan preparados para mostrar estas cifras, pero solo cuando viajen selladas en un corte: el corte actual no las trae y, por regla, no se muestra nada en vez de inventar una cohorte. El corte publicado no se regeneró; los archivos nuevos entran al contrato de los cortes futuros con una excepción cerrada y nominal para el actual.",
+      "When the same number lives in the thesis, in a table, in a figure, in the model card and on the site, sooner or later four of those five go stale and nobody notices. That door is now closed: there is a single file holding the figures for the whole stage, derived from the four previous steps, and everything else is generated from it. Not one count, not one average, not one verdict is copied by hand, and an automatic check walks the new thesis text and fails if it finds a number written by hand. The wording keeps the result as it came out, which is still negative: no router wins; in one table the six- and twelve-month gains are not enough because the three-month one falls short; in another the large twelve-month gain does not save the cell, which loses at three; and the smallest group provides no evidence. The site and the assistant are ready to show these figures, but only once they travel sealed in a cut: the current cut does not carry them and, by rule, nothing is shown rather than inventing a cohort. The published cut was not regenerated; the new files enter the contract for future cuts with a closed, named exception for the current one.",
+    ),
+    status: "observing",
+  },
   {
     date: "2026-09-09",
     title: c("E4 pone a competir el enrutado por grupos, y corrige una frase de más", "E4 puts group routing to the test, and takes back a sentence"),
