@@ -151,7 +151,10 @@ describe("public MLOps plan", () => {
     const stories = PLAN_EPICS.flatMap((epic) => epic.stories);
     const pointing = stories.filter((item) => item.evidence && PLAN_META.dataMain.startsWith(item.evidence));
     for (const story of pointing) {
-      expect(story.status).toBe("done");
+      // Aterrizada, sí; activada, no necesariamente: una historia puede quedar `observing`
+      // esperando el próximo corte gobernado y ser aun así la que movió el puntero. Lo que
+      // sigue siendo imposible es que una historia `planned` o `active` reclame el corte vigente.
+      expect(["done", "observing"]).toContain(story.status);
     }
     // y ninguna evidencia de historia entregada puede ser un prefijo vacío o de otra longitud
     for (const story of stories.filter((s) => s.status === "done" && s.evidence)) {
@@ -208,7 +211,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("2ff4d07d9934ef4eda2d79060d907a751f938529");
+    expect(PLAN_META.dataMain).toBe("a53202e3c5d8db93e89eb3c8f12863e5e06d9e81");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
