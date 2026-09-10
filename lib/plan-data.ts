@@ -203,7 +203,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar el bloqueo de la fuente y la ingesta semiautomática, y retirar la promesa de operación desatendida.", "Document the blocked source and the semi-automatic ingestion, and retire the unattended-operation claim."), "done", "29ca6cb"),
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte y cohortes propagados; el descargo espera la re-derivación causal"),
-      story("G5", c("Deck de defensa", "Defense deck"), c("Generar cifras de la presentación desde key_facts.", "Generate presentation figures from key_facts."), "planned"),
+      story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
       story("G6", c("Siguiente revisión", "Next review"), c("Llevar a Chente cohortes, multi-horizonte y decisiones abiertas.", "Bring cohorts, multi-horizon results and open decisions to Chente."), "planned"),
     ],
   },
@@ -220,6 +220,18 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-10",
+    title: c(
+      "G5 deja el material de la defensa generado desde los datos, no escrito a mano",
+      "G5 leaves the defense material generated from the data, not written by hand",
+    ),
+    detail: c(
+      "Una presentación es el sitio donde las cifras envejecen sin que nadie se entere: se copian una vez y nadie vuelve a comprobarlas. El material de la defensa se construye ahora con un programa que lee los archivos sellados del proyecto y arma las láminas con lo que encuentre; si un dato que una lámina necesita no existe, el programa se detiene y lo dice por su nombre, en vez de dejar un hueco o inventar una cifra. Cada número aparece acompañado de su unidad y de la población a la que se refiere, y la última lámina lista las huellas digitales de los archivos de los que salió todo. Un conjunto de comprobaciones automáticas vigila que no se despegue: fallan si alguna cifra visible no viene de un archivo, si el material guardado no coincide con lo que el programa produce hoy, si alguno de los archivos cambió desde la última construcción, o si alguna de las afirmaciones cualitativas dejó de ser cierta. El contenido cubre el panel, el piso difícil de batir, el valor a varios meses, el resultado negativo de las cohortes, la amenaza de disponibilidad de la fuente y las decisiones que siguen abiertas. El material es privado y de uso interno: no se publica en este sitio ni se incorpora a ningún repositorio del proyecto.",
+      "A presentation is where figures age unnoticed: they are copied once and nobody checks them again. The defense material is now built by a program that reads the project's sealed files and assembles the slides from whatever it finds; if a fact a slide needs does not exist, the program stops and names it, instead of leaving a gap or inventing a number. Every figure appears with its unit and the population it refers to, and the last slide lists the fingerprints of the files everything came from. A set of automated checks watches for drift: they fail if a visible figure does not come from a file, if the stored material does not match what the program produces today, if any of those files changed since the last build, or if one of the qualitative claims stopped being true. The content covers the panel, the floor that is hard to beat, the value at several months out, the negative cohort result, the availability threat to the source and the decisions still open. The material is private and for internal use: it is not published on this site nor added to any repository of the project.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-10",
     title: c(
