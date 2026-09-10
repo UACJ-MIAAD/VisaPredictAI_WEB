@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "51a83ff5788341367c4a13ff460b1489d5e39945",
+  dataMain: "6566e02e06f9bf8965dd428f323bb976b9c3221d",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -199,7 +199,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     status: "planned",
     stories: [
-      story("G1", c("Overleaf", "Overleaf"), c("Actualizar y revisar visualmente ambos documentos.", "Update and visually review both documents."), "planned"),
+      story("G1", c("Overleaf", "Overleaf"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
       story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar Cloudflare y la ingesta semiautomática.", "Document Cloudflare and semi-automatic ingestion."), "planned"),
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "planned"),
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "planned"),
@@ -220,6 +220,18 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-10",
+    title: c(
+      "G1 lleva los documentos a su propia casa y vuelve a compilarlos de punta a punta",
+      "G1 moves the documents into their own home and compiles them end to end again",
+    ),
+    detail: c(
+      "La tesis, el anteproyecto y el artículo vivían dentro del repositorio de datos, mezclados con el código que produce los números. Ahora tienen un repositorio propio, con su propia comprobación automática: cada vez que alguien toca un texto, el sistema los compila los tres y avisa si alguno deja de armarse. Al separarlos se comprobó archivo por archivo que ninguno cambiara ni un byte por el camino. En el repositorio de datos quedan sólo las cinco tablas de cifras que genera el propio pipeline, y una comprobación exige que sean idénticas en los dos lados, para que nadie edite una copia y deje la otra atrás. Con la mudanza hecha, los tres documentos se compilaron y revisaron en la herramienta de edición que usa el autor, sin un solo error. Desde ahora esa herramienta se usa para compilar y mirar el resultado, no para guardar cambios: lo que deba perdurar entra por el repositorio, con su revisión, y desde allí se trae. Es la misma disciplina que ya rige el código, aplicada al texto.",
+      "The thesis, the proposal and the paper used to live inside the data repository, mixed in with the code that produces the numbers. They now have a repository of their own, with its own automated check: whenever someone edits a text, the system compiles all three and says so if any of them stops building. The move was verified file by file, so that not one byte changed along the way. The data repository keeps only the five tables of figures the pipeline itself generates, and a check demands they be identical on both sides, so nobody edits one copy and leaves the other behind. With the move done, the three documents were compiled and reviewed in the author's editing tool, without a single error. From now on that tool is used to compile and look at the result, not to store changes: whatever should last enters through the repository, with its review, and is pulled from there. It is the same discipline that already governs the code, applied to the text.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-09",
     title: c("E6 pone una sola autoridad y retira lo que ya no era cierto", "E6 sets one authority and retires what had stopped being true")
