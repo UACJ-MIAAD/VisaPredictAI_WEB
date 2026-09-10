@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "29ca6cb8b2ccc0d56e2ef5706614ba5831a40727",
+  dataMain: "a8029f2266faf73ef5e0b5fbd8c1386b50c3cb7d",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -201,8 +201,8 @@ export const PLAN_EPICS: PlanEpic[] = [
     stories: [
       story("G1", c("Overleaf", "Overleaf"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
       story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar el bloqueo de la fuente y la ingesta semiautomática, y retirar la promesa de operación desatendida.", "Document the blocked source and the semi-automatic ingestion, and retire the unattended-operation claim."), "done", "29ca6cb"),
-      story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "planned"),
-      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "planned"),
+      story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
+      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte y cohortes propagados; el descargo espera la re-derivación causal"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar cifras de la presentación desde key_facts.", "Generate presentation figures from key_facts."), "planned"),
       story("G6", c("Siguiente revisión", "Next review"), c("Llevar a Chente cohortes, multi-horizonte y decisiones abiertas.", "Bring cohorts, multi-horizon results and open decisions to Chente."), "planned"),
     ],
@@ -220,6 +220,18 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-10",
+    title: c(
+      "G4 lleva al artículo el resultado de las cohortes y la amenaza al suministro, y queda en observación",
+      "G4 carries the cohort result and the supply threat into the paper, and stays under observation",
+    ),
+    detail: c(
+      "El artículo defiende un hallazgo incómodo: en este panel, repetir el último valor publicado es difícil de batir, y ningún modelo entrenado lo consigue con significancia. La objeción natural es que ese piso sea un efecto de mezclar series muy distintas. La respuesta ya estaba medida y ahora se publica: se partió el panel en series estables e inestables con una regla escrita antes de mirar ningún resultado, se entrenó cada grupo por separado y se exigió al selector por grupo el mismo listón que al sistema, en tres plazos a la vez. No lo pasa ninguno, ni en una tabla ni en la otra, y en uno de los grupos el propio selector elige el método simple, de modo que compite consigo mismo. Segmentar, por sí solo, no cambia quién gana a un mes. El párrafo no lleva ni una cifra: la afirmación es cualitativa porque el hallazgo lo es, y los números viven en la tesis, derivados de los archivos sellados. Se añade además la limitación de suministro: la fuente oficial rechaza visitas automatizadas, así que la descarga mensual se hace a mano y entra por el mismo procedimiento controlado; eso amenaza la puntualidad, no la integridad de lo ya recogido. La historia queda en observación y no terminada, porque las cifras principales del artículo siguen esperando la re-derivación causal, y el descargo que lo advierte sólo puede retirarse cuando esa medición exista.",
+      "The paper defends an uncomfortable finding: on this panel, repeating the last published value is hard to beat, and no trained model beats it with significance. The natural objection is that such a floor is an effect of pooling very different series. The answer had already been measured and is now published: the panel was split into stable and unstable series under a rule written before any result was inspected, each group was trained separately, and the per-group selector had to clear the same bar as the system, at three horizons at once. None clears it, in either table, and in one group the selector picks the simple method itself, so it competes with its own reference. Segmenting, on its own, does not change who wins at one month. The paragraph carries no figure at all: the claim is qualitative because the finding is, and the numbers live in the thesis, derived from the sealed files. The supply limitation is added too: the official source rejects automated visits, so the monthly download is done by hand and enters through the same controlled procedure; that threatens timeliness, not the integrity of what has already been collected. The story stays under observation rather than finished, because the paper's headline figures are still waiting on the causal re-derivation, and the disclaimer that says so may only be retired once that measurement exists.",
+    ),
+    status: "observing",
+  },
   {
     date: "2026-09-10",
     title: c(
