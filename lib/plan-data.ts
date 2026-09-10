@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "6566e02e06f9bf8965dd428f323bb976b9c3221d",
+  dataMain: "29ca6cb8b2ccc0d56e2ef5706614ba5831a40727",
   releaseId: "2026-09-158ec972c234",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -200,7 +200,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     status: "planned",
     stories: [
       story("G1", c("Overleaf", "Overleaf"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
-      story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar Cloudflare y la ingesta semiautomática.", "Document Cloudflare and semi-automatic ingestion."), "planned"),
+      story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar el bloqueo de la fuente y la ingesta semiautomática, y retirar la promesa de operación desatendida.", "Document the blocked source and the semi-automatic ingestion, and retire the unattended-operation claim."), "done", "29ca6cb"),
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "planned"),
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "planned"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar cifras de la presentación desde key_facts.", "Generate presentation figures from key_facts."), "planned"),
@@ -220,6 +220,18 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-10",
+    title: c(
+      "G2 documenta lo que el bloqueo de la fuente sí amenaza, y retira una promesa que había dejado de ser cierta",
+      "G2 documents what the blocked source actually threatens, and retires a claim that had stopped being true",
+    ),
+    detail: c(
+      "El sitio oficial que publica los boletines dejó de aceptar visitas automatizadas, así que los últimos meses se descargaron a mano y entraron por la misma orden controlada de siempre. Al revisar la tesis para escribir esa limitación apareció algo más urgente: un apéndice seguía afirmando que el sistema se mantiene al día sin intervención manual, y eso había dejado de ser verdad. La frase se retira y se sustituye por lo que sí se sostiene. El texto nuevo hace una distinción que importa: lo que está en riesgo es la frescura, es decir, la puntualidad con que llega cada mes nuevo y, con ella, la acumulación de evidencia para juzgar los pronósticos a plazos largos; lo que no está en riesgo es la integridad de lo ya recogido, porque cada página quedó congelada, verificada y respaldada, y el corte actual no tiene ningún mes ausente. Cambia quién trae la página, no cómo se valida ni cómo se guarda. Para que la afirmación retirada no vuelva por descuido, una comprobación automática la vigila ahora en todos los documentos del proyecto, no sólo en el sitio, y distingue prometer automatismo de describir el trabajo manual, que sigue siendo legítimo. El estado concreto de la fuente no se copia en ningún documento: se publica en el archivo que viaja con cada corte, de modo que cuando cambie, cambie en un solo lugar.",
+      "The official site that publishes the bulletins stopped accepting automated visits, so the last months were downloaded by hand and entered through the same controlled command as always. Reviewing the thesis to write that limitation turned up something more pressing: an appendix still claimed the system stays up to date without manual intervention, and that had stopped being true. The sentence is retired and replaced by what does hold. The new text draws a distinction that matters: what is at risk is freshness, that is, how promptly each new month arrives and, with it, the build-up of evidence for judging long-range forecasts; what is not at risk is the integrity of what has already been collected, because every page was frozen, verified and backed up, and the current cut has no missing month. What changes is who fetches the page, not how it is validated or stored. So the retired claim cannot creep back, an automated check now watches for it across every document of the project, not just the site, and it tells promising automation apart from describing manual work, which remains legitimate. The concrete state of the source is copied into no document: it is published in the file that travels with every cut, so that when it changes, it changes in one place only.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-10",
     title: c(
