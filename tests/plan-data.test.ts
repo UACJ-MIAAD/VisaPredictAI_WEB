@@ -99,17 +99,29 @@ describe("public MLOps plan", () => {
     }
   });
 
-  it("keeps G6 autonomous and free of an external meeting dependency", () => {
+  it("keeps G6 autonomous and closes it only once the reconciliation landed", () => {
     const g6 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "G6");
     expect(g6).toMatchObject({
-      status: "active",
+      status: "done",
       title: { es: "Cierre autónomo", en: "Autonomous closeout" },
     });
     expect(g6?.outcome.es).toMatch(/A6\/A7.*M74-E/);
     expect(g6?.outcome.en).toMatch(/A6\/A7.*M74-E/);
-
+    // G6 nació para sustituir una reunión por evidencia; esa propiedad no caduca al cerrarla.
     expect(`${g6?.outcome.es} ${g6?.outcome.en}`).not.toMatch(/director|reuni[oó]n|meeting/i);
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-09-13", status: "active" });
+  });
+
+  it("hands the front to campaign integrity, not to an empty plan", () => {
+    // Cerrar la última historia sin abrir la siguiente dejaría `planFocus().next` en null y la
+    // cabecera sin frente: el tablero diría que no queda trabajo cuando sí queda.
+    const focus = planFocus();
+    expect(focus.next).toMatchObject({ id: "G7", status: "active" });
+    expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(/M74-E/);
+    // y sigue sin prometer campaña: autorizarla es una decisión aparte
+    expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(
+      /antes de autorizar|before authorizing/i,
+    );
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-09-13", status: "done" });
   });
 
   it("shows D7 as observation 0/2 and does not call it completed", () => {

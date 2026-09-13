@@ -204,7 +204,8 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte y cohortes propagados; el descargo espera la re-derivación causal"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
-      story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "active"),
+      story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "done"),
+      story("G7", c("Integridad de campaña", "Campaign integrity"), c("Cerrar M74-E en el entorno aislado: acreditar cada consumidor de pronósticos, conectar el productor del transporte y sellar entornos antes de autorizar otra campaña.", "Close M74-E in the isolated worktree: accredit every forecast consumer, wire the transport producer and seal the environments before authorizing another campaign."), "active"),
     ],
   },
 ];
@@ -220,6 +221,18 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-13",
+    title: c(
+      "G6 cierra: la reconciliación académica vive ya en la autoridad documental",
+      "G6 closes: the academic reconciliation now lives in the documentary authority",
+    ),
+    detail: c(
+      "La retroalimentación académica y los dos incrementos semanales ya viven en la autoridad documental, que es la única prueba que cuenta: el documento principal los incorpora, compila en verde y quedó verificado también en la superficie de compilación. El cambio no toca datos, modelos ni resultados científicos; el corte publicado y su identidad siguen intactos. Con eso, la reconciliación deja de ser una deuda y el trabajo vuelve a la integridad de campaña, que se cierra en un árbol aislado: acreditar cada consumidor de pronósticos, conectar el productor que hoy falta y sellar los entornos antes de que cualquier campaña nueva pueda autorizarse. Las dos corridas fallidas anteriores permanecen como evidencia diagnóstica y ninguna de sus salidas se reutiliza como resultado oficial.",
+      "The academic feedback and both weekly increments now live in the documentary authority, which is the only proof that counts: the main document carries them, compiles clean and was verified on the compilation surface as well. The change touches no data, models or scientific results; the published cut and its identity are unchanged. With that, the reconciliation stops being a debt and the work returns to campaign integrity, which is closed in an isolated tree: accrediting every forecast consumer, wiring the producer that is missing today and sealing the environments before any new campaign can be authorized. The two earlier failed runs remain diagnostic evidence and none of their outputs is reused as an official result.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-09-13",
     title: c(
