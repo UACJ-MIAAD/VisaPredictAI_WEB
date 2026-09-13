@@ -99,6 +99,19 @@ describe("public MLOps plan", () => {
     }
   });
 
+  it("keeps G6 autonomous and free of an external meeting dependency", () => {
+    const g6 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "G6");
+    expect(g6).toMatchObject({
+      status: "active",
+      title: { es: "Cierre autónomo", en: "Autonomous closeout" },
+    });
+    expect(g6?.outcome.es).toMatch(/A6\/A7.*M74-E/);
+    expect(g6?.outcome.en).toMatch(/A6\/A7.*M74-E/);
+
+    expect(`${g6?.outcome.es} ${g6?.outcome.en}`).not.toMatch(/director|reuni[oó]n|meeting/i);
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-09-13", status: "active" });
+  });
+
   it("shows D7 as observation 0/2 and does not call it completed", () => {
     const d7 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "D7");
     expect(d7).toMatchObject({ status: "observing", evidence: "80b3bfb · 0/2" });

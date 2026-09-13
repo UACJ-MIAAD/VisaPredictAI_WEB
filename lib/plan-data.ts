@@ -204,7 +204,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte y cohortes propagados; el descargo espera la re-derivación causal"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
-      story("G6", c("Siguiente revisión", "Next review"), c("Llevar a Chente cohortes, multi-horizonte y decisiones abiertas.", "Bring cohorts, multi-horizon results and open decisions to Chente."), "planned"),
+      story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "active"),
     ],
   },
 ];
@@ -220,6 +220,18 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-09-13",
+    title: c(
+      "G6 elimina la reunión como puerta y ordena el cierre autónomo",
+      "G6 removes the meeting gate and orders the autonomous closeout",
+    ),
+    detail: c(
+      "El avance ya no espera una reunión ni una respuesta externa. Las decisiones técnicas se resuelven con evidencia reproducible, y el propietario conserva únicamente las autorizaciones materiales. El frente inmediato incorpora toda la retroalimentación académica recibida y reconcilia A6 y A7 con el LaTeX principal: ambos paquetes fueron entregados y verificados, pero no se consideran integrados mientras su contenido durable no viva en la autoridad documental y compile allí. Después se retoma M74-E en el entorno aislado para terminar sus guardas y pruebas; sólo con un commit local limpio y un preflight nuevo se podrá autorizar por separado otra campaña. Las dos corridas fallidas permanecen como evidencia diagnóstica y ninguna de sus salidas se reutiliza como resultado oficial. El corte de datos y el release publicados no cambian con esta actualización.",
+      "Progress no longer waits for a meeting or an external answer. Technical decisions are resolved through reproducible evidence, while the owner retains only the material authorization boundaries. The immediate track incorporates all received academic feedback and reconciles A6 and A7 with the main LaTeX document: both packages were delivered and verified, but they are not considered integrated until their durable content lives in the documentary authority and compiles there. M74-E then resumes in its isolated environment to finish its guards and tests; only a clean local commit and a new preflight can support a separate authorization for another campaign. The two failed runs remain diagnostic evidence, and none of their outputs is reused as an official result. The published data cut and release do not change with this update.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-09-10",
     title: c(
