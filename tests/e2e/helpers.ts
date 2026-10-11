@@ -76,14 +76,30 @@ export async function gotoSettled(page: Page, path: string): Promise<void> {
     const step = Math.max(200, window.innerHeight - 100);
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
     for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
-      window.scrollTo(0, y);
+      // The site uses smooth scrolling. A scripted visibility walk must be
+      // instant, or the next measurement can sample a header still moving
+      // over a different background instead of the settled top of the page.
+      window.scrollTo({ top: y, behavior: "instant" });
       await sleep(60);
     }
-    window.scrollTo(0, document.documentElement.scrollHeight);
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
     await sleep(200);
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "instant" });
     await sleep(150);
   });
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  // IntersectionObserver starts a fade when the walk reaches each reveal.
+  // Measure the final rendered state, including delayed fades, without
+  // disabling motion or changing the accessibility assertions.
+  await expect.poll(() => page.locator(".reveal").evaluateAll((elements) =>
+    elements.filter((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && getComputedStyle(element).opacity !== "1";
+    }).map((element) => ({
+      className: element.className,
+      opacity: getComputedStyle(element).opacity,
+    })),
+  ), { message: "Rendered reveal elements must finish fading before measurements" }).toEqual([]);
 }
 
 export type OverflowReport = {

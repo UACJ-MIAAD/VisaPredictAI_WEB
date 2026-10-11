@@ -23,7 +23,7 @@
   --color-accent-strong: #003ca6; /* full UACJ blue for emphasis */
   --color-accent-btn: #0a4da8; /* filled control that carries WHITE text (AA) */
   --color-deep-band: #002a75; /* editorial deep band bg (white text, AA both themes) */
-  --color-accent-2: #9a6a12; /* AA-compliant ochre/gold */
+  --color-accent-2: #92620f; /* ochre/gold, AA as text on bg (5.28:1) and surface-soft (4.92:1) */
   --color-border: #e3e7ee;
   --color-rule: #14181f; /* strong editorial module rule (= ink in light) */
   --color-danger: #b32424;
