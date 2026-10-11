@@ -16,6 +16,7 @@ import {
   groupUpdatesByDay,
   planFocus,
   planStats,
+  storiesStatus,
   type PlanStatus,
 } from "@/lib/plan-data";
 import type { Lang } from "@/lib/site-map";
@@ -98,10 +99,7 @@ const lower = (text: string) =>
 // así el diagrama no puede volver a decir «planificado» sobre una fase ya entregada.
 const roadmapStatus = (ids: string[]): PlanStatus => {
   const stories = PLAN_EPICS.filter((epic) => ids.includes(epic.id)).flatMap((epic) => epic.stories);
-  if (stories.length === 0) return "planned";
-  if (stories.every((item) => item.status === "done")) return "done";
-  if (stories.some((item) => ["done", "observing", "active"].includes(item.status))) return "active";
-  return "planned";
+  return storiesStatus(stories);
 };
 
 export function PlanPage({ lang }: { lang: Lang }) {
@@ -122,8 +120,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "El plan, sin humo" : "The plan, without hand-waving"}
             lead={
               es
-                ? "Un tablero vivo del plan MLOps v2. El porcentaje se calcula desde las historias de usuario; los trabajos pausados no se esconden ni inflan el avance."
-                : "A living dashboard for the MLOps v2 plan. Progress is calculated from user stories; paused work is neither hidden nor used to inflate completion."
+                ? "Un tablero vivo del plan MLOps v2. El porcentaje pondera las historias de usuario; una acreditación local todavía no equivale a integrar resultados en producción."
+                : "A living dashboard for the MLOps v2 plan. Progress weights user stories; local accreditation does not yet mean results are integrated into production."
             }
           />
 
@@ -215,8 +213,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "De plataforma a evidencia" : "From platform to evidence"}
             lead={
               es
-                ? "Primero cerramos la plataforma; después reducimos deuda con factura, sincronizamos las seis superficies y sólo entonces entrenamos cohortes."
-                : "We close the platform first, then reduce debt with measured payoff, synchronize all six surfaces, and only then train cohorts."
+                ? "La plataforma está preparada y la campaña ya completó el cálculo. Sus complementarias están acreditadas en local; ahora toca reconciliar el corte y sincronizar las seis superficies con autorización."
+                : "The platform is ready and the campaign has completed computation. Its complements are locally accredited; the next step is to reconcile the cut and synchronize all six surfaces with authorization."
             }
           />
 
@@ -282,7 +280,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
                 <article className={styles.epicCard} key={epic.id}>
                   <div className={styles.epicTop}>
                     <span className={styles.epicCode}>{epic.id}</span>
-                    <StatusBadge status={epic.status} lang={lang} />
+                    <StatusBadge status={storiesStatus(epic.stories)} lang={lang} />
                   </div>
                   <h3>{copy(epic.title, lang)}</h3>
                   <p>{copy(epic.summary, lang)}</p>
@@ -324,7 +322,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
                       <strong>{copy(epic.title, lang)}</strong>
                       <small>{progress.completed}/{progress.total} · {progress.percent}%</small>
                     </span>
-                    <StatusBadge status={epic.status} lang={lang} />
+                    <StatusBadge status={storiesStatus(epic.stories)} lang={lang} />
                   </summary>
                   <ol className={styles.storyList}>
                     {epic.stories.map((item) => (

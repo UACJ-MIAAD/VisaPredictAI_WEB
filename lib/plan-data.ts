@@ -22,7 +22,6 @@ export type PlanEpic = {
   id: string;
   title: Copy;
   summary: Copy;
-  status: PlanStatus;
   stories: PlanStory[];
 };
 
@@ -65,7 +64,6 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Base aislada, backports, CI mínimo e higiene con recuperación demostrada.",
       "Isolated baseline, backports, minimum CI and cleanup with proven recovery.",
     ),
-    status: "done",
     stories: [
       story("0.1", c("Worktree de integración", "Integration worktree"), c("Aislar main del trabajo R9 preservado.", "Keep main isolated from the preserved R9 work."), "done"),
       story("0.2", c("Reauditar el diagrama ER", "Re-audit the ER diagram"), c("Portar el diagrama y su generador con equivalencia visual.", "Port the diagram and generator with visual equivalence."), "done"),
@@ -83,7 +81,6 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Ingesta manual segura y cron resiliente ante el bloqueo de la fuente oficial.",
       "Safe manual ingestion and a cron resilient to the official source being blocked.",
     ),
-    status: "done",
     stories: [
       story("A1", c("Puerto único de red", "Single network port"), c("Inyectar el fetcher, aplicar un retry y tipar el bloqueo WAF.", "Inject the fetcher, apply one retry and type WAF blocking."), "done"),
       story("A2", c("Ingesta manual validada", "Validated manual ingestion"), c("Validar, promover atómicamente y subir a S3 en modo create-only.", "Validate, promote atomically and upload to S3 in create-only mode."), "done"),
@@ -101,7 +98,6 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Protección de main, autenticación del cron, supply chain y seguridad web.",
       "Main protection, cron authentication, supply chain and web security.",
     ),
-    status: "done",
     stories: [
       story("B0", c("Publicación protegida", "Protected publishing"), c("Usar una GitHub App de alcance mínimo para publicar con gates.", "Use a least-privilege GitHub App to publish through gates."), "done"),
       story("B1", c("Supply chain mínima", "Minimum supply chain"), c("Conservar locks, contratos, triage y acciones fijadas por SHA.", "Retain locks, contracts, triage and SHA-pinned actions."), "done"),
@@ -119,7 +115,6 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Integridad del release, observabilidad y operación reproducible antes de entrenar más modelos.",
       "Release integrity, observability and reproducible operations before training more models.",
     ),
-    status: "active",
     stories: [
       story("D1", c("Fricción DVC", "DVC friction"), c("Bloquear pushes cuando el lock no representa el DAG.", "Block pushes when the lock does not represent the DAG."), "done", "f67edf9"),
       story("D2", c("Advisories visibles", "Visible advisories"), c("Rechazar artefactos vacíos y convertir warnings y advisories en contratos.", "Reject empty artifacts and turn warnings and advisories into contracts."), "done", "0092af0"),
@@ -139,7 +134,6 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Reducir duplicación y complejidad sólo donde existe una prueba de valor.",
       "Reduce duplication and complexity only where value is demonstrated.",
     ),
-    status: "planned",
     stories: [
       story("C1", c("Taxonomía única", "Single taxonomy"), c("Centralizar categorías y metadatos con golden master.", "Centralize categories and metadata with a golden master."), "done", "5fa14fa"),
       story("C2", c("Extracción común", "Shared extraction"), c("Eliminar la duplicación entre scrapers con funciones puras.", "Remove scraper duplication with pure functions."), "done", "25722fe"),
@@ -160,13 +154,12 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Una misma verdad canónica en datos, paper, web, RAG, tarjeta y producción.",
       "One canonical truth across data, paper, web, RAG, model card and production.",
     ),
-    status: "planned",
     stories: [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
       story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "17eb7a9 · activa en el próximo corte gobernado"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
-      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "7925dae · reglas puestas; los facts esperan la campaña causal"),
+      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "7925dae · campaña causal calculada; facts pendientes de propagación"),
       story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "done"),
       story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "done", "1c81b6f"),
       story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "done", "1c81b6f"),
@@ -179,7 +172,6 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Responder la hipótesis de estabilidad con evaluación pre-registrada y resultados positivos o negativos.",
       "Answer the stability hypothesis with preregistered evaluation and positive or negative results.",
     ),
-    status: "planned",
     stories: [
       story("E0", c("Escala única", "Single scale"), c("Centralizar la escala naïve previa al entrenamiento.", "Centralize the pre-training naïve scale."), "done", "816d088"),
       story("E1", c("Cohortes causales", "Causal cohorts"), c("Construir estabilidad sin usar información del hold-out.", "Build stability without using hold-out information."), "done", "967dfcb"),
@@ -197,15 +189,14 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Convertir la plataforma y sus resultados en tesis, paper y defensa reproducibles.",
       "Turn the platform and its results into a reproducible thesis, paper and defense.",
     ),
-    status: "planned",
     stories: [
       story("G1", c("Overleaf", "Overleaf"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
       story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar el bloqueo de la fuente y la ingesta semiautomática, y retirar la promesa de operación desatendida.", "Document the blocked source and the semi-automatic ingestion, and retire the unattended-operation claim."), "done", "29ca6cb"),
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
-      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte y cohortes propagados; el descargo espera la re-derivación causal"),
+      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte publicado; campaña nueva calculada, descargo pendiente de reconciliación"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
       story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "done"),
-      story("G7", c("Integridad de campaña", "Campaign integrity"), c("Cerrar M74-E en el entorno aislado: acreditar cada consumidor de pronósticos, conectar el productor del transporte y sellar entornos antes de autorizar otra campaña.", "Close M74-E in the isolated worktree: accredit every forecast consumer, wire the transport producer and seal the environments before authorizing another campaign."), "active"),
+      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E está calculada y las complementarias C4/C3 están acreditadas en local. Cerrar los límites pendientes y reconciliar el corte antes de autorizar figuras, propagación y publicación.", "The M74-E campaign is computed and the C4/C3 complements are locally accredited. Resolve the remaining limitations and reconcile the cut before authorizing figures, propagation and publication."), "active", "local · C4/C3"),
     ],
   },
 ];
@@ -221,6 +212,66 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-10",
+    title: c(
+      "G7 acredita C3 en local y cierra su evidencia durable",
+      "G7 accredits C3 locally and seals its durable evidence",
+    ),
+    detail: c(
+      "La comparación de conformal se volvió a calcular usando los intervalos profundos producidos por la campaña madre, importados con su procedencia acreditada y sin reentrenarlos. Sólo cambió la columna de comparación con ese baseline; gamma y las coberturas ACI permanecieron idénticos. La complementaria pasó cierre, aceptación y verificación al releerla, y su recibo y evidencia quedaron sellados después de recuperar el acceso a archivos. La figura F4 y las cifras canónicas todavía no se han regenerado. La siguiente tarea es cerrar los límites pendientes y preparar la reconciliación de las seis superficies, con autorizaciones separadas para propagar y publicar.",
+      "The conformal comparison was recomputed using the deep intervals produced by the parent campaign, imported with accredited provenance and without retraining. Only the baseline comparison column changed; gamma and ACI coverage remained identical. The complement passed close, acceptance and read-time verification, and its receipt and evidence were sealed after file access was restored. Figure F4 and canonical figures have not yet been regenerated. The next task is to resolve the remaining limitations and prepare reconciliation across all six surfaces, with separate authorizations for propagation and publication.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-10",
+    title: c(
+      "G7 acredita C4: la semilla declarada conserva los veredictos de E3",
+      "G7 accredits C4: the declared seed preserves the E3 verdicts",
+    ),
+    detail: c(
+      "Los 42 lanes de E3 se ejecutaron en un worktree separado, con semilla 1, identidad propia y recibos acreditados contra el plan y los hashes de sus salidas. La ejecución terminó sin fallos y la verificación volvió a acreditar el conjunto completo. Los veredictos coinciden con los de la campaña madre. Los recibos originales se conservaron sin cambiarles la identidad ni la semilla. C4 está acreditada en local; sus resultados todavía no son canónicos ni están propagados.",
+      "All 42 E3 lanes ran in a separate worktree with seed 1, their own identity and receipts accredited against the plan and output hashes. The run completed without failures and verification re-accredited the entire set. The verdicts match the parent campaign. Original receipts were preserved without changing their identity or seed. C4 is locally accredited; its results are not yet canonical or propagated.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-10",
+    title: c(
+      "G7 deja M74-F en un único commit local revisado",
+      "G7 leaves M74-F in one reviewed local commit",
+    ),
+    detail: c(
+      "El commit local de M74-F reúne las correcciones de procedencia, identidad, semillas y aislamiento de campañas, junto al contrato y la CLI de las complementarias. Los sellos comprueban el código, las entradas, el contenido y el catálogo SQL de la DuckDB y las importaciones contra la evidencia archivada de la madre. Las pruebas con Git y bases temporales reales, las baterías completas y la revisión posterior al commit pasaron. El árbol quedó limpio. El commit no está en main ni respaldado en el remoto; los entornos no se recertificaron y los frentes protegidos permanecieron intactos.",
+      "The local M74-F commit contains the provenance, identity, seed and campaign-isolation corrections, together with the complement contract and CLI. Seals check code, inputs, DuckDB content and SQL catalog, and imports against the parent's archived evidence. Tests using real Git and temporary databases, full validation suites and post-commit review passed. The tree is clean. The commit is neither on main nor backed up remotely; environments were not recertified and protected worktrees remained intact.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-07",
+    title: c(
+      "G7 completa el cálculo de la campaña principal; la consistencia sigue pendiente",
+      "G7 completes the main campaign computation; consistency remains pending",
+    ),
+    detail: c(
+      "La cuarta campaña completó todas sus etapas sin fallos y pasó las puertas de entrada y salida. Los resultados y sus recibos quedaron persistidos, y la transacción terminó en computed con consistencia pendiente. El guardián detectó cifras nuevas que todavía requieren reconciliación documental y propagación. No se publicaron los resultados ni se modificó el corte servido. La evidencia de los intentos fallidos anteriores y la campaña madre permanecen preservadas.",
+      "The fourth campaign completed every stage without failures and passed its input and output gates. Results and receipts were persisted, and the transaction finished as computed with consistency pending. The consistency guardian detected new figures that still require documentary reconciliation and propagation. Results were not published and the served cut was not modified. Evidence from earlier failed attempts and the parent campaign remains preserved.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-09-19",
+    title: c(
+      "G7 respalda M74-E y conserva la evidencia de los tres intentos fallidos",
+      "G7 backs up M74-E and preserves evidence from three failed attempts",
+    ),
+    detail: c(
+      "M74-E quedó en 953cd00, con dictamen apto para iniciar una campaña local y respaldo en su rama remota. Las causas de los tres intentos fallidos se corrigieron y sus escenas se conservaron. Este estado no autorizaba por sí mismo ni el cómputo ni la publicación: la campaña permaneció detenida hasta recibir una orden y una ventana continua de ejecución. R9 continuó en custodia.",
+      "M74-E reached 953cd00 with a verdict allowing a local campaign and a backup on its remote branch. Causes of the three failed attempts were corrected and their scenes preserved. This state alone authorized neither computation nor publication: the campaign remained stopped until an explicit order and continuous execution window were provided. R9 remained preserved.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-09-13",
     title: c(
@@ -593,6 +644,20 @@ export function planStats(epics = PLAN_EPICS) {
     planned: stories.filter((item) => item.status === "planned").length,
     percent: Math.round((points / stories.length) * 100),
   };
+}
+
+/** A badge describes the remaining work, and cannot lag behind its stories. */
+export function storiesStatus(stories: PlanStory[]): PlanStatus {
+  if (stories.length === 0) return "planned";
+  const remaining = stories.filter((item) => item.status !== "done");
+  if (remaining.length === 0) return "done";
+  if (remaining.some((item) => item.status === "active")) return "active";
+  if (remaining.some((item) => item.status === "planned")) {
+    return remaining.length < stories.length ? "active" : "planned";
+  }
+  if (remaining.some((item) => item.status === "observing")) return "observing";
+  if (remaining.some((item) => item.status === "paused")) return "paused";
+  return "deferred";
 }
 
 export function epicStats(epic: PlanEpic) {

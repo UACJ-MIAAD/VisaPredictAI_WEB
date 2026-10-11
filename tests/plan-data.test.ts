@@ -10,6 +10,7 @@ import {
   groupUpdatesByDay,
   planFocus,
   planStats,
+  storiesStatus,
 } from "@/lib/plan-data";
 
 /** Copia profunda del plan: las mutaciones de una prueba jamás tocan el plan publicado. */
@@ -22,6 +23,36 @@ const findStory = (epics: PlanEpic[], id: string) => {
 };
 
 describe("public MLOps plan", () => {
+  it("shows delivered and observed epics instead of stale planned badges", () => {
+    const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
+    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "observing", G: "active" });
+    expect(planStats().percent).toBe(94);
+  });
+
+  it("moves an epic badge when its work starts, enters observation, and finishes", () => {
+    const epic = clonePlan().find((item) => item.id === "C")!;
+    epic.stories[0].status = "planned";
+    expect(storiesStatus(epic.stories)).toBe("active");
+    epic.stories[0].status = "observing";
+    expect(storiesStatus(epic.stories)).toBe("observing");
+    epic.stories[0].status = "done";
+    expect(storiesStatus(epic.stories)).toBe("done");
+    expect(storiesStatus(PLAN_EPICS.find((item) => item.id === "C")!.stories)).toBe("done");
+  });
+
+  it("does not call deferred, paused, or empty work delivered", () => {
+    const epic = clonePlan()[0];
+    epic.stories[0].status = "deferred";
+    expect(storiesStatus(epic.stories)).toBe("deferred");
+    epic.stories[0].status = "paused";
+    expect(storiesStatus(epic.stories)).toBe("paused");
+    expect(storiesStatus([])).toBe("planned");
+  });
+
+  it("does not publish the unbacked local M74-F commit as a resolvable reference", () => {
+    expect(JSON.stringify({ epics: PLAN_EPICS, updates: PLAN_UPDATES })).not.toContain("03095ba");
+  });
+
   it("derives every published counter from the stories and the public weighting", () => {
     // Nada se teclea: el esperado se recalcula aquí con la misma regla que la página publica.
     const stories = PLAN_EPICS.flatMap((epic) => epic.stories);
@@ -111,17 +142,20 @@ describe("public MLOps plan", () => {
     expect(`${g6?.outcome.es} ${g6?.outcome.en}`).not.toMatch(/director|reuni[oó]n|meeting/i);
   });
 
-  it("hands the front to campaign integrity, not to an empty plan", () => {
+  it("keeps the front on reconciliation until local results are propagated", () => {
     // Cerrar la última historia sin abrir la siguiente dejaría `planFocus().next` en null y la
     // cabecera sin frente: el tablero diría que no queda trabajo cuando sí queda.
     const focus = planFocus();
     expect(focus.next).toMatchObject({ id: "G7", status: "active" });
     expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(/M74-E/);
-    // y sigue sin prometer campaña: autorizarla es una decisión aparte
+    // El cálculo está hecho; no permite declarar entregada una integración pendiente.
     expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(
-      /antes de autorizar|before authorizing/i,
+      /propagaci[oó]n.*publicaci[oó]n|propagation.*publication/i,
     );
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-09-13", status: "done" });
+    expect(focus.next?.evidence).toBe("local · C4/C3");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-10", status: "active" });
+    expect(focus.updatedAt).toBe("2026-10-10");
+    expect(planStats().percent).toBe(94);
   });
 
   it("shows D7 as observation 0/2 and does not call it completed", () => {
@@ -417,8 +451,11 @@ describe("public MLOps plan", () => {
       expect(focus.updatedAt).toBe(newest);
 
       const updates = cloneUpdates();
-      updates.unshift({ ...updates[0], date: "2026-10-01" });
-      expect(planFocus(clonePlan(), updates).updatedAt).toBe("2026-10-01");
+      const nextDate = new Date(`${newest}T00:00:00Z`);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      const tomorrow = nextDate.toISOString().slice(0, 10);
+      updates.unshift({ ...updates[0], date: tomorrow });
+      expect(planFocus(clonePlan(), updates).updatedAt).toBe(tomorrow);
       expect(planFocus().updatedAt).toBe(newest); // el feed publicado no se movió
     });
 

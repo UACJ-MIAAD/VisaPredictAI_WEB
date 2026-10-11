@@ -311,7 +311,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
           <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4 border-t-2 border-dashed" style={{ borderColor: "var(--color-accent-2)" }} />{lang === "en" ? "Forecast" : "Pronóstico"}</span>
           <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-4 rounded-sm" style={{ background: "color-mix(in srgb, var(--color-accent) 20%, transparent)" }} />{lang === "en" ? "80 % / 95 % band" : "Banda 80 % / 95 %"}</span>
           {spec.fallback && (
-            <span className="rounded-full px-2 py-0.5 text-[0.64rem] font-medium" style={{ background: "color-mix(in srgb, var(--color-accent-2) 16%, transparent)", color: "var(--color-accent-2)" }}
+            <span className="rounded-full px-2 py-0.5 text-[0.64rem] font-medium" style={{ background: "color-mix(in srgb, var(--color-accent-2) 16%, transparent)", color: "var(--color-ink)" }}
               title={lang === "en" ? "This series has no production forecast — showing the illustrative in-browser drift baseline." : "Esta serie no tiene pronóstico de producción — se muestra la línea base de deriva ilustrativa en el navegador."}>
               {lang === "en" ? "in-browser baseline" : "línea base en el navegador"}
             </span>
