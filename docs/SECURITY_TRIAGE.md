@@ -1,8 +1,9 @@
-# Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02)
+# Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02 · #62 2026-10-12)
 
-Estado del `npm audit` al 2026-09-02 (verificado sobre `main@9d0929d`): **0 avisos en
-todas las severidades**, con y sin `devDependencies` (`npm audit --omit=dev
---audit-level=high` sale 0). El gate programado (`.github/workflows/scheduled-quality.yml`,
+Estado vigente: ver **«Triage vigente (2026-10-12)»** más abajo (gate `--omit=dev
+--audit-level=high` en 0 tras la remediación; 2 avisos de producción y 2 de desarrollo
+abiertos con dueño). Al 2026-09-02 (`main@9d0929d`) el audit era 0 en todas las
+severidades. El gate programado (`.github/workflows/scheduled-quality.yml`,
 job `security-audit`) falla en high/critical y reporta las moderadas cada lunes; este
 documento es su triage vivo. El lado Python (locks del repo de datos) vive en
 `VisaPredictAI/docs/SECURITY_TRIAGE.md` con la misma política y fecha de revisión.
@@ -26,10 +27,39 @@ histórico se retira de este documento (queda en el historial de git).
 (hoy: next@9.3.3, tres majors atrás). Todo upgrade va por PR con la suite completa
 (vitest + typecheck + build offline) y rollback = revert del commit.
 
-## Triage vigente (2026-09-02): sin avisos abiertos
+## Triage vigente (2026-10-12)
 
-No hay filas de triage: el audit completo es 0/0/0/0/0. La próxima fila la abre el job
-semanal cuando aparezca un aviso nuevo; el SLA de la tabla anterior aplica desde esa fecha.
+El job semanal falló desde el 14-sep: ese día por un `ETIMEDOUT` al instalar
+`onnxruntime-node` (red, no audit) y desde el 21-sep por avisos nuevos. Audit medido el
+2026-10-12 con Node 22.19 / npm 10.9.3 sobre el lock de `main@3ae16ff`: **producción
+(`--omit=dev`) 15 avisos únicos en 11 paquetes, 4 high**; con dev, 20 únicos. El gate
+salía rc 1. Remediación (lockfile regenerado con npm, sin `--force` ni excepciones):
+
+| Cadena | Avisos | Remediación |
+|---|---|---|
+| `@huggingface/transformers` → `onnxruntime-node` → `adm-zip` 0.6.0 | 7 (4 high, 3 moderate), incluidos los 7 de `adm-zip` del 5-oct | override `adm-zip` → `^0.6.1`. GHSA-vwc7-r8mq-g2x9 declara afectado `>=0.5.9 <=0.6.0` **sin versión parcheada**: 0.6.1 queda fuera del rango, la ficha no la nombra como corrección |
+| `sharp` 0.35.4 (librsvg, CVE-2026-96889) | GHSA-wq5f-xc86-pv6w (high) | `sharp` y su override → `^0.35.5` (+ `@img/*` 0.35.5 / libvips 1.3.4) |
+| `postcss`/`@tailwindcss/node`/`magicast` → `source-map-js` 1.2.1 | GHSA-68fv-2mgg-jv7q (high) | `source-map-js` 1.2.2 dentro de rango (sólo lock) |
+| `next` 15.5.25 (envenenamiento de caché SSG/ISR auto-hospedado; el export estático no lo usa) | GHSA-4jqv-mc3x-m676, GHSA-mcj8-r9mp-w47p (moderate) | `next` → `^15.5.27` (parche de la misma major) |
+| `dompurify` 3.4.14 (`IN_PLACE` + hooks; la app usa modo cadena sin hooks) | GHSA-p98j-92pf-mc4p, GHSA-6688-9rhm-gjv2 (low) | `dompurify` → `^3.4.16` |
+| `brace-expansion` (dev) | GHSA-6j4f, GHSA-qhr7 (high), GHSA-q2hr (moderate) | 1.1.21 / 5.0.12 dentro de rango (sólo lock) |
+
+Después: `npm audit --omit=dev --audit-level=high` **rc 0**; producción 2 avisos únicos
+(6 paquetes en la cadena), ninguno high. Abiertos, con dueño:
+
+| Aviso | Paquete (alcance) | Severidad | Explotabilidad | Plan / SLA |
+|---|---|---|---|---|
+| GHSA-hp3w-g68c-fv3c | `sprintf-js` 1.1.3 vía `onnxruntime-node` → `global-agent` → `roarr` (prod) | moderate | DoS por especificador de precisión; los formatos los fija la biblioteca de logging, no un usuario | **sin versión parcheada** publicada; revisar en cada lunes y al subir `onnxruntime-node` |
+| GHSA-238p-pmpm-9mq7 | `katex` 0.16.47 (prod, sólo build sobre contenido propio + CSS) | low | requiere contaminación de prototipo previa | upgrade a ≥0.18.2 es un minor de 0.x: va en su propio PR con revisión visual de las fórmulas |
+| GHSA-82fw-gwwq-j7x9 | `vitest`/`@vitest/mocker` 4.1.9 (dev) | moderate | lectura de archivos vía mock redirigido en el runner local | 4.1.11 existe y cabe en el rango, pero `npm install` falla con un error interno de npm (`Cannot read properties of null (reading 'edgesOut')`, 2 intentos); `@vitest/coverage-v8` fija `vitest` exacto. Pendiente |
+| GHSA-vfj7-8cjw-p6xm | `braces` 3.0.3 (dev, vía `micromatch`) | high | DoS con patrones anidados en herramientas de desarrollo | **sin versión parcheada** publicada |
+
+Evidencia del audit antes/después, delta del lockfile y fichas oficiales:
+`Anteproyecto/Prompts/lote_NOCTURNO_WEB_Y_G7_2026-10-12/` (fuera de este repo).
+
+## Triage 2026-09-02 (histórico): sin avisos abiertos
+
+Entonces el audit completo era 0/0/0/0/0 y no había filas de triage.
 
 ### Remediación H1 (PR #2, squash → `main@9d0929d`, 2026-09-02)
 

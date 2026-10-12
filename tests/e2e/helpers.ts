@@ -63,25 +63,64 @@ export async function expectTheme(page: Page, theme: ThemeName): Promise<void> {
   await expect(page.locator("html")).toHaveClass(new RegExp(`\\b${theme}\\b`));
 }
 
+/** Walk bounds (#63). The tallest real page needs ~15 steps at 1280 px; the
+ * cap leaves room for an order of magnitude more, and a single step (one
+ * scroll plus a 60 ms pause) never needs seconds. */
+const WALK_MAX_STEPS = 150;
+const WALK_STEP_STALL_MS = 15_000;
+
+/** One walk step: instant scroll (the site uses smooth scrolling, and a
+ * scripted visibility walk must not sample a header still moving over a
+ * different background), a pause for IO-gated content, then the current
+ * document height. */
+async function walkStep(page: Page, y: number, index: number): Promise<number> {
+  const step = page.evaluate(async (top) => {
+    window.scrollTo({ top, behavior: "instant" });
+    await new Promise((r) => setTimeout(r, 60));
+    return document.documentElement.scrollHeight;
+  }, y);
+  step.catch(() => undefined); // a stalled step is reported below; the page closes with the test
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const stalled = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`gotoSettled: walk step ${index} at y=${y} did not return within ${WALK_STEP_STALL_MS} ms`)),
+      WALK_STEP_STALL_MS,
+    );
+  });
+  try {
+    return await Promise.race([step, stalled]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Navigate and settle: fonts loaded, then walk the page once (viewport-sized
  * steps) so IO-gated/lazy sections mount and images/charts render, then back
  * to top. The site reveals several sections on intersection — measuring
  * without the walk would skip exactly the content most likely to overflow.
+ * The walk is driven step by step from here and bounded: a page that keeps
+ * growing, or a step that stalls, fails with a diagnosis instead of silently
+ * consuming the test budget (#63).
  */
 export async function gotoSettled(page: Page, path: string): Promise<void> {
   await page.goto(path, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
-  await page.evaluate(async () => {
-    const step = Math.max(200, window.innerHeight - 100);
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
-      // The site uses smooth scrolling. A scripted visibility walk must be
-      // instant, or the next measurement can sample a header still moving
-      // over a different background instead of the settled top of the page.
-      window.scrollTo({ top: y, behavior: "instant" });
-      await sleep(60);
+  const step = await page.evaluate(() => Math.max(200, window.innerHeight - 100));
+  const firstHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  let height = firstHeight;
+  let steps = 0;
+  for (let y = 0; y < height; y += step) {
+    if (steps === WALK_MAX_STEPS) {
+      throw new Error(
+        `gotoSettled: ${path} kept growing — scrollHeight ${firstHeight} → ${height} after ${steps} steps of ${step} px`,
+      );
     }
+    height = await walkStep(page, y, steps);
+    steps += 1;
+  }
+  await page.evaluate(async () => {
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
     await sleep(200);
     window.scrollTo({ top: 0, behavior: "instant" });
