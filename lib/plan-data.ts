@@ -196,7 +196,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte publicado; campaña nueva calculada, descargo pendiente de reconciliación"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
       story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "done"),
-      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E está calculada y las complementarias C4/C3 están acreditadas en local. Cerrar los límites pendientes y reconciliar el corte antes de autorizar figuras, propagación y publicación.", "The M74-E campaign is computed and the C4/C3 complements are locally accredited. Resolve the remaining limitations and reconcile the cut before authorizing figures, propagation and publication."), "active", "local · C4/C3"),
+      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E está calculada; las complementarias C3 y C4 y las del CRPS campeón (C5) y de referencia (C6) están acreditadas en local, y F4 sólo dibuja un CRPS acreditado. Cerrar las tres puertas pendientes y reconciliar el corte antes de autorizar figuras, propagación y publicación.", "The M74-E campaign is computed; the C3 and C4 complements and those of the champion CRPS (C5) and reference CRPS (C6) are locally accredited, and F4 only draws an accredited CRPS. Close the three pending gates and reconcile the cut before authorizing figures, propagation and publication."), "active", "local · C3–C6"),
     ],
   },
 ];
@@ -212,6 +212,54 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-14",
+    title: c(
+      "G7 conecta F4 al CRPS acreditado: sin acreditación, la figura se niega",
+      "G7 wires F4 to the accredited CRPS: without accreditation, the figure refuses",
+    ),
+    detail: c(
+      "El panel CRPS de la figura F4 leía el archivo que hubiera en disco. Ahora pasa por el lector de procedencia y, por decisión del autor, rechaza con su motivo un CRPS que no esté acreditado en lugar de rotularlo. El script comprueba la acreditación antes de dibujar ninguna figura, de modo que no deja figuras regeneradas a medias. Una auditoría externa encontró una vía pública que permitía saltarse esa comprobación, y quedó cerrada. Dentro de una campaña el comportamiento no cambia, porque el CRPS de referencia se sella antes de la etapa de figuras. No se regeneró ninguna figura: F4 se regenerará dentro de la secuencia de propagación, después de cerrar las tres puertas pendientes.",
+      "The CRPS panel of figure F4 used to read whatever file was on disk. It now goes through the provenance reader and, following the author's decision, refuses a CRPS that is not accredited, stating the reason, instead of labelling it. The script checks accreditation before drawing any figure, so it never leaves figures regenerated halfway. An external audit found a public path that bypassed this check, and it was closed. Inside a campaign nothing changes, because the reference CRPS is sealed before the figures stage. No figure was regenerated: F4 will be regenerated within the propagation sequence, after the three pending gates are closed.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-13",
+    title: c(
+      "G7 da contrato al CRPS de referencia y valida el camino de campaña",
+      "G7 gives the reference CRPS a contract and validates the campaign path",
+    ),
+    detail: c(
+      "El CRPS de referencia de los modelos distribucionales, que alimenta el panel CRPS de F4, no tenía recibo ni lector. Ahora tiene su propio tipo de complementaria. El recibo fija el protocolo completo, con modelos, muestras y semilla, y el lector recalcula la sustancia contra el catálogo de la base sellada. Dos auditorías externas encontraron que, cuando una campaña respaldaba el recibo, el consumidor sólo comprobaba la identidad. También encontraron que algunas entradas mal formadas producían excepciones en lugar de rechazos. Ambos consumidores de CRPS validan ahora protocolo, forma y sustancia en todos los caminos. La complementaria quedó acreditada en local y su resultado es idéntico byte a byte al de una corrida independiente. Las cifras todavía no son canónicas ni están propagadas.",
+      "The reference CRPS of the distributional models, which feeds the CRPS panel of F4, had no receipt and no reader. It now has its own complement type. The receipt fixes the full protocol, including models, samples and seed, and the reader recomputes the substance against the catalogue of the sealed database. Two external audits found that, when a campaign vouched for the receipt, the consumer only checked its identity. They also found that some malformed inputs raised exceptions instead of being rejected. Both CRPS consumers now validate protocol, shape and substance on every path. The complement is locally accredited and its output is byte-identical to an independent run. The figures are not yet canonical or propagated.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-12",
+    title: c(
+      "G7 repara el muestreo de ARIMA/SARIMA y acredita el CRPS campeón",
+      "G7 repairs ARIMA/SARIMA sampling and accredits the champion CRPS",
+    ),
+    detail: c(
+      "La primera complementaria del CRPS campeón se calculó con procedencia correcta, pero se marcó fallida por sustancia. La versión de la biblioteca de pronóstico fijaba el estado inicial al muestrear ARIMA/SARIMA, así que el primer paso salía determinista y la banda del 95 % tenía ancho nulo. El muestreo ahora usa la distribución predictiva completa, sin cambiar el pronóstico puntual. El lector exige además que una transacción acreditada respalde el recibo y que los conteos sean enteros. Una auditoría externa detectó que el muestreador había perdido el contrato de semillas; se restauró, y las fábricas de ARIMA y SARIMA quedaron sembradas. La nueva complementaria quedó acreditada en local y se reprodujo byte a byte en un segundo entorno aislado. La complementaria fallida se conserva como evidencia. Nada se propagó ni se publicó.",
+      "The first champion CRPS complement was computed with correct provenance, but it was marked failed on substance. The forecasting library version pinned the initial state when sampling ARIMA/SARIMA, so the first step came out deterministic and the 95 % band had zero width. Sampling now uses the full predictive distribution, without changing the point forecast. The reader also requires an accredited transaction behind the receipt and integer counts. An external audit found that the sampler had lost its seed contract; it was restored, and the ARIMA and SARIMA factories are now seeded. The new complement is locally accredited and was reproduced byte for byte in a second isolated environment. The failed complement is preserved as evidence. Nothing was propagated or published.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-12",
+    title: c(
+      "El gate semanal de seguridad y la prueba E2E inestable quedan cerrados en producción",
+      "The weekly security gate and the flaky E2E test are closed in production",
+    ),
+    detail: c(
+      "El portal actualizó sus dependencias para despejar los avisos altos de producción que hacían fallar el control semanal de seguridad. La ejecución manual del control terminó en verde sobre main. La prueba de interfaz que fallaba de forma intermitente ahora recorre la página en pasos acotados y, si se atasca, deja un diagnóstico. Su suite pasó completa en la integración continua, sin reintentos. El gate de producción pasa sin avisos altos ni críticos; persisten avisos de menor severidad y de desarrollo, registrados en el triage con su plan de corrección o a la espera de parche.",
+      "The portal updated its dependencies to clear the high production advisories that were failing the weekly security check. A manual run of that check finished green on main. The interface test that failed intermittently now walks the page in bounded steps and leaves a diagnosis if it stalls. Its suite passed in continuous integration without retries. The production gate passes with no high or critical advisories; lower-severity and development advisories remain, recorded in the triage with their remediation plan or awaiting a patch.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-10",
     title: c(

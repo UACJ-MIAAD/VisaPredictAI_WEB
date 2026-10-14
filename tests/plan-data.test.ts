@@ -49,8 +49,24 @@ describe("public MLOps plan", () => {
     expect(storiesStatus([])).toBe("planned");
   });
 
-  it("does not publish the unbacked local M74-F commit as a resolvable reference", () => {
-    expect(JSON.stringify({ epics: PLAN_EPICS, updates: PLAN_UPDATES })).not.toContain("03095ba");
+  it("does not publish any unbacked local M74-F commit as a resolvable reference", () => {
+    // Commits sólo locales (sin respaldo remoto): citarlos daría una referencia que nadie puede resolver.
+    const published = JSON.stringify({ epics: PLAN_EPICS, updates: PLAN_UPDATES });
+    const local = ["03095ba", "0e60930", "951b84d", "135df00", "7d079d8", "7ca92ec", "e4d160d", "7493028",
+      "87a5a7a", "2192ce5", "3f6f74d", "5024080"];
+    expect(local.filter((sha) => published.includes(sha))).toEqual([]);
+  });
+
+  it("does not publish CRPS figures that are not yet canonical", () => {
+    // Las cifras de C5/C6 son locales y no propagadas (regla #0): el tablero cuenta el avance, no el número.
+    const prose = PLAN_UPDATES.filter((u) => u.date >= "2026-10-12").flatMap((u) => [u.detail.es, u.detail.en]);
+    // Cualquier decimal, y un número de dos o más cifras a poca distancia de «CRPS» («CRPS FAD 41.52 / DFF 27.86»,
+    // «CRPS: 41», «CRPS de 41 días»); «F4» o «C5» junto a «CRPS» no son cifras del CRPS.
+    const cifra = /\d+[.,]\d+|CRPS\b[^.\n]{0,24}?\b\d{2,}\b/i;
+    expect(prose.filter((line) => cifra.test(line))).toEqual([]);
+    for (const muestra of ["CRPS FAD 41.52 / DFF 27.86", "CRPS: 41.52", "el CRPS de 41 días", "FAD 41.52 d", "CRPS 27"]) {
+      expect(cifra.test(muestra), muestra).toBe(true);
+    }
   });
 
   it("derives every published counter from the stories and the public weighting", () => {
@@ -152,9 +168,9 @@ describe("public MLOps plan", () => {
     expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(
       /propagaci[oó]n.*publicaci[oó]n|propagation.*publication/i,
     );
-    expect(focus.next?.evidence).toBe("local · C4/C3");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-10", status: "active" });
-    expect(focus.updatedAt).toBe("2026-10-10");
+    expect(focus.next?.evidence).toBe("local · C3–C6");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-14", status: "active" });
+    expect(focus.updatedAt).toBe("2026-10-14");
     expect(planStats().percent).toBe(94);
   });
 
