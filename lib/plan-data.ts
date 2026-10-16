@@ -196,7 +196,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte publicado; campaña nueva calculada, descargo pendiente de reconciliación"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
       story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "done"),
-      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E está calculada; las complementarias C3 y C4 y las del CRPS campeón (C5) y de referencia (C6) están acreditadas en local, y F4 sólo dibuja un CRPS acreditado. Cerrar las tres puertas pendientes y reconciliar el corte antes de autorizar figuras, propagación y publicación.", "The M74-E campaign is computed; the C3 and C4 complements and those of the champion CRPS (C5) and reference CRPS (C6) are locally accredited, and F4 only draws an accredited CRPS. Close the three pending gates and reconcile the cut before authorizing figures, propagation and publication."), "active", "local · C3–C6"),
+      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E está calculada y reconciliada en local con sus cuatro complementarias acreditadas; las cifras y figuras re-derivadas y la prosa corregida esperan en candidatos, con el guardián de consistencia en cero. Integrar documental, datos y web en ese orden y validar la transacción antes de autorizar propagación y publicación del corte.", "The M74-E campaign is computed and reconciled locally with its four accredited complements; the re-derived figures and charts and the corrected prose wait in candidates, with the consistency guardian at zero. Integrate the documents, data and web in that order and validate the transaction before authorizing propagation and publication of the cut."), "active", "local · reconciliación"),
     ],
   },
 ];
@@ -212,6 +212,42 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-16",
+    title: c(
+      "G7 corrige las figuras de resultados y vuelve a reconciliar sin repetir la campaña",
+      "G7 corrects the results figures and reconciles again without rerunning the campaign",
+    ),
+    detail: c(
+      "Una auditoría externa encontró dos defectos en las figuras. El listón parsimonioso usaba una métrica de selección sobre ejes del conjunto reservado, y una figura conservaba una referencia fija de una corrida antigua. Ahora el listón se calcula en la misma métrica y sobre las mismas series que se dibujan, y la figura se niega a dibujarse si no puede hacerlo. Cuatro figuras más que dependen de la campaña entraron al contrato de la reconciliación por nombre exacto, y la reconciliación ya no se cierra si falta alguna. Una segunda auditoría mostró que el ranking promediaba algunos modelos sobre menos series que el listón, lo que invertía la comparación. Ahora sólo se ranquean los modelos con cobertura completa, y los parciales se declaran aparte con su cobertura. Cada corrección se hizo con pruebas que fallaban antes y una nueva reconciliación; las anteriores se conservan y siguen verificando. Una auditoría confirmó el cierre en local. Nada se propagó ni se publicó.",
+      "An external audit found two defects in the figures. The parsimonious bar used a selection metric on hold-out axes, and one figure kept a fixed reference from an old run. The bar is now computed in the same metric and over the same series that are drawn, and the figure refuses to draw when it cannot. Four more campaign-dependent figures joined the reconciliation contract by exact name, and the reconciliation no longer closes if any is missing. A second audit showed that the ranking averaged some models over fewer series than the bar, which reversed the comparison. Only models with full coverage are now ranked, and partial ones are listed separately with their coverage. Each fix came with tests that failed beforehand and a new reconciliation; the earlier ones are kept and still verify. An audit confirmed the local closure. Nothing was propagated or published.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-15",
+    title: c(
+      "G7 reconcilia la campaña con sus complementarias y corrige la prosa en candidatos",
+      "G7 reconciles the campaign with its complements and corrects the prose in candidates",
+    ),
+    detail: c(
+      "Un recibo de reconciliación reúne en un árbol desechable las salidas selladas de la campaña y los artefactos de las cuatro complementarias, re-acreditando cada una con su lector, y sella capas, salidas e inventario. Una auditoría externa encontró que una salida borrada tras el cierre seguía acreditada y que el cierre aceptaba salidas antiguas junto a otras nuevas; ambos casos se rechazan ahora. La reconciliación real se ejecutó en local y re-derivó el veredicto, los hechos canónicos y las figuras. Con esos artefactos se corrigió la prosa científica de la tesis, del paper y de la documentación en candidatos sin commit, con una tabla que liga cada frase a su artefacto. Algunas conclusiones cambian de sentido, no sólo de cifra, y se publicarán con el corte. El guardián de consistencia quedó en cero y la tesis compila sin avisos.",
+      "A reconciliation receipt gathers, in a disposable tree, the campaign's sealed outputs and the artifacts of the four complements, re-accrediting each with its reader, and seals layers, outputs and inventory. An external audit found that an output deleted after closing stayed accredited and that closing accepted stale outputs next to new ones; both are now rejected. The real reconciliation ran locally and re-derived the verdict, the canonical facts and the figures. From those artifacts the scientific prose of the thesis, the paper and the documentation was corrected in uncommitted candidates, with a table linking each sentence to its artifact. Some conclusions change direction, not just value, and will be published with the cut. The consistency guardian is at zero and the thesis compiles without warnings.",
+    ),
+    status: "active",
+  },
+  {
+    date: "2026-10-14",
+    title: c(
+      "G7 cierra en local las tres puertas previas a la propagación",
+      "G7 closes the three gates ahead of propagation locally",
+    ),
+    detail: c(
+      "La lectura de una transacción en curso y el camino de campaña de los consumidores de CRPS exigen ahora el esquema completo de la transacción. Las figuras de hold-out derivan su ventana del protocolo y rechazan pronósticos de otra añada. La sincronización con publicación activada y sin cambios termina sin consumir el permiso. Una segunda ronda rechaza identificadores de serie vacíos y el staging ajeno, y por decisión del autor retira la vía directa para marcar publicada una campaña: sólo se llega a publicada desde la transacción acreditada.",
+      "Reading a running transaction and the campaign path of the CRPS consumers now require the full transaction schema. The hold-out figures derive their window from the protocol and reject forecasts from another vintage. Syncing with publication enabled and no changes ends without consuming the permission. A second round rejects empty series identifiers and foreign staging and, by the author's decision, removes the direct path to mark a campaign published: published is reachable only from the accredited transaction.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-10-14",
     title: c(
