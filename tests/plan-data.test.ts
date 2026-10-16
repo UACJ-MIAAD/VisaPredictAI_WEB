@@ -53,7 +53,8 @@ describe("public MLOps plan", () => {
     // Commits sólo locales (sin respaldo remoto): citarlos daría una referencia que nadie puede resolver.
     const published = JSON.stringify({ epics: PLAN_EPICS, updates: PLAN_UPDATES });
     const local = ["03095ba", "0e60930", "951b84d", "135df00", "7d079d8", "7ca92ec", "e4d160d", "7493028",
-      "87a5a7a", "2192ce5", "3f6f74d", "5024080"];
+      "87a5a7a", "2192ce5", "3f6f74d", "5024080", "9608740", "0c7e684", "404215d", "c1cbe2b", "5e69c4c", "3f62bed",
+      "c964881", "1f7d332"];
     expect(local.filter((sha) => published.includes(sha))).toEqual([]);
   });
 
@@ -168,9 +169,9 @@ describe("public MLOps plan", () => {
     expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(
       /propagaci[oó]n.*publicaci[oó]n|propagation.*publication/i,
     );
-    expect(focus.next?.evidence).toBe("local · C3–C6");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-14", status: "active" });
-    expect(focus.updatedAt).toBe("2026-10-14");
+    expect(focus.next?.evidence).toBe("local · reconciliación");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-16", status: "active" });
+    expect(focus.updatedAt).toBe("2026-10-16");
     expect(planStats().percent).toBe(94);
   });
 
