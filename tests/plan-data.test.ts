@@ -25,8 +25,8 @@ const findStory = (epics: PlanEpic[], id: string) => {
 describe("public MLOps plan", () => {
   it("shows delivered and observed epics instead of stale planned badges", () => {
     const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
-    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "observing", G: "active" });
-    expect(planStats().percent).toBe(94);
+    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "observing", G: "observing" });
+    expect(planStats().percent).toBe(95);
   });
 
   it("moves an epic badge when its work starts, enters observation, and finishes", () => {
@@ -59,7 +59,7 @@ describe("public MLOps plan", () => {
   });
 
   it("does not publish CRPS figures that are not yet canonical", () => {
-    // Las cifras de C5/C6 son locales y no propagadas (regla #0): el tablero cuenta el avance, no el número.
+    // El tablero cuenta el avance; las métricas se leen en sus superficies canónicas, sin duplicarlas aquí.
     const prose = PLAN_UPDATES.filter((u) => u.date >= "2026-10-12").flatMap((u) => [u.detail.es, u.detail.en]);
     // Cualquier decimal, y un número de dos o más cifras a poca distancia de «CRPS» («CRPS FAD 41.52 / DFF 27.86»,
     // «CRPS: 41», «CRPS de 41 días»); «F4» o «C5» junto a «CRPS» no son cifras del CRPS.
@@ -159,20 +159,16 @@ describe("public MLOps plan", () => {
     expect(`${g6?.outcome.es} ${g6?.outcome.en}`).not.toMatch(/director|reuni[oó]n|meeting/i);
   });
 
-  it("keeps the front on reconciliation until local results are propagated", () => {
-    // Cerrar la última historia sin abrir la siguiente dejaría `planFocus().next` en null y la
-    // cabecera sin frente: el tablero diría que no queda trabajo cuando sí queda.
+  it("closes reconciliation with the published data commit while retaining observation and deferrals", () => {
     const focus = planFocus();
-    expect(focus.next).toMatchObject({ id: "G7", status: "active" });
-    expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(/M74-E/);
-    // El cálculo está hecho; no permite declarar entregada una integración pendiente.
-    expect(`${focus.next?.outcome.es} ${focus.next?.outcome.en}`).toMatch(
-      /propagaci[oó]n.*publicaci[oó]n|propagation.*publication/i,
-    );
-    expect(focus.next?.evidence).toBe("local · reconciliación");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-16", status: "active" });
-    expect(focus.updatedAt).toBe("2026-10-16");
-    expect(planStats().percent).toBe(94);
+    expect(findStory(PLAN_EPICS, "G7")).toMatchObject({ status: "done", evidence: "a6036ec" });
+    expect(focus.next).toBeNull();
+    expect(focus.observing.length).toBeGreaterThan(0);
+    expect(focus.deferred.length).toBeGreaterThan(0);
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-20", status: "done" });
+    expect(focus.updatedAt).toBe("2026-10-20");
+    expect(planStats().percent).toBe(95);
+    expect(PLAN_META.releaseId).toBe("2026-09-87a5be76e8a1");
   });
 
   it("shows D7 as observation 0/2 and does not call it completed", () => {
@@ -243,25 +239,21 @@ describe("public MLOps plan", () => {
     expect(historia).toMatchObject({ status: "done", evidence: "1c81b6f" });
   });
 
-  it("keeps F5 under observation, with its dependency named", () => {
-    // La parte viable está puesta; lo que falta depende de la campaña causal (F2-causal/#33),
-    // así que declararla entregada sería adelantarse a un resultado que no existe.
+  it("keeps F5 under observation without calling its published facts local", () => {
     const f5 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F5");
     expect(f5).toMatchObject({ status: "observing" });
-    expect(f5?.evidence).toMatch(/^7925dae · /);
-    expect(f5?.evidence).toMatch(/campa[ñn]a causal/);
+    expect(f5?.evidence).toMatch(/^a6036ec · .*publicados/);
+    expect(f5?.evidence).not.toMatch(/pendiente.*propagaci[oó]n/);
   });
 
-  it("keeps F2 under observation until a governed cut publishes the feed", () => {
-    // El paso de datos entró (spec + gate), pero el corte vigente no trae el artefacto y no se
-    // regenera: la historia no puede declararse entregada hasta que un corte lo publique.
+  it("keeps F2 under observation of the blocked source with its feed published", () => {
     const f2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F2");
     expect(f2).toMatchObject({ status: "observing" });
     // Antes esto exigía que la evidencia de F2 fuera prefijo de `dataMain`. Solo era cierto
     // porque `dataMain` se había quedado congelado en el corte de F2: la prueba consagraba el
     // fallo. La propiedad real es que F2 declara SU corte y su dependencia, no la punta de main.
     expect(f2?.evidence).toMatch(/^[0-9a-f]{7} · /);
-    expect(f2?.evidence).toMatch(/corte gobernado$/);
+    expect(f2?.evidence).toMatch(/feed publicado; observaci[oó]n/);
   });
 
   it("cites no data commit for work that lives entirely in the web repo", () => {
@@ -287,7 +279,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("a8029f2266faf73ef5e0b5fbd8c1386b50c3cb7d");
+    expect(PLAN_META.dataMain).toBe("a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -357,16 +349,20 @@ describe("public MLOps plan", () => {
       const enCurso = orden.filter((story) => story.status === "active");
       if (enCurso.length > 0) {
         expect(focus.next?.id).toBe(enCurso[0].id);
-      } else {
+      } else if (orden.some((story) => story.status === "planned")) {
         const posicion = orden.findIndex((story) => story.id === focus.next?.id);
         expect(focus.next?.status).toBe("planned");
         expect(orden.slice(0, posicion).every((story) => story.status !== "planned")).toBe(true);
+      } else {
+        expect(focus.next).toBeNull();
       }
-      expect(focus.epic.stories.some((story) => story.id === focus.next?.id)).toBe(true);
+      if (focus.next) expect(focus.epic.stories.some((story) => story.id === focus.next?.id)).toBe(true);
     });
 
     it("prefers the story in flight over the first one nobody has started", () => {
       const epics = clonePlan();
+      // Mundo con trabajo nuevo: la publicación real ya no tiene historias por empezar.
+      findStory(epics, "C9").status = "planned";
       const siguiente = planFocus(epics, cloneUpdates()).next!;
       findStory(epics, siguiente.id).status = "active";
       expect(planFocus(epics, cloneUpdates()).next?.id).toBe(siguiente.id);

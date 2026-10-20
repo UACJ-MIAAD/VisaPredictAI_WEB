@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   ArrowRight,
   Check,
@@ -19,7 +20,7 @@ import {
   storiesStatus,
   type PlanStatus,
 } from "@/lib/plan-data";
-import type { Lang } from "@/lib/site-map";
+import { localePath, type Lang } from "@/lib/site-map";
 import styles from "./plan-page.module.css";
 
 const STATUS_LABEL: Record<PlanStatus, { es: string; en: string }> = {
@@ -125,6 +126,11 @@ export function PlanPage({ lang }: { lang: Lang }) {
             }
           />
 
+          <Link href={`${localePath("/ingenieria", lang)}/#sistema`} className={styles.architectureLink}>
+            {es ? "Explorar el sistema: flujos, componentes y base de datos" : "Explore the system: flows, components and database"}
+            <ArrowRight aria-hidden size={16} />
+          </Link>
+
           <div className={styles.dashboard}>
             <article className={styles.scoreCard}>
               <div
@@ -167,7 +173,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
               </article>
               <article>
                 <span>{es ? "Siguiente" : "Next"}</span>
-                <strong>{focus.next ? focus.next.id : es ? "Plan cerrado" : "Plan complete"}</strong>
+                <strong>{focus.next ? focus.next.id : focus.observing.length ? es ? "Observación" : "Observation" : es ? "Plan cerrado" : "Plan complete"}</strong>
                 <small>
                   {focus.next
                     ? copy(focus.next.title, lang)
@@ -213,8 +219,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "De plataforma a evidencia" : "From platform to evidence"}
             lead={
               es
-                ? "La plataforma está preparada y la campaña ya completó el cálculo. Sus complementarias están acreditadas en local; ahora toca reconciliar el corte y sincronizar las seis superficies con autorización."
-                : "The platform is ready and the campaign has completed computation. Its complements are locally accredited; the next step is to reconcile the cut and synchronize all six surfaces with authorization."
+                ? "La campaña y sus complementarias ya están reconciliadas y el corte se publicó por la vía gobernada. El documental y los datos están integrados; el portal verifica los artefactos durante su construcción. Continúan el seguimiento operativo y las tareas diferidas."
+                : "The campaign and its complements are reconciled and the release was published through the governed path. Documents and data are integrated; the portal verifies artifacts during its build. Operational observation and deferred tasks continue."
             }
           />
 

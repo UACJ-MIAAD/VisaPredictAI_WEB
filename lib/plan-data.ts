@@ -50,8 +50,8 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "a8029f2266faf73ef5e0b5fbd8c1386b50c3cb7d",
-  releaseId: "2026-09-158ec972c234",
+  dataMain: "a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b",
+  releaseId: "2026-09-87a5be76e8a1",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
 } as const;
@@ -156,10 +156,10 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     stories: [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
-      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "17eb7a9 · activa en el próximo corte gobernado"),
+      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "a6036ec · feed publicado; observación de la fuente bloqueada"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
-      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "7925dae · campaña causal calculada; facts pendientes de propagación"),
+      story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "a6036ec · facts reconciliados publicados; seguimiento de consumidores"),
       story("F6", c("Galería preparada", "Gallery readiness"), c("Añadir el hook de cohorte sin duplicar datos.", "Add the cohort hook without duplicating data."), "done"),
       story("F7", c("Documentos rancios", "Stale documents"), c("Corregir conteos y afirmaciones obsoletas.", "Correct stale counts and claims."), "done", "1c81b6f"),
       story("F8", c("Runbook de propagación", "Propagation runbook"), c("Mecanizar el orden datos → web → producción.", "Mechanize the data → web → production order."), "done", "1c81b6f"),
@@ -193,10 +193,10 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G1", c("Overleaf", "Overleaf"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
       story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar el bloqueo de la fuente y la ingesta semiautomática, y retirar la promesa de operación desatendida.", "Document the blocked source and the semi-automatic ingestion, and retire the unattended-operation claim."), "done", "29ca6cb"),
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
-      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a8029f2 · corte publicado; campaña nueva calculada, descargo pendiente de reconciliación"),
+      story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a6036ec · corte y prosa reconciliados publicados; seguimiento académico"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
       story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "done"),
-      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E está calculada y reconciliada en local con sus cuatro complementarias acreditadas; las cifras y figuras re-derivadas y la prosa corregida esperan en candidatos, con el guardián de consistencia en cero. Integrar documental, datos y web en ese orden y validar la transacción antes de autorizar propagación y publicación del corte.", "The M74-E campaign is computed and reconciled locally with its four accredited complements; the re-derived figures and charts and the corrected prose wait in candidates, with the consistency guardian at zero. Integrate the documents, data and web in that order and validate the transaction before authorizing propagation and publication of the cut."), "active", "local · reconciliación"),
+      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E y sus cuatro complementarias quedaron reconciliadas, con hechos, figuras y prosa contrastados. El documental y los datos están integrados con CI verde; el corte se publicó por la transacción gobernada, tras la revisión humana y la revalidación. El portal descarga y verifica ese corte durante su build. Continúan las observaciones operativas y el frente R9 permanece pausado.", "The M74-E campaign and its four complements were reconciled, with checked facts, figures and prose. Documents and data are integrated with green CI; the release was published through the governed transaction after human review and revalidation. The portal downloads and verifies that release during its build. Operational observations continue and R9 remains paused."), "done", "a6036ec"),
     ],
   },
 ];
@@ -212,6 +212,24 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-20",
+    title: c("G7 publica el corte reconciliado y cierra la transacción", "G7 publishes the reconciled release and closes the transaction"),
+    detail: c(
+      "El documental entró por el PR #5 y los datos por el PR #50, con CI verde. La revisión humana del candidato y su revalidación precedieron a la integración y a la publicación gobernada. El tag del corte conserva el commit de artefactos que acredita el manifiesto y la campaña quedó publicada. Esta actualización del portal vuelve a construir el sitio desde ese corte, en lugar de conservar el build anterior. Se incorporan el mapa general del sistema, los flujos de cada componente y el esquema de la base de datos. El seguimiento mensual y las deudas explícitas siguen abiertos; R9 continúa fuera del plan activo.",
+      "Documents landed through PR #5 and data through PR #50, with green CI. Human review of the candidate and revalidation preceded integration and governed publication. The release tag retains the artifact commit accredited by the manifest and the campaign is published. This portal update rebuilds the site from that release instead of retaining the previous build. It adds the system overview, individual component flows and the database schema. Monthly observation and explicit debts remain open; R9 stays outside the active plan.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-19",
+    title: c("G7 re-deriva la selección de características y verifica el candidato en Linux", "G7 re-derives feature selection and verifies the candidate on Linux"),
+    detail: c(
+      "La reconciliación incorporó los hechos de ingeniería de características, su informe y sus figuras, que antes conservaban resultados previos a la campaña. La tesis describe el resultado del control de falso descubrimiento sin convertir la ausencia de asociaciones detectadas en ausencia de señal ni en superioridad predictiva. El candidato pasó las réplicas Linux, incluida la reproducción de hechos que bloqueaba el CI; después pasó el CI remoto antes de la revisión final.",
+      "Reconciliation incorporated feature-engineering facts, their report and figures, which had retained pre-campaign results. The thesis describes the false-discovery-control result without treating the absence of detected associations as absence of signal or predictive superiority. The candidate passed the Linux replicas, including the facts-reproduction step that blocked CI; remote CI then passed before final review.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-16",
     title: c(
