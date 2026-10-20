@@ -3,6 +3,53 @@ import AxeBuilder from "@axe-core/playwright";
 import { blockExternal, forceTheme } from "./helpers";
 import { planStats } from "../../lib/plan-data";
 
+test.afterEach(async ({ page }, info) => {
+  if (info.status === info.expectedStatus || page.isClosed()) return;
+  const layout = await page.evaluate(() => {
+    const describe = (el: Element) => {
+      const style = getComputedStyle(el);
+      const rect = el.getBoundingClientRect();
+      return {
+        tag: el.tagName, id: el.id, className: el.getAttribute("class"),
+        text: el.textContent?.trim().slice(0, 120), rect: rect.toJSON(),
+        clientWidth: el.clientWidth, scrollWidth: el.scrollWidth,
+        font: style.font, overflowX: style.overflowX,
+        visibility: style.visibility, position: style.position, transform: style.transform,
+      };
+    };
+    const elements = [...document.querySelectorAll("body *")];
+    const wide = elements.filter((el) => {
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && (rect.right > innerWidth + 1 || rect.left < -1 || el.scrollWidth > el.clientWidth + 1);
+    }).map((el) => {
+      const ancestors = [];
+      for (let parent = el.parentElement; parent; parent = parent.parentElement) ancestors.push(describe(parent));
+      return { element: describe(el), ancestors };
+    });
+    const pseudos = [document.documentElement, ...elements].flatMap((el) =>
+      ["::before", "::after"].flatMap((pseudo) => {
+        const style = getComputedStyle(el, pseudo);
+        return style.content === "none" || style.content === "normal" ? [] : [{
+          owner: describe(el), pseudo, content: style.content, position: style.position,
+          width: style.width, left: style.left, right: style.right, transform: style.transform,
+        }];
+      }),
+    );
+    return {
+      url: location.href, viewport: { width: innerWidth, height: innerHeight, dpr: devicePixelRatio },
+      scroll: { x: scrollX, y: scrollY }, root: describe(document.documentElement), body: describe(document.body),
+      reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+      fonts: [...document.fonts].map((font) => ({ family: font.family, status: font.status })),
+      wide, pseudos,
+    };
+  });
+  await info.attach("layout-diagnostics", { body: JSON.stringify(layout, null, 2), contentType: "application/json" });
+  const uncontained = layout.wide.filter(({ ancestors }) =>
+    !ancestors.some((ancestor) => ["auto", "scroll", "hidden", "clip"].includes(ancestor.overflowX)),
+  );
+  console.log("LAYOUT_DIAGNOSTICS", JSON.stringify({ root: layout.root, viewport: layout.viewport, uncontained: uncontained.slice(0, 30), pseudos: layout.pseudos }));
+});
+
 test("engineering charts stay contained while resize delivery is delayed", async ({ page, context }) => {
   await blockExternal(context);
   await forceTheme(page, "light");
