@@ -1,0 +1,232 @@
+{
+  "sourceCommit": "a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b",
+  "sourceHashes": {
+    "schema.sql": "721298241241cf20e1cd220d325468d993ec11e1bca29a0578c99808a566ffba",
+    "pipeline/migrations/002_provenance_and_timestamps.sql": "a0bd8574e8c61225c88d11b17a656fad5179828579ac45314efc0583b6ec7d0d"
+  },
+  "tables": {
+    "dim_area": [
+      "area_id",
+      "slug",
+      "name",
+      "is_residual_group"
+    ],
+    "dim_category": [
+      "category_id",
+      "block",
+      "code",
+      "parent_code",
+      "preference_level",
+      "is_subcategory",
+      "ina_basis"
+    ],
+    "dim_category_alias": [
+      "alias_id",
+      "category_id",
+      "raw_label",
+      "valid_from",
+      "valid_to",
+      "n_months",
+      "created_at",
+      "updated_at"
+    ],
+    "dim_date": [
+      "date_id",
+      "bulletin_date",
+      "year",
+      "month",
+      "quarter",
+      "us_fiscal_year"
+    ],
+    "dim_region": [
+      "region_id",
+      "slug",
+      "name"
+    ],
+    "dim_status": [
+      "status",
+      "label",
+      "description",
+      "is_predictable"
+    ],
+    "dim_table": [
+      "table_id",
+      "code",
+      "name"
+    ],
+    "etl_run": [
+      "run_id",
+      "built_at_utc",
+      "schema_version",
+      "n_fact_priority",
+      "n_fact_dv",
+      "n_trainable_f",
+      "pct_trainable",
+      "panel_floor",
+      "panel_ceiling",
+      "pipeline_run_id",
+      "git_sha",
+      "git_dirty",
+      "panel_sha256",
+      "dvc_lock_sha256",
+      "env_lock_sha256",
+      "started_at",
+      "completed_at",
+      "build_status",
+      "degradations"
+    ],
+    "fact_dv_rank": [
+      "region_id",
+      "date_id",
+      "status",
+      "rank_cutoff",
+      "raw_value",
+      "exceptions",
+      "etl_run_id",
+      "created_at",
+      "updated_at"
+    ],
+    "fact_priority": [
+      "area_id",
+      "category_id",
+      "table_id",
+      "date_id",
+      "status",
+      "priority_date",
+      "days_since_base",
+      "raw_value",
+      "etl_run_id",
+      "created_at",
+      "updated_at"
+    ],
+    "schema_version": [
+      "version",
+      "description",
+      "applied_at",
+      "checksum"
+    ],
+    "source_artifact": [
+      "source_id",
+      "filename",
+      "url",
+      "license",
+      "sha256",
+      "vintage",
+      "source_modified_at",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  "primaryKeys": {
+    "dim_area": [
+      "area_id"
+    ],
+    "dim_category": [
+      "category_id"
+    ],
+    "dim_category_alias": [
+      "alias_id"
+    ],
+    "dim_date": [
+      "date_id"
+    ],
+    "dim_region": [
+      "region_id"
+    ],
+    "dim_status": [
+      "status"
+    ],
+    "dim_table": [
+      "table_id"
+    ],
+    "etl_run": [
+      "run_id"
+    ],
+    "fact_dv_rank": [
+      "region_id",
+      "date_id"
+    ],
+    "fact_priority": [
+      "area_id",
+      "category_id",
+      "table_id",
+      "date_id"
+    ],
+    "schema_version": [
+      "version"
+    ],
+    "source_artifact": [
+      "source_id"
+    ]
+  },
+  "foreignKeys": [
+    {
+      "from": "dim_category_alias",
+      "column": "category_id",
+      "to": "dim_category",
+      "target": "category_id"
+    },
+    {
+      "from": "etl_run",
+      "column": "schema_version",
+      "to": "schema_version",
+      "target": "version"
+    },
+    {
+      "from": "fact_dv_rank",
+      "column": "region_id",
+      "to": "dim_region",
+      "target": "region_id"
+    },
+    {
+      "from": "fact_dv_rank",
+      "column": "date_id",
+      "to": "dim_date",
+      "target": "date_id"
+    },
+    {
+      "from": "fact_dv_rank",
+      "column": "status",
+      "to": "dim_status",
+      "target": "status"
+    },
+    {
+      "from": "fact_priority",
+      "column": "area_id",
+      "to": "dim_area",
+      "target": "area_id"
+    },
+    {
+      "from": "fact_priority",
+      "column": "category_id",
+      "to": "dim_category",
+      "target": "category_id"
+    },
+    {
+      "from": "fact_priority",
+      "column": "table_id",
+      "to": "dim_table",
+      "target": "table_id"
+    },
+    {
+      "from": "fact_priority",
+      "column": "date_id",
+      "to": "dim_date",
+      "target": "date_id"
+    },
+    {
+      "from": "fact_priority",
+      "column": "status",
+      "to": "dim_status",
+      "target": "status"
+    }
+  ],
+  "views": [
+    "mart_series_summary",
+    "mart_training_F",
+    "v_category_alias",
+    "v_dv_long",
+    "v_panel_long",
+    "v_trainable_by_preference"
+  ]
+}

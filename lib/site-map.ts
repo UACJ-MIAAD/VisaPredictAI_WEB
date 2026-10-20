@@ -60,10 +60,12 @@ export const ROUTES: Route[] = [
     short: "Ingeniería",
     shortEn: "Engineering",
     blurb:
-      "Cómo se construyó y entendió el panel: pipeline, análisis exploratorio, ingeniería de características, prácticas MLOps, estructura del repositorio y almacén en esquema estrella.",
+      "Cómo funciona VisaPredictAI: del boletín al pronóstico, con sus componentes y su base de datos.",
     blurbEn:
-      "How the panel was built and understood: pipeline, exploratory analysis, feature engineering, MLOps practices, repository structure and a star-schema warehouse.",
+      "How VisaPredictAI works: from the bulletin to the forecast, with its components and database.",
     sections: [
+      { id: "sistema", label: "Mapa del sistema", labelEn: "System map" },
+      { id: "base-datos", label: "Esquema de la base", labelEn: "Database schema" },
       { id: "datos", label: "Construcción del panel", labelEn: "Building the panel" },
       { id: "eda", label: "Análisis exploratorio", labelEn: "Exploratory analysis" },
       { id: "fe", label: "Ingeniería de características", labelEn: "Feature engineering" },

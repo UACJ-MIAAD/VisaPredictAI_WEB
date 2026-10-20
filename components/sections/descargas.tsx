@@ -63,7 +63,7 @@ const ITEMS: Item[] = [
   {
     href: "/schema_er.svg",
     size: sizeOf("schema_er.svg"),
-    label: { es: "Diagrama ER del almacén de datos", en: "Data-warehouse ER diagram" },
+    label: { es: "Diagrama ER original (anterior a la migración de procedencia)", en: "Original ER diagram (before the provenance migration)" },
     kind: { es: "SVG", en: "SVG" },
   },
   {

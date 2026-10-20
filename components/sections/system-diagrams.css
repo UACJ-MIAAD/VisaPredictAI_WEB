@@ -1,0 +1,95 @@
+.system-atlas { color: var(--color-ink); }
+.system-atlas h2 { font-size: clamp(1.8rem, 3.8vw, 2.8rem); max-width: 25ch; line-height: 1.15; }
+.system-kicker { color: var(--color-accent); text-transform: uppercase; font-size: .73rem; font-weight: 700; letter-spacing: .14em; margin-bottom: .8rem; }
+.system-lead { max-width: 70ch; font-size: 1.05rem; line-height: 1.75; margin: 1.25rem 0 1.8rem; color: var(--color-muted); }
+.system-index { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; padding: 1rem 0; border-block: 1px solid var(--color-border); }
+.system-index a { font-size: .85rem; padding: .5rem 0; color: var(--color-accent); text-decoration: underline; text-underline-offset: .22em; }
+.system-flow { margin: 1.7rem 0 0; }
+.system-flow-caption { font-size: .78rem; color: var(--color-muted); margin-bottom: .8rem; }
+.system-flow-svg { display: block; width: 100%; height: auto; }
+.system-node-step { font: 11px ui-monospace, monospace; fill: var(--color-accent); }
+.system-edge-label { font: 10px system-ui, sans-serif; fill: var(--color-muted); }
+.system-node-title { font: 600 16px system-ui, sans-serif; fill: var(--color-ink); }
+.system-node-detail { font: 11.5px/1.4 system-ui, sans-serif; color: var(--color-muted); }
+.system-mobile-graph { display: none; }
+.system-atlas a { text-underline-offset: .2em; }
+.system-atlas a:focus-visible, .system-atlas summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; border-radius: 2px; }
+.system-boundary { border-left: 2px solid var(--color-accent); padding: .6rem 1rem; max-width: 85ch; color: var(--color-muted); font-size: .87rem; line-height: 1.65; }
+.system-sources { display: flex; flex-wrap: wrap; gap: .6rem 1rem; padding: 1rem 0; font-size: .74rem; overflow-wrap: anywhere; }
+.system-sources span:first-child { color: var(--color-muted); }
+.system-sources a, .system-scope a { color: var(--color-accent); text-decoration: underline; }
+.system-components-heading { font-size: 1.4rem; margin: 2.6rem 0 1rem; }
+.system-component { border-top: 1px solid var(--color-border); scroll-margin-top: 10rem; }
+.system-component:last-child { border-bottom: 1px solid var(--color-border); }
+.system-component > summary, .system-entity > summary { display: flex; align-items: center; gap: 1rem; min-height: 64px; padding: 1rem 0; cursor: pointer; list-style: none; font-size: 1.05rem; font-weight: 600; }
+.system-atlas summary::-webkit-details-marker { display: none; }
+.system-component-number { font: .75rem ui-monospace, monospace; color: var(--color-accent); }
+.system-toggle { margin-left: auto; color: var(--color-accent); font-size: 1.4rem; font-weight: 400; }
+details[open] > summary > .system-toggle { transform: rotate(45deg); }
+.system-component-body { padding: 0 0 1.5rem; }
+.system-component-body > p { max-width: 76ch; color: var(--color-muted); line-height: 1.7; }
+.system-text-graph { font-size: .84rem; margin: .7rem 0 1.4rem; }
+.system-text-graph > summary, .system-views > summary { cursor: pointer; color: var(--color-accent); padding: .8rem 0; text-decoration: underline; }
+.system-flow-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem 2rem; list-style-position: inside; padding: 1rem 0; }
+.system-flow-list li { border-top: 1px solid var(--color-border); padding-top: .7rem; line-height: 1.6; }
+.system-flow-list p { margin: .25rem 0; color: var(--color-muted); }
+.system-flow-list a { color: var(--color-accent); text-decoration: underline; }
+.system-outgoing { font-size: .78rem; }
+.system-scope { font-size: .82rem; color: var(--color-muted); line-height: 1.8; margin-top: 1.6rem; max-width: 90ch; }
+.system-legend { display: flex; flex-wrap: wrap; gap: .8rem 1.5rem; list-style: none; padding: 1rem 0; font-size: .76rem; color: var(--color-muted); }
+.system-legend li { display: flex; align-items: center; gap: .5rem; }
+.system-kind-dot { width: .6rem; height: .6rem; border-radius: 50%; }
+.system-kind-dimension, .system-kind-fill-dimension { background: var(--color-accent); fill: var(--color-accent); }
+.system-kind-fact, .system-kind-fill-fact { background: var(--color-accent-2); fill: var(--color-accent-2); }
+.system-kind-provenance, .system-kind-fill-provenance { background: var(--color-muted); fill: var(--color-muted); }
+.system-line { width: 1.6rem; border-top: 2px solid var(--color-muted); }
+.system-line-asserted { border-top-style: dashed; }
+.system-line-by-value { border-top-style: dotted; }
+.system-er { margin: 1.5rem 0; }
+.system-er:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+.system-er svg { width: 100%; height: auto; display: block; }
+.system-er figcaption { max-width: 90ch; font-size: .83rem; color: var(--color-muted); line-height: 1.7; }
+.system-er-kind { font: 11px system-ui, sans-serif; fill: var(--color-muted); text-transform: uppercase; letter-spacing: 1px; }
+.system-er-title { font: 600 16px ui-monospace, monospace; fill: var(--color-ink); }
+.system-er-key { font: 11px ui-monospace, monospace; fill: var(--color-muted); }
+.system-db-invariants { padding: 1.3rem 0; border-block: 1px solid var(--color-border); }
+.system-db-invariants h3 { font-size: 1rem; }
+.system-db-invariants ul { padding-left: 1rem; line-height: 1.8; font-size: .87rem; color: var(--color-muted); }
+.system-entities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; align-items: start; }
+.system-entity { border-top: 1px solid var(--color-border); min-width: 0; scroll-margin-top: 10rem; }
+.system-entity > summary { font-size: .94rem; }
+.system-entity code, .system-views code { overflow-wrap: anywhere; }
+.system-entity-kind { display: block; font-size: .65rem; text-transform: uppercase; letter-spacing: .12em; font-weight: 400; color: var(--color-muted); margin-bottom: .3rem; }
+.system-entity-body { padding: 0 0 1.2rem; font-size: .84rem; line-height: 1.7; }
+.system-entity-body p { color: var(--color-muted); margin-bottom: .8rem; }
+.system-entity-body h4 { font-size: .76rem; margin-top: 1rem; }
+.system-column-list { display: flex; flex-wrap: wrap; gap: .3rem .8rem; list-style: none; padding: 0; color: var(--color-muted); }
+.system-relation-list { list-style: none; padding: 0; }
+.system-relation-list li { margin: .6rem 0; overflow-wrap: anywhere; }
+.system-relation-list a { color: var(--color-accent); }
+.system-relation-list span, .system-views li > span { display: block; font-size: .72rem; color: var(--color-muted); }
+.system-views { margin: 1.8rem 0; font-size: .85rem; line-height: 1.8; }
+.system-views h3 { font-size: 1rem; }
+.system-views ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem 2rem; padding: 0; list-style: none; }
+.system-views li { overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .system-flow-svg { display: none; }
+  .system-text-graph { display: none; }
+  .system-mobile-graph { display: block; }
+  .system-flow-list, .system-entities, .system-views ul { grid-template-columns: minmax(0, 1fr); }
+  .system-er svg { min-width: 740px; }
+  .system-er { overflow-x: auto; padding-bottom: .8rem; }
+  .system-er figcaption { min-width: 0; position: sticky; left: 0; width: calc(100vw - 3rem); }
+  .system-component > summary { font-size: .94rem; gap: .65rem; }
+}
+@media print {
+  .system-flow-svg { display: block; }
+  .system-component, .system-entity { break-inside: avoid; }
+}
+/* The engineering page's original model metrics contain an unbreakable
+   PK·FK·CHECK label. At phone widths its intrinsic grid track pushed the
+   whole document beyond the viewport. Stack these metrics, without hiding
+   content or changing the shared metric layout on other routes. */
+@media (max-width: 480px) {
+  #modelo .metrics-inner { grid-template-columns: minmax(0, 1fr); }
+}
