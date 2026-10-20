@@ -25,7 +25,7 @@ const findStory = (epics: PlanEpic[], id: string) => {
 describe("public MLOps plan", () => {
   it("shows delivered and observed epics instead of stale planned badges", () => {
     const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
-    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "observing", G: "observing" });
+    expect(statuses).toMatchObject({ C: "done", F: "active", E: "observing", G: "observing" });
     expect(planStats().percent).toBe(95);
   });
 
@@ -54,7 +54,7 @@ describe("public MLOps plan", () => {
     const published = JSON.stringify({ epics: PLAN_EPICS, updates: PLAN_UPDATES });
     const local = ["03095ba", "0e60930", "951b84d", "135df00", "7d079d8", "7ca92ec", "e4d160d", "7493028",
       "87a5a7a", "2192ce5", "3f6f74d", "5024080", "9608740", "0c7e684", "404215d", "c1cbe2b", "5e69c4c", "3f62bed",
-      "c964881", "1f7d332"];
+      "c964881", "1f7d332", "0daefb2", "246ef75", "a9c0be0", "91d6947", "483532e", "684ca14"];
     expect(local.filter((sha) => published.includes(sha))).toEqual([]);
   });
 
@@ -159,12 +159,14 @@ describe("public MLOps plan", () => {
     expect(`${g6?.outcome.es} ${g6?.outcome.en}`).not.toMatch(/director|reuni[oó]n|meeting/i);
   });
 
-  it("closes reconciliation with the published data commit while retaining observation and deferrals", () => {
+  it("keeps G7 closed and resumes unfinished work without inventing production evidence", () => {
     const focus = planFocus();
     expect(findStory(PLAN_EPICS, "G7")).toMatchObject({ status: "done", evidence: "a6036ec" });
-    expect(focus.next).toBeNull();
+    expect(focus.next?.id).toBe("D5");
     expect(focus.observing.length).toBeGreaterThan(0);
-    expect(focus.deferred.length).toBeGreaterThan(0);
+    expect(focus.deferred).toEqual([]);
+    expect(findStory(PLAN_EPICS, "D5").status).toBe("active");
+    expect(findStory(PLAN_EPICS, "A6").status).toBe("planned");
     expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-20", status: "done" });
     expect(focus.updatedAt).toBe("2026-10-20");
     expect(planStats().percent).toBe(95);
@@ -184,9 +186,11 @@ describe("public MLOps plan", () => {
     expect(delivered.some((item) => /local|pendiente|pending/i.test(item.evidence ?? ""))).toBe(false);
   });
 
-  it("keeps the paused R9 track outside the active denominator", () => {
-    expect(PAUSED_TRACK.status).toBe("paused");
+  it("resumes R9 without changing the historical story denominator", () => {
+    expect(PAUSED_TRACK.status).toBe("active");
     expect(PLAN_EPICS.some((epic) => epic.id === PAUSED_TRACK.id)).toBe(false);
+    expect(planStats().total).toBe(62);
+    expect(`${PAUSED_TRACK.detail.es} ${PAUSED_TRACK.detail.en}`).not.toMatch(/025154d|Gate Q|until a human decision/);
     expect(STATUS_WEIGHT.paused).toBe(0);
   });
 
@@ -246,14 +250,15 @@ describe("public MLOps plan", () => {
     expect(f5?.evidence).not.toMatch(/pendiente.*propagaci[oó]n/);
   });
 
-  it("keeps F2 under observation until its own source-state artifact is published", () => {
+  it("keeps local F2 work in flight until its governed artifact reaches production", () => {
     const f2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F2");
-    expect(f2).toMatchObject({ status: "observing" });
-    // Antes esto exigía que la evidencia de F2 fuera prefijo de `dataMain`. Solo era cierto
-    // porque `dataMain` se había quedado congelado en el corte de F2: la prueba consagraba el
-    // fallo. La propiedad real es que F2 declara SU corte y su dependencia, no la punta de main.
-    expect(f2?.evidence).toMatch(/^[0-9a-f]{7} · /);
-    expect(f2?.evidence).toMatch(/ingestion_state\.json pendiente de un corte gobernado$/);
+    expect(f2).toMatchObject({ status: "active" });
+    expect(f2?.evidence).toMatch(/^local · /);
+    expect(f2?.evidence).toMatch(/producci[oó]n pendiente/);
+    const maintenance = PLAN_UPDATES.find((entry) => entry.title.es.includes("contrato de mantenimiento"));
+    expect(maintenance?.status).toBe("active");
+    expect(maintenance?.detail.es).toMatch(/local.*CI remoto/);
+    expect(maintenance?.detail.en).toMatch(/local.*remote CI/);
   });
 
   it("cites no data commit for work that lives entirely in the web repo", () => {
