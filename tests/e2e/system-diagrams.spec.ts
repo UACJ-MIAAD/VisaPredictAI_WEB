@@ -27,8 +27,13 @@ for (const lang of ["es", "en"] as const) {
       expect(scan.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) }))).toEqual([]);
       for (const width of [320, 375, 768, 1280, 1920]) {
         await page.setViewportSize({ width, height: 900 });
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
-        expect(overflow, `document overflow at ${width}`).toBe(false);
+        // The page also contains Recharts: ResizeObserver updates their legend
+        // after the viewport changes. Assert the settled layout, retaining the
+        // same one-pixel tolerance and failing on persistent overflow.
+        await expect.poll(
+          () => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1),
+          { message: `document overflow at ${width}`, timeout: 5000 },
+        ).toBe(false);
         if (width < 768) await expect(atlas.locator(".system-mobile-graph").first()).toBeVisible();
       }
       // Plan links to the atlas in its own language and retains its progress.
