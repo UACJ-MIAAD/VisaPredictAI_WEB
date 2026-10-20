@@ -3,6 +3,36 @@ import AxeBuilder from "@axe-core/playwright";
 import { blockExternal, forceTheme } from "./helpers";
 import { planStats } from "../../lib/plan-data";
 
+test("engineering charts stay contained while resize delivery is delayed", async ({ page, context }) => {
+  await blockExternal(context);
+  await forceTheme(page, "light");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    const NativeResizeObserver = window.ResizeObserver;
+    window.ResizeObserver = class extends NativeResizeObserver {
+      constructor(callback: ResizeObserverCallback) {
+        super((entries, observer) => {
+          if (!document.documentElement.hasAttribute("data-test-delay-resize")) callback(entries, observer);
+        });
+      }
+    };
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/ingenieria/");
+  const chart = page.locator("#eda .recharts-wrapper").first();
+  await expect.poll(() => chart.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(800);
+  await page.evaluate(() => document.documentElement.setAttribute("data-test-delay-resize", ""));
+  await page.setViewportSize({ width: 320, height: 900 });
+  // Retain a real desktop-sized chart while the observer is delayed. Its data
+  // must remain reachable through a local scroller, never widen the document.
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
+  const frame = page.locator("#eda figure > [role=img]").first();
+  await expect.poll(() => frame.evaluate((el) => getComputedStyle(el).overflowX)).toBe("auto");
+  expect(await frame.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+  await frame.evaluate((el) => { el.scrollLeft = el.scrollWidth; });
+  expect(await frame.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+});
+
 for (const lang of ["es", "en"] as const) {
   for (const theme of ["light", "dark"] as const) {
     test(`system diagrams · ${lang} · ${theme}`, async ({ page, context }) => {

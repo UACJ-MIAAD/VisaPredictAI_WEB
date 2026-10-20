@@ -103,7 +103,9 @@ function Figure({
     <figure className="mt-10 border-t-2 border-[var(--color-rule)] pt-4">
       <figcaption className="mb-1 font-serif text-lg font-bold text-[var(--color-ink)]">{title}</figcaption>
       <p className="mb-3 max-w-3xl text-sm text-[var(--color-muted)]">{desc}</p>
-      <div role="img" aria-label={`${title}. ${desc}`}>
+      {/* A delayed ResizeObserver may temporarily retain the desktop chart
+          width. Keep its full contents reachable inside this viewport. */}
+      <div role="img" aria-label={`${title}. ${desc}`} className="overflow-x-auto" tabIndex={0}>
         {children}
       </div>
     </figure>
