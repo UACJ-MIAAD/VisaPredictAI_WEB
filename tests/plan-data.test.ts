@@ -246,14 +246,14 @@ describe("public MLOps plan", () => {
     expect(f5?.evidence).not.toMatch(/pendiente.*propagaci[oó]n/);
   });
 
-  it("keeps F2 under observation of the blocked source with its feed published", () => {
+  it("keeps F2 under observation until its own source-state artifact is published", () => {
     const f2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F2");
     expect(f2).toMatchObject({ status: "observing" });
     // Antes esto exigía que la evidencia de F2 fuera prefijo de `dataMain`. Solo era cierto
     // porque `dataMain` se había quedado congelado en el corte de F2: la prueba consagraba el
     // fallo. La propiedad real es que F2 declara SU corte y su dependencia, no la punta de main.
     expect(f2?.evidence).toMatch(/^[0-9a-f]{7} · /);
-    expect(f2?.evidence).toMatch(/feed publicado; observaci[oó]n/);
+    expect(f2?.evidence).toMatch(/ingestion_state\.json pendiente de un corte gobernado$/);
   });
 
   it("cites no data commit for work that lives entirely in the web repo", () => {
