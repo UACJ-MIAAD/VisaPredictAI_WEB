@@ -219,8 +219,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "De plataforma a evidencia" : "From platform to evidence"}
             lead={
               es
-                ? "La campaña y sus complementarias ya están reconciliadas y el corte se publicó por la vía gobernada. El documental y los datos están integrados; el portal verifica los artefactos durante su construcción. Continúan el seguimiento operativo y las tareas diferidas."
-                : "The campaign and its complements are reconciled and the release was published through the governed path. Documents and data are integrated; the portal verifies artifacts during its build. Operational observation and deferred tasks continue."
+                ? "G7 está verificado en producción. El contrato de mantenimiento está adoptado y validado en local; siguen su integración, la seguridad y los cierres operativos. El autor reactivó las tareas diferidas y R9, con evidencia y revisión en cada puerta."
+                : "G7 is verified in production. The maintenance contract is adopted and locally validated; integration, security and operational closeout follow. The owner resumed deferred work and R9, with evidence and review at every gate."
             }
           />
 
