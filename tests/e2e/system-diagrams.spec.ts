@@ -50,6 +50,31 @@ test.afterEach(async ({ page }, info) => {
   console.log("LAYOUT_DIAGNOSTICS", JSON.stringify({ root: layout.root, viewport: layout.viewport, uncontained: uncontained.slice(0, 30), pseudos: layout.pseudos }));
 });
 
+for (const lang of ["es", "en"] as const) {
+  test(`engineering metrics contain wider font metrics · ${lang}`, async ({ page, context }) => {
+    await blockExternal(context);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 320, height: 900 });
+    await page.goto(`${lang === "en" ? "/en" : ""}/ingenieria/`);
+    // Exercise intrinsic track sizing with a deterministic wider font. The
+    // remote failure identified the real ruff+mypy metric, not the diagrams.
+    await page.addStyleTag({ content: ".metric-num { font-family: monospace !important; }" });
+    const metric = page.locator("#mlops .metric").filter({ hasText: "ruff+mypy" });
+    await expect(metric).toHaveCount(1);
+    await metric.scrollIntoViewIfNeeded();
+    for (const width of [320, 375]) {
+      await page.setViewportSize({ width, height: 900 });
+      await expect.poll(() => metric.evaluate((el) => {
+        const grid = el.closest(".metrics-inner")!;
+        return el.getBoundingClientRect().right <= grid.getBoundingClientRect().right + 1
+          && el.scrollWidth <= el.clientWidth + 1;
+      })).toBe(true);
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+      await expect(metric.locator(".metric-num")).toHaveText("ruff+mypy");
+    }
+  });
+}
+
 test("engineering charts stay contained while resize delivery is delayed", async ({ page, context }) => {
   await blockExternal(context);
   await forceTheme(page, "light");
