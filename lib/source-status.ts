@@ -1,87 +1,60 @@
-/**
- * F2 · Estado de la FUENTE, derivado del feed canónico de ingesta (D3).
- *
- * El sitio prometía actualizarse «automáticamente en cuanto aparece el boletín». Dejó de ser
- * cierto el 6 de agosto de 2026, cuando travel.state.gov quedó tras un WAF y los dos boletines
- * siguientes entraron a mano. La promesa se retira, y en su lugar el sitio dice lo que el
- * pipeline REGISTRA, nunca lo que un texto sugiera ni un valor tecleado.
- *
- * La fuente es `reports/governance/ingestion_state.json` (esquema v1, cerrado). Todavía no viaja
- * en el corte publicado: por eso `absent` es un estado de primera clase y NO se inventa un bloqueo
- * cuando el artefacto falta. Lo que sí falla cerrado es un artefacto PRESENTE y malo: ilegible,
- * de otro esquema, con un estado desconocido o con campos del tipo equivocado.
- */
+/** Frozen source record from the governed cut, distinct from today's calendar expectation. */
+import { ingestionProblems, parseIngestionRecord } from "./ingestion-contract.mjs";
 
 export const SOURCE_STATUSES = ["ok", "blocked", "partial", "offline"] as const;
 export type SourceStatus = (typeof SOURCE_STATUSES)[number];
-
 export type SourceState =
   | { kind: "absent" }
-  | {
-      kind: SourceStatus;
-      since: string;
-      reason: string | null;
-      expectedMonth: string;
-      panelVintage: string;
-      missingMonths: string[];
-    };
+  | { kind: SourceStatus; since: string; reason: string | null; expectedMonth: string;
+      panelVintage: string | null; missingMonths: string[] };
+export type SourceView = SourceState | { kind: "loading" | "invalid" | "unavailable" };
 
-const MES = /^\d{4}-\d{2}$/;
-const DIA = /^\d{4}-\d{2}-\d{2}$/;
-
-const esObjeto = (v: unknown): v is Record<string, unknown> =>
-  typeof v === "object" && v !== null && !Array.isArray(v);
-
-/**
- * `null`/`undefined` = el corte no publica el artefacto todavía → `absent`. Cualquier otra cosa
- * que no sea un feed v1 válido lanza: un banner tranquilizador construido sobre datos corruptos
- * es peor que ninguno.
- */
-export function deriveSourceStatus(raw: unknown): SourceState {
-  if (raw === null || raw === undefined) return { kind: "absent" };
-  if (!esObjeto(raw)) throw new Error(`ingestion_state: se esperaba un objeto, llegó ${Array.isArray(raw) ? "una lista" : typeof raw}`);
-  if (raw.schema !== 1) throw new Error(`ingestion_state: esquema ${JSON.stringify(raw.schema)} no soportado (se espera 1)`);
-
-  const status = raw.status;
-  if (typeof status !== "string" || !(SOURCE_STATUSES as readonly string[]).includes(status)) {
-    throw new Error(`ingestion_state: estado desconocido ${JSON.stringify(status)} (válidos: ${SOURCE_STATUSES.join(", ")})`);
+export async function loadSourceState(fetcher: typeof fetch = fetch): Promise<SourceView> {
+  let body: string;
+  try {
+    const response = await fetcher("/data/ingestion_state.json");
+    if (response.status === 404) return { kind: "absent" };
+    if (!response.ok) return { kind: "unavailable" };
+    body = await response.text();
+  } catch {
+    return { kind: "unavailable" };
   }
-  for (const [campo, patron] of [
-    ["status_since", DIA],
-    ["expected_month", MES],
-    ["panel_vintage", MES],
-  ] as const) {
-    const valor = raw[campo];
-    if (typeof valor !== "string" || !patron.test(valor)) {
-      throw new Error(`ingestion_state: '${campo}' debería ser una fecha ${patron === DIA ? "YYYY-MM-DD" : "YYYY-MM"}, llegó ${JSON.stringify(valor)}`);
-    }
-  }
-  const reason = raw.reason;
-  if (reason !== null && typeof reason !== "string") {
-    throw new Error(`ingestion_state: 'reason' debería ser texto o nulo, llegó ${JSON.stringify(reason)}`);
-  }
-  const missing = raw.missing_months;
-  if (!Array.isArray(missing) || missing.some((m) => typeof m !== "string" || !MES.test(m))) {
-    throw new Error(`ingestion_state: 'missing_months' debería ser una lista de meses YYYY-MM, llegó ${JSON.stringify(missing)}`);
-  }
-  return {
-    kind: status as SourceStatus,
-    since: raw.status_since as string,
-    reason: (reason ?? null) as string | null,
-    expectedMonth: raw.expected_month as string,
-    panelVintage: raw.panel_vintage as string,
-    missingMonths: missing as string[],
-  };
+  try { return parseSourceStatus(body); } catch { return { kind: "invalid" }; }
 }
 
-/** Texto crudo → estado. Un cuerpo ilegible falla cerrado; el vacío se trata como ausencia. */
+export function deriveSourceStatus(raw: unknown): SourceState {
+  if (raw === null || raw === undefined) return { kind: "absent" };
+  const problems = ingestionProblems(raw);
+  if (problems.length) throw new Error(`ingestion_state: ${problems.join("; ")}`);
+  const s = raw as Record<string, unknown>;
+  return { kind: s.status as SourceStatus, since: s.status_since as string,
+    reason: (s.reason as string) || null, expectedMonth: s.expected_month as string,
+    panelVintage: s.panel_vintage as string | null, missingMonths: s.missing_months as string[] };
+}
+
+/** Missing response is absence; a present empty/corrupt body is invalid. */
 export function parseSourceStatus(body: string | null | undefined): SourceState {
-  if (body === null || body === undefined || body.trim() === "") return { kind: "absent" };
-  let dato: unknown;
-  try {
-    dato = JSON.parse(body);
-  } catch (e) {
-    throw new Error(`ingestion_state: JSON ilegible (${(e as Error).message})`);
+  if (body === null || body === undefined) return { kind: "absent" };
+  return deriveSourceStatus(parseIngestionRecord(body));
+}
+
+/** Mirrors the existing ingestion policy: from day 15, expect next month's bulletin.
+ * This is a calendar expectation, never evidence that a bulletin has been published.
+ */
+export function sourceCalendar(state: Exclude<SourceState, { kind: "absent" }>, today: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(today) || !Number.isFinite(Date.parse(`${today}T00:00:00Z`))
+      || new Date(`${today}T00:00:00Z`).toISOString().slice(0, 10) !== today) throw new Error("invalid calendar date");
+  const date = new Date(`${today}T00:00:00Z`);
+  if (date.getUTCDate() >= 15) date.setUTCMonth(date.getUTCMonth() + 1, 1);
+  const expected = date.toISOString().slice(0, 7);
+  const pending: string[] = [];
+  if (state.panelVintage) {
+    let year = Number(state.panelVintage.slice(0, 4));
+    let month = Number(state.panelVintage.slice(5, 7));
+    while (`${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}` < expected) {
+      if (++month === 13) { year++; month = 1; }
+      pending.push(`${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}`);
+    }
   }
-  return deriveSourceStatus(dato);
+  return { expected, pending, stale: state.expectedMonth < expected };
 }

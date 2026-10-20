@@ -9,6 +9,6 @@ export const SITE_STATS = {
   dateLast: "2026-09",
   horizonMonths: 12,
   nModels: 24,
-  releaseId: "2026-09-158ec972c234",
-  releaseStatus: "fresh",
+  releaseId: "2026-09-e157b7e936fc",
+  releaseStatus: "stale",
 } as const;
