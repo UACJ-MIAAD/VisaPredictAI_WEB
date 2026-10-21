@@ -87,7 +87,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("A3", c("Cron resiliente", "Resilient cron"), c("Separar el acceso a la fuente de los gates, CI y publicación.", "Separate source access from gates, CI and publishing."), "done"),
       story("A4", c("Señal honesta", "Honest signal"), c("Versionar el estado de fuente y mantener una issue canónica.", "Version source state and maintain one canonical issue."), "done"),
       story("A5", c("Pruebas sin red", "Offline tests"), c("Cubrir fetch, freeze e ingesta sin depender de Internet.", "Cover fetch, freeze and ingestion without depending on the Internet."), "done"),
-      story("A6", c("BrowserFetcher", "BrowserFetcher"), c("Spike opcional y acotado; el ritual manual sigue siendo la ruta fiable.", "Optional time-boxed spike; the manual ritual remains the reliable path."), "deferred"),
+      story("A6", c("BrowserFetcher", "BrowserFetcher"), c("Retomar el ensayo acotado del navegador y contrastarlo con la ingesta manual, que sigue siendo la ruta fiable.", "Resume the bounded browser trial and compare it with manual ingestion, which remains the reliable path."), "planned"),
       story("A7", c("Corte agosto–septiembre", "August–September cut"), c("Publicar 300 snapshots, 298 meses y el corte 2026-09 con regla cero.", "Publish 300 snapshots, 298 months and the 2026-09 cut under rule zero."), "done", "release/2026-09-158ec972c234"),
     ],
   },
@@ -120,7 +120,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("D2", c("Advisories visibles", "Visible advisories"), c("Rechazar artefactos vacíos y convertir warnings y advisories en contratos.", "Reject empty artifacts and turn warnings and advisories into contracts."), "done", "0092af0"),
       story("D3", c("Estado de ingesta", "Ingestion state"), c("Mantener un feed cerrado, atómico y fail-closed.", "Maintain a closed, atomic and fail-closed state feed."), "done", "004e478"),
       story("D4", c("Un solo release_id", "One release_id"), c("Romper el ciclo tarjeta–manifiesto con identidad normalizada.", "Break the card–manifest cycle with normalized identity."), "done", "f9c22a2"),
-      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Retirarlo únicamente tras la campaña causal F2; nunca a mano.", "Remove it only after the causal F2 campaign; never by hand."), "deferred"),
+      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Derivar el caveat de la campaña acreditada y verificar su corte de mantenimiento en producción.", "Derive the caveat from the accredited campaign and verify its maintenance release in production."), "active", "local · derivación validada; integración y producción pendientes"),
       story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
       story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
       story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "done", "5dd424b"),
@@ -156,7 +156,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     stories: [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
-      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el bloqueo de la fuente sin prometer actualización automática.", "Show source blocking without promising automatic updates."), "observing", "17eb7a9 · banner preparado; ingestion_state.json pendiente de un corte gobernado"),
+      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el estado nominal de la fuente con su fecha, sin confundirlo con la frescura del build.", "Show nominal source status with its date, without confusing it with build freshness."), "active", "local · contrato y banner validados; publicación en producción pendiente"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "a6036ec · facts reconciliados publicados; seguimiento de consumidores"),
@@ -196,7 +196,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados.", "Propagate the cut and cohorts with derived caveats."), "observing", "a6036ec · corte y prosa reconciliados publicados; seguimiento académico"),
       story("G5", c("Deck de defensa", "Defense deck"), c("Generar las cifras de la presentación desde los artefactos sellados, con procedencia y pruebas anti-deriva.", "Generate the presentation figures from the sealed artifacts, with provenance and anti-drift tests."), "done"),
       story("G6", c("Cierre autónomo", "Autonomous closeout"), c("Reconciliar la retroalimentación académica y A6/A7 con el documento principal; después cerrar M74-E localmente antes de autorizar otra campaña.", "Reconcile the academic feedback and A6/A7 with the main document; then close M74-E locally before authorizing another campaign."), "done"),
-      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E y sus cuatro complementarias quedaron reconciliadas, con hechos, figuras y prosa contrastados. El documental y los datos están integrados con CI verde; el corte se publicó por la transacción gobernada, tras la revisión humana y la revalidación. El portal descarga y verifica ese corte durante su build. Continúan las observaciones operativas y el frente R9 permanece pausado.", "The M74-E campaign and its four complements were reconciled, with checked facts, figures and prose. Documents and data are integrated with green CI; the release was published through the governed transaction after human review and revalidation. The portal downloads and verifies that release during its build. Operational observations continue and R9 remains paused."), "done", "a6036ec"),
+      story("G7", c("Reconciliación de campaña", "Campaign reconciliation"), c("La campaña M74-E y sus cuatro complementarias quedaron reconciliadas, con hechos, figuras y prosa contrastados. Documental, datos y portal sirven el corte verificado; la transacción está publicada. El mantenimiento posterior tiene su propio contrato y no reabre la campaña. El autor reactivó las tareas pendientes y R9, conservando las puertas de revisión y las observaciones reales.", "The M74-E campaign and its four complements were reconciled, with checked facts, figures and prose. Documents, data and the portal serve the verified release; the transaction is published. Subsequent maintenance has its own contract and does not reopen the campaign. The owner resumed unfinished work and R9, retaining review gates and real observations."), "done", "a6036ec"),
     ],
   },
 ];
@@ -205,13 +205,31 @@ export const PAUSED_TRACK = {
   id: "R9/B233",
   title: c("Entornos reproducibles content-addressed", "Content-addressed reproducible environments"),
   detail: c(
-    "Preservado en 025154d con nueve entradas locales y PR #4 en draft. Gate Q lo mantiene fuera del denominador del plan activo hasta una decisión humana.",
-    "Preserved at 025154d with nine local entries and PR #4 in draft. Gate Q keeps it outside the active-plan denominator until a human decision.",
+    "Reactivado por orden del autor. Se retoma la reentrada de B233 con respaldo y validación del trabajo preservado; la PR sigue en borrador. Este frente adicional conserva su alcance propio y no cambia el denominador histórico del tablero.",
+    "Resumed by the owner's instruction. B233 re-entry starts with backup and validation of the preserved work; its PR remains a draft. This additional track retains its own scope and does not change the dashboard's historical denominator.",
   ),
-  status: "paused" as const,
+  status: "active" as const,
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-20",
+    title: c("G7 confirma sus consumidores; el autor reactiva el trabajo pendiente", "G7 confirms its consumers; the owner resumes unfinished work"),
+    detail: c(
+      "El dominio público y el alias de producción sirven el mismo corte reconciliado, con los hechos canónicos idénticos a los datos publicados. La campaña sigue publicada y su evidencia no se modifica. El autor levantó las pausas: se retoman el caveat derivado, el banner nominal de la fuente, el ensayo BrowserFetcher y la reentrada de R9. El mantenimiento validado en local aún necesita integración y comprobación remota. Los ciclos operativos no observados no se dan por completados y el porcentaje conserva su fórmula.",
+      "The public domain and production alias serve the same reconciled release, with canonical facts identical to the published data. The campaign remains published and its evidence is unchanged. The owner lifted the pauses: the derived caveat, nominal source banner, BrowserFetcher trial and R9 re-entry resume. Locally validated maintenance still needs integration and remote verification. Unobserved operational cycles are not counted as completed, and progress retains its weighting formula.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-20",
+    title: c("Se adopta el contrato de mantenimiento y se valida su operación local", "The maintenance contract is adopted and its local operation is validated"),
+    detail: c(
+      "La tarjeta deriva su advertencia de la campaña acreditada y el estado de ingesta tiene un contrato nominal con fecha propia. El contrato de mantenimiento está adoptado y su operación quedó validada en local: registro privado, revisión explícita, consumo único y recuperación comprobada. El candidato espera CI remoto y la aprobación concreta de su integración; no se reutiliza la revisión de la campaña ni se presenta este corte local como publicado. El portal deberá consumir y verificar el nuevo corte cuando corresponda.",
+      "The model card derives its caveat from the accredited campaign, and ingestion status has a nominal contract with its own date. The maintenance contract is adopted and its operation was validated locally: private registry, explicit review, single consumption and verified recovery. The candidate awaits remote CI and specific integration approval; the campaign review is not reused and this local release is not presented as published. The portal must consume and verify the new release when appropriate.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-10-20",
     title: c("G7 publica el corte reconciliado y cierra la transacción", "G7 publishes the reconciled release and closes the transaction"),
