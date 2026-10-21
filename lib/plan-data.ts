@@ -120,7 +120,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("D2", c("Advisories visibles", "Visible advisories"), c("Rechazar artefactos vacíos y convertir warnings y advisories en contratos.", "Reject empty artifacts and turn warnings and advisories into contracts."), "done", "0092af0"),
       story("D3", c("Estado de ingesta", "Ingestion state"), c("Mantener un feed cerrado, atómico y fail-closed.", "Maintain a closed, atomic and fail-closed state feed."), "done", "004e478"),
       story("D4", c("Un solo release_id", "One release_id"), c("Romper el ciclo tarjeta–manifiesto con identidad normalizada.", "Break the card–manifest cycle with normalized identity."), "done", "f9c22a2"),
-      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Derivar el caveat de la campaña acreditada y verificar su corte de mantenimiento en producción.", "Derive the caveat from the accredited campaign and verify its maintenance release in production."), "active", "datos 6ff06fd integrados; consumidor web en integración, producción pendiente"),
+      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Derivar el caveat de la campaña acreditada y verificar su corte de mantenimiento en producción.", "Derive the caveat from the accredited campaign and verify its maintenance release in production."), "done", "6ff06fd"),
       story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
       story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
       story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "done", "5dd424b"),
@@ -156,7 +156,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     stories: [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
-      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el estado nominal de la fuente con su fecha, sin confundirlo con la frescura del build.", "Show nominal source status with its date, without confusing it with build freshness."), "active", "local · banner en integración web sobre datos 6ff06fd; producción pendiente"),
+      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el estado nominal de la fuente con su fecha, sin confundirlo con la frescura del build.", "Show nominal source status with its date, without confusing it with build freshness."), "done", "6ff06fd"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "a6036ec · facts reconciliados publicados; seguimiento de consumidores"),
@@ -212,6 +212,15 @@ export const PAUSED_TRACK = {
 };
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-21",
+    title: c("D5 y F2 llegan a producción con el corte de mantenimiento", "D5 and F2 reach production with the maintenance release"),
+    detail: c(
+      "El mantenimiento entró a datos por el PR #51 después de la revisión humana del candidato y de su comentario de autorización, con CI verde. El tag del corte 2026-09-805d624d2ecf conserva su commit de origen y el acta de mantenimiento quedó consumida. El portal integró su consumidor por el PR #49 y producción sirve ese corte fresco: la tarjeta del modelo, el índice del asistente y los hechos canónicos son idénticos a los datos publicados. El banner muestra el estado registrado de la fuente, bloqueada desde el 2 de septiembre, sin confundirlo con la frescura del build. La campaña no se reabre y la observación mensual sigue abierta.",
+      "Maintenance entered the data repository through PR #51 after human review of the candidate and its authorization comment, with green CI. The release tag 2026-09-805d624d2ecf retains its origin commit and the maintenance record was consumed. The portal integrated its consumer through PR #49 and production serves that fresh release: the model card, the assistant index and the canonical facts are identical to the published data. The banner shows the recorded source status, blocked since 2 September, without confusing it with build freshness. The campaign is not reopened and monthly observation remains open.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-20",
     title: c("G7 confirma sus consumidores; el autor reactiva el trabajo pendiente", "G7 confirms its consumers; the owner resumes unfinished work"),
