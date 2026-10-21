@@ -22,9 +22,9 @@ describe("absent is a first-class state, not an invented block", () => {
     expect(deriveSourceStatus(valor)).toEqual({ kind: "absent" });
   });
 
-  it("treats an empty body as absent", () => {
-    expect(parseSourceStatus("")).toEqual({ kind: "absent" });
-    expect(parseSourceStatus("   ")).toEqual({ kind: "absent" });
+  it("refuses a present empty body; only a missing response is absent", () => {
+    expect(() => parseSourceStatus("")).toThrow(/ilegible/);
+    expect(() => parseSourceStatus("   ")).toThrow(/ilegible/);
     expect(parseSourceStatus(null)).toEqual({ kind: "absent" });
   });
 

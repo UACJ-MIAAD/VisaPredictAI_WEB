@@ -50,8 +50,8 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b",
-  releaseId: "2026-09-87a5be76e8a1",
+  dataMain: "6ff06fd5cf0b38d7a9692a1754931ad634050afc",
+  releaseId: "2026-09-805d624d2ecf",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
 } as const;
@@ -120,7 +120,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("D2", c("Advisories visibles", "Visible advisories"), c("Rechazar artefactos vacíos y convertir warnings y advisories en contratos.", "Reject empty artifacts and turn warnings and advisories into contracts."), "done", "0092af0"),
       story("D3", c("Estado de ingesta", "Ingestion state"), c("Mantener un feed cerrado, atómico y fail-closed.", "Maintain a closed, atomic and fail-closed state feed."), "done", "004e478"),
       story("D4", c("Un solo release_id", "One release_id"), c("Romper el ciclo tarjeta–manifiesto con identidad normalizada.", "Break the card–manifest cycle with normalized identity."), "done", "f9c22a2"),
-      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Derivar el caveat de la campaña acreditada y verificar su corte de mantenimiento en producción.", "Derive the caveat from the accredited campaign and verify its maintenance release in production."), "active", "local · derivación validada; integración y producción pendientes"),
+      story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Derivar el caveat de la campaña acreditada y verificar su corte de mantenimiento en producción.", "Derive the caveat from the accredited campaign and verify its maintenance release in production."), "active", "datos 6ff06fd integrados; consumidor web en integración, producción pendiente"),
       story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
       story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
       story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "done", "5dd424b"),
@@ -156,7 +156,7 @@ export const PLAN_EPICS: PlanEpic[] = [
     ),
     stories: [
       story("F1", c("Número de modelos derivado", "Derived model count"), c("Eliminar el literal web y leer key_facts fail-closed.", "Remove the web literal and read key_facts fail-closed."), "done"),
-      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el estado nominal de la fuente con su fecha, sin confundirlo con la frescura del build.", "Show nominal source status with its date, without confusing it with build freshness."), "active", "local · contrato y banner validados; publicación en producción pendiente"),
+      story("F2", c("Banner de fuente", "Source banner"), c("Mostrar el estado nominal de la fuente con su fecha, sin confundirlo con la frescura del build.", "Show nominal source status with its date, without confusing it with build freshness."), "active", "local · banner en integración web sobre datos 6ff06fd; producción pendiente"),
       story("F3", c("Guardián generalizado", "Generalized guardian"), c("Vigilar macros, tablas, propuesta y documentación.", "Guard macros, tables, proposal and documentation."), "done", "033c8a5"),
       story("F4", c("RAG canónico", "Canonical RAG"), c("Responder cifras desde JSON y exigir un pin coherente en producción.", "Answer figures from JSON and require a coherent production pin."), "done"),
       story("F5", c("Paper derivado", "Derived paper"), c("Mover literales y caveats a facts versionados.", "Move literals and caveats into versioned facts."), "observing", "a6036ec · facts reconciliados publicados; seguimiento de consumidores"),

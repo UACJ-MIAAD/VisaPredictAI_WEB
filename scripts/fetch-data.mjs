@@ -24,6 +24,7 @@ import {
   isContract,
   planSwap,
   releaseState,
+  requireStatusArtifacts,
   swapDisposition,
   validateArtifact,
   vendoredMatches,
@@ -163,8 +164,8 @@ async function loadVendoredContracts() {
 }
 
 // Manifest path: staging → verify everything → atomic swap (or keep the previous cut).
-async function manifestFetch(manifest) {
-  const entries = consumedEntries(manifest);
+async function manifestFetch(manifest, manifestBytes) {
+  const entries = consumedEntries(manifest, manifestBytes);
   const vendored = await loadVendoredContracts();
   await rm(STAGING, { recursive: true, force: true });
   await mkdir(STAGING, { recursive: true });
@@ -174,7 +175,7 @@ async function manifestFetch(manifest) {
     Array.from({ length: 8 }, async () => {
       for (let e = queue.shift(); e; e = queue.shift()) {
         try {
-          const body = await fetchBuf(`${RAW}/${e.path}`);
+          const body = e.path === MANIFEST_PATH ? manifestBytes : await fetchBuf(`${RAW}/${e.path}`);
           const ok = verifyEntry(e, body);
           if (ok !== true) throw new Error(ok);
           // B3a — deriva de contrato: el publicado debe SER el vendorizado (por hash);
@@ -264,9 +265,13 @@ if (process.env.FETCH_OFFLINE === "1") {
   state = releaseState({ status: "legacy", reason: "FETCH_LEGACY=1 (forced rollback to per-file fetch)" });  // legacy bytes are per-file/unverified: no release identity to inherit
 } else {
   let manifest = null;
+  let manifestBytes = null;
   try {
-    manifest = JSON.parse((await fetchBuf(`${RAW}/${MANIFEST_PATH}`)).toString("utf8"));
+    manifestBytes = await fetchBuf(`${RAW}/${MANIFEST_PATH}`);
+    manifest = JSON.parse(manifestBytes.toString("utf8"));
+    requireStatusArtifacts(manifest);
   } catch (e) {
+    manifest = null;
     console.warn(`fetch-data: release manifest unavailable (${e.message}) → committed fallback cut kept whole`);
   }
   if (manifest && manifest.schema_version !== SUPPORTED_SCHEMA) {
@@ -282,7 +287,7 @@ if (process.env.FETCH_OFFLINE === "1") {
       reason: `manifest schema_version ${manifest.schema_version}, loader supports ${SUPPORTED_SCHEMA}`,
     });
   } else if (manifest) {
-    state = await manifestFetch(manifest);
+    state = await manifestFetch(manifest, manifestBytes);
   } else {
     // 2a ronda audit 12-jul (CRITICO): aqui corria legacyFetch() automatico — una descarga
     // parcial por-archivo mezclaba bytes nuevos con fallbacks (hibrido SIN verificar) y el

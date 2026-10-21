@@ -28,10 +28,9 @@ describe("outFor — repo path → public/data name", () => {
   });
   it("returns null for release artifacts the site build does not consume", () => {
     expect(outFor("reports/prospective/forecast_log.csv")).toBeNull();
-    expect(outFor("reports/governance/MODEL_CARD.md")).toBeNull();
     // F1 lo sacó de esta lista: key_facts.json SÍ se consume, y por eso el conteo de
     // modelos dejó de estar tecleado en build-stats.
-    expect(outFor("reports/governance/MODEL_CARD.md")).toBeNull();
+    expect(outFor("reports/governance/MODEL_CARD.md")).toBe("MODEL_CARD.md");
   });
 });
 
