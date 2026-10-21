@@ -1,8 +1,8 @@
 # Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02 · #62 2026-10-12)
 
-Estado vigente: ver **«Triage vigente (2026-10-12)»** más abajo (gate `--omit=dev
---audit-level=high` en 0 tras la remediación; 2 avisos de producción y 2 de desarrollo
-abiertos con dueño). Al 2026-09-02 (`main@9d0929d`) el audit era 0 en todas las
+Estado vigente: ver **«Candidato local C3 (2026-10-20)»** más abajo. El gate
+`--omit=dev --audit-level=high` permanece sin cambios. El candidato aún no acredita
+CI remoto ni despliegue. Al 2026-09-02 (`main@9d0929d`) el audit era 0 en todas las
 severidades. El gate programado (`.github/workflows/scheduled-quality.yml`,
 job `security-audit`) falla en high/critical y reporta las moderadas cada lunes; este
 documento es su triage vivo. El lado Python (locks del repo de datos) vive en
@@ -27,7 +27,48 @@ histórico se retira de este documento (queda en el historial de git).
 (hoy: next@9.3.3, tres majors atrás). Todo upgrade va por PR con la suite completa
 (vitest + typecheck + build offline) y rollback = revert del commit.
 
-## Triage vigente (2026-10-12)
+## Candidato local C3 (2026-10-20)
+
+Inventario nuevo sobre el lock exacto: la base web `88cb073` presenta **15 paquetes
+afectados por 5 GHSA distintos**; producción tiene 6 paquetes y 2 GHSA, sin altos
+ni críticos. Tras la corrección quedan **10 paquetes y 2 GHSA**; producción, 5
+paquetes de una sola cadena moderada. Son conteos de paquetes y advisories distintos.
+No se declara un audit completamente limpio ni se acepta riesgo por el autor.
+
+| Corrección | Versión final | Alcance y validación exigida |
+|---|---|---|
+| GHSA-238p-pmpm-9mq7, KaTeX | 0.18.2 | mínima versión corregida; build real, fórmulas, export y E2E |
+| GHSA-82fw-gwwq-j7x9, Vitest/mocker | 4.1.11, incluido coverage-v8 | parche de la misma línea; unitarias y pisos de cobertura |
+| GHSA-698v-4r3x-3vcv, Vite | 8.3.4 | resuelto dentro del rango de Vitest; sin ignorar peers |
+
+Npm 10.9.3 falló con `edgesOut` al resolver los peers del lock anterior. Se usó
+npm 11.6.2 aislado únicamente para resolver, y después npm 10 normalizó dos entradas
+opcionales `@emnapi`. **La instalación limpia final usa npm 10.9.3 / Node 22.19**,
+como el CI; no se cambia el runtime de la aplicación ni se usa `--legacy-peer-deps`
+o `--force`. Transformers, ONNX Runtime, Next y sharp conservan sus versiones.
+
+| Aviso todavía presente | Cadena y alcance | Control comprobable / dueño |
+|---|---|---|
+| GHSA-vfj7-8cjw-p6xm, high | `eslint-config-next` → plugin Next → `fast-glob` → `micromatch` → `braces` 3.0.3; sólo desarrollo | El uso de fast-glob en el plugin está en la resolución de `settings.next.rootDir`; sin ese ajuste devuelve el cwd sin expandir globs. La configuración del proyecto no toma patrones de usuarios. Conservar ese límite y actualizar cuando exista parche. Dueño: mantenimiento del web / Javier. No es un aviso alto de producción. |
+| GHSA-hp3w-g68c-fv3c, moderate | Transformers → `onnxruntime-node` → `global-agent` → `roarr` → `sprintf-js` 1.1.3 | En ONNX Node, global-agent se importa en `script/install.js` para el proxy de descarga, no en su entrada de inferencia. El export estático y las funciones del portal no importan ese instalador. No introducir formatos de logging de usuarios ni dependencias de ese instalador en funciones. Dueño: mantenimiento del web / Javier; SLA moderado vigente. |
+
+El registro npm consultado el 20-oct sigue publicando braces 3.0.3 y sprintf-js
+1.1.3 como últimas versiones: no hay parche publicado que instalar. Los límites
+anteriores reducen el alcance, no eliminan las dependencias ni su aviso. Cualquier
+excepción o aceptación adicional corresponde al autor sobre este inventario concreto.
+
+Acciones: `upload-artifact` v7.0.2 y `cache` v6.1.0 fijadas a commits oficiales,
+ambas con runtime Node 24 comprobado en `action.yml`. Los jobs se fijan a
+`ubuntu-24.04`; se conserva Node 22 para la aplicación. El runner hospedado debe
+soportar Node 24 (cache documenta mínimo 2.327.1). Las entradas/salidas, permisos y
+gates se conservan; la comprobación remota se hará sobre el commit integrado.
+
+Evidencia local y resolución de tags/runtimes:
+`Anteproyecto/Prompts/lote_C3_CI_SEGURIDAD_2026-10-20/`. La verificación local y el
+resultado del CI remoto se registran por separado. El triage Python y las demás
+historias de cierre conservan su propio alcance.
+
+## Triage 2026-10-12 (histórico)
 
 El job semanal falló desde el 14-sep: ese día por un `ETIMEDOUT` al instalar
 `onnxruntime-node` (red, no audit) y desde el 21-sep por avisos nuevos. Audit medido el
