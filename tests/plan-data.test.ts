@@ -25,8 +25,8 @@ const findStory = (epics: PlanEpic[], id: string) => {
 describe("public MLOps plan", () => {
   it("shows delivered and observed epics instead of stale planned badges", () => {
     const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
-    expect(statuses).toMatchObject({ C: "done", F: "active", E: "observing", G: "observing" });
-    expect(planStats().percent).toBe(95);
+    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "observing", G: "observing" });
+    expect(planStats().percent).toBe(97);
   });
 
   it("moves an epic badge when its work starts, enters observation, and finishes", () => {
@@ -162,14 +162,14 @@ describe("public MLOps plan", () => {
   it("keeps G7 closed and resumes unfinished work without inventing production evidence", () => {
     const focus = planFocus();
     expect(findStory(PLAN_EPICS, "G7")).toMatchObject({ status: "done", evidence: "a6036ec" });
-    expect(focus.next?.id).toBe("D5");
+    expect(focus.next?.id).toBe("A6");
     expect(focus.observing.length).toBeGreaterThan(0);
     expect(focus.deferred).toEqual([]);
-    expect(findStory(PLAN_EPICS, "D5").status).toBe("active");
+    expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
     expect(findStory(PLAN_EPICS, "A6").status).toBe("planned");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-20", status: "done" });
-    expect(focus.updatedAt).toBe("2026-10-20");
-    expect(planStats().percent).toBe(95);
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-21", status: "done" });
+    expect(focus.updatedAt).toBe("2026-10-21");
+    expect(planStats().percent).toBe(97);
     expect(PLAN_META.releaseId).toBe("2026-09-805d624d2ecf");
   });
 
@@ -250,11 +250,14 @@ describe("public MLOps plan", () => {
     expect(f5?.evidence).not.toMatch(/pendiente.*propagaci[oó]n/);
   });
 
-  it("keeps local F2 work in flight until its governed artifact reaches production", () => {
+  it("closes F2 only once its governed artifact reaches production", () => {
     const f2 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F2");
-    expect(f2).toMatchObject({ status: "active" });
-    expect(f2?.evidence).toMatch(/^local · /);
-    expect(f2?.evidence).toMatch(/producci[oó]n pendiente/);
+    expect(f2).toMatchObject({ status: "done", evidence: "6ff06fd" });
+    const published = PLAN_UPDATES.find((entry) => entry.title.es.startsWith("D5 y F2"));
+    expect(published?.status).toBe("done");
+    expect(published?.detail.es).toMatch(/PR #51.*PR #49.*producci[oó]n/);
+    expect(published?.detail.en).toMatch(/PR #51.*PR #49.*production/);
+    // la entrada del 20-oct es historia: describía la operación local antes del CI remoto
     const maintenance = PLAN_UPDATES.find((entry) => entry.title.es.includes("contrato de mantenimiento"));
     expect(maintenance?.status).toBe("active");
     expect(maintenance?.detail.es).toMatch(/local.*CI remoto/);
