@@ -31,6 +31,18 @@ jobs:
             node_modules/.cache
           key: hf-e5-small-${{ runner.os }}
       - run: npm ci
+      - name: Fetch and verify the served release before indexing
+        run: |
+          node scripts/fetch-data.mjs
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+          const state = JSON.parse(readFileSync("public/data/release-state.json", "utf8"));
+          if (state.status !== "fresh") {
+            throw new Error(`Scheduled RAG requires a verified fresh release, got ${state.status}`);
+          }
+          console.log(`Scheduled RAG release verified: ${state.release_id}`);
+          NODE
+          node scripts/build-stats.mjs
       - name: Build the real RAG index (embeddings incluidos)
         run: node scripts/build-rag-index.mjs
       - name: Retrieval gate por estrato
