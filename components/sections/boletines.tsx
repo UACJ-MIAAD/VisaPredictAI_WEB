@@ -54,7 +54,7 @@ export function Boletines() {
   const [month, setMonth] = React.useState("");
   const [filter, setFilter] = React.useState("");
   // F2 · el estado de la fuente se carga aparte: su ausencia no debe romper la sección.
-  const [sourceState, setSourceState] = React.useState<Vista>({ kind: "absent" });
+  const [sourceState, setSourceState] = React.useState<Vista>({ kind: "loading" });
   const ref = React.useRef<HTMLElement | null>(null);
   const loaded = React.useRef(false);
 

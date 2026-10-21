@@ -5,8 +5,9 @@
 // comes from a live source:
 //   1. The site's own academic content   (content/source.html + content/en/*.html)
 //   2. Docs from the data repo via GitHub raw — PINNED at the release git SHA
-//      (US I6: resolved from the release manifest; `main` only as documented
-//      fallback when the manifest is unreachable)
+//      (US I6: resolved from the manifest captured with the served cut; missing
+//      docs may fall back to `main`, recorded individually. MODEL_CARD instead
+//      comes from that cut's verified local artifact.)
 //   3. Live facts from data/processed/bulletins.json (latest month movements —
 //      deliberately fetched from `main`: it is the freshness feed)
 //
@@ -39,7 +40,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { DATA_REPO_RAW as REPO_RAW, dataRepoRawAt } from "../lib/repo.mjs";
-import { MANIFEST_PATH } from "../lib/release.mjs";
+import { MODEL_CARD_PATH, modelCardForCut, sourcePinForCut } from "../lib/release-model-card.mjs";
 import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -78,9 +79,9 @@ const MODEL_PIN = {
 // indexed knowledge is attributable to ONE repo state and a rebuild reads the
 // same bytes. The pin cross-checks lib/content/data-pins.generated.mjs (US I1:
 // the release actually SERVED under /data) — `coherent: true` means docs and
-// data describe the same release; a mismatch is recorded, never hidden.
+// data describe the same release; an absent or different served cut fails.
 const sourcePin = {
-  ref: "main", // effective fetch ref: git_sha when resolved, else main (documented fallback)
+  ref: null, // resolved from the served cut before any document fetch
   git_sha: null,
   release_id: null,
   generated_at: null,
@@ -89,34 +90,21 @@ const sourcePin = {
   coherent: false,
   fallbacks: [], // docs that had to fall back to main (missing at the pinned SHA)
 };
+let servedManifest;
 async function resolveSourcePin() {
   try {
     const { DATA_PINS } = await import("../lib/content/data-pins.generated.mjs");
     sourcePin.served_release_id = DATA_PINS?.releaseId ?? null;
     sourcePin.served_release_status = DATA_PINS?.releaseStatus ?? null;
   } catch {
-    console.warn("  ! data-pins.generated.mjs not built yet (run build-stats) — served-release cross-check skipped");
+    throw new Error("data-pins.generated.mjs not built yet — run build-stats before indexing");
   }
-  try {
-    const r = await fetch(`${REPO_RAW}/${MANIFEST_PATH}`);
-    if (!r.ok) throw new Error(`${r.status}`);
-    const m = await r.json();
-    if (m.git_sha) {
-      sourcePin.ref = m.git_sha;
-      sourcePin.git_sha = m.git_sha;
-      sourcePin.release_id = m.release_id ?? null;
-      sourcePin.generated_at = m.generated_at ?? null;
-      sourcePin.coherent = !!sourcePin.served_release_id && sourcePin.served_release_id === sourcePin.release_id;
-      console.log(
-        `  source pin: docs @ ${m.git_sha} (release ${m.release_id})` +
-          (sourcePin.coherent ? " — coherent with served /data cut" : ` — served cut is ${sourcePin.served_release_id ?? "n/d"} (recorded, not hidden)`),
-      );
-      return;
-    }
-    throw new Error("manifest has no git_sha");
-  } catch (e) {
-    console.warn(`  ! release manifest unavailable (${e.message}) — docs fall back to main (unpinned, recorded in meta.json)`);
-  }
+  // Consume the metadata captured in the same verified swap as /data. Re-fetching
+  // `main` here can resolve a newer cut than the one this build actually serves.
+  const manifest = JSON.parse(readFileSync(join(root, "public/data/release_manifest.json"), "utf8"));
+  Object.assign(sourcePin, sourcePinForCut(manifest, { release_id: sourcePin.served_release_id }));
+  servedManifest = manifest;
+  console.log(`  source pin: docs @ ${sourcePin.git_sha} (release ${sourcePin.release_id}) — coherent with served /data cut`);
 }
 
 // ── tiny HTML/markdown → text helpers ──────────────────────────────────────
@@ -404,6 +392,11 @@ const REPO_DOCS = [
 // (e.g. a release sealed from a dirty worktree), fall back to main and RECORD
 // the fallback — never silently mix trust levels.
 async function fetchRepoDoc(path) {
+  if (path === MODEL_CARD_PATH) {
+    const card = modelCardForCut(servedManifest, { release_id: sourcePin.served_release_id }, readFileSync(join(root, "public/data/MODEL_CARD.md")));
+    sourcePin.model_card = { release_id: servedManifest.release_id, sha256: card.sha256, source: "served-cut" };
+    return { ...card, pinned: true };
+  }
   const tryRef = async (ref) => {
     const r = await fetch(`${dataRepoRawAt(ref)}/${path}`);
     if (!r.ok) throw new Error(`${r.status}`);
@@ -424,11 +417,12 @@ async function collectRepoDocs() {
   let ok = 0;
   for (const [path, name] of REPO_DOCS) {
     try {
-      const { txt, pinned } = await fetchRepoDoc(path);
-      const docMeta = repoDocMeta(pinned);
+      const { txt, pinned, meta } = await fetchRepoDoc(path);
+      const docMeta = meta ?? repoDocMeta(pinned);
       // Human deep-link stays on blob/main (readable, follows the repo head);
       // the INDEXED BYTES' provenance lives in the chunk meta + meta.json pin.
-      const url = `https://github.com/UACJ-MIAAD/VisaPredictAI/blob/main/${path}`;
+      const url = path === MODEL_CARD_PATH ? "https://visapredictai.com/data/MODEL_CARD.md"
+        : `https://github.com/UACJ-MIAAD/VisaPredictAI/blob/main/${path}`;
       if (path.endsWith(".sql")) {
         // SQL: chunk by statement/comment blocks
         const text = txt.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/[ \t]+/g, " ");
@@ -477,6 +471,7 @@ async function collectRepoDocs() {
       }
       ok++;
     } catch (e) {
+      if (path === MODEL_CARD_PATH) throw new Error(`MODEL_CARD del corte no verificable: ${e.message}`);
       console.warn(`  ! skip ${path}: ${e.message}`);
     }
   }

@@ -8,6 +8,7 @@ export const localeOf = (l: Lang | string): string => (l === "en" ? "en-US" : "e
 type Dict = Record<string, { es: string; en: string }>;
 
 const S = {
+  srcLoading: { es: "Cargando el registro de ingesta incluido en este corte.", en: "Loading the ingestion record included in this release." },
   // hero
   heroEyebrow: { es: "Tesis MIAAD · UACJ · Proyecto I en curso", en: "MIAAD Thesis · UACJ · Project I underway" },
   heroDataThrough: { es: "datos a", en: "data through" },
@@ -44,26 +45,33 @@ const S = {
     es: "Cada mes el Departamento de Estado de EE. UU. publica un nuevo Visa Bulletin. Cuando el pipeline logra ingerirlo, congela el boletín y reconstruye el panel; el estado de esa ingesta se informa arriba. Las fechas son datos oficiales publicados —no predicciones del modelo— con el movimiento respecto al mes anterior.",
     en: "Each month the U.S. Department of State publishes a new Visa Bulletin. When the pipeline manages to ingest it, it freezes the bulletin and rebuilds the panel; the state of that ingestion is reported above. The dates are official published data —not model predictions— with the movement relative to the previous month.",
   },
-  srcHeading: { es: "Estado de la fuente", en: "Source status" },
+  srcHeading: { es: "Estado de la fuente registrado en el corte", en: "Source status recorded in this release" },
   srcOk: {
-    es: "La ingesta automática está operando: el último intento sobre el Visa Bulletin fue correcto.",
-    en: "Automatic ingestion is operating: the last attempt against the Visa Bulletin succeeded.",
+    es: "El registro del corte indica una ingesta correcta.",
+    en: "The release record reports successful ingestion.",
   },
   srcBlocked: {
-    es: "La fuente oficial está rechazando la ingesta automática. Los datos que ves siguen siendo oficiales y verificados; lo que no puede prometerse es que el próximo boletín entre solo.",
-    en: "The official source is refusing automatic ingestion. The data you see is still official and verified; what cannot be promised is that the next bulletin will arrive on its own.",
+    es: "El registro del corte indica que la fuente rechazó la ingesta automática. Los datos que ves siguen siendo oficiales y verificados; no se promete que el próximo boletín entre solo.",
+    en: "The release record reports that the source refused automatic ingestion. The data you see is still official and verified; automatic arrival of the next bulletin is not promised.",
   },
   srcPartial: {
-    es: "La ingesta automática entró solo en parte. Falta al menos un mes por incorporar.",
-    en: "Automatic ingestion only partly succeeded. At least one month is still missing.",
+    es: "El registro del corte indica una ingesta parcial; algunos enlaces fallaron.",
+    en: "The release record reports partial ingestion; some links failed.",
   },
   srcOffline: {
-    es: "No se pudo alcanzar la fuente oficial en el último intento de ingesta.",
-    en: "The official source could not be reached on the last ingestion attempt.",
+    es: "El registro del corte indica que no se pudo alcanzar la fuente oficial.",
+    en: "The release record reports that the official source could not be reached.",
   },
-  srcSince: { es: "Desde", en: "Since" },
-  srcExpected: { es: "Mes esperado", en: "Expected month" },
-  srcMissing: { es: "Meses pendientes", en: "Months pending" },
+  srcSince: { es: "Estado registrado desde", en: "Status recorded since" },
+  srcExpected: { es: "Mes esperado hoy (calendario UTC)", en: "Expected month today (UTC calendar)" },
+  srcMissing: { es: "Meses esperados tras el panel registrado", en: "Calendar months expected after the recorded panel" },
+  srcRecordedExpected: { es: "Mes esperado al registrar el estado", en: "Expected month in the record" },
+  srcPanel: { es: "Panel según este registro", en: "Recorded panel vintage" },
+  srcUnknown: { es: "no disponible", en: "unavailable" },
+  srcFrozen: { es: "Es una copia congelada del registro, sin fecha del último intento. No comprueba la fuente en vivo. La expectativa usa la política del día 15; no confirma la publicación de esos boletines.", en: "This is a frozen record without a last-attempt date. It does not check the source live. Calendar expectations use the day-15 policy and do not confirm bulletin publication." },
+  srcStale: { es: "El registro es anterior a la expectativa actual; su estado puede haber cambiado.", en: "The record predates the current expectation; its status may have changed." },
+  srcAbsent: { es: "Este corte no ofrece un registro de ingesta verificable. El estado actual de la fuente se desconoce.", en: "This release has no verifiable ingestion record. The source's current status is unknown." },
+  srcUnavailable: { es: "No se pudo descargar el registro de ingesta. El estado de la fuente se desconoce.", en: "The ingestion record could not be downloaded. The source status is unknown." },
   srcInvalid: {
     es: "El estado de la fuente no se pudo verificar: el registro publicado no es legible. No se muestra un diagnóstico inventado.",
     en: "The source status could not be verified: the published record is unreadable. No invented diagnosis is shown.",

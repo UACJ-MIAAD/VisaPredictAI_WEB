@@ -170,7 +170,7 @@ describe("public MLOps plan", () => {
     expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-20", status: "done" });
     expect(focus.updatedAt).toBe("2026-10-20");
     expect(planStats().percent).toBe(95);
-    expect(PLAN_META.releaseId).toBe("2026-09-87a5be76e8a1");
+    expect(PLAN_META.releaseId).toBe("2026-09-805d624d2ecf");
   });
 
   it("shows D7 as observation 0/2 and does not call it completed", () => {
@@ -284,7 +284,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b");
+    expect(PLAN_META.dataMain).toBe("6ff06fd5cf0b38d7a9692a1754931ad634050afc");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });

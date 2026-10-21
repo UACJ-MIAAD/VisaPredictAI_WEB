@@ -17,8 +17,8 @@ const vendored = readdirSync(CONTRACTS)
   .map((f) => ({ name: f, buf: readFileSync(join(CONTRACTS, f)), contract: JSON.parse(readFileSync(join(CONTRACTS, f), "utf8")) }));
 
 describe("contratos vendorizados vs fallbacks commiteados (prueba conjunta offline)", () => {
-  it("hay 14 contratos vendorizados y todos declaran artifact + kind", () => {
-    expect(vendored.length).toBe(14);
+  it("hay 15 contratos vendorizados, incluido el registro de ingesta, con artifact + kind", () => {
+    expect(vendored.length).toBe(15);
     for (const v of vendored) {
       expect(v.contract.contract_version).toBe(1);
       expect(typeof v.contract.artifact).toBe("string");
