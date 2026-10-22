@@ -26,7 +26,7 @@ const findStory = (epics: PlanEpic[], id: string) => {
 describe("public MLOps plan", () => {
   it("shows delivered and observed epics instead of stale planned badges", () => {
     const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
-    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "observing", G: "observing" });
+    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "done", G: "observing" });
     expect(planStats().percent).toBe(97);
   });
 
@@ -174,8 +174,8 @@ describe("public MLOps plan", () => {
     expect(focus.deferred).toEqual([]);
     expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
     expect(findStory(PLAN_EPICS, "A6").status).toBe("planned");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-21", status: "done" });
-    expect(focus.updatedAt).toBe("2026-10-21");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-22", status: "done" });
+    expect(focus.updatedAt).toBe("2026-10-22");
     expect(planStats().percent).toBe(97);
     expect(PLAN_META.releaseId).toBe("2026-09-805d624d2ecf");
   });
@@ -248,6 +248,19 @@ describe("public MLOps plan", () => {
   it.each(["F7", "F8"])("shows %s as delivered with the squash that carries it on main", (id) => {
     const historia = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === id);
     expect(historia).toMatchObject({ status: "done", evidence: "1c81b6f" });
+  });
+
+  it("closes E5 only with the web squash that put the cohorts in production", () => {
+    const e5 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "E5");
+    expect(e5).toMatchObject({ status: "done", evidence: "ea1b8c5" });
+    const published = PLAN_UPDATES.find((entry) => entry.title.es.startsWith("E5"));
+    expect(published?.status).toBe("done");
+    expect(published?.detail.es).toMatch(/PR web #52.*producci[oó]n/);
+    expect(published?.detail.en).toMatch(/PR #52.*production/);
+    // el cierre técnico ya no anuncia E5 como verificación pendiente
+    const closeout = PLAN_CLOSEOUT.find((item) => item.id === "technical-closeout");
+    expect(closeout?.detail.es).not.toMatch(/^E5, F5 y G4 se pueden verificar/);
+    expect(closeout?.detail.en).not.toMatch(/^E5, F5 and G4 can be checked/);
   });
 
   it("keeps F5 under observation without calling its published facts local", () => {

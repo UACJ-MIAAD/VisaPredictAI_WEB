@@ -178,7 +178,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("E2", c("Scan exploratorio", "Exploratory scan"), c("Medir lo ya puntuado por cohorte sin reentrenar.", "Measure already-scored results by cohort without retraining."), "done", "e8b4629"),
       story("E3", c("Modelos globales", "Global models"), c("Entrenar una escalera registrada y documentar también el fracaso.", "Train a registered ladder and document failure too."), "done", "850d4bd"),
       story("E4", c("Router por estabilidad", "Stability router"), c("Competir contra el naïve de cada cohorte bajo el gate canónico.", "Compete against each cohort's naïve baseline under the canonical gate."), "done", "2ff4d07"),
-      story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "observing", "a53202e"),
+      story("E5", c("Propagación científica", "Scientific propagation"), c("Llevar resultados a tesis, web, RAG y tarjeta con regla cero.", "Carry results into thesis, web, RAG and model card under rule zero."), "done", "ea1b8c5"),
       story("E6", c("Limpieza pagada", "Paid-for cleanup"), c("Unificar universos y corregir catálogo y docstrings fósiles.", "Unify universes and correct stale catalog entries and docstrings."), "done", "51a83ff"),
     ],
   },
@@ -233,13 +233,22 @@ export const PLAN_CLOSEOUT = [
     id: "technical-closeout",
     title: c("Cerrar verificaciones y decisiones operativas", "Complete checks and operational decisions"),
     detail: c(
-      "E5, F5 y G4 se pueden verificar ahora: igualdad de exportaciones, prosa, tarjeta, portal e índice del asistente contra el corte publicado. D7 conserva cero de dos ciclos acreditados; un build del portal no cuenta como un boletín nuevo. BrowserFetcher requiere su ensayo acotado o una decisión de alcance. R9 continúa activo en local; los parches Python, la automatización documental y el resto del mantenimiento conservan tareas y criterios propios. El porcentaje del tablero no acredita la entrega académica ni todo ese backlog.",
-      "E5, F5 and G4 can be checked now: matching exports, prose, model card, portal and assistant index against the published release. D7 retains zero of two accredited cycles; a portal build does not count as a new bulletin. BrowserFetcher needs its bounded trial or a scope decision. R9 remains active locally; Python patches, documentary automation and other maintenance retain their own tasks and acceptance criteria. The board percentage does not certify academic delivery or completion of that entire backlog.",
+      "E5 quedó cerrada en producción con el PR web #52. F5 y G4 pasaron sus verificaciones técnicas (igualdad de exportaciones, prosa, tarjeta e índice del asistente contra el corte publicado) y siguen en observación; no equivalen al aval académico. D7 conserva cero de dos ciclos acreditados; un build del portal no cuenta como un boletín nuevo. BrowserFetcher requiere su ensayo acotado o una decisión de alcance. R9 continúa activo en local; los parches Python, la automatización documental y el resto del mantenimiento conservan tareas y criterios propios. El porcentaje del tablero no acredita la entrega académica ni todo ese backlog.",
+      "E5 closed in production with web PR #52. F5 and G4 passed their technical checks (matching exports, prose, model card and assistant index against the published release) and remain under observation; they are not the academic approval. D7 retains zero of two accredited cycles; a portal build does not count as a new bulletin. BrowserFetcher needs its bounded trial or a scope decision. R9 remains active locally; Python patches, documentary automation and other maintenance retain their own tasks and acceptance criteria. The board percentage does not certify academic delivery or completion of that entire backlog.",
     ),
   },
 ];
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-22",
+    title: c("E5 muestra las cohortes de estabilidad en el portal y en el asistente", "E5 shows the stability cohorts on the portal and in the assistant"),
+    detail: c(
+      "El PR web #52 entró a main con CI verde y producción sirve el mismo corte 2026-09-805d624d2ecf. Ingeniería muestra ahora en español y en inglés la partición de series estables y no estables, su reparto por tabla y el resultado negativo del enrutado, leídos del archivo de cifras del corte. El asistente recibe esas mismas cifras en cada lengua, y la pregunta en inglés sobre series estables e inestables, que antes no encontraba su fuente, ya la recupera. Ninguna cifra científica cambia y la campaña no se reabre. Con esto la épica E queda terminada; el porcentaje del tablero no cambia por redondeo.",
+      "Web PR #52 reached main with green CI and production serves the same 2026-09-805d624d2ecf release. Engineering now shows, in Spanish and English, the split into stable and unstable series, its breakdown by table and the negative routing result, read from the release's figures file. The assistant receives those same figures in each language, and the English question about stable and unstable series, which previously missed its source, now retrieves it. No scientific figure changes and the campaign is not reopened. This completes epic E; the board percentage is unchanged by rounding.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-21",
     title: c("G6 integra los tres avances en la tesis y prepara la revisión del asesor", "G6 integrates the three progress reports into the thesis and prepares advisor review"),
