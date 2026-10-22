@@ -4,7 +4,7 @@
   "largest_js_chunk_kb": 450,
   "data_total_mb": 45.0,
   "rag_index_total_mb": 3.5,
-  "ort_wasm_total_mb": 25.0,
+  "ort_wasm_total_mb": 26.0,
   "rag_preconsent_chunks_kb": 600,
   "rag_vectors_kb": 800
 }

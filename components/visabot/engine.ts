@@ -14,6 +14,7 @@
 // the semantic engine (AZ1: no ~150 MB download without consent).
 import type { Chunk, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
 import { buildBM25, decodeF16, retrieveRanked } from "@/lib/visabot/retrieval-core.mjs";
+import { ORT_RUNTIME_PREFIX } from "@/lib/ort-runtime.mjs";
 
 // US I6 — layered index. chunks.json (small, no vectors) loads on warmUp and
 // powers BM25; vectors.f16 (raw float16) downloads ONLY after the semantic
@@ -82,7 +83,7 @@ function ensureEmbedder(): Promise<(text: string) => Promise<Float32Array>> {
       | { wasm?: { wasmPaths?: string; numThreads?: number; proxy?: boolean } }
       | undefined;
     if (onnx?.wasm) {
-      onnx.wasm.wasmPaths = "/ort/";
+      onnx.wasm.wasmPaths = ORT_RUNTIME_PREFIX;
       onnx.wasm.numThreads = 1; // no cross-origin isolation → single thread
       onnx.wasm.proxy = false; // main thread: the worker path hangs under our bundling/CSP
     }
