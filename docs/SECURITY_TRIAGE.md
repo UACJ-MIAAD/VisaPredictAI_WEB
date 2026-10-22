@@ -27,7 +27,33 @@ histórico se retira de este documento (queda en el historial de git).
 (hoy: next@9.3.3, tres majors atrás). Todo upgrade va por PR con la suite completa
 (vitest + typecheck + build offline) y rollback = revert del commit.
 
-## Candidato local C3 (2026-10-20)
+## Actualización del runtime RAG (2026-10-22)
+
+El candidato usa Transformers 4.3.1 y ONNX Runtime Node 1.30.0. La dependencia
+global-agent 4.1.3 elimina roarr y sprintf-js de la cadena; el audit del lock
+de producción pasa de cinco paquetes moderados a **cero avisos**. No se usa
+`audit fix --force`, un downgrade de Next ni una supresión de advisories.
+
+La contraparte web de ONNX incluida por upstream aumenta el WASM servido a
+25.7 MB sin comprimir. El presupuesto de ese artefacto opt-in pasa deliberadamente
+de 25 a 26 MB para esta actualización de seguridad. Los presupuestos de JavaScript,
+datos, índice y vectores no cambian. La descarga del modelo y WASM conserva su
+puerta de consentimiento y debe verificarse en Chromium, junto con build real,
+RAG, cobertura y suite E2E. El aumento es un coste del runtime, no una reducción
+del corpus ni de los umbrales de recuperación. Sólo se integra con esos gates verdes.
+
+Vitest y coverage-v8 se fijan conjuntamente en 4.1.12, que retira los avisos
+moderados del registro manual de mocks y del recorrido de rutas de Windows.
+Npm 10 reproduce el fallo interno `edgesOut` al resolver esos peers: sólo la
+resolución se hizo con npm 11.6.2 aislado; el lock se normalizó con npm 10 y la
+instalación limpia de validación usa Node 22.19/npm 10.9.3, igual que el CI.
+
+El audit completo sigue distinguiendo dependencias de desarrollo. La cadena
+braces de ESLint no tiene versión corregida publicada; no se aplica el downgrade
+destructivo que sugiere npm. Su alcance y dueño siguen en el triage inferior.
+El resultado de producción cero no se presenta como audit completo limpio.
+
+## Registro histórico del candidato C3 (2026-10-20)
 
 Inventario nuevo sobre el lock exacto: la base web `88cb073` presenta **15 paquetes
 afectados por 5 GHSA distintos**; producción tiene 6 paquetes y 2 GHSA, sin altos
