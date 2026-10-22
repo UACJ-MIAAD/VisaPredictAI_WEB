@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PlanEpic, PlanStatus, PlanUpdate } from "@/lib/plan-data";
 import {
   PAUSED_TRACK,
+  PLAN_CLOSEOUT,
   PLAN_EPICS,
   PLAN_META,
   PLAN_UPDATES,
@@ -133,6 +134,12 @@ describe("public MLOps plan", () => {
   });
 
   it("has complete bilingual copy", () => {
+    for (const item of PLAN_CLOSEOUT) {
+      expect(item.title.es).toBeTruthy();
+      expect(item.title.en).toBeTruthy();
+      expect(item.detail.es).toBeTruthy();
+      expect(item.detail.en).toBeTruthy();
+    }
     for (const epic of PLAN_EPICS) {
       expect(epic.title.es).toBeTruthy();
       expect(epic.title.en).toBeTruthy();

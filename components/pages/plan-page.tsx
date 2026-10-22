@@ -10,6 +10,7 @@ import {
 import { RouteHeader } from "@/components/route-header";
 import {
   PAUSED_TRACK,
+  PLAN_CLOSEOUT,
   PLAN_EPICS,
   PLAN_META,
   copy,
@@ -157,7 +158,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
 
             <div className={styles.metrics}>
               <article>
-                <span>{es ? "Fase actual" : "Current phase"}</span>
+                <span>{es ? "Fase MLOps" : "MLOps phase"}</span>
                 <strong>
                   {focus.epic.id} · {copy(focus.epic.title, lang)}
                 </strong>
@@ -165,14 +166,14 @@ export function PlanPage({ lang }: { lang: Lang }) {
                   {focus.observing.length > 0
                     ? `${focus.observing.map((item) => item.id).join(", ")} ${
                         es ? "observación" : "observation"
-                      } ${PLAN_META.observation.current}/${PLAN_META.observation.target}`
+                      }`
                     : es
                       ? "sin historias en observación"
                       : "no stories under observation"}
                 </small>
               </article>
               <article>
-                <span>{es ? "Siguiente" : "Next"}</span>
+                <span>{es ? "Siguiente historia" : "Next story"}</span>
                 <strong>{focus.next ? focus.next.id : focus.observing.length ? es ? "Observación" : "Observation" : es ? "Plan cerrado" : "Plan complete"}</strong>
                 <small>
                   {focus.next
@@ -219,8 +220,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "De plataforma a evidencia" : "From platform to evidence"}
             lead={
               es
-                ? "G7 está verificado en producción. El contrato de mantenimiento está adoptado y validado en local; siguen su integración, la seguridad y los cierres operativos. El autor reactivó las tareas diferidas y R9, con evidencia y revisión en cada puerta."
-                : "G7 is verified in production. The maintenance contract is adopted and locally validated; integration, security and operational closeout follow. The owner resumed deferred work and R9, with evidence and review at every gate."
+                ? "G7 y el mantenimiento C1/C2 están integrados y verificados en producción. La tesis incorpora los tres avances. La prioridad de entrega es el documento del 6 de noviembre con aval del asesor; en operación, incorporar el boletín de octubre y cerrar las verificaciones pendientes. R9 sigue activo en local."
+                : "G7 and C1/C2 maintenance are integrated and verified in production. The thesis includes all three progress reports. Delivery priority is the 6 November document with advisor approval; operations must ingest the October bulletin and complete outstanding checks. R9 remains active locally."
             }
           />
 
@@ -246,7 +247,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
           <div className={styles.nowNext}>
             <Route aria-hidden />
             <p>
-              <strong>{es ? "Ahora:" : "Now:"}</strong>{" "}
+              <strong>{es ? "Dentro del tablero MLOps:" : "Within the MLOps board:"}</strong>{" "}
               {focus.next
                 ? es
                   ? `Sigue ${focus.next.id} en la épica ${focus.epic.id}: ${lower(copy(focus.next.outcome, lang))}`
@@ -256,14 +257,42 @@ export function PlanPage({ lang }: { lang: Lang }) {
                   : "No stories are left to start."}
               {focus.observing.length > 0 &&
                 (es
-                  ? ` ${list(focus.observing, "y")} ${focus.observing.length > 1 ? "siguen" : "sigue"} en observación (${PLAN_META.observation.current}/${PLAN_META.observation.target}).`
-                  : ` ${list(focus.observing, "and")} ${focus.observing.length > 1 ? "remain" : "remains"} under observation (${PLAN_META.observation.current}/${PLAN_META.observation.target}).`)}
+                  ? ` ${list(focus.observing, "y")} ${focus.observing.length > 1 ? "siguen" : "sigue"} en observación.`
+                  : ` ${list(focus.observing, "and")} ${focus.observing.length > 1 ? "remain" : "remains"} under observation.`)}
+              {focus.observing.some((item) => item.id === "D7") &&
+                (es
+                  ? ` D7 acredita ${PLAN_META.observation.current}/${PLAN_META.observation.target} ciclos mensuales.`
+                  : ` D7 has ${PLAN_META.observation.current}/${PLAN_META.observation.target} accredited monthly cycles.`)}
               {focus.deferred.length > 0 &&
                 (es
                   ? ` ${list(focus.deferred, "y")} ${focus.deferred.length > 1 ? "quedan diferidas" : "queda diferida"}.`
                   : ` ${list(focus.deferred, "and")} ${focus.deferred.length > 1 ? "stay" : "stays"} deferred.`)}
             </p>
           </div>
+        </div>
+      </section>
+
+      <section id="cierre" className="section">
+        <div className="section-inner">
+          <SectionHeading
+            eyebrow={es ? "Prioridades de cierre" : "Closeout priorities"}
+            title={es ? "Entrega académica y próximo boletín" : "Academic delivery and the next bulletin"}
+            lead={es
+              ? "Estas prioridades organizan lo que falta. Conservan el alcance y la ponderación de las historias; preparar un envío o un corte no acredita su publicación."
+              : "These priorities organize the remaining work. Story scope and weighting stay unchanged; preparing a submission or release does not certify that it was published."}
+          />
+          <ol className={styles.timeline}>
+            {PLAN_CLOSEOUT.map((item) => (
+              <li key={item.id}>
+                <h3>{copy(item.title, lang)}</h3>
+                <p>{copy(item.detail, lang)}</p>
+              </li>
+            ))}
+          </ol>
+          <a className={styles.architectureLink} href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/2027/visa-bulletin-for-october-2026.html">
+            {es ? "Fuente oficial: Visa Bulletin de octubre de 2026" : "Official source: October 2026 Visa Bulletin"}
+            <ArrowRight aria-hidden size={16} />
+          </a>
         </div>
       </section>
 
