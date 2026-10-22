@@ -50,8 +50,8 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "3a9d94a9b547b8df58992be42a7462c45109c96b",
-  releaseId: "2026-09-805d624d2ecf",
+  dataMain: "1ecef2fe06a0f9280c954c9aee0fea211af8ad91",
+  releaseId: "2026-10-a880a917ede0",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
 } as const;
@@ -217,16 +217,16 @@ export const PLAN_CLOSEOUT = [
     id: "academic",
     title: c("Documento del 6 de noviembre y aval del asesor", "6 November document and advisor approval"),
     detail: c(
-      "El PR documental #7 amplía la tesis para A11–B2, con CI verde y copia local de revisión de 139 páginas. Se prepararon seis informes acumulativos y la presentación B3, cada uno en PDF y formato editable. Falta el Pull from GitHub en Overleaf, revisar la compilación oficial, enviar al asesor y obtener aval y acuse antes del 6 de noviembre. C1 depende de las observaciones reales de la presentación; no se anticipan. La Cumbre del 16 al 24 de noviembre sigue tentativa.",
-      "Documentary PR #7 expands the thesis for A11–B2, with green CI and a 139-page local review copy. Six cumulative reports and presentation B3 are prepared in PDF and editable formats. Pull from GitHub in Overleaf, official compilation review, advisor submission, approval and delivery receipt remain due before 6 November. C1 depends on real presentation feedback and is not anticipated. The 16–24 November summit remains tentative.",
+      "Los PR documentales #7–#9 integran A11–B2 y distinguen el censo operativo de octubre de la evaluación científica de septiembre, con CI verde y copia local de revisión de 139 páginas. Los seis informes acumulativos y la presentación B3 están preparados en PDF y formato editable. Falta el Pull from GitHub en Overleaf, revisar la compilación oficial, enviar al asesor y obtener aval y acuse antes del 6 de noviembre. C1 depende de las observaciones reales de la presentación; no se anticipan. La Cumbre del 16 al 24 de noviembre sigue tentativa.",
+      "Documentary PRs #7–#9 integrate A11–B2 and distinguish October's operational census from September's scientific evaluation, with green CI and a 139-page local review copy. The six cumulative reports and presentation B3 are prepared in PDF and editable formats. Pull from GitHub in Overleaf, official compilation review, advisor submission, approval and delivery receipt remain due before 6 November. C1 depends on real presentation feedback and is not anticipated. The 16–24 November summit remains tentative.",
     ),
   },
   {
     id: "visa-bulletin",
-    title: c("Incorporar el boletín oficial de octubre", "Ingest the official October bulletin"),
+    title: c("Octubre validado: comprobar su consumo completo", "October validated: verify its complete consumption"),
     detail: c(
-      "El PDF de octubre recibido del autor se conserva íntegro y con hash. Sus cuatro tablas se transcribieron a HTML derivado, con el PDF original incrustado; no se presenta como una descarga HTML oficial. Las 150 celdas pasaron la validación y el panel se reconstruyó en local. La copia se archivó en S3 sin sobrescritura. El corte científico servido sigue siendo el de septiembre hasta superar la cadena mensual completa y verificar sus consumidores; no se anuncia octubre como publicado antes de esa comprobación.",
-      "The October PDF supplied by the owner is preserved intact and hashed. Its four tables were transcribed into derived HTML with the original PDF embedded; it is not presented as an official HTML download. All 150 cells passed validation and the panel was rebuilt locally. The copy was archived in S3 without overwriting. The served scientific release remains September until the complete monthly chain and its consumers are verified; October is not announced as published before that check.",
+      "El PDF oficial aportado se conserva íntegro y con hash. Sus cuatro tablas se transcribieron a HTML derivado con el original incrustado, y el control manual coincide con la página oficial visible. La copia quedó archivada en S3 sin sobrescritura. La primera corrida completó datos y pronósticos, pero falló antes del sellado; EDA y los informes se recuperaron localmente con identidad explícita y se selló el corte completo de octubre. Falta comprobar su consumo final en producción. D7 conserva cero ciclos acreditados al no disponer del JSONL original de tracking. La campaña científica sigue congelada en septiembre y la descarga automática de la fuente conserva su estado bloqueado.",
+      "The supplied official PDF is preserved intact and hashed. Its four tables were transcribed into derived HTML with the original embedded, and the manual control matches the visible official page. The copy was archived in S3 without overwriting. The first run completed data and forecasts but failed before sealing; EDA and reports were recovered locally with an explicit identity, and the complete October release was sealed. Final production consumption still needs verification. D7 retains zero accredited cycles because the original tracking JSONL is unavailable. The scientific campaign remains frozen in September, and automatic source fetching retains its blocked status.",
     ),
   },
   {
@@ -252,6 +252,33 @@ export const PLAN_DELIVERABLES = [
 ] as const;
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-22",
+    title: c("A3 recupera el sellado mensual completo de octubre", "A3 restores complete October monthly sealing"),
+    detail: c(
+      "El cron admite ejecuciones tardías y deja de ocultar fallos en los productores de EDA. El corte reúne datos, pronósticos, informes y contratos de octubre sin modificar las referencias de la campaña científica. Se conserva la evidencia de la primera corrida fallida y de su recuperación local; no se presenta como una corrida automática verde. El portal consume el conjunto por hashes y conserva un fallback completo. D7 conserva cero ciclos acreditados: el scoring corrió, pero su JSONL original quedó en staging efímero. Los reintentos de un boletín nunca cuentan como meses distintos.",
+      "The cron accepts delayed starts and no longer hides failures in EDA producers. The release brings together October data, forecasts, reports and contracts without changing the scientific campaign references. Evidence of the first failed run and its local recovery is retained; it is not presented as a successful automatic run. The portal consumes the set by hash and retains a complete fallback. D7 retains zero accredited cycles: scoring ran, but its original JSONL remained in ephemeral staging. Retries of one bulletin never count as separate months.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-22",
+    title: c("B4 publica el runtime del asistente con assets coherentes", "B4 publishes the assistant runtime with consistent assets"),
+    detail: c(
+      "El PR web #56 está integrado con CI y control semanal verdes. El módulo y el WASM usan la misma revisión en sus rutas de caché y el motor conserva la puerta de consentimiento, comprobada en producción. El audit del lock no tiene avisos de producción; persisten avisos de desarrollo sin parche en el triage. El presupuesto del WASM optativo se ajustó explícitamente, conservando los demás presupuestos y los gates de recuperación. No se declara un audit completo limpio.",
+      "Web PR #56 is integrated with green CI and scheduled quality checks. The module and WASM use the same revision in their cache paths, and the engine retains its consent gate, verified in production. The lock audit has no production advisories; unpatched development advisories remain in the triage. The opt-in WASM budget was explicitly adjusted while retaining all other budgets and retrieval gates. This is not a clean full audit.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-22",
+    title: c("G6 distingue ciencia de septiembre y operación de octubre", "G6 separates September science from October operation"),
+    detail: c(
+      "Los PR documentales #8 y #9 están integrados y su CI pasa. La tesis separa el censo operativo vivo de la ventana científica congelada; el paper conserva esa misma frontera. La revisión local compila en 139 páginas sin referencias rotas ni desbordes. El ZIP académico actualizado conserva los siete PDF científicos y sus editables. Prepararlos no acredita envío, aval, entrega al curso ni presentación; la copia oficial se compila en Overleaf después de Pull from GitHub.",
+      "Documentary PRs #8 and #9 are integrated and their CI passes. The thesis separates the live operational census from the frozen scientific window; the paper retains the same boundary. The local review compiles to 139 pages without broken references or overflowing lines. The updated academic ZIP retains the seven scientific PDFs and editable files. Preparation does not establish sending, approval, course submission or presentation; the official copy is compiled in Overleaf after Pull from GitHub.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-22",
     title: c("F5 y G4 cierran su propagación; siete entregables preparados", "F5 and G4 close propagation; seven deliverables prepared"),

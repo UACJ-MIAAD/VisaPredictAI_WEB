@@ -1,9 +1,13 @@
 # Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02 · #62 2026-10-12)
 
-Estado vigente: ver **«Candidato local C3 (2026-10-20)»** más abajo. El gate
-`--omit=dev --audit-level=high` permanece sin cambios. El candidato aún no acredita
-CI remoto ni despliegue. Al 2026-09-02 (`main@9d0929d`) el audit era 0 en todas las
-severidades. El gate programado (`.github/workflows/scheduled-quality.yml`,
+Estado vigente: **runtime RAG integrado el 22-oct-2026 por PR #56**, squash
+`6790aa0`. CI de PR, control semanal y CI de main verdes; el de main necesitó
+un segundo intento por una descarga fallida de fuentes de Google. Producción
+verifica el consentimiento y la activación del motor. El audit del lock publicado
+tiene **cero avisos de producción** y cinco paquetes de desarrollo afectados por
+`braces`, sin parche publicado. No es un audit completo limpio. El registro C3 del
+20-oct de abajo es histórico. El gate `--omit=dev --audit-level=high` permanece
+sin cambios. El gate programado (`.github/workflows/scheduled-quality.yml`,
 job `security-audit`) falla en high/critical y reporta las moderadas cada lunes; este
 documento es su triage vivo. El lado Python (locks del repo de datos) vive en
 `VisaPredictAI/docs/SECURITY_TRIAGE.md` con la misma política y fecha de revisión.
@@ -29,7 +33,7 @@ histórico se retira de este documento (queda en el historial de git).
 
 ## Actualización del runtime RAG (2026-10-22)
 
-El candidato usa Transformers 4.3.1 y ONNX Runtime Node 1.30.0. La dependencia
+La versión integrada usa Transformers 4.3.1 y ONNX Runtime Node 1.30.0. La dependencia
 global-agent 4.1.3 elimina roarr y sprintf-js de la cadena; el audit del lock
 de producción pasa de cinco paquetes moderados a **cero avisos**. No se usa
 `audit fix --force`, un downgrade de Next ni una supresión de advisories.
