@@ -1,0 +1,41 @@
+{
+  "license": "SIL Open Font License 1.1",
+  "files": [
+    {
+      "file": "playfair-display-latin.woff2",
+      "family": "Playfair Display",
+      "source_url": "https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xQ.woff2",
+      "sha256": "5d91eb5d522a03081946c44c8ca17c902230dfed5f0f9b5014262135d47b15b2",
+      "bytes": 38460,
+      "previous_export_asset": "eaead17c7dbfcd5d-s.p.woff2",
+      "identical_to_previous_export": true
+    },
+    {
+      "file": "dm-sans-latin.woff2",
+      "family": "DM Sans",
+      "source_url": "https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K6z9mXg.woff2",
+      "sha256": "468d56b6b25b05b70190b6c233d773f6f1770e8579827ce022a57f03fa8002fb",
+      "bytes": 36980,
+      "previous_export_asset": "13971731025ec697-s.p.woff2",
+      "identical_to_previous_export": true
+    },
+    {
+      "file": "space-mono-latin-400.woff2",
+      "family": "Space Mono",
+      "source_url": "https://fonts.gstatic.com/s/spacemono/v17/i7dPIFZifjKcF5UAWdDRYEF8RXi4EwQ.woff2",
+      "sha256": "e0c8e616bda27642f4c3cebaecff6525d901e73afc8a227cbbb0f2af4810f300",
+      "bytes": 9464,
+      "previous_export_asset": "fc727f226c737876-s.p.woff2",
+      "identical_to_previous_export": true
+    },
+    {
+      "file": "space-mono-latin-700.woff2",
+      "family": "Space Mono",
+      "source_url": "https://fonts.gstatic.com/s/spacemono/v17/i7dMIFZifjKcF5UAWdDRaPpZUFWaHi6WZ3Q.woff2",
+      "sha256": "af7cf6d2b897ec453acdcdacde4e9bcc8410718af5914de865b453e09f10eebc",
+      "bytes": 9552,
+      "previous_export_asset": "806de4d605d3ad01-s.p.woff2",
+      "identical_to_previous_export": true
+    }
+  ]
+}
