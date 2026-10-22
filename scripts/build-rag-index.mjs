@@ -34,7 +34,7 @@
 // Network failures degrade gracefully (local content always yields an index).
 // Run: npm run build:rag   (also runs in `prebuild`)
 // ─────────────────────────────────────────────────────────────────────────
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, copyFileSync, rmSync } from "node:fs";
 import { assertPinCoherent, collectFactSheet } from "../lib/fact-sheet.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
@@ -44,6 +44,7 @@ import { MODEL_CARD_PATH, modelCardForCut, sourcePinForCut } from "../lib/releas
 import { cohortChunks, readCohortFacts } from "../lib/data/cohort-facts.mjs";
 import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
 import { censusValues, renderCensus } from "../lib/census-bindings.mjs";
+import { assertOrtRuntimeVersion, ORT_RUNTIME_VERSION } from "../lib/ort-runtime.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -709,13 +710,15 @@ function buildPrompts() {
 //    CDN). Copy ONLY the asyncify build: transformers.js imports
 //    `onnxruntime-web/webgpu`, whose loader requests
 //    ort-wasm-simd-threaded.asyncify.{mjs,wasm} from env.wasm.wasmPaths
-//    ("/ort/", see components/visabot/engine.ts). The jsep build was ~26 MB of
+//    (versioned /ort/<runtime>/, see components/visabot/engine.ts). The jsep build was ~26 MB of
 //    dead weight the runtime never fetched (AZ2). Stale files are pruned so
 //    the Netlify build cache (netlify-plugin-cache persists public/ort) can't
 //    resurrect them. ──────────────────────────────────────────────────────────
 function copyOrtWasm() {
+  assertOrtRuntimeVersion(JSON.parse(readFileSync(join(root, "node_modules/onnxruntime-web/package.json"), "utf8")).version);
   const src = join(root, "node_modules", "onnxruntime-web", "dist");
-  const dst = join(root, "public", "ort");
+  const base = join(root, "public", "ort");
+  const dst = join(base, ORT_RUNTIME_VERSION);
   const KEEP = /^ort-wasm-simd-threaded\.asyncify\.(wasm|mjs)$/;
   mkdirSync(dst, { recursive: true });
   let n = 0;
@@ -725,13 +728,13 @@ function copyOrtWasm() {
       n++;
     }
   }
-  for (const f of readdirSync(dst)) {
-    if (!KEEP.test(f)) {
-      unlinkSync(join(dst, f));
+  for (const f of readdirSync(base)) {
+    if (f !== ORT_RUNTIME_VERSION) {
+      rmSync(join(base, f), { recursive: true, force: true });
       console.log(`  ort wasm: pruned stale ${f}`);
     }
   }
-  console.log(`  ort wasm: ${n} files → public/ort/`);
+  console.log(`  ort wasm: ${n} files → public/ort/${ORT_RUNTIME_VERSION}/`);
 }
 
 // ── main ────────────────────────────────────────────────────────────────────

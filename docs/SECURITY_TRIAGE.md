@@ -42,6 +42,12 @@ puerta de consentimiento y debe verificarse en Chromium, junto con build real,
 RAG, cobertura y suite E2E. El aumento es un coste del runtime, no una reducción
 del corpus ni de los umbrales de recuperación. Sólo se integra con esos gates verdes.
 
+Como `/ort/*` lleva caché immutable, el módulo MJS y el WASM se solicitan con la
+misma revisión del runtime en sus URLs. El build exige que esa revisión coincida
+con la versión instalada. Las sondas de navegador reproducen las dos mezclas de
+caché antigua/nueva que antes dejaban el motor sin activar; no basta comprobar
+sólo un perfil limpio. La pareja antigua completa se conserva como control benigno.
+
 Vitest y coverage-v8 se fijan conjuntamente en 4.1.12, que retira los avisos
 moderados del registro manual de mocks y del recorrido de rutas de Windows.
 Npm 10 reproduce el fallo interno `edgesOut` al resolver esos peers: sólo la
