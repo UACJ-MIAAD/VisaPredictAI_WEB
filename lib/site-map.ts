@@ -69,6 +69,7 @@ export const ROUTES: Route[] = [
       { id: "datos", label: "Construcción del panel", labelEn: "Building the panel" },
       { id: "eda", label: "Análisis exploratorio", labelEn: "Exploratory analysis" },
       { id: "fe", label: "Ingeniería de características", labelEn: "Feature engineering" },
+      { id: "cohortes", label: "Cohortes de estabilidad", labelEn: "Stability cohorts" },
       { id: "mlops", label: "Prácticas MLOps", labelEn: "MLOps practices" },
       { id: "estructura", label: "Estructura del repo", labelEn: "Repo structure" },
       { id: "modelo", label: "Modelo de datos", labelEn: "Data model" },
