@@ -41,6 +41,7 @@ import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { DATA_REPO_RAW as REPO_RAW, dataRepoRawAt } from "../lib/repo.mjs";
 import { MODEL_CARD_PATH, modelCardForCut, sourcePinForCut } from "../lib/release-model-card.mjs";
+import { cohortChunks, readCohortFacts } from "../lib/data/cohort-facts.mjs";
 import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -500,6 +501,17 @@ function collectFactSheetChunks() {
   }
   const estado = assertPinCoherent(sourcePin);
   console.log(`  fact sheet: 4 chunks derivados · corte servido ${estado}`);
+  // E5: cohortes ES/EN derivadas de e5_facts.json, la MISMA copia que pinta /ingenieria#cohortes.
+  // La tarjeta del modelo entra al pool EN en español; sin esto, una pregunta inglesa sobre series
+  // estables/inestables no recuperaba nada (sonda BM25 del lote C4, 21-oct). Ausente = sin chunk.
+  const e5Path = join(root, "public/data/e5_facts.json");
+  const cohort = cohortChunks(existsSync(e5Path) ? readCohortFacts(JSON.parse(readFileSync(e5Path, "utf8"))) : null);
+  for (const c of cohort) {
+    add({ lang: c.lang, kind: c.kind, source_type: "release_artifact", release_id: sourcePin.served_release_id ?? undefined,
+          source: c.lang === "es" ? "Cohortes de estabilidad (corte publicado)" : "Stability cohorts (published cut)",
+          sourceId: "cohortes", url: `${localePath("/ingenieria", c.lang)}#cohortes`, title: c.title, text: c.text });
+  }
+  console.log(`  cohortes: ${cohort.length} chunks derivados de e5_facts.json`);
 }
 
 

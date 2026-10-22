@@ -11,6 +11,15 @@ const VALIDO = {
   CampanaBate: 0,
   RouterCeldas: 4,
   RouterGana: 0,
+  RouterPierde: 1,
+  RouterSinEvidencia: 3,
+  ScanPeor: 66,
+  ScanSinDatos: 24,
+  CampanaLanes: 42,
+  CampanaOk: 42,
+  CampanaPrimarias: 18,
+  cohorts_by_table: { FAD: { estable: 11, no_estable: 30 }, DFF: { estable: 28, no_estable: 5 } },
+  status: "exploratorio",
 };
 
 describe("cifras de cohortes: ausencia tolerada, presencia validada", () => {
@@ -25,8 +34,8 @@ describe("cifras de cohortes: ausencia tolerada, presencia validada", () => {
   });
 
   it("acepta un artefacto bien formado y expone solo los campos declarados", () => {
-    const f = readCohortFacts(VALIDO) as Record<string, number | string>;
-    expect(Object.keys(f).sort()).toEqual(COHORT_FACT_FIELDS.map(([k]) => k).sort());
+    const f = readCohortFacts(VALIDO)!;
+    expect(Object.keys(f).sort()).toEqual([...COHORT_FACT_FIELDS.map(([k]) => k), "byTable", "status"].sort());
     expect(f.NSeriesEvaluable).toBe(74);
   });
 
@@ -56,7 +65,7 @@ describe("cifras de cohortes: ausencia tolerada, presencia validada", () => {
   });
 
   it("una victoria distinta de cero se reportaría igual: la frase se deriva", () => {
-    const frase = cohortSentence(readCohortFacts({ ...VALIDO, RouterGana: 2 }));
+    const frase = cohortSentence(readCohortFacts({ ...VALIDO, RouterGana: 2, RouterSinEvidencia: 1 }));
     expect(frase).toContain("de 4 celdas de enrutado, 2 baten");
   });
 });
