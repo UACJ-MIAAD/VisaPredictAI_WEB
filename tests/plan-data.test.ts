@@ -3,6 +3,7 @@ import type { PlanEpic, PlanStatus, PlanUpdate } from "@/lib/plan-data";
 import {
   PAUSED_TRACK,
   PLAN_CLOSEOUT,
+  PLAN_DELIVERABLES,
   PLAN_EPICS,
   PLAN_META,
   PLAN_UPDATES,
@@ -26,8 +27,8 @@ const findStory = (epics: PlanEpic[], id: string) => {
 describe("public MLOps plan", () => {
   it("shows delivered and observed epics instead of stale planned badges", () => {
     const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
-    expect(statuses).toMatchObject({ C: "done", F: "observing", E: "done", G: "observing" });
-    expect(planStats().percent).toBe(97);
+    expect(statuses).toMatchObject({ C: "done", F: "done", E: "done", G: "done" });
+    expect(planStats().percent).toBe(99);
   });
 
   it("moves an epic badge when its work starts, enters observation, and finishes", () => {
@@ -173,10 +174,10 @@ describe("public MLOps plan", () => {
     expect(focus.observing.length).toBeGreaterThan(0);
     expect(focus.deferred).toEqual([]);
     expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
-    expect(findStory(PLAN_EPICS, "A6").status).toBe("planned");
+    expect(findStory(PLAN_EPICS, "A6").status).toBe("active");
     expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-22", status: "done" });
     expect(focus.updatedAt).toBe("2026-10-22");
-    expect(planStats().percent).toBe(97);
+    expect(planStats().percent).toBe(99);
     expect(PLAN_META.releaseId).toBe("2026-09-805d624d2ecf");
   });
 
@@ -263,11 +264,21 @@ describe("public MLOps plan", () => {
     expect(closeout?.detail.en).not.toMatch(/^E5, F5 and G4 can be checked/);
   });
 
-  it("keeps F5 under observation without calling its published facts local", () => {
+  it("closes technical F5 separately from editorial acceptance", () => {
     const f5 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "F5");
-    expect(f5).toMatchObject({ status: "observing" });
-    expect(f5?.evidence).toMatch(/^a6036ec · .*publicados/);
+    expect(f5).toMatchObject({ status: "done" });
+    expect(f5?.evidence).toBe("6ff06fd");
+    expect(f5?.outcome.es).toMatch(/editorial.*separado/);
     expect(f5?.evidence).not.toMatch(/pendiente.*propagaci[oó]n/);
+  });
+
+  it("keeps prepared academic files outside the 62-story score and C1 event-bound", () => {
+    expect(planStats().total).toBe(62);
+    expect(PLAN_DELIVERABLES.map((item) => item.id)).toEqual(["A11", "A12", "A13", "A14", "B1", "B2", "B3", "C1"]);
+    expect(PLAN_DELIVERABLES.filter((item) => item.status === "prepared")).toHaveLength(7);
+    expect(PLAN_DELIVERABLES.find((item) => item.id === "C1")).toMatchObject({ status: "pending-event", pdf: undefined });
+    expect(findStory(PLAN_EPICS, "A6").outcome.es).toMatch(/Falta el adaptador autom[aá]tico/);
+    expect(findStory(PLAN_EPICS, "D7").evidence).toBe("80b3bfb · 0/2");
   });
 
   it("closes F2 only once its governed artifact reaches production", () => {

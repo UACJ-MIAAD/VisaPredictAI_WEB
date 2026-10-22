@@ -11,6 +11,7 @@ import { RouteHeader } from "@/components/route-header";
 import {
   PAUSED_TRACK,
   PLAN_CLOSEOUT,
+  PLAN_DELIVERABLES,
   PLAN_EPICS,
   PLAN_META,
   copy,
@@ -293,6 +294,33 @@ export function PlanPage({ lang }: { lang: Lang }) {
             {es ? "Fuente oficial: Visa Bulletin de octubre de 2026" : "Official source: October 2026 Visa Bulletin"}
             <ArrowRight aria-hidden size={16} />
           </a>
+        </div>
+      </section>
+
+      <section id="entregables" className="section section--alt">
+        <div className="section-inner">
+          <SectionHeading
+            eyebrow={es ? "Calendario académico" : "Academic schedule"}
+            title={es ? "A11–B3 preparados; C1 después de la presentación" : "A11–B3 prepared; C1 after the presentation"}
+            lead={es
+              ? "Copias de revisión derivadas del documento principal. Preparado no significa entregado, aprobado ni presentado. El PDF oficial para el asesor se compila en Overleaf después de Pull from GitHub. Estas actividades no añaden puntos al porcentaje MLOps."
+              : "Review copies derived from the main document. Prepared does not mean submitted, approved or presented. The official advisor PDF is compiled in Overleaf after Pull from GitHub. These activities add no points to MLOps progress."}
+          />
+          <ol className={styles.timeline}>
+            {PLAN_DELIVERABLES.map((item) => (
+              <li key={item.id}>
+                <h3>{item.id} · {copy(item.title, lang)}</h3>
+                <p>{copy(item.scope, lang)}</p>
+                <p>{copy(item.due, lang)} · {item.status === "prepared"
+                  ? es ? "Preparado para revisión; sin acuse de entrega" : "Prepared for review; no submission receipt"
+                  : es ? "Pendiente de un evento real" : "Awaiting a real event"}</p>
+                {item.pdf && <a className={styles.architectureLink} href={item.pdf}>
+                  {es ? `Revisar PDF ${item.id}` : `Review ${item.id} PDF`}
+                  <ArrowRight aria-hidden size={16} />
+                </a>}
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
