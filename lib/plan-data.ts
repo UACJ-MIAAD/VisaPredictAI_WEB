@@ -223,10 +223,10 @@ export const PLAN_CLOSEOUT = [
   },
   {
     id: "visa-bulletin",
-    title: c("Octubre validado: comprobar su consumo completo", "October validated: verify its complete consumption"),
+    title: c("Octubre publicado y consumidores verificados", "October published and consumers verified"),
     detail: c(
-      "El PDF oficial aportado se conserva íntegro y con hash. Sus cuatro tablas se transcribieron a HTML derivado con el original incrustado, y el control manual coincide con la página oficial visible. La copia quedó archivada en S3 sin sobrescritura. La primera corrida completó datos y pronósticos, pero falló antes del sellado; EDA y los informes se recuperaron localmente con identidad explícita y se selló el corte completo de octubre. Falta comprobar su consumo final en producción. D7 conserva cero ciclos acreditados al no disponer del JSONL original de tracking. La campaña científica sigue congelada en septiembre y la descarga automática de la fuente conserva su estado bloqueado.",
-      "The supplied official PDF is preserved intact and hashed. Its four tables were transcribed into derived HTML with the original embedded, and the manual control matches the visible official page. The copy was archived in S3 without overwriting. The first run completed data and forecasts but failed before sealing; EDA and reports were recovered locally with an explicit identity, and the complete October release was sealed. Final production consumption still needs verification. D7 retains zero accredited cycles because the original tracking JSONL is unavailable. The scientific campaign remains frozen in September, and automatic source fetching retains its blocked status.",
+      "El corte de octubre ya se sirve fresh en el dominio y su alias. Se verificaron los artefactos contra el manifiesto, el censo del panel, las fechas e intervalos de cada pronóstico, el índice del asistente y los PDF preparados. El HTML derivado con el PDF original incrustado permanece archivado en S3 sin sobrescritura. La primera corrida falló y EDA se recuperó localmente con identidad explícita antes del sellado; esa recuperación no repone el JSONL original de tracking ausente, por lo que D7 sigue en observación. La campaña científica permanece congelada en septiembre y la descarga automática de la fuente sigue bloqueada.",
+      "The October release is now served fresh on the domain and its production alias. Artifacts were checked against the manifest, together with the panel census, each forecast's dates and intervals, the assistant index and the prepared PDFs. The derived HTML with the original PDF embedded remains archived in S3 without overwriting. The first run failed and EDA was recovered locally with an explicit identity before sealing; this recovery does not replace the missing original tracking JSONL, so D7 remains under observation. The scientific campaign stays frozen in September and automatic source fetching remains blocked.",
     ),
   },
   {
@@ -252,6 +252,15 @@ export const PLAN_DELIVERABLES = [
 ] as const;
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-22",
+    title: c("A3 · Octubre llega a producción y cierra la verificación de consumidores", "A3 · October reaches production and completes consumer verification"),
+    detail: c(
+      "El PR de datos #56 y el PR web #57 están integrados. El dominio y su alias de producción sirven el corte mensual de octubre, con los artefactos idénticos al manifiesto publicado. Se comprobaron los pronósticos, el índice del asistente y los PDF; el plan, los diagramas y el banner de fuente se revisaron en ambos idiomas. El motor semántico descargó sus archivos sólo después del consentimiento. La búsqueda conserva ahora los identificadores C/F/U que antes descartaba, sin cambiar la evaluación ni sus umbrales. El benchmark científico y la observación mensual no se dan por nuevos resultados: la ciencia sigue congelada y no se inventa el registro de tracking ausente.",
+      "Data PR #56 and web PR #57 are integrated. The domain and its production alias serve the October monthly release, with artifacts identical to the published manifest. Forecasts, the assistant index and PDFs were checked; the plan, diagrams and source banner were reviewed in both languages. The semantic engine downloaded its files only after consent. Retrieval now retains the C/F/U identifiers it previously discarded, without changing the evaluation or its thresholds. The scientific benchmark and monthly observation are not presented as new results: science remains frozen and the missing tracking record is not invented.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-22",
     title: c("A3 recupera el sellado mensual completo de octubre", "A3 restores complete October monthly sealing"),
