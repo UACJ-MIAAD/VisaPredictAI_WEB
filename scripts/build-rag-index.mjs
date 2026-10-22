@@ -43,6 +43,7 @@ import { DATA_REPO_RAW as REPO_RAW, dataRepoRawAt } from "../lib/repo.mjs";
 import { MODEL_CARD_PATH, modelCardForCut, sourcePinForCut } from "../lib/release-model-card.mjs";
 import { cohortChunks, readCohortFacts } from "../lib/data/cohort-facts.mjs";
 import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
+import { censusValues, renderCensus } from "../lib/census-bindings.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -347,7 +348,11 @@ function collectLocal() {
     labels[m[1]] = { es: m[2], en: m[3] };
   const lab = (id, lang) => (labels[id]?.[lang]) || id;
 
-  const es = readFileSync(join(root, "content", "source.html"), "utf8");
+  const census = censusValues(
+    JSON.parse(readFileSync(join(root, "public/data/key_facts.json"), "utf8")),
+    JSON.parse(readFileSync(join(root, "public/data/eda_facts.json"), "utf8")),
+  );
+  const es = renderCensus(readFileSync(join(root, "content", "source.html"), "utf8"), census);
   const secRe = /<section\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/section>/g;
   let m, nEs = 0;
   while ((m = secRe.exec(es))) {
@@ -363,7 +368,7 @@ function collectLocal() {
     if (!file.endsWith(".html")) continue;
     const id = file.replace(/\.html$/, "");
     const before = chunks.length;
-    addSectionHtml(id, lab(id, "en"), readFileSync(join(enDir, file), "utf8"), "en");
+    addSectionHtml(id, lab(id, "en"), renderCensus(readFileSync(join(enDir, file), "utf8"), census), "en");
     nEn += chunks.length - before;
   }
   console.log(`  local academic: ${nEs} ES + ${nEn} EN chunks`);
