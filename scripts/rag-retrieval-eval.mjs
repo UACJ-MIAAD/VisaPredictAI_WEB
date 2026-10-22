@@ -4,7 +4,7 @@
 // fused ranking for MRR/nDCG and post-MMR top-6 for recall). No network, no
 // Claude — fast + free, so it can be re-run after every indexing change to
 // prove a gain. Run: node scripts/rag-retrieval-eval.mjs
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
@@ -99,6 +99,32 @@ const ACAD = [
   { q: "¿cuántos modelos compararon?", src: /model card/i, lang: "es", flagship: true },
   { q: "which is the best model?", src: /model card/i, lang: "en", flagship: true },
 ];
+// E5 · cohortes: la pregunta debe recuperar el chunk derivado de SU lengua, también en BM25-only
+// (pre-consentimiento), que es donde fallaba la inglesa. Gate propio al 100 %.
+const COHORT = [
+  { q: "How many stable and unstable series are there?", lang: "en" },
+  { q: "What are the stability cohorts?", lang: "en" },
+  { q: "Does the cohort router beat naive-1?", lang: "en" },
+  { q: "¿Cuántas series son estables y cuántas no estables?", lang: "es" },
+  { q: "¿El enrutador por cohorte mejora frente al naïve?", lang: "es" },
+];
+// Keyed on the ARTIFACT, not on the chunks: a builder that silently dropped them must fail here.
+const e5Present = existsSync(join(root, "public", "data", "e5_facts.json"));
+let cohortHit = 0, cohortN = 0;
+if (e5Present) {
+  for (const p of COHORT) {
+    for (const qv of [await embed(p.q), null]) {
+      cohortN++;
+      const { mmr } = rank(qv, p.lang, p.q);
+      if (mmr.some((i) => chunks[i].sourceId === "cohortes" && chunks[i].lang === p.lang)) cohortHit++;
+      else console.log(`  MISS cohort (${qv ? "hybrid" : "bm25"}): "${p.q}"`);
+    }
+  }
+  console.log(`COHORT probes (${COHORT.length} × hybrid/BM25): ${cohortHit}/${cohortN} reach the same-language cohort chunk`);
+} else {
+  console.log("COHORT probes: skipped — the served cut carries no e5_facts.json");
+}
+
 let aHit = 0, aRankSum = 0, flagN = 0, flagHit = 0, aPrecSum = 0;
 const probeLog = [];
 for (const p of ACAD) {
@@ -142,9 +168,9 @@ if (process.argv.includes("--gate")) {
   // regression shows WHICH probe moved, not just an aggregate pass/fail.
   const probesPath = join(tmpdir(), "visabot-gate-probes.json");
   try { writeFileSync(probesPath, JSON.stringify({ built: idx.built, glossary: { recall1: r1 / n, recall6: r6 / n, mrr: mrrSum / n, bm25Recall6: b6 / n }, academic: probeLog }, null, 2)); console.log(`  per-probe ranks → ${probesPath}`); } catch { /* best-effort */ }
-  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85, flagship: 1.0, bm25Recall6: 0.90 };
-  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length, flagship: flagN ? flagHit / flagN : 1, bm25Recall6: b6 / n };
+  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85, flagship: 1.0, bm25Recall6: 0.90, cohort: 1.0 };
+  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length, flagship: flagN ? flagHit / flagN : 1, bm25Recall6: b6 / n, cohort: cohortN ? cohortHit / cohortN : 1 };
   const fails = Object.entries(T).filter(([k, t]) => m[k] < t).map(([k, t]) => `${k} ${m[k].toFixed(3)} < ${t}`);
   if (fails.length) { console.error(`\n✗ RAG GATE FAILED:\n  ${fails.join("\n  ")}`); process.exit(1); }
-  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}, flagship ${m.flagship.toFixed(2)}, bm25@6 ${m.bm25Recall6.toFixed(2)}).`);
+  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}, flagship ${m.flagship.toFixed(2)}, bm25@6 ${m.bm25Recall6.toFixed(2)}, cohort ${e5Present ? m.cohort.toFixed(2) : "n/a"}).`);
 }

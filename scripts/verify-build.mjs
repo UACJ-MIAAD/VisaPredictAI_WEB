@@ -69,6 +69,20 @@ for (const a of ["data/visa_panel_long.csv", "data/forecasts.csv", "data/release
   if (!(await exists(a))) problems.push(`asset crítico ausente: ${a}`);
 }
 
+// E5: las cohortes del corte se ven en /ingenieria (ES y EN) con las cifras de e5_facts.json.
+try {
+  const e5 = JSON.parse(await readFile(join(process.cwd(), "public", "data", "e5_facts.json"), "utf8"));
+  for (const base of ["", "en"]) {
+    const html = await readFile(join(OUT, base, "ingenieria", "index.html"), "utf8");
+    const sec = html.match(/<section[^>]*id="cohortes"[\s\S]*?<\/section>/)?.[0] ?? "";
+    for (const n of [e5.NSeriesEvaluable, e5.NEstable, e5.NNoEstable]) {
+      if (!new RegExp(`>${n}<`).test(sec)) problems.push(`/${base ? base + "/" : ""}ingenieria/#cohortes sin la cifra ${n} de e5_facts.json`);
+    }
+  }
+} catch (e) {
+  if (e?.code !== "ENOENT") problems.push(`cohortes: ${e.message}`);
+}
+
 if (problems.length) {
   console.error(`verify-build: ✗ ${problems.length} problema(s):`);
   for (const p of problems) console.error(`  - ${p}`);

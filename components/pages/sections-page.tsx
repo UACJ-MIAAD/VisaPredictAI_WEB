@@ -4,6 +4,7 @@ import { RouteHeader } from "@/components/route-header";
 import { SectionHTML } from "@/components/section-html";
 import { Eda } from "@/components/sections/eda";
 import { Fe } from "@/components/sections/fe";
+import { Cohortes } from "@/components/sections/cohortes";
 import { Descargas } from "@/components/sections/descargas";
 import { DatabaseDiagram, SystemArchitecture } from "@/components/sections/system-diagrams";
 import { tr } from "@/lib/i18n";
@@ -59,6 +60,7 @@ export function SectionsPage({ path, lang }: { path: string; lang: Lang }) {
         if (s.id === "base-datos") return <DatabaseDiagram key={s.id} lang={lang} className={sectionClass(i, s.id)} />;
         const Live = LIVE[s.id];
         if (Live) return <Live key={s.id} />;
+        if (s.id === "cohortes") return <Cohortes key={s.id} lang={lang} className={sectionClass(i, s.id)} />;
         if (s.id === "descargas")
           return <Descargas key={s.id} lang={lang} className={sectionClass(i, s.id)} />;
         return (
