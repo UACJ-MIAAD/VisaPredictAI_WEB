@@ -211,7 +211,44 @@ export const PAUSED_TRACK = {
   status: "active" as const,
 };
 
+// Prioridades de entrega y operación: no son historias nuevas ni suman puntos al tablero.
+export const PLAN_CLOSEOUT = [
+  {
+    id: "academic",
+    title: c("Documento del 6 de noviembre y aval del asesor", "6 November document and advisor approval"),
+    detail: c(
+      "La implementación de los tres avances ya está integrada en el documental por el PR #6, con CI verde. Sigue el Pull from GitHub en Overleaf, comprobar el PDF y solicitar la revisión y el aval escrito del asesor. El correo está preparado, sin enviar. La entrega requiere documento completo, aval y acuse; admite resultados preliminares. La presentación del 16 al 24 de noviembre es tentativa.",
+      "The implementation from all three progress reports is integrated in the documentary repository through PR #6, with green CI. Next: Pull from GitHub in Overleaf, check the PDF and request the advisor's review and written approval. The email is drafted, not sent. Delivery requires a complete document, approval and submission receipt; preliminary results are accepted. Presentation on 16–24 November is tentative.",
+    ),
+  },
+  {
+    id: "visa-bulletin",
+    title: c("Incorporar el boletín oficial de octubre", "Ingest the official October bulletin"),
+    detail: c(
+      "El índice oficial ya enlaza octubre de 2026; el panel publicado aún termina en septiembre. La descarga automatizada de esta revisión devuelve HTTP 403 y las tres corridas recientes del cron omitieron la actualización por horario. La siguiente entrada es una copia íntegra del HTML oficial, validada antes de subirla al archivo y reconstruir el panel. Después se verifican el corte nuevo y sus consumidores. El índice todavía no enlaza noviembre; no se incorporan datos ni fechas supuestas.",
+      "The official index now links October 2026; the published panel still ends in September. This review's automated download returns HTTP 403, and the three recent scheduled runs skipped the update because of their start time. Next comes a complete copy of the official HTML, validated before archival upload and panel rebuild. The new release and its consumers are then checked. The index does not yet link November; no data or dates are assumed.",
+    ),
+  },
+  {
+    id: "technical-closeout",
+    title: c("Cerrar verificaciones y decisiones operativas", "Complete checks and operational decisions"),
+    detail: c(
+      "E5, F5 y G4 se pueden verificar ahora: igualdad de exportaciones, prosa, tarjeta, portal e índice del asistente contra el corte publicado. D7 conserva cero de dos ciclos acreditados; un build del portal no cuenta como un boletín nuevo. BrowserFetcher requiere su ensayo acotado o una decisión de alcance. R9 continúa activo en local; los parches Python, la automatización documental y el resto del mantenimiento conservan tareas y criterios propios. El porcentaje del tablero no acredita la entrega académica ni todo ese backlog.",
+      "E5, F5 and G4 can be checked now: matching exports, prose, model card, portal and assistant index against the published release. D7 retains zero of two accredited cycles; a portal build does not count as a new bulletin. BrowserFetcher needs its bounded trial or a scope decision. R9 remains active locally; Python patches, documentary automation and other maintenance retain their own tasks and acceptance criteria. The board percentage does not certify academic delivery or completion of that entire backlog.",
+    ),
+  },
+];
+
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-21",
+    title: c("G6 integra los tres avances en la tesis y prepara la revisión del asesor", "G6 integrates the three progress reports into the thesis and prepares advisor review"),
+    detail: c(
+      "El PR documental #6 quedó integrado en main como fcbcb23, con el mismo árbol revisado y CI verde. La implementación amplía los tres avances, reconcilia su historia con la campaña publicada y sitúa la revisión humana antes de validar. La copia local de revisión compila en 137 páginas; el correo y la ficha de envío están preparados. Falta comprobar Overleaf, enviar la solicitud y obtener el aval y el acuse de entrega. El corte servido no cambia. El merge fue registrado el 22 de octubre en UTC, todavía 21 de octubre en Nueva York.",
+      "Documentary PR #6 was integrated into main as fcbcb23, with the same reviewed tree and green CI. The implementation expands all three progress reports, reconciles their history with the published campaign and places human review before validation. The local review copy compiles to 137 pages; the email and sending sheet are prepared. Overleaf verification, sending the request, advisor approval and the submission receipt remain outstanding. The served release is unchanged. The merge was recorded on 22 October UTC, still 21 October in New York.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-21",
     title: c("D5 y F2 llegan a producción con el corte de mantenimiento", "D5 and F2 reach production with the maintenance release"),
