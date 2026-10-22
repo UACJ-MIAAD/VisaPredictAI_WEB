@@ -14,8 +14,11 @@ export type SystemFlow = {
   sources: { label: string; href: string }[];
 };
 
-const DATA = "https://github.com/UACJ-MIAAD/VisaPredictAI/blob/a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b/";
-const WEB = "https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/blob/422fd1a01a5d6a0e1be9eabf1f5f45208759bdb4/";
+const DATA = "https://github.com/UACJ-MIAAD/VisaPredictAI/blob/83f045d163cbf92ff05f5fb18993de1fffcbf49f/";
+const WEB = "https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/blob/6790aa0ee96ae2c8546af7cd3fe0c0b0de2c401f/";
+// The DDL catalog fixture was built at this published commit. Its source files
+// are byte-identical in the October release; retain the catalog's exact origin.
+const SCHEMA_DATA = "https://github.com/UACJ-MIAAD/VisaPredictAI/blob/a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b/";
 const node = (id: string, es: string, en: string, detailEs: string, detailEn: string, component?: string): FlowNode =>
   ({ id, title: copy(es, en), detail: copy(detailEs, detailEn), component });
 const chain = (nodes: FlowNode[]): FlowEdge[] => nodes.slice(1).map((n, i) => ({ from: nodes[i].id, to: n.id }));
@@ -102,11 +105,12 @@ export const COMPONENT_FLOWS: SystemFlow[] = [
     copy("La automatización conecta las etapas y conserva tanto los resultados como las señales de error y deriva.", "Automation connects the stages and retains results as well as error and drift signals."), [
       node("cron", "Disparo mensual", "Monthly trigger", "Orquestación y comprobación de la fuente", "Orchestration and source checks"),
       node("ejecutar", "Pipeline y pronósticos", "Pipeline and forecasts", "DVC, modelado y artefactos derivados", "DVC, modeling and derived artifacts"),
+      node("informes", "EDA e informes", "EDA and reports", "Cada productor debe terminar correctamente", "Every producer must finish successfully"),
       node("observar", "Gobernanza y deriva", "Governance and drift", "Consistencia, estado y señales de cambio", "Consistency, status and change signals"),
       node("puerta", "Gate y CI", "Gate and CI", "Publicación condicionada al SHA validado", "Publication conditioned on the validated SHA"),
       node("avisos", "Tracking y avisos", "Tracking and notifications", "Registro JSONL, correo SES e incidencias", "JSONL log, SES email and issues"),
-    ], copy("La deriva informa y puede abrir una incidencia; no promueve modelos por sí sola. Un fallo o una fuente bloqueada conserva su diagnóstico en vez de anunciar éxito.", "Drift informs and may open an issue; it does not promote models on its own. Failure or a blocked source retains its diagnosis instead of announcing success."),
-    ["docs/MLOPS_ARCHITECTURE.md", "dvc.yaml"]),
+    ], copy("El sellado exige EDA completo y contraste con los documentos; la entrega sólo parte de main con su CI verde. Un fallo conserva su diagnóstico y no publica un corte parcial. La deriva informa, pero no promueve modelos por sí sola.", "Sealing requires complete EDA and documentary checks; delivery runs only from main with green CI. A failure retains its diagnosis and does not publish a partial release. Drift informs but does not promote models on its own."),
+    [".github/workflows/freeze_and_rebuild.yml", "docs/MLOPS_ARCHITECTURE.md", "dvc.yaml"]),
 ];
 
 export const SYSTEM_FLOW: SystemFlow = {
@@ -138,4 +142,4 @@ export const SYSTEM_FLOW: SystemFlow = {
   sources: [{ label: "docs/ARCHITECTURE.md", href: DATA + "docs/ARCHITECTURE.md" }, { label: "dvc.yaml", href: DATA + "dvc.yaml" }],
 };
 
-export const DATABASE_SOURCES = ["schema.sql", "pipeline/migrations/002_provenance_and_timestamps.sql", "docs/er_diagram.md"].map((p) => ({ label: p, href: DATA + p }));
+export const DATABASE_SOURCES = ["schema.sql", "pipeline/migrations/002_provenance_and_timestamps.sql", "docs/er_diagram.md"].map((p) => ({ label: p, href: SCHEMA_DATA + p }));
