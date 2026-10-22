@@ -21,13 +21,18 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import katex from "katex";
+import { censusValues, renderCensus } from "../lib/census-bindings.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 // Build input: the original site markup with disclaimers already removed
 // at the source level (content/source.html). The transform below is kept as
 // defense-in-depth and is idempotent on already-clean input.
-const html = readFileSync(join(root, "content", "source.html"), "utf8");
+const census = censusValues(
+  JSON.parse(readFileSync(join(root, "public/data/key_facts.json"), "utf8")),
+  JSON.parse(readFileSync(join(root, "public/data/eda_facts.json"), "utf8")),
+);
+const html = renderCensus(readFileSync(join(root, "content", "source.html"), "utf8"), census);
 
 // Source sections that no component renders (see header comment).
 const EXCLUDED_KEYS = new Set(["inicio", "boletines", "eda", "fe"]);
@@ -267,7 +272,7 @@ for (const file of readdirSync(enDir).sort()) {
   if (!file.endsWith(".html")) continue;
   const id = file.replace(/\.html$/, "");
   if (EXCLUDED_KEYS.has(id)) continue; // pruned: no component renders it
-  sectionsEn[id] = transformEn(readFileSync(join(enDir, file), "utf8"), id);
+  sectionsEn[id] = transformEn(renderCensus(readFileSync(join(enDir, file), "utf8"), census), id);
 }
 writeFileSync(
   join(root, "lib", "content", "sections.en.generated.ts"),
