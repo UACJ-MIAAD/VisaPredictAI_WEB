@@ -1,6 +1,30 @@
 # Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02 · #62 2026-10-12)
 
-Estado vigente: **runtime RAG integrado el 22-oct-2026 por PR #56**, squash
+Estado vigente: **nuevo candidato local del 22-oct-2026, aún sin push**. La consulta
+npm posterior al merge #58 incorpora dos paquetes de producción con avisos críticos:
+Next 15.5.27 y DOMPurify 3.4.16. Se preparan Next 15.5.28 y DOMPurify 3.4.17,
+sin supresiones ni cambios de umbrales. La evidencia antes/después y la validación
+se registran fuera del repo en `Prompts/lote_NOCTURNO_ENTREGABLES_2026-10-22/final_font_failure/`.
+No se aplica el resultado del candidato a producción hasta integrarlo y verificarla.
+
+### Parche de seguridad y fuentes (22-oct, candidato local)
+
+| Paquete | Avisos oficiales | Corrección y alcance |
+|---|---|---|
+| Next 15.5.27 | [GHSA-2464-fhr4-w9xw](https://github.com/advisories/GHSA-2464-fhr4-w9xw), critical; [GHSA-p3m5-59mp-jv5r](https://github.com/advisories/GHSA-p3m5-59mp-jv5r), high | 15.5.28. El sitio usa export estático, sin API de optimización ni Server Actions; sharp ya era 0.35.5. Esos límites no sustituyen el parche ni prueban riesgo nulo. |
+| DOMPurify 3.4.16 | [GHSA-cg2g-xh64-v4q7](https://github.com/advisories/GHSA-cg2g-xh64-v4q7), critical; [GHSA-mrv2-3pqr-j5jr](https://github.com/advisories/GHSA-mrv2-3pqr-j5jr), high; [GHSA-c6gr-qvv4-5v3f](https://github.com/advisories/GHSA-c6gr-qvv4-5v3f), low | 3.4.17. El renderizador usa entrada/salida de cadena con allowlist y no activa los modos DOM/IN_PLACE ni hooks descritos. Se conserva la sanitización y se prueba el render en navegador. |
+
+El build final de #58 falló en GitHub y Netlify dentro del loader de Google Fonts,
+después del fetch y del gate RAG. Las fuentes Latin de ES/EN se incluyen ahora con
+sus licencias, exactamente iguales por hash a las del export anterior; los pesos
+y métricas de fallback se conservan. El build ya no necesita consultar Google.
+Se exige export limpio sin Google disponible, cobertura, E2E completa y audit del
+lock antes de integrar; después, CI remoto y producción. Los cinco avisos high de
+desarrollo de braces conservan su triage; no se declaran resueltos por este parche.
+
+### Estado anterior del runtime RAG (histórico, misma fecha)
+
+El **runtime RAG integrado el 22-oct-2026 por PR #56**, squash
 `6790aa0`. CI de PR, control semanal y CI de main verdes; el de main necesitó
 un segundo intento por una descarga fallida de fuentes de Google. Producción
 verifica el consentimiento y la activación del motor. El audit del lock publicado

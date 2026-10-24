@@ -1,0 +1,27 @@
+/* Preserve the metric overrides emitted by the previous Google-font build. */
+@font-face {
+  font-family: "Playfair Display Fallback";
+  src: local("Times New Roman");
+  ascent-override: 97.25%;
+  descent-override: 22.56%;
+  line-gap-override: 0%;
+  size-adjust: 111.26%;
+}
+
+@font-face {
+  font-family: "DM Sans Fallback";
+  src: local("Arial");
+  ascent-override: 94.90%;
+  descent-override: 29.66%;
+  line-gap-override: 0%;
+  size-adjust: 104.53%;
+}
+
+@font-face {
+  font-family: "Space Mono Fallback";
+  src: local("Arial");
+  ascent-override: 81.58%;
+  descent-override: 26.30%;
+  line-gap-override: 0%;
+  size-adjust: 137.28%;
+}
