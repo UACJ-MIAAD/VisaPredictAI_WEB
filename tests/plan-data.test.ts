@@ -175,8 +175,8 @@ describe("public MLOps plan", () => {
     expect(focus.deferred).toEqual([]);
     expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
     expect(findStory(PLAN_EPICS, "A6").status).toBe("active");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-22", status: "done" });
-    expect(focus.updatedAt).toBe("2026-10-22");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-24", status: "done" });
+    expect(focus.updatedAt).toBe("2026-10-24");
     expect(planStats().percent).toBe(99);
     expect(PLAN_META.releaseId).toBe("2026-10-a880a917ede0");
   });
@@ -276,9 +276,23 @@ describe("public MLOps plan", () => {
     expect(planStats().total).toBe(62);
     expect(PLAN_DELIVERABLES.map((item) => item.id)).toEqual(["A11", "A12", "A13", "A14", "B1", "B2", "B3", "C1"]);
     expect(PLAN_DELIVERABLES.filter((item) => item.status === "prepared")).toHaveLength(7);
+    for (const item of PLAN_DELIVERABLES.filter((item) => item.status === "prepared")) {
+      expect(item.pdf).toBe(`/entregables/2026-10-23/${item.id}.pdf`);
+    }
+    expect(PLAN_DELIVERABLES.find((item) => item.id === "B3")?.scope).toEqual({
+      es: "21 diapositivas · PDF, PowerPoint y guion",
+      en: "21 slides · PDF, PowerPoint and speaker guide",
+    });
     expect(PLAN_DELIVERABLES.find((item) => item.id === "C1")).toMatchObject({ status: "pending-event", pdf: undefined });
     expect(findStory(PLAN_EPICS, "A6").outcome.es).toMatch(/Falta el adaptador autom[aá]tico/);
     expect(findStory(PLAN_EPICS, "D7").evidence).toBe("80b3bfb · 0/2");
+    expect(findStory(PLAN_EPICS, "G1").title.es).toBe("Compilación local");
+    const academic = PLAN_CLOSEOUT.find((item) => item.id === "academic");
+    expect(`${academic?.detail.es} ${academic?.detail.en}`).not.toMatch(/Overleaf/);
+    const november = PLAN_UPDATES.find((item) => item.title.es.startsWith("Noviembre ·"));
+    expect(november?.status).toBe("active");
+    expect(november?.detail.es).toContain("Producción conserva octubre");
+    expect(november?.detail.en).toContain("Production retains October");
   });
 
   it("closes F2 only once its governed artifact reaches production", () => {
@@ -318,7 +332,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("1ecef2fe06a0f9280c954c9aee0fea211af8ad91");
+    expect(PLAN_META.dataMain).toBe("b2396c839d1e7d96419b4e8e44a24497fdb1ebbe");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
