@@ -1,32 +1,45 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { Playfair_Display, DM_Sans, Space_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SITE_URL } from "@/lib/seo";
 import "./globals.css";
 import "./content.css";
+import "./font-fallbacks.css";
 
 // AZ7 — weights trimmed to what the repo actually uses (audited via grep):
 // Playfair 700 (font-bold serif) / 800 (font-extrabold, CSS 800) / 900
 // (font-black hero). Italic was loaded but NO serif element renders <em> —
 // dropped (3 font files). DM Sans 300 (font-light) had zero uses — dropped.
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
+// Versioned, byte-identical Latin assets remove build-time Google requests.
+// Sources and redistribution licenses live beside the fonts.
+const playfair = localFont({
+  src: "./fonts/playfair-display-latin.woff2",
+  weight: "700 900",
+  style: "normal",
+  adjustFontFallback: false,
+  fallback: ["Playfair Display Fallback"],
   variable: "--font-playfair",
   display: "swap",
 });
 
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const dmSans = localFont({
+  src: "./fonts/dm-sans-latin.woff2",
+  weight: "400 700",
+  style: "normal",
+  adjustFontFallback: false,
+  fallback: ["DM Sans Fallback"],
   variable: "--font-dm",
   display: "swap",
 });
 
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+const spaceMono = localFont({
+  src: [
+    { path: "./fonts/space-mono-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/space-mono-latin-700.woff2", weight: "700", style: "normal" },
+  ],
+  adjustFontFallback: false,
+  fallback: ["Space Mono Fallback"],
   variable: "--font-space-mono",
   display: "swap",
 });
