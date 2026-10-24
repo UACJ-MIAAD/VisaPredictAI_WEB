@@ -303,8 +303,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             eyebrow={es ? "Calendario académico" : "Academic schedule"}
             title={es ? "A11–B3 preparados; C1 después de la presentación" : "A11–B3 prepared; C1 after the presentation"}
             lead={es
-              ? "Copias de revisión derivadas del documento principal. Preparado no significa entregado, aprobado ni presentado. El PDF oficial para el asesor se compila en Overleaf después de Pull from GitHub. Estas actividades no añaden puntos al porcentaje MLOps."
-              : "Review copies derived from the main document. Prepared does not mean submitted, approved or presented. The official advisor PDF is compiled in Overleaf after Pull from GitHub. These activities add no points to MLOps progress."}
+              ? "Copias de revisión derivadas del documento principal. Preparado no significa entregado, aprobado ni presentado. El PDF para el asesor se compila y verifica en local desde el repositorio documental. Estas actividades no añaden puntos al porcentaje MLOps."
+              : "Review copies derived from the main document. Prepared does not mean submitted, approved or presented. The advisor PDF is compiled and verified locally from the documentary repository. These activities add no points to MLOps progress."}
           />
           <ol className={styles.timeline}>
             {PLAN_DELIVERABLES.map((item) => (

@@ -50,7 +50,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "1ecef2fe06a0f9280c954c9aee0fea211af8ad91",
+  dataMain: "b2396c839d1e7d96419b4e8e44a24497fdb1ebbe",
   releaseId: "2026-10-a880a917ede0",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
@@ -190,7 +190,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       "Turn the platform and its results into a reproducible thesis, paper and defense.",
     ),
     stories: [
-      story("G1", c("Overleaf", "Overleaf"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
+      story("G1", c("Compilación local", "Local compilation"), c("Compilar y revisar los tres documentos oficiales desde el repositorio documental.", "Compile and review the three official documents from the documentary repository."), "done"),
       story("G2", c("Amenazas a la validez", "Threats to validity"), c("Documentar el bloqueo de la fuente y la ingesta semiautomática, y retirar la promesa de operación desatendida.", "Document the blocked source and the semi-automatic ingestion, and retire the unattended-operation claim."), "done", "29ca6cb"),
       story("G3", c("Resultado de cohortes", "Cohort result"), c("Publicar la subsección aunque el resultado sea negativo.", "Publish the subsection even if the result is negative."), "done", "a53202e"),
       story("G4", c("Paper MICAI", "MICAI paper"), c("Propagar corte y cohortes con caveats derivados. Prosa y figuras verificadas; esto no acredita aceptación de MICAI ni aval del asesor.", "Propagate the cut and cohorts with derived caveats. Prose and figures verified; this does not certify MICAI acceptance or advisor approval."), "done", "6ff06fd"),
@@ -217,16 +217,16 @@ export const PLAN_CLOSEOUT = [
     id: "academic",
     title: c("Documento del 6 de noviembre y aval del asesor", "6 November document and advisor approval"),
     detail: c(
-      "Los PR documentales #7–#9 integran A11–B2 y distinguen el censo operativo de octubre de la evaluación científica de septiembre, con CI verde y copia local de revisión de 139 páginas. Los seis informes acumulativos y la presentación B3 están preparados en PDF y formato editable. Falta el Pull from GitHub en Overleaf, revisar la compilación oficial, enviar al asesor y obtener aval y acuse antes del 6 de noviembre. C1 depende de las observaciones reales de la presentación; no se anticipan. La Cumbre del 16 al 24 de noviembre sigue tentativa.",
-      "Documentary PRs #7–#9 integrate A11–B2 and distinguish October's operational census from September's scientific evaluation, with green CI and a 139-page local review copy. The six cumulative reports and presentation B3 are prepared in PDF and editable formats. Pull from GitHub in Overleaf, official compilation review, advisor submission, approval and delivery receipt remain due before 6 November. C1 depends on real presentation feedback and is not anticipated. The 16–24 November summit remains tentative.",
+      "El PR documental #10 integra la revisión académica y las referencias y figuras corregidas, con CI de main verde. El maestro compila en local en 139 páginas; los seis informes y B3 se regeneraron para revisión. Todas las compilaciones y exportaciones se hacen en local por orden del autor. Falta la revisión final, el envío al asesor, su aval y el acuse de entrega antes del 6 de noviembre. A13 vence el 25 de octubre; C1 espera observaciones reales después de presentar. La Cumbre del 16 al 24 de noviembre sigue tentativa.",
+      "Documentary PR #10 integrates the academic review and corrected references and figures, with green main CI. The master compiles locally to 139 pages; the six reports and B3 were regenerated for review. All compilation and export are local by the owner’s instruction. Final review, sending to the advisor, approval and the submission receipt remain due before 6 November. A13 is due on 25 October; C1 awaits real feedback after presenting. The 16–24 November summit remains tentative.",
     ),
   },
   {
     id: "visa-bulletin",
-    title: c("Octubre publicado y consumidores verificados", "October published and consumers verified"),
+    title: c("Octubre publicado; noviembre preparado en local", "October published; November prepared locally"),
     detail: c(
-      "El corte de octubre ya se sirve fresh en el dominio y su alias. Se verificaron los artefactos contra el manifiesto, el censo del panel, las fechas e intervalos de cada pronóstico, el índice del asistente y los PDF preparados. El HTML derivado con el PDF original incrustado permanece archivado en S3 sin sobrescritura. La primera corrida falló y EDA se recuperó localmente con identidad explícita antes del sellado; esa recuperación no repone el JSONL original de tracking ausente, por lo que D7 sigue en observación. La campaña científica permanece congelada en septiembre y la descarga automática de la fuente sigue bloqueada.",
-      "The October release is now served fresh on the domain and its production alias. Artifacts were checked against the manifest, together with the panel census, each forecast's dates and intervals, the assistant index and the prepared PDFs. The derived HTML with the original PDF embedded remains archived in S3 without overwriting. The first run failed and EDA was recovered locally with an explicit identity before sealing; this recovery does not replace the missing original tracking JSONL, so D7 remains under observation. The scientific campaign stays frozen in September and automatic source fetching remains blocked.",
+      "Producción conserva el corte verificado de octubre. La fuente de noviembre está cotejada y el ensayo mensual local terminó; eso no publica el boletín. Datos #57 integra el lector corregido y la conservación durable del tracking, con CI de main verde. Falta actualizar la base del documental #11 y verificar su CI, coordinar el archivo de la fuente y la corrida real, y comprobar el corte, sus consumidores y la telemetría remota original. D7 sigue en cero de dos ciclos; la campaña científica de septiembre no se reabre.",
+      "Production retains the verified October release. The November source has been checked and the local monthly rehearsal completed; that does not publish the bulletin. Data PR #57 integrates the corrected reader and durable tracking preservation, with green main CI. Documentary PR #11 needs its base updated and CI verified, followed by source archival, the real run, and verification of the release, consumers and original remote telemetry. D7 remains at zero of two cycles; the September scientific campaign is not reopened.",
     ),
   },
   {
@@ -241,17 +241,35 @@ export const PLAN_CLOSEOUT = [
 
 // Preparación académica independiente del denominador histórico de 62 historias.
 export const PLAN_DELIVERABLES = [
-  { id: "A11", title: c("Ajustes del modelo", "Model configurations"), scope: c("Sección 1.4.2 · PDF y Word acumulativos", "Section 1.4.2 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-22/A11.pdf" },
-  { id: "A12", title: c("Evaluación del modelo", "Model evaluation"), scope: c("Sección 1.4.3 · PDF y Word acumulativos", "Section 1.4.3 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-22/A12.pdf" },
-  { id: "A13", title: c("Optimización y pruebas avanzadas", "Optimization and advanced tests"), scope: c("Secciones 1.4.2–1.4.4", "Sections 1.4.2–1.4.4"), due: c("25 oct · 23:59, zona del LMS por confirmar", "25 Oct · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-22/A13.pdf" },
-  { id: "A14", title: c("Pruebas y validación", "Testing and validation"), scope: c("Secciones 1.5.1 y 1.5.2", "Sections 1.5.1 and 1.5.2"), due: c("1 nov · 23:59, zona del LMS por confirmar", "1 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-22/A14.pdf" },
-  { id: "B1", title: c("Diseño de experimentos", "Experimental design"), scope: c("Sección 2.1 · variables y comparación temporal", "Section 2.1 · variables and temporal comparison"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-22/B1.pdf" },
-  { id: "B2", title: c("Resultados y robustez", "Results and robustness"), scope: c("Secciones 2.2, 2.3 y conclusiones", "Sections 2.2, 2.3 and conclusions"), due: c("15 nov · 23:59, zona del LMS por confirmar", "15 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-22/B2.pdf" },
-  { id: "B3", title: c("Presentación del proyecto", "Project presentation"), scope: c("18 diapositivas · PDF, PowerPoint y guion", "18 slides · PDF, PowerPoint and speaker guide"), due: c("Actividad: 15 nov · presentación por asignar", "Activity: 15 Nov · presentation date to assign"), status: "prepared", pdf: "/entregables/2026-10-22/B3.pdf" },
+  { id: "A11", title: c("Ajustes del modelo", "Model configurations"), scope: c("Sección 1.4.2 · PDF y Word acumulativos", "Section 1.4.2 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-23/A11.pdf" },
+  { id: "A12", title: c("Evaluación del modelo", "Model evaluation"), scope: c("Sección 1.4.3 · PDF y Word acumulativos", "Section 1.4.3 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-23/A12.pdf" },
+  { id: "A13", title: c("Optimización y pruebas avanzadas", "Optimization and advanced tests"), scope: c("Secciones 1.4.2–1.4.4", "Sections 1.4.2–1.4.4"), due: c("25 oct · 23:59, zona del LMS por confirmar", "25 Oct · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-23/A13.pdf" },
+  { id: "A14", title: c("Pruebas y validación", "Testing and validation"), scope: c("Secciones 1.5.1 y 1.5.2", "Sections 1.5.1 and 1.5.2"), due: c("1 nov · 23:59, zona del LMS por confirmar", "1 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-23/A14.pdf" },
+  { id: "B1", title: c("Diseño de experimentos", "Experimental design"), scope: c("Sección 2.1 · variables y comparación temporal", "Section 2.1 · variables and temporal comparison"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-23/B1.pdf" },
+  { id: "B2", title: c("Resultados y robustez", "Results and robustness"), scope: c("Secciones 2.2, 2.3 y conclusiones", "Sections 2.2, 2.3 and conclusions"), due: c("15 nov · 23:59, zona del LMS por confirmar", "15 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-23/B2.pdf" },
+  { id: "B3", title: c("Presentación del proyecto", "Project presentation"), scope: c("21 diapositivas · PDF, PowerPoint y guion", "21 slides · PDF, PowerPoint and speaker guide"), due: c("Actividad: 15 nov · presentación por asignar", "Activity: 15 Nov · presentation date to assign"), status: "prepared", pdf: "/entregables/2026-10-23/B3.pdf" },
   { id: "C1", title: c("Observaciones del comité", "Committee feedback"), scope: c("Pendiente de presentación y observaciones auténticas", "Awaiting presentation and authentic feedback"), due: c("Consigna: 21 nov · conciliar con fecha de Cumbre", "Assignment: 21 Nov · reconcile with summit date"), status: "pending-event", pdf: undefined },
 ] as const;
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-24",
+    title: c("G6 · Revisión académica integrada y compilación local", "G6 · Academic review integrated and local compilation"),
+    detail: c(
+      "El documental #10 entró como 395d010 y después datos #57 como b2396c8, con árboles idénticos a los candidatos revisados y CI de main verde. La tesis incorpora las referencias y figuras corregidas; el cron preserva el scoring y su resumen como artefactos incluso si falla el modelado. Los siete PDF revisados están preparados; B3 tiene 21 diapositivas. Toda compilación y exportación es local por orden del autor. Faltan revisión final, aval, envío y acuses. El porcentaje conserva su fórmula.",
+      "Documentary PR #10 landed as 395d010, followed by data PR #57 as b2396c8, with trees identical to the reviewed candidates and green main CI. The thesis includes corrected references and figures; the cron preserves scoring and its summary as artifacts even if modeling fails. The seven revised PDFs are prepared; B3 has 21 slides. All compilation and export are local by the owner’s instruction. Final review, approval, submission and receipts remain pending. Progress retains its formula.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-24",
+    title: c("Noviembre · Ensayo completo; publicación mensual pendiente", "November · Rehearsal complete; monthly publication pending"),
+    detail: c(
+      "El boletín se cotejó contra el PDF original y el ensayo local completo pasó sus controles. El código corregido ya está integrado; el documental #11 requiere actualizar su base y verificar CI antes de coordinar el archivo de la fuente y la corrida real. Después se comprobarán el corte, sus consumidores y el tracking remoto original. Producción conserva octubre. El ensayo no se publica ni cuenta como ciclo D7, que sigue en cero de dos.",
+      "The bulletin was checked against the original PDF and the full local rehearsal passed its checks. Corrected code is integrated; documentary PR #11 needs its base updated and CI verified before coordinating source archival and the real run. The release, consumers and original remote tracking must then be verified. Production retains October. The rehearsal is not published or counted as a D7 cycle, which remains at zero of two.",
+    ),
+    status: "active",
+  },
   {
     date: "2026-10-22",
     title: c("A3 · Octubre llega a producción y cierra la verificación de consumidores", "A3 · October reaches production and completes consumer verification"),
@@ -283,8 +301,8 @@ export const PLAN_UPDATES: PlanUpdate[] = [
     date: "2026-10-22",
     title: c("G6 distingue ciencia de septiembre y operación de octubre", "G6 separates September science from October operation"),
     detail: c(
-      "Los PR documentales #8 y #9 están integrados y su CI pasa. La tesis separa el censo operativo vivo de la ventana científica congelada; el paper conserva esa misma frontera. La revisión local compila en 139 páginas sin referencias rotas ni desbordes. El ZIP académico actualizado conserva los siete PDF científicos y sus editables. Prepararlos no acredita envío, aval, entrega al curso ni presentación; la copia oficial se compila en Overleaf después de Pull from GitHub.",
-      "Documentary PRs #8 and #9 are integrated and their CI passes. The thesis separates the live operational census from the frozen scientific window; the paper retains the same boundary. The local review compiles to 139 pages without broken references or overflowing lines. The updated academic ZIP retains the seven scientific PDFs and editable files. Preparation does not establish sending, approval, course submission or presentation; the official copy is compiled in Overleaf after Pull from GitHub.",
+      "Los PR documentales #8 y #9 están integrados y su CI pasa. La tesis separa el censo operativo vivo de la ventana científica congelada; el paper conserva esa misma frontera. La revisión local compila en 139 páginas sin referencias rotas ni desbordes. El ZIP académico actualizado conserva los siete PDF científicos y sus editables. Prepararlos no acredita envío, aval, entrega al curso ni presentación; la copia para revisión se compila en local desde la autoridad documental.",
+      "Documentary PRs #8 and #9 are integrated and their CI passes. The thesis separates the live operational census from the frozen scientific window; the paper retains the same boundary. The local review compiles to 139 pages without broken references or overflowing lines. The updated academic ZIP retains the seven scientific PDFs and editable files. Preparation does not establish sending, approval, course submission or presentation; the review copy is compiled locally from the documentary authority.",
     ),
     status: "done",
   },
@@ -292,8 +310,8 @@ export const PLAN_UPDATES: PlanUpdate[] = [
     date: "2026-10-22",
     title: c("F5 y G4 cierran su propagación; siete entregables preparados", "F5 and G4 close propagation; seven deliverables prepared"),
     detail: c(
-      "El PR documental #7 integra configuraciones, evaluación, optimización y diseño experimental en la tesis con CI verde. De esa autoridad se derivaron seis informes y la presentación B3, con copias PDF y editables. Son archivos preparados para revisión; faltan Overleaf, aval, envío y acuses. C1 espera la presentación real. F5 y G4 cierran su propagación técnica ya verificada. El ensayo de navegador comenzó y recibe HTTP 403, mientras el control manual pasa. Con los mismos pesos y las mismas historias, el tablero redondea a 99 %; no significa que todos los pendientes humanos u operativos estén terminados.",
-      "Documentary PR #7 integrates configurations, evaluation, optimization and experimental design into the thesis with green CI. Six reports and presentation B3 were derived from that authority, in PDF and editable copies. These files are prepared for review; Overleaf, approval, submission and receipts remain pending. C1 awaits the real presentation. F5 and G4 close their verified technical propagation. The browser trial started and receives HTTP 403 while the manual control passes. With unchanged weights and stories, the board rounds to 99%; it does not mean all human or operational tasks are finished.",
+      "El PR documental #7 integra configuraciones, evaluación, optimización y diseño experimental en la tesis con CI verde. De esa autoridad se derivaron seis informes y la presentación B3, con copias PDF y editables. Son archivos preparados para revisión; faltan revisión final, aval, envío y acuses. C1 espera la presentación real. F5 y G4 cierran su propagación técnica ya verificada. El ensayo de navegador comenzó y recibe HTTP 403, mientras el control manual pasa. Con los mismos pesos y las mismas historias, el tablero redondea a 99 %; no significa que todos los pendientes humanos u operativos estén terminados.",
+      "Documentary PR #7 integrates configurations, evaluation, optimization and experimental design into the thesis with green CI. Six reports and presentation B3 were derived from that authority, in PDF and editable copies. These files are prepared for review; final review, approval, submission and receipts remain pending. C1 awaits the real presentation. F5 and G4 close their verified technical propagation. The browser trial started and receives HTTP 403 while the manual control passes. With unchanged weights and stories, the board rounds to 99%; it does not mean all human or operational tasks are finished.",
     ),
     status: "done",
   },
@@ -310,8 +328,8 @@ export const PLAN_UPDATES: PlanUpdate[] = [
     date: "2026-10-21",
     title: c("G6 integra los tres avances en la tesis y prepara la revisión del asesor", "G6 integrates the three progress reports into the thesis and prepares advisor review"),
     detail: c(
-      "El PR documental #6 quedó integrado en main como fcbcb23, con el mismo árbol revisado y CI verde. La implementación amplía los tres avances, reconcilia su historia con la campaña publicada y sitúa la revisión humana antes de validar. La copia local de revisión compila en 137 páginas; el correo y la ficha de envío están preparados. Falta comprobar Overleaf, enviar la solicitud y obtener el aval y el acuse de entrega. El corte servido no cambia. El merge fue registrado el 22 de octubre en UTC, todavía 21 de octubre en Nueva York.",
-      "Documentary PR #6 was integrated into main as fcbcb23, with the same reviewed tree and green CI. The implementation expands all three progress reports, reconciles their history with the published campaign and places human review before validation. The local review copy compiles to 137 pages; the email and sending sheet are prepared. Overleaf verification, sending the request, advisor approval and the submission receipt remain outstanding. The served release is unchanged. The merge was recorded on 22 October UTC, still 21 October in New York.",
+      "El PR documental #6 quedó integrado en main como fcbcb23, con el mismo árbol revisado y CI verde. La implementación amplía los tres avances, reconcilia su historia con la campaña publicada y sitúa la revisión humana antes de validar. La copia local de revisión compila en 137 páginas; el correo y la ficha de envío están preparados. Falta revisar la compilación local, enviar la solicitud y obtener el aval y el acuse de entrega. El corte servido no cambia. El merge fue registrado el 22 de octubre en UTC, todavía 21 de octubre en Nueva York.",
+      "Documentary PR #6 was integrated into main as fcbcb23, with the same reviewed tree and green CI. The implementation expands all three progress reports, reconciles their history with the published campaign and places human review before validation. The local review copy compiles to 137 pages; the email and sending sheet are prepared. Local compilation review, sending the request, advisor approval and the submission receipt remain outstanding. The served release is unchanged. The merge was recorded on 22 October UTC, still 21 October in New York.",
     ),
     status: "done",
   },
