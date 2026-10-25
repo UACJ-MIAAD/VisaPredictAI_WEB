@@ -1,3 +1,4 @@
+import { BULLETIN_OPERATION } from "@/lib/bulletin-operation";
 import type { Lang } from "@/lib/site-map";
 
 export type PlanStatus =
@@ -50,10 +51,9 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "ea10f6069f9d5ee198475bdd21f60060063f4448",
+  dataMain: "5749d6681ef92fced532a374a8973f1c242a0c82",
   releaseId: "2026-11-5ed564aa4d00",
   releaseStatus: "fresh",
-  observation: { current: 0, target: 2 },
 } as const;
 
 export const PLAN_EPICS: PlanEpic[] = [
@@ -87,7 +87,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("A3", c("Cron resiliente", "Resilient cron"), c("Separar el acceso a la fuente de los gates, CI y publicación.", "Separate source access from gates, CI and publishing."), "done"),
       story("A4", c("Señal honesta", "Honest signal"), c("Versionar el estado de fuente y mantener una issue canónica.", "Version source state and maintain one canonical issue."), "done"),
       story("A5", c("Pruebas sin red", "Offline tests"), c("Cubrir fetch, freeze e ingesta sin depender de Internet.", "Cover fetch, freeze and ingestion without depending on the Internet."), "done"),
-      story("A6", c("BrowserFetcher", "BrowserFetcher"), c("Ensayo iniciado: Chromium sin sesión recibe HTTP 403; el Chrome visible del autor abre octubre y sus 150 celdas coinciden con el PDF. El control manual carga las cuatro tablas. Falta el adaptador automático de producto; la vía asistida conserva la dependencia humana.", "Trial started: sessionless Chromium receives HTTP 403; the owner's visible Chrome opens October and its 150 cells match the PDF. The manual control loads all four tables. The automatic product adapter remains outstanding; assisted ingestion retains its human dependency."), "active", "22-oct-2026 · ensayo acotado y control manual"),
+      story("A6", c("Ingesta asistida desde PDF", "Assisted PDF intake"), c("El autor adoptó el depósito humano del PDF oficial y su procesamiento validado con Make. Se conservan original, texto, matrices y recibos; el candidato de panel y DuckDB se construye aislado. La publicación es una fase explícita. Este contrato sustituye el adaptador web previsto; no se declara resuelto el bloqueo de la fuente.", "The owner adopted human deposit of the official PDF and validated Make processing. The original, text, tables and receipts are retained; the panel and DuckDB candidate is built in isolation. Publication is an explicit phase. This contract replaces the planned web adapter; source blocking is not declared resolved."), "done", BULLETIN_OPERATION.sourceCommit.slice(0, 7)),
       story("A7", c("Corte agosto–septiembre", "August–September cut"), c("Publicar 300 snapshots, 298 meses y el corte 2026-09 con regla cero.", "Publish 300 snapshots, 298 months and the 2026-09 cut under rule zero."), "done", "release/2026-09-158ec972c234"),
     ],
   },
@@ -122,7 +122,7 @@ export const PLAN_EPICS: PlanEpic[] = [
       story("D4", c("Un solo release_id", "One release_id"), c("Romper el ciclo tarjeta–manifiesto con identidad normalizada.", "Break the card–manifest cycle with normalized identity."), "done", "f9c22a2"),
       story("D5", c("Caveat provisional derivado", "Derived provisional caveat"), c("Derivar el caveat de la campaña acreditada y verificar su corte de mantenimiento en producción.", "Derive the caveat from the accredited campaign and verify its maintenance release in production."), "done", "6ff06fd"),
       story("D6", c("Higiene de disco", "Disk hygiene"), c("Inventariar, preservar y limpiar con GC conservador y recibos.", "Inventory, preserve and clean with conservative GC and receipts."), "done"),
-      story("D7", c("Tracking mensual", "Monthly tracking"), c("Observar dos rebuilds reales antes de decidir si track_run se queda.", "Observe two real rebuilds before deciding whether track_run stays."), "observing", "80b3bfb · 0/2"),
+      story("D7", c("Tracking de operación asistida", "Assisted-operation tracking"), c("Aceptado el registro durable por corrida: recibo de ingesta y telemetría original de scoring con sus identidades y hashes. La espera de dos meses automáticos se sustituyó por decisión del autor. Se conserva el fallo de entrega de noviembre y su recuperación manual; no se inventan dos ciclos exitosos.", "Durable per-run records accepted: intake receipt and original scoring telemetry with their identities and hashes. The owner replaced the wait for two automatic months. November’s delivery failure and manual recovery are retained; two successful cycles are not invented."), "done", BULLETIN_OPERATION.sourceCommit.slice(0, 7)),
       story("D8", c("Consolidación documental", "Documentation consolidation"), c("Crear ENGINEERING.md con matriz de fuentes y backlinks, sin borrar aún.", "Create ENGINEERING.md with a source matrix and backlinks, without deleting yet."), "done", "5dd424b"),
       story("D9", c("Arquitectura MLOps", "MLOps architecture"), c("Publicar una página y un SVG del sistema completo con cifras canónicas.", "Publish a one-page system overview and SVG using canonical figures."), "done", "494bcfd"),
     ],
@@ -217,41 +217,59 @@ export const PLAN_CLOSEOUT = [
     id: "academic",
     title: c("Documento del 6 de noviembre y aval del asesor", "6 November document and advisor approval"),
     detail: c(
-      "El PR documental #10 integra la revisión académica y las referencias y figuras corregidas, con CI de main verde. El maestro compila en local en 139 páginas; los seis informes y B3 se regeneraron para revisión. Todas las compilaciones y exportaciones se hacen en local por orden del autor. Falta la revisión final, el envío al asesor, su aval y el acuse de entrega antes del 6 de noviembre. A13 vence el 25 de octubre; C1 espera observaciones reales después de presentar. La Cumbre del 16 al 24 de noviembre sigue tentativa.",
-      "Documentary PR #10 integrates the academic review and corrected references and figures, with green main CI. The master compiles locally to 139 pages; the six reports and B3 were regenerated for review. All compilation and export are local by the owner’s instruction. Final review, sending to the advisor, approval and the submission receipt remain due before 6 November. A13 is due on 25 October; C1 awaits real feedback after presenting. The 16–24 November summit remains tentative.",
+      "La revisión técnica comprende nueve PDF y 321 páginas: maestro de 139, Anteproyecto de 61, seis informes y B3 de 22 diapositivas. El documental #13 incorpora el procedimiento desde PDF y la compilación local; los siete PDF de actividades se ofrecen en su versión del 24 de octubre. Se comprobaron compilación, referencias, tablas, figuras y páginas renderizadas. Quedan a cargo del autor la revisión de entrega, el envío, el aval y el acuse antes del 6 de noviembre; no se dan por acreditados. A13 vence el 25 de octubre. C1 espera observaciones auténticas tras presentar, y la Cumbre del 16 al 24 de noviembre sigue tentativa.",
+      "Technical review covers nine PDFs and 321 pages: the 139-page master, 61-page proposal, six reports and the 22-slide B3 deck. Documentary PR #13 incorporates the PDF procedure and local compilation; the seven activity PDFs are offered in their 24 October version. Compilation, references, tables, figures and rendered pages were checked. The owner retains submission review, sending, advisor approval and the receipt before 6 November; these are not certified. A13 is due on 25 October. C1 awaits authentic feedback after presenting, and the 16–24 November summit remains tentative.",
     ),
   },
   {
     id: "visa-bulletin",
     title: c("Noviembre publicado con ingesta manual", "November published through manual intake"),
     detail: c(
-      "Producción sirve el corte de noviembre 2026-11-5ed564aa4d00: 300 meses y 28,211 observaciones. El HTML cotejado se subió a S3 sin sobrescribir nada, el documental #12 entró antes que los datos y la corrida mensual real generó y selló el corte. Su entrega automática quedó detenida porque una prueba usaba como cifra errónea la que noviembre volvió real; la prueba se corrigió en datos y el despliegue llegó con este consumidor. La telemetría remota del scoring se conserva por primera vez. D7 sigue en cero de dos: este ciclo no completó su entrega automática.",
-      "Production serves the November release 2026-11-5ed564aa4d00: 300 months and 28,211 observations. The checked HTML was uploaded to S3 without overwriting anything, documentary PR #12 landed before the data, and the real monthly run generated and sealed the release. Its automatic delivery stopped because a test used as a wrong count the one November made real; the test was fixed in the data repository and deployment came with this consumer. The remote scoring telemetry is preserved for the first time. D7 remains at zero of two: this cycle did not complete its automatic delivery.",
+      "Producción sirve el corte de noviembre 2026-11-5ed564aa4d00: 300 meses y 28,211 observaciones. El HTML cotejado se subió a S3 sin sobrescribir nada, el documental #12 entró antes que los datos y la corrida mensual real generó y selló el corte. Su entrega automática quedó detenida porque una prueba usaba como cifra errónea la que noviembre volvió real; la prueba se corrigió en datos y el despliegue llegó con este consumidor. La telemetría remota del scoring se conserva por primera vez. El fallo de entrega y la recuperación manual se conservan; el contrato vigente acepta la operación asistida y su tracking por corrida.",
+      "Production serves the November release 2026-11-5ed564aa4d00: 300 months and 28,211 observations. The checked HTML was uploaded to S3 without overwriting anything, documentary PR #12 landed before the data, and the real monthly run generated and sealed the release. Its automatic delivery stopped because a test used as a wrong count the one November made real; the test was fixed in the data repository and deployment came with this consumer. The remote scoring telemetry is preserved for the first time. The delivery failure and manual recovery are retained; the current contract accepts assisted operation and per-run tracking.",
     ),
   },
   {
     id: "technical-closeout",
-    title: c("Cerrar verificaciones y decisiones operativas", "Complete checks and operational decisions"),
+    title: c("Plataforma cerrada; operación y compromisos separados", "Platform closed; operation and commitments kept separate"),
     detail: c(
-      "E5, F5 y G4 tienen cerrado su alcance técnico con evidencia publicada y consumidores verificados. El aval del asesor y la aceptación editorial siguen siendo hechos independientes. BrowserFetcher está en curso: la sesión visible abre la fuente, pero la sonda sin sesión recibe 403 y el adaptador automático aún no existe. D7 conserva cero de dos ciclos acreditados: ni un PDF preparado ni un build del portal cuentan como ciclo mensual. R9 permanece activo y preservado. El porcentaje pondera las mismas 62 historias y no acredita todo el mantenimiento ni la entrega académica.",
-      "E5, F5 and G4 have completed their technical scope with published evidence and verified consumers. Advisor approval and editorial acceptance remain independent events. BrowserFetcher is in progress: the visible session opens the source, but the sessionless probe receives 403 and the automatic adapter does not yet exist. D7 retains zero of two accredited cycles: neither a prepared PDF nor a portal build counts as a monthly cycle. R9 remains active and preserved. Progress weights the same 62 stories and does not certify all maintenance or academic delivery.",
+      "Las historias de plataforma están cerradas con los mismos pesos y denominador. A6 y D7 adoptan el contrato manual-automatizado y la evidencia por corrida, en lugar de un adaptador web y dos meses automáticos. La fuente puede seguir bloqueada: se aporta el PDF oficial. No se altera la campaña científica ni se fingen meses observados. R9 sigue activo como frente separado. El aval, la entrega académica, la aceptación editorial y las observaciones posteriores de C1 se acreditan por separado.",
+      "Platform stories are closed with the same weights and denominator. A6 and D7 adopt the manual-automated contract and per-run evidence instead of a web adapter and two automatic months. The source may remain blocked: the official PDF is supplied. The scientific campaign is unchanged and observed months are not invented. R9 remains active as a separate track. Advisor approval, academic submission, editorial acceptance and later C1 feedback require separate evidence.",
     ),
   },
 ];
 
 // Preparación académica independiente del denominador histórico de 62 historias.
 export const PLAN_DELIVERABLES = [
-  { id: "A11", title: c("Ajustes del modelo", "Model configurations"), scope: c("Sección 1.4.2 · PDF y Word acumulativos", "Section 1.4.2 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-23/A11.pdf" },
-  { id: "A12", title: c("Evaluación del modelo", "Model evaluation"), scope: c("Sección 1.4.3 · PDF y Word acumulativos", "Section 1.4.3 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-23/A12.pdf" },
-  { id: "A13", title: c("Optimización y pruebas avanzadas", "Optimization and advanced tests"), scope: c("Secciones 1.4.2–1.4.4", "Sections 1.4.2–1.4.4"), due: c("25 oct · 23:59, zona del LMS por confirmar", "25 Oct · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-23/A13.pdf" },
-  { id: "A14", title: c("Pruebas y validación", "Testing and validation"), scope: c("Secciones 1.5.1 y 1.5.2", "Sections 1.5.1 and 1.5.2"), due: c("1 nov · 23:59, zona del LMS por confirmar", "1 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-23/A14.pdf" },
-  { id: "B1", title: c("Diseño de experimentos", "Experimental design"), scope: c("Sección 2.1 · variables y comparación temporal", "Section 2.1 · variables and temporal comparison"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-23/B1.pdf" },
-  { id: "B2", title: c("Resultados y robustez", "Results and robustness"), scope: c("Secciones 2.2, 2.3 y conclusiones", "Sections 2.2, 2.3 and conclusions"), due: c("15 nov · 23:59, zona del LMS por confirmar", "15 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-23/B2.pdf" },
-  { id: "B3", title: c("Presentación del proyecto", "Project presentation"), scope: c("21 diapositivas · PDF, PowerPoint y guion", "21 slides · PDF, PowerPoint and speaker guide"), due: c("Actividad: 15 nov · presentación por asignar", "Activity: 15 Nov · presentation date to assign"), status: "prepared", pdf: "/entregables/2026-10-23/B3.pdf" },
+  { id: "A11", title: c("Ajustes del modelo", "Model configurations"), scope: c("Sección 1.4.2 · PDF y Word acumulativos", "Section 1.4.2 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-24/A11.pdf" },
+  { id: "A12", title: c("Evaluación del modelo", "Model evaluation"), scope: c("Sección 1.4.3 · PDF y Word acumulativos", "Section 1.4.3 · cumulative PDF and Word"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-24/A12.pdf" },
+  { id: "A13", title: c("Optimización y pruebas avanzadas", "Optimization and advanced tests"), scope: c("Secciones 1.4.2–1.4.4", "Sections 1.4.2–1.4.4"), due: c("25 oct · 23:59, zona del LMS por confirmar", "25 Oct · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-24/A13.pdf" },
+  { id: "A14", title: c("Pruebas y validación", "Testing and validation"), scope: c("Secciones 1.5.1 y 1.5.2", "Sections 1.5.1 and 1.5.2"), due: c("1 nov · 23:59, zona del LMS por confirmar", "1 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-24/A14.pdf" },
+  { id: "B1", title: c("Diseño de experimentos", "Experimental design"), scope: c("Sección 2.1 · variables y comparación temporal", "Section 2.1 · variables and temporal comparison"), due: c("Confirmar fecha en LMS", "Confirm date in LMS"), status: "prepared", pdf: "/entregables/2026-10-24/B1.pdf" },
+  { id: "B2", title: c("Resultados y robustez", "Results and robustness"), scope: c("Secciones 2.2, 2.3 y conclusiones", "Sections 2.2, 2.3 and conclusions"), due: c("15 nov · 23:59, zona del LMS por confirmar", "15 Nov · 23:59, LMS time zone to confirm"), status: "prepared", pdf: "/entregables/2026-10-24/B2.pdf" },
+  { id: "B3", title: c("Presentación del proyecto", "Project presentation"), scope: c("22 diapositivas · PDF, PowerPoint y guion", "22 slides · PDF, PowerPoint and speaker guide"), due: c("Actividad: 15 nov · presentación por asignar", "Activity: 15 Nov · presentation date to assign"), status: "prepared", pdf: "/entregables/2026-10-24/B3.pdf" },
   { id: "C1", title: c("Observaciones del comité", "Committee feedback"), scope: c("Pendiente de presentación y observaciones auténticas", "Awaiting presentation and authentic feedback"), due: c("Consigna: 21 nov · conciliar con fecha de Cumbre", "Assignment: 21 Nov · reconcile with summit date"), status: "pending-event", pdf: undefined },
 ] as const;
 
 export const PLAN_UPDATES: PlanUpdate[] = [
+  {
+    date: "2026-10-24",
+    title: c("A6 y D7 · Cierre por operación asistida y evidencia verificable", "A6 and D7 · Closeout through assisted operation and verifiable evidence"),
+    detail: c(
+      "El autor sustituyó el objetivo de acceso web automático y la espera de dos meses por un contrato manual-automatizado. El PDF oficial se deposita en una carpeta; Make extrae, valida y construye un candidato de panel y DuckDB con recibo durable. Publicar requiere una opción explícita y el recibo revisado, seguido de las puertas del circuito mensual. Las pruebas incluyen octubre y noviembre reales y el alta de un mes nuevo. Noviembre ya está publicado y se conservan tanto el fallo de entrega como su recuperación manual. Las mismas historias alcanzan el cierre de plataforma; no se acreditan aval, entrega académica ni presentación.",
+      "The owner replaced automated web access and the two-month wait with a manual-automated contract. The official PDF is placed in a folder; Make extracts, validates and builds a panel and DuckDB candidate with a durable receipt. Publishing requires an explicit option and the reviewed receipt, followed by the monthly path gates. Tests include real October and November PDFs and intake of a new month. November is already published, retaining both the delivery failure and its manual recovery. The same stories reach platform closeout; advisor approval, academic submission and presentation are not certified.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-24",
+    title: c("Revisión técnica de los PDF y compilación local", "Technical PDF review and local compilation"),
+    detail: c(
+      "Se revisaron los nueve PDF del paquete: maestro, Anteproyecto, A11–A14, B1, B2 y B3. El maestro conserva 139 páginas y la presentación tiene 22 diapositivas; se corrigieron la paginación, la documentación del flujo y las instrucciones de compilación. El Anteproyecto acompaña al maestro para preparar los dos documentos que exige B3. Los archivos están preparados y sellados, sin declarar aval, envío, acuse ni observaciones de C1 inexistentes. La aceptación del 100 % corresponde a las historias de plataforma, no a esos actos académicos.",
+      "The nine package PDFs were reviewed: master, proposal, A11–A14, B1, B2 and B3. The master retains 139 pages and the presentation has 22 slides; pagination, flow documentation and compilation instructions were corrected. The proposal accompanies the master to prepare both documents required by B3. Files are prepared and sealed, without claiming approval, sending, a submission receipt or nonexistent C1 feedback. The 100% acceptance applies to platform stories rather than those academic acts.",
+    ),
+    status: "done",
+  },
   {
     date: "2026-10-24",
     title: c("A2 · Noviembre publicado con ingesta manual", "A2 · November published through manual intake"),

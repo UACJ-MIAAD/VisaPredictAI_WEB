@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { blockExternal, forceTheme } from "./helpers";
 import { planStats } from "../../lib/plan-data";
+import { BULLETIN_OPERATION } from "../../lib/bulletin-operation";
 
 test.afterEach(async ({ page }, info) => {
   if (info.status === info.expectedStatus || page.isClosed()) return;
@@ -114,7 +115,24 @@ for (const lang of ["es", "en"] as const) {
       await page.setViewportSize({ width: 1280, height: 900 });
       await page.goto(`${lang === "en" ? "/en" : ""}/ingenieria/`);
       const atlas = page.locator("#sistema");
+      const guide = page.locator("#operacion-asistida");
+      await expect(guide.locator("pre code")).toHaveText([
+        BULLETIN_OPERATION.prepareCommand, BULLETIN_OPERATION.publishCommand,
+      ]);
+      await expect(guide.locator("ol > li")).toHaveCount(3);
+      await expect(guide).toContainText("data/inbox/");
+      await expect(guide).toContainText(lang === "es" ? "no publica" : "neither publishes");
+      await expect(guide).toContainText(lang === "es" ? "histórica" : "historical");
       await expect(atlas.locator(".system-component")).toHaveCount(9);
+      const intake = atlas.locator("#componente-ingesta svg");
+      expect(await intake.evaluate((svg) => {
+        const boxes = [...svg.querySelectorAll("rect")].map((node) => node.getBoundingClientRect());
+        return [...svg.querySelectorAll(".system-edge-label")].every((node) => {
+          const label = node.getBoundingClientRect();
+          return boxes.every((box) => label.right <= box.left || label.left >= box.right
+            || label.bottom <= box.top || label.top >= box.bottom);
+        });
+      })).toBe(true);
       await expect(page.locator("#base-datos .system-entity")).toHaveCount(12);
       // Native disclosures must work with keyboard, without a custom tab widget.
       const summary = atlas.locator("#componente-asistente > summary");
@@ -142,6 +160,8 @@ for (const lang of ["es", "en"] as const) {
       await page.goto(`${lang === "en" ? "/en" : ""}/plan/`);
       await expect(page.locator(`a[href="${lang === "en" ? "/en" : ""}/ingenieria/#sistema"]`)).toBeVisible();
       await expect(page.getByRole("img", { name: new RegExp(`${planStats().percent}%`) })).toBeVisible();
+      await expect(page.locator(`a[href="${lang === "en" ? "/en" : ""}/ingenieria/#operacion-asistida"]`)).toBeVisible();
+      await expect(page.getByText(lang === "es" ? "Plataforma entregada" : "Platform delivered", { exact: true })).toBeVisible();
     });
   }
 }
