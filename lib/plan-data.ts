@@ -50,8 +50,8 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "b2396c839d1e7d96419b4e8e44a24497fdb1ebbe",
-  releaseId: "2026-10-a880a917ede0",
+  dataMain: "ea10f6069f9d5ee198475bdd21f60060063f4448",
+  releaseId: "2026-11-5ed564aa4d00",
   releaseStatus: "fresh",
   observation: { current: 0, target: 2 },
 } as const;
@@ -223,10 +223,10 @@ export const PLAN_CLOSEOUT = [
   },
   {
     id: "visa-bulletin",
-    title: c("Octubre publicado; noviembre preparado en local", "October published; November prepared locally"),
+    title: c("Noviembre publicado con ingesta manual", "November published through manual intake"),
     detail: c(
-      "Producción conserva el corte verificado de octubre. La fuente de noviembre está cotejada y el ensayo mensual local terminó; eso no publica el boletín. Datos #57 integra el lector corregido y la conservación durable del tracking, con CI de main verde. Falta actualizar la base del documental #11 y verificar su CI, coordinar el archivo de la fuente y la corrida real, y comprobar el corte, sus consumidores y la telemetría remota original. D7 sigue en cero de dos ciclos; la campaña científica de septiembre no se reabre.",
-      "Production retains the verified October release. The November source has been checked and the local monthly rehearsal completed; that does not publish the bulletin. Data PR #57 integrates the corrected reader and durable tracking preservation, with green main CI. Documentary PR #11 needs its base updated and CI verified, followed by source archival, the real run, and verification of the release, consumers and original remote telemetry. D7 remains at zero of two cycles; the September scientific campaign is not reopened.",
+      "Producción sirve el corte de noviembre 2026-11-5ed564aa4d00: 300 meses y 28,211 observaciones. El HTML cotejado se subió a S3 sin sobrescribir nada, el documental #12 entró antes que los datos y la corrida mensual real generó y selló el corte. Su entrega automática quedó detenida porque una prueba usaba como cifra errónea la que noviembre volvió real; la prueba se corrigió en datos y el despliegue llegó con este consumidor. La telemetría remota del scoring se conserva por primera vez. D7 sigue en cero de dos: este ciclo no completó su entrega automática.",
+      "Production serves the November release 2026-11-5ed564aa4d00: 300 months and 28,211 observations. The checked HTML was uploaded to S3 without overwriting anything, documentary PR #12 landed before the data, and the real monthly run generated and sealed the release. Its automatic delivery stopped because a test used as a wrong count the one November made real; the test was fixed in the data repository and deployment came with this consumer. The remote scoring telemetry is preserved for the first time. D7 remains at zero of two: this cycle did not complete its automatic delivery.",
     ),
   },
   {
@@ -254,6 +254,15 @@ export const PLAN_DELIVERABLES = [
 export const PLAN_UPDATES: PlanUpdate[] = [
   {
     date: "2026-10-24",
+    title: c("A2 · Noviembre publicado con ingesta manual", "A2 · November published through manual intake"),
+    detail: c(
+      "La corrida mensual 40136706583 generó el corte 2026-11-5ed564aa4d00 sobre el HTML subido a S3 y el documental #12. El CI de su commit sellado falló sólo en una prueba que tomaba como errónea una cifra que noviembre volvió real; el arreglo entró en datos con CI verde y este consumidor fija el puntero, refresca el fallback y despliega. La telemetría del scoring se archivó como artefacto y en el lote. #11 se cerró y lo sustituye #12, con el mismo árbol.",
+      "Monthly run 40136706583 generated release 2026-11-5ed564aa4d00 from the HTML uploaded to S3 and documentary PR #12. CI on its sealed commit failed only on a test that took as wrong a count that November made real; the fix landed in data with green CI, and this consumer pins the pointer, refreshes the fallback and deploys. The scoring telemetry was archived as an artifact and in the batch. #11 was closed and replaced by #12, with the same tree.",
+    ),
+    status: "done",
+  },
+  {
+    date: "2026-10-24",
     title: c("G6 · Revisión académica integrada y compilación local", "G6 · Academic review integrated and local compilation"),
     detail: c(
       "El documental #10 entró como 395d010 y después datos #57 como b2396c8, con árboles idénticos a los candidatos revisados y CI de main verde. La tesis incorpora las referencias y figuras corregidas; el cron preserva el scoring y su resumen como artefactos incluso si falla el modelado. Los siete PDF revisados están preparados; B3 tiene 21 diapositivas. Toda compilación y exportación es local por orden del autor. Faltan revisión final, aval, envío y acuses. El porcentaje conserva su fórmula.",
@@ -263,12 +272,12 @@ export const PLAN_UPDATES: PlanUpdate[] = [
   },
   {
     date: "2026-10-24",
-    title: c("Noviembre · Ensayo completo; publicación mensual pendiente", "November · Rehearsal complete; monthly publication pending"),
+    title: c("Noviembre · Ensayo local completo", "November · Local rehearsal complete"),
     detail: c(
       "El boletín se cotejó contra el PDF original y el ensayo local completo pasó sus controles. El código corregido ya está integrado; el documental #11 requiere actualizar su base y verificar CI antes de coordinar el archivo de la fuente y la corrida real. Después se comprobarán el corte, sus consumidores y el tracking remoto original. Producción conserva octubre. El ensayo no se publica ni cuenta como ciclo D7, que sigue en cero de dos.",
       "The bulletin was checked against the original PDF and the full local rehearsal passed its checks. Corrected code is integrated; documentary PR #11 needs its base updated and CI verified before coordinating source archival and the real run. The release, consumers and original remote tracking must then be verified. Production retains October. The rehearsal is not published or counted as a D7 cycle, which remains at zero of two.",
     ),
-    status: "active",
+    status: "done",
   },
   {
     date: "2026-10-22",
