@@ -1,0 +1,78 @@
+{
+  "schema": "visapredict.academic-review/1",
+  "date": "2026-10-25",
+  "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
+  "source_commit": "b5eb855d8a2f582f144fb8194b22d6ade93c2e46",
+  "derivation": {
+    "kind": "local-cumulative-package",
+    "package": "Entregables_2026-10-25_acumulativos",
+    "cumulative_pdfs_tracked_in_source_repo": false,
+    "review_manifest_sha256": "94d53b8578b3c270164bf744318c9695056f9349d86a9b8b69ee4f20de7d55c0"
+  },
+  "status": "prepared-not-submitted",
+  "artifacts": [
+    {
+      "id": "A11",
+      "path": "/entregables/2026-10-25/A11.pdf",
+      "sha256": "616e10f30b238664053bc991905f16b775dd5cdddc1ea08700896049464780f1",
+      "bytes": 5751082,
+      "pages": 96,
+      "source_package": "2026-10-25_acumulativos",
+      "source_zip_sha256": "4ef13979ee6273afbedebfd22883883db5fa77a69c0e201f9cde1af7cbbbd3d6"
+    },
+    {
+      "id": "A12",
+      "path": "/entregables/2026-10-25/A12.pdf",
+      "sha256": "abf772741a8c4c289c31c8303702d693cd0768ce45f3b554fa49a8dce7202c9b",
+      "bytes": 5754857,
+      "pages": 97,
+      "source_package": "2026-10-25_acumulativos",
+      "source_zip_sha256": "01f3e8c33d40f6399f16014f58ec3bfd53a30ebacc950e5e8e0373b1f1eea7e5"
+    },
+    {
+      "id": "A13",
+      "path": "/entregables/2026-10-25/A13.pdf",
+      "sha256": "b22eee213eb36c4c42d4219e748d8bf50e4d33bb78559c2aec4c144e3f107930",
+      "bytes": 5761328,
+      "pages": 99,
+      "source_package": "2026-10-25_acumulativos",
+      "source_zip_sha256": "2c0cb4ec035ab9455ac5a8fa5ec75800ffa976df80c71877fb4dbe1a6488562a"
+    },
+    {
+      "id": "A14",
+      "path": "/entregables/2026-10-25/A14.pdf",
+      "sha256": "8e62b3ba38598f74b6d191e62a24c7267b9cfb75b9115484ace6cc8a7a452094",
+      "bytes": 5874322,
+      "pages": 102,
+      "source_package": "2026-10-25_acumulativos",
+      "source_zip_sha256": "c3845cf9f3b6da82987060bd0be374cd9faf36f0c35c239e2ce71a7db9bfd0b0"
+    },
+    {
+      "id": "B1",
+      "path": "/entregables/2026-10-25/B1.pdf",
+      "sha256": "7c8f41f5a9f50511d0f86a15145f1e97399fe3a44becd44d595bdbaffe0d2c75",
+      "bytes": 5886434,
+      "pages": 105,
+      "source_package": "2026-10-25_acumulativos",
+      "source_zip_sha256": "0bdd474692b21c85da452cf02799740d48b5340ee1cb7b107ff4fe3ebd280e52"
+    },
+    {
+      "id": "B2",
+      "path": "/entregables/2026-10-25/B2.pdf",
+      "sha256": "3e6d0e568f02debcd8757c40643e5ed80e6fdaa43bbc210e618c54666255e6ce",
+      "bytes": 6255209,
+      "pages": 135,
+      "source_package": "2026-10-25_acumulativos",
+      "source_zip_sha256": "5eeb102a7763499ba4afa3ffdf25fd73d1ec32882843031e6a1539c7da0cc08a"
+    },
+    {
+      "id": "B3",
+      "path": "/entregables/2026-10-25/B3.pdf",
+      "sha256": "a2d021867d676d2226705828eec16b088b66154552d45b2119e5efac519fcfbb",
+      "bytes": 772721,
+      "pages": 22,
+      "source_package": "2026-10-24",
+      "reused_unchanged": true
+    }
+  ]
+}
