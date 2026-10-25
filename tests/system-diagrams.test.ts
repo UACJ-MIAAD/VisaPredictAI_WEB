@@ -32,9 +32,12 @@ describe("system architecture", () => {
   it("the overview covers every independent component", () => {
     expect([...new Set(SYSTEM_FLOW.nodes.map((n) => n.component))].sort()).toEqual(COMPONENT_FLOWS.map((f) => f.id).sort());
   });
-  it("manual ingestion branches only when the source is blocked", () => {
+  it("PDF ingestion makes validation and the human publication boundary explicit", () => {
     const ingestion = COMPONENT_FLOWS.find((f) => f.id === "ingesta")!;
-    expect(ingestion.edges.filter((e) => e.from === "acceso").map((e) => e.to).sort()).toEqual(["archivo", "manual"]);
+    expect(ingestion.nodes[0].id).toBe("pdf");
+    expect(ingestion.edges.filter((e) => e.from === "validar").map((e) => e.to).sort()).toEqual(["candidato", "rechazo"]);
+    expect(ingestion.edges.find((e) => e.to === "publicar")?.label?.en).toBe("human review");
+    expect(ingestion.boundary.en).toContain("neither uploads to S3 nor dispatches");
   });
   it("engineering navigation exposes both new anchors", () => {
     expect(routeByPath("/ingenieria").sections.slice(0, 2).map((s) => s.id)).toEqual(["sistema", "base-datos"]);

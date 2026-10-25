@@ -1,13 +1,31 @@
 # Triage de dependencias y política de SLA (G2, plan auditoría 2026-07-11 · A5 2026-07-12 · cierre H1/B4 2026-09-02 · #62 2026-10-12)
 
-Estado vigente: **nuevo candidato local del 22-oct-2026, aún sin push**. La consulta
+## Estado vigente — 24-oct-2026
+
+Los parches Next 15.5.28 y DOMPurify 3.4.17 y las fuentes locales están
+integrados por [PR #59](https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/pull/59),
+squash `9e71551`, con CI de main verde. El sitio de noviembre se publicó después
+desde `main@7bb252b`; no siguen siendo cambios locales pendientes de push.
+
+La consulta nueva `npm audit --omit=dev --json` del 25-oct a las 03:00Z
+(24-oct en Nueva York), sobre el mismo lock, termina rc 0: **cero avisos de
+producción en todas las severidades**. Evidencia fuera del repo:
+`Prompts/lote_AUDITORIA_CIERRE_100_2026-10-24/npm-audit-production.json`.
+Esta consulta excluye desarrollo; no acredita un audit completo limpio ni
+elimina su triage. No se cambiaron paquetes, lock, supresiones ni umbrales
+para actualizar este registro. El historial siguiente conserva lo medido en
+cada fecha y no describe por sí solo el estado actual del sitio.
+
+## Registro del candidato local del 22-oct-2026 (histórico)
+
+Estado de preparación de aquel día, antes del push: **candidato local**. La consulta
 npm posterior al merge #58 incorpora dos paquetes de producción con avisos críticos:
 Next 15.5.27 y DOMPurify 3.4.16. Se preparan Next 15.5.28 y DOMPurify 3.4.17,
 sin supresiones ni cambios de umbrales. La evidencia antes/después y la validación
 se registran fuera del repo en `Prompts/lote_NOCTURNO_ENTREGABLES_2026-10-22/final_font_failure/`.
 No se aplica el resultado del candidato a producción hasta integrarlo y verificarla.
 
-### Parche de seguridad y fuentes (22-oct, candidato local)
+### Parche de seguridad y fuentes (22-oct, candidato local histórico)
 
 | Paquete | Avisos oficiales | Corrección y alcance |
 |---|---|---|
@@ -51,8 +69,8 @@ histórico se retira de este documento (queda en el historial de git).
 | moderate | 30 días o el siguiente bump del upstream directo (lo que llegue primero), vía PR probado | Triage aquí con explotabilidad y owner |
 | low | Mejor esfuerzo | Se agrupa con el siguiente upgrade planificado |
 
-**Prohibido `npm audit fix --force`**: sus "fixes" proponen downgrades destructivos
-(hoy: next@9.3.3, tres majors atrás). Todo upgrade va por PR con la suite completa
+**Prohibido `npm audit fix --force`**: en el registro histórico sus propuestas
+incluían el downgrade destructivo a next@9.3.3. Todo upgrade va por PR con la suite completa
 (vitest + typecheck + build offline) y rollback = revert del commit.
 
 ## Actualización del runtime RAG (2026-10-22)

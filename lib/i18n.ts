@@ -9,6 +9,7 @@ type Dict = Record<string, { es: string; en: string }>;
 
 const S = {
   srcLoading: { es: "Cargando el registro de ingesta incluido en este corte.", en: "Loading the ingestion record included in this release." },
+  srcAssistedGuide: { es: "Cómo se actualiza desde el PDF oficial", en: "How updates start from the official PDF" },
   // hero
   heroEyebrow: { es: "Tesis MIAAD · UACJ · Proyecto I en curso", en: "MIAAD Thesis · UACJ · Project I underway" },
   heroDataThrough: { es: "datos a", en: "data through" },

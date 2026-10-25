@@ -1,3 +1,4 @@
+import { BULLETIN_OPERATION } from "@/lib/bulletin-operation";
 import { describe, expect, it } from "vitest";
 import type { PlanEpic, PlanStatus, PlanUpdate } from "@/lib/plan-data";
 import {
@@ -28,7 +29,7 @@ describe("public MLOps plan", () => {
   it("shows delivered and observed epics instead of stale planned badges", () => {
     const statuses = Object.fromEntries(PLAN_EPICS.map((epic) => [epic.id, storiesStatus(epic.stories)]));
     expect(statuses).toMatchObject({ C: "done", F: "done", E: "done", G: "done" });
-    expect(planStats().percent).toBe(99);
+    expect(planStats().percent).toBe(100);
   });
 
   it("moves an epic badge when its work starts, enters observation, and finishes", () => {
@@ -170,21 +171,30 @@ describe("public MLOps plan", () => {
   it("keeps G7 closed and resumes unfinished work without inventing production evidence", () => {
     const focus = planFocus();
     expect(findStory(PLAN_EPICS, "G7")).toMatchObject({ status: "done", evidence: "a6036ec" });
-    expect(focus.next?.id).toBe("A6");
-    expect(focus.observing.length).toBeGreaterThan(0);
+    expect(focus.next).toBeNull();
+    expect(focus.observing).toEqual([]);
     expect(focus.deferred).toEqual([]);
     expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
-    expect(findStory(PLAN_EPICS, "A6").status).toBe("active");
+    expect(findStory(PLAN_EPICS, "A6").status).toBe("done");
     expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-24", status: "done" });
     expect(focus.updatedAt).toBe("2026-10-24");
-    expect(planStats().percent).toBe(99);
+    expect(planStats().percent).toBe(100);
     expect(PLAN_META.releaseId).toBe("2026-11-5ed564aa4d00");
   });
 
-  it("shows D7 as observation 0/2 and does not call it completed", () => {
-    const d7 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "D7");
-    expect(d7).toMatchObject({ status: "observing", evidence: "80b3bfb · 0/2" });
-    expect(PLAN_META.observation).toEqual({ current: 0, target: 2 });
+  it("closes assisted operation without inventing the retired automatic cycles", () => {
+    expect(findStory(PLAN_EPICS, "A6").status).toBe("done");
+    expect(findStory(PLAN_EPICS, "D7")).toMatchObject({
+      status: "done", evidence: BULLETIN_OPERATION.sourceCommit.slice(0, 7),
+    });
+    expect(BULLETIN_OPERATION.sourceCommit).toMatch(/^[a-f0-9]{40}$/);
+    expect(BULLETIN_OPERATION.mode).toBe("manual-automated");
+    expect(BULLETIN_OPERATION.superseded.creditedAutomaticCycles).toBe(0);
+    expect(BULLETIN_OPERATION.superseded.twoAutomaticCycles).toBe("replaced-by-per-run-review");
+    expect(BULLETIN_OPERATION.publishCommand).toContain("PUBLISH=1 RECEIPT=");
+    expect(BULLETIN_OPERATION.prepareCommand).not.toContain("PUBLISH");
+    expect(PLAN_META).not.toHaveProperty("observation");
+    expect(planStats()).toMatchObject({ completed: 62, total: 62, observing: 0, percent: 100 });
   });
 
   it("never presents delivered work as local or pending", () => {
@@ -277,15 +287,15 @@ describe("public MLOps plan", () => {
     expect(PLAN_DELIVERABLES.map((item) => item.id)).toEqual(["A11", "A12", "A13", "A14", "B1", "B2", "B3", "C1"]);
     expect(PLAN_DELIVERABLES.filter((item) => item.status === "prepared")).toHaveLength(7);
     for (const item of PLAN_DELIVERABLES.filter((item) => item.status === "prepared")) {
-      expect(item.pdf).toBe(`/entregables/2026-10-23/${item.id}.pdf`);
+      expect(item.pdf).toBe(`/entregables/2026-10-24/${item.id}.pdf`);
     }
     expect(PLAN_DELIVERABLES.find((item) => item.id === "B3")?.scope).toEqual({
-      es: "21 diapositivas · PDF, PowerPoint y guion",
-      en: "21 slides · PDF, PowerPoint and speaker guide",
+      es: "22 diapositivas · PDF, PowerPoint y guion",
+      en: "22 slides · PDF, PowerPoint and speaker guide",
     });
     expect(PLAN_DELIVERABLES.find((item) => item.id === "C1")).toMatchObject({ status: "pending-event", pdf: undefined });
-    expect(findStory(PLAN_EPICS, "A6").outcome.es).toMatch(/Falta el adaptador autom[aá]tico/);
-    expect(findStory(PLAN_EPICS, "D7").evidence).toBe("80b3bfb · 0/2");
+    expect(findStory(PLAN_EPICS, "A6").outcome.es).toMatch(/depósito humano del PDF/);
+    expect(findStory(PLAN_EPICS, "D7").status).toBe("done");
     expect(findStory(PLAN_EPICS, "G1").title.es).toBe("Compilación local");
     const academic = PLAN_CLOSEOUT.find((item) => item.id === "academic");
     expect(`${academic?.detail.es} ${academic?.detail.en}`).not.toMatch(/Overleaf/);
@@ -335,7 +345,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("ea10f6069f9d5ee198475bdd21f60060063f4448");
+    expect(PLAN_META.dataMain).toBe(BULLETIN_OPERATION.sourceCommit);
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
@@ -345,7 +355,6 @@ describe("public MLOps plan", () => {
     // anunciando «D9 → D8» meses después de entregar ambas épicas.
     expect(Object.keys(PLAN_META).sort()).toEqual([
       "dataMain",
-      "observation",
       "releaseId",
       "releaseStatus",
     ]);
@@ -510,8 +519,8 @@ describe("public MLOps plan", () => {
       expect(focus.deferred.map((item) => item.id)).toEqual(
         todas.filter((item) => item.status === "deferred").map((item) => item.id),
       );
-      expect(focus.observing.length).toBeGreaterThan(0);
-      expect(PLAN_META.observation).toEqual({ current: 0, target: 2 });
+      expect(focus.observing).toEqual([]);
+      expect(BULLETIN_OPERATION.superseded.creditedAutomaticCycles).toBe(0);
     });
 
     it("takes the update date from the feed, so a newer entry moves it on its own", () => {

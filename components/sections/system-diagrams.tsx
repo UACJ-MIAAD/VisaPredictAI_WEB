@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BULLETIN_OPERATION } from "@/lib/bulletin-operation";
 import type { Lang } from "@/lib/site-map";
 import { localePath } from "@/lib/site-map";
 import { COMPONENT_FLOWS, DATABASE_SOURCES, SYSTEM_FLOW, type SystemFlow } from "@/lib/system-diagrams";
@@ -16,7 +17,7 @@ const T = {
     legend: "Cómo leer las relaciones", columns: "Columnas", pk: "Clave primaria", relations: "Relaciones y cardinalidad", views: "Vistas de consulta", tableDetails: "Tablas y campos",
     note: "Las líneas continuas son claves foráneas declaradas en SQL. Las discontinuas unen los hechos a la ejecución ETL mediante comprobaciones del constructor. La línea de puntos relaciona la añada del HTML con el mes; no es una FK.",
     modelNote: "El esquema incluye la migración de procedencia. La explicación académica original y su dibujo anterior a esa migración se conservan en Modelo de datos.",
-    details: "Leer la explicación del modelo", plan: "Consultar el estado del plan", scope: "Arquitectura contrastada con el código publicado del corte reconciliado. Consulta el tablero para el avance y las observaciones pendientes.",
+    details: "Leer la explicación del modelo", plan: "Consultar el estado del plan", scope: "Arquitectura contrastada con el código publicado del corte reconciliado. Consulta el tablero para el cierre de plataforma y los compromisos académicos separados.",
     invariants: "Contratos que importan", invariant1: "FAD y DFF son tablas distintas. DV se registra por región y mes, sin esa división.",
     invariant2: "Sólo F define una fecha o un rango numérico. C, U y UNK conservan el estado administrativo.",
     invariant3: "parent_code es descriptivo, no una FK recursiva. Los alias guardan el intervalo observado, no una historia SCD-2.",
@@ -31,7 +32,7 @@ const T = {
     legend: "Reading the relationships", columns: "Columns", pk: "Primary key", relations: "Relationships and cardinality", views: "Query views", tableDetails: "Tables and fields",
     note: "Solid lines are foreign keys declared in SQL. Dashed lines link facts to the ETL run through builder checks. The dotted line joins the HTML vintage to the month; it is not a foreign key.",
     modelNote: "The schema includes the provenance migration. The original academic explanation and its earlier diagram remain in Data model.",
-    details: "Read the model explanation", plan: "View plan status", scope: "Architecture checked against the published code of the reconciled release. See the board for progress and outstanding observations.",
+    details: "Read the model explanation", plan: "View plan status", scope: "Architecture checked against the published code of the reconciled release. See the board for platform closeout and separate academic commitments.",
     invariants: "Contracts that matter", invariant1: "FAD and DFF are separate tables. DV is recorded by region and month, without that split.",
     invariant2: "Only F defines a numeric date or rank. C, U and UNK retain the administrative status.",
     invariant3: "parent_code is descriptive, not a recursive FK. Aliases hold the observed envelope, not an SCD-2 history.",
@@ -81,7 +82,7 @@ function FlowDiagram({ flow, lang }: { flow: SystemFlow; lang: Lang }) {
           : b.y - a.y > 142 ? `M ${sx} ${sy} V ${sy + 22} H 990 V ${ey - 22} H ${ex} V ${ey}`
           : `M ${sx} ${sy} V ${sy + 22} H ${ex} V ${ey}`;
         return <g key={`${edge.from}-${edge.to}`}><path d={path} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" markerEnd={`url(#${marker})`} />
-          {edge.label && <text x={(sx + ex) / 2} y={sy + 17} textAnchor="middle" className="system-edge-label">{edge.label[lang]}</text>}
+          {edge.label && <text x={(sx + ex) / 2} y={sameRow ? a.y + 116 : sy + 17} textAnchor="middle" className="system-edge-label">{edge.label[lang]}</text>}
         </g>;
       })}
       {flow.nodes.map((n, i) => {
@@ -104,6 +105,21 @@ function FlowDiagram({ flow, lang }: { flow: SystemFlow; lang: Lang }) {
   </figure>;
 }
 
+function BulletinOperationGuide({ lang }: { lang: Lang }) {
+  const es = lang === "es";
+  return <section id="operacion-asistida" className="system-operation">
+    <h3>{es ? "Del PDF al portal, con revisión humana" : "From PDF to portal, with human review"}</h3>
+    <p>{es ? "Deja el PDF oficial en la carpeta indicada y sustituye YYYY-MM por su mes. El primer comando sólo prepara: no publica ni sobrescribe la fuente archivada." : "Place the official PDF in the indicated folder and replace YYYY-MM with its month. The first command only prepares: it neither publishes nor overwrites the archived source."}</p>
+    <p><strong>{es ? "Carpeta de entrada" : "Input folder"}:</strong> <code>{BULLETIN_OPERATION.inbox}</code></p>
+    <p>{BULLETIN_OPERATION.prerequisite[lang]}</p>
+    <pre><code>{BULLETIN_OPERATION.prepareCommand}</code></pre>
+    <ol>{BULLETIN_OPERATION.steps.map((step, i) => <li key={i}><h4>{step.title[lang]}</h4><p>{step.detail[lang]}</p></li>)}</ol>
+    <p>{es ? "Después de revisar el candidato, sustituye ruta/receipt.json por el recibo que imprimió Make. La opción de publicación activa el circuito remoto gobernado. Conserva la evidencia y comprueba el resultado; si una puerta falla, no se anuncia un corte nuevo." : "After reviewing the candidate, replace ruta/receipt.json with the receipt printed by Make. The publish option enables the governed remote path. Retain evidence and verify the result; if a gate fails, no new release is announced."}</p>
+    <pre><code>{BULLETIN_OPERATION.publishCommand}</code></pre>
+    <p className="system-boundary">{BULLETIN_OPERATION.acceptance[lang]}</p>
+  </section>;
+}
+
 export function SystemArchitecture({ lang, className }: { lang: Lang; className?: string }) {
   const t = T[lang];
   return <section id="sistema" className={`${className ?? "section"} system-atlas`}>
@@ -117,6 +133,7 @@ export function SystemArchitecture({ lang, className }: { lang: Lang; className?
       </nav>
       <FlowDiagram flow={SYSTEM_FLOW} lang={lang} />
       <Sources items={SYSTEM_FLOW.sources} lang={lang} />
+      <BulletinOperationGuide lang={lang} />
       <h3 className="system-components-heading">{t.components}</h3>
       <div className="system-components">
         {COMPONENT_FLOWS.map((f, i) => <details key={f.id} id={`componente-${f.id}`} className="system-component" open={i === 0}>

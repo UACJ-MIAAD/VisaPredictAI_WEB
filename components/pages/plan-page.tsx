@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BULLETIN_OPERATION } from "@/lib/bulletin-operation";
 import {
   ArrowRight,
   Check,
@@ -111,6 +112,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
   const updateDays = groupUpdatesByDay();
   const es = lang === "es";
   const locale = es ? "es-MX" : "en-US";
+  const platformClosed = stats.completed === stats.total;
 
   return (
     <>
@@ -123,8 +125,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "El plan, sin humo" : "The plan, without hand-waving"}
             lead={
               es
-                ? "Un tablero vivo del plan MLOps v2. El porcentaje pondera las historias de usuario; una acreditación local todavía no equivale a integrar resultados en producción."
-                : "A living dashboard for the MLOps v2 plan. Progress weights user stories; local accreditation does not yet mean results are integrated into production."
+                ? "El porcentaje corresponde a las historias de la plataforma MLOps. Su cierre requiere evidencia publicada; no acredita por sí solo aval del asesor, entrega al curso ni presentación."
+                : "Progress covers the MLOps platform stories. Closeout requires published evidence; it does not itself establish advisor approval, course submission or presentation."
             }
           />
 
@@ -145,12 +147,14 @@ export function PlanPage({ lang }: { lang: Lang }) {
                 <small>{es ? "avance" : "progress"}</small>
               </div>
               <div>
-                <p className={styles.metricLabel}>{es ? "Plan activo" : "Active plan"}</p>
+                <p className={styles.metricLabel}>{platformClosed ? es ? "Plataforma entregada" : "Platform delivered" : es ? "Plan activo" : "Active plan"}</p>
                 <p className={styles.metricMain}>
                   {stats.advanced} <span>/ {stats.total} US</span>
                 </p>
                 <p className={styles.metricNote}>
-                  {es
+                  {platformClosed
+                    ? es ? `${stats.completed} historias cerradas · operación asistida` : `${stats.completed} stories closed · assisted operation`
+                    : es
                     ? `${stats.completed} terminadas · ${stats.observing} en observación`
                     : `${stats.completed} done · ${stats.observing} under observation`}
                 </p>
@@ -161,7 +165,7 @@ export function PlanPage({ lang }: { lang: Lang }) {
               <article>
                 <span>{es ? "Fase MLOps" : "MLOps phase"}</span>
                 <strong>
-                  {focus.epic.id} · {copy(focus.epic.title, lang)}
+                  {platformClosed ? es ? "Operación y mantenimiento" : "Operation and maintenance" : `${focus.epic.id} · ${copy(focus.epic.title, lang)}`}
                 </strong>
                 <small>
                   {focus.observing.length > 0
@@ -169,17 +173,19 @@ export function PlanPage({ lang }: { lang: Lang }) {
                         es ? "observación" : "observation"
                       }`
                     : es
-                      ? "sin historias en observación"
-                      : "no stories under observation"}
+                      ? "Contrato operativo verificado"
+                      : "Verified operation contract"}
                 </small>
               </article>
               <article>
-                <span>{es ? "Siguiente historia" : "Next story"}</span>
-                <strong>{focus.next ? focus.next.id : focus.observing.length ? es ? "Observación" : "Observation" : es ? "Plan cerrado" : "Plan complete"}</strong>
+                <span>{platformClosed ? es ? "Próxima operación" : "Next operation" : es ? "Siguiente historia" : "Next story"}</span>
+                <strong>{focus.next ? focus.next.id : platformClosed ? es ? "Próximo boletín" : "Next bulletin" : focus.observing.length ? es ? "Observación" : "Observation" : es ? "Plan cerrado" : "Plan complete"}</strong>
                 <small>
                   {focus.next
                     ? copy(focus.next.title, lang)
-                    : es
+                    : platformClosed
+                      ? es ? "PDF oficial → Make → verificación" : "Official PDF → Make → verification"
+                      : es
                       ? "ninguna historia por empezar"
                       : "no stories left to start"}
                 </small>
@@ -221,8 +227,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "De plataforma a evidencia" : "From platform to evidence"}
             lead={
               es
-                ? "G7 y el mantenimiento C1/C2 están integrados y verificados en producción. La tesis incorpora los tres avances. La prioridad de entrega es el documento del 6 de noviembre con aval del asesor; en operación, incorporar el boletín de octubre y cerrar las verificaciones pendientes. R9 sigue activo en local."
-                : "G7 and C1/C2 maintenance are integrated and verified in production. The thesis includes all three progress reports. Delivery priority is the 6 November document with advisor approval; operations must ingest the October bulletin and complete outstanding checks. R9 remains active locally."
+                ? "G7, el mantenimiento y el corte de noviembre están publicados y verificados. La plataforma pasa a operación asistida desde PDF y evidencia por corrida. La prioridad académica sigue siendo el documento del 6 de noviembre con aval del asesor; compilar o preparar archivos no acredita su entrega. R9 conserva su alcance propio y sigue activo."
+                : "G7, maintenance and the November release are published and verified. The platform moves to assisted PDF operation with per-run evidence. Academic priority remains the 6 November document with advisor approval; compiling or preparing files does not establish submission. R9 retains its own scope and remains active."
             }
           />
 
@@ -260,10 +266,6 @@ export function PlanPage({ lang }: { lang: Lang }) {
                 (es
                   ? ` ${list(focus.observing, "y")} ${focus.observing.length > 1 ? "siguen" : "sigue"} en observación.`
                   : ` ${list(focus.observing, "and")} ${focus.observing.length > 1 ? "remain" : "remains"} under observation.`)}
-              {focus.observing.some((item) => item.id === "D7") &&
-                (es
-                  ? ` D7 acredita ${PLAN_META.observation.current}/${PLAN_META.observation.target} ciclos mensuales.`
-                  : ` D7 has ${PLAN_META.observation.current}/${PLAN_META.observation.target} accredited monthly cycles.`)}
               {focus.deferred.length > 0 &&
                 (es
                   ? ` ${list(focus.deferred, "y")} ${focus.deferred.length > 1 ? "quedan diferidas" : "queda diferida"}.`
@@ -279,8 +281,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             eyebrow={es ? "Prioridades de cierre" : "Closeout priorities"}
             title={es ? "Entrega académica y próximo boletín" : "Academic delivery and the next bulletin"}
             lead={es
-              ? "Estas prioridades organizan lo que falta. Conservan el alcance y la ponderación de las historias; preparar un envío o un corte no acredita su publicación."
-              : "These priorities organize the remaining work. Story scope and weighting stay unchanged; preparing a submission or release does not certify that it was published."}
+              ? "Las mismas historias y pesos se conservan. El autor adoptó la ingesta asistida desde PDF y la revisión por corrida en lugar de esperar un adaptador web y dos meses automáticos. Los compromisos académicos se acreditan por separado."
+              : "The same stories and weights are retained. The owner adopted assisted PDF intake and per-run review in place of a web adapter and two automatic months. Academic commitments require separate evidence."}
           />
           <ol className={styles.timeline}>
             {PLAN_CLOSEOUT.map((item) => (
@@ -290,10 +292,11 @@ export function PlanPage({ lang }: { lang: Lang }) {
               </li>
             ))}
           </ol>
-          <a className={styles.architectureLink} href="https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/2027/visa-bulletin-for-october-2026.html">
-            {es ? "Fuente oficial: Visa Bulletin de octubre de 2026" : "Official source: October 2026 Visa Bulletin"}
+          <Link className={styles.architectureLink} href={`${localePath("/ingenieria", lang)}/#operacion-asistida`}>
+            {es ? "Cómo actualizar: PDF → Make → corte verificado" : "How to update: PDF → Make → verified release"}
             <ArrowRight aria-hidden size={16} />
-          </a>
+          </Link>
+          <p>{BULLETIN_OPERATION.acceptance[lang]}</p>
         </div>
       </section>
 
@@ -414,8 +417,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             title={es ? "Últimos avances" : "Latest progress"}
             lead={
               es
-                ? "Cada día tiene su propia sección para mostrar qué avanzó. La bitácora cambia únicamente cuando existe evidencia verificable: commit, CI, release o recibo."
-                : "Each day has its own section showing what moved forward. The log changes only when verifiable evidence exists: a commit, CI, release or receipt."
+                ? "Cada entrada conserva el estado que tenía en su fecha. Los estados históricos no son pendientes vigentes; el cierre actual aparece arriba. La evidencia es un commit, CI, release o recibo."
+                : "Each entry retains its state at that date. Historical states are not current pending work; current closeout appears above. Evidence is a commit, CI, release or receipt."
             }
           />
 

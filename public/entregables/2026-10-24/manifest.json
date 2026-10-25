@@ -1,0 +1,58 @@
+{
+  "schema": "visapredict.academic-review/1",
+  "date": "2026-10-24",
+  "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
+  "source_commit": "d7ebe518d541d348648a732731bb2b939d43da48",
+  "status": "prepared-not-submitted",
+  "artifacts": [
+    {
+      "id": "A11",
+      "path": "/entregables/2026-10-24/A11.pdf",
+      "sha256": "c4e447a364f1e57494fcd539c1f62fb5383bc853e41d5f6b4004341d0ee4ba01",
+      "bytes": 212303,
+      "pages": 12
+    },
+    {
+      "id": "A12",
+      "path": "/entregables/2026-10-24/A12.pdf",
+      "sha256": "51ebc5b788dbe74113af224cf4c31718edf29301026eeba93dbf29d2d2233c27",
+      "bytes": 235620,
+      "pages": 14
+    },
+    {
+      "id": "A13",
+      "path": "/entregables/2026-10-24/A13.pdf",
+      "sha256": "38ebe752b188b8a0c52406f644190612046f15162a9d299382aee8d663a332c6",
+      "bytes": 242684,
+      "pages": 15
+    },
+    {
+      "id": "A14",
+      "path": "/entregables/2026-10-24/A14.pdf",
+      "sha256": "4719e8e8831fbed0672e4e59901b487a6977588dda6cf4d3f5038904bfdca848",
+      "bytes": 263716,
+      "pages": 17
+    },
+    {
+      "id": "B1",
+      "path": "/entregables/2026-10-24/B1.pdf",
+      "sha256": "73c50731c7ee6681046aec9dce289bedfe8213d16b356f08d2592bb7dbe08986",
+      "bytes": 288045,
+      "pages": 19
+    },
+    {
+      "id": "B2",
+      "path": "/entregables/2026-10-24/B2.pdf",
+      "sha256": "465678f6e6d814abbb67b3a19cbd6616f3400b2d10502cfa5e31551b812e50c0",
+      "bytes": 305459,
+      "pages": 22
+    },
+    {
+      "id": "B3",
+      "path": "/entregables/2026-10-24/B3.pdf",
+      "sha256": "a2d021867d676d2226705828eec16b088b66154552d45b2119e5efac519fcfbb",
+      "bytes": 772721,
+      "pages": 22
+    }
+  ]
+}

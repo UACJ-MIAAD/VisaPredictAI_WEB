@@ -5,6 +5,7 @@ import * as React from "react";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { sourceCalendar, type SourceView } from "@/lib/source-status";
+import { localePath } from "@/lib/site-map";
 export { loadSourceState } from "@/lib/source-status";
 
 // Frozen record included in the verified cut; never a live source-health check.
@@ -58,6 +59,7 @@ export function SourceBanner({ state }: { state: Vista }) {
       {recorded?.reason ? (
         <p className="mt-2 break-words text-xs text-muted-foreground">{recorded.reason}</p>
       ) : null}
+      {recorded ? <a className="mt-3 inline-block text-sm underline underline-offset-4" href={`${localePath("/ingenieria", lang)}/#operacion-asistida`}>{tr(lang, "srcAssistedGuide")}</a> : null}
     </div>
   );
 }
