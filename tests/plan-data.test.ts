@@ -176,8 +176,8 @@ describe("public MLOps plan", () => {
     expect(focus.deferred).toEqual([]);
     expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
     expect(findStory(PLAN_EPICS, "A6").status).toBe("done");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-24", status: "done" });
-    expect(focus.updatedAt).toBe("2026-10-24");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-25", status: "done" });
+    expect(focus.updatedAt).toBe("2026-10-25");
     expect(planStats().percent).toBe(100);
     expect(PLAN_META.releaseId).toBe("2026-11-5ed564aa4d00");
   });
@@ -287,7 +287,7 @@ describe("public MLOps plan", () => {
     expect(PLAN_DELIVERABLES.map((item) => item.id)).toEqual(["A11", "A12", "A13", "A14", "B1", "B2", "B3", "C1"]);
     expect(PLAN_DELIVERABLES.filter((item) => item.status === "prepared")).toHaveLength(7);
     for (const item of PLAN_DELIVERABLES.filter((item) => item.status === "prepared")) {
-      expect(item.pdf).toBe(`/entregables/2026-10-24/${item.id}.pdf`);
+      expect(item.pdf).toBe(`/entregables/2026-10-25/${item.id}.pdf`);
     }
     expect(PLAN_DELIVERABLES.find((item) => item.id === "B3")?.scope).toEqual({
       es: "22 diapositivas · PDF, PowerPoint y guion",
