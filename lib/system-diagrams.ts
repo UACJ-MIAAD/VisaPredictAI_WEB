@@ -1,3 +1,4 @@
+import { BULLETIN_OPERATION } from "@/lib/bulletin-operation";
 import type { Lang } from "@/lib/site-map";
 
 export type DiagramCopy = Record<Lang, string>;
@@ -14,7 +15,7 @@ export type SystemFlow = {
   sources: { label: string; href: string }[];
 };
 
-const DATA = "https://github.com/UACJ-MIAAD/VisaPredictAI/blob/83f045d163cbf92ff05f5fb18993de1fffcbf49f/";
+const DATA = `https://github.com/UACJ-MIAAD/VisaPredictAI/blob/${BULLETIN_OPERATION.sourceCommit}/`;
 const WEB = "https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/blob/6790aa0ee96ae2c8546af7cd3fe0c0b0de2c401f/";
 // The DDL catalog fixture was built at this published commit. Its source files
 // are byte-identical in the October release; retain the catalog's exact origin.
@@ -26,18 +27,25 @@ const flow = (id: string, title: DiagramCopy, description: DiagramCopy, nodes: F
   ({ id, title, description, nodes, edges: edges ?? chain(nodes), boundary, sources: paths.map((p) => ({ label: p, href: (web ? WEB : DATA) + p })) });
 
 export const COMPONENT_FLOWS: SystemFlow[] = [
-  flow("ingesta", copy("Ingesta y archivo de la fuente", "Source ingestion and archive"),
-    copy("Del boletín oficial a una instantánea verificable que puede procesarse sin volver a consultar la red.", "From the official bulletin to a verifiable snapshot that can be processed without another network request."), [
-      node("fuente", "Visa Bulletin", "Visa Bulletin", "Fuente oficial del Departamento de Estado", "Official Department of State source"),
-      node("acceso", "Acceso a la fuente", "Source access", "Fetcher con retry; bloqueo WAF explícito", "Fetcher with retry; explicit WAF blocking"),
-      node("manual", "Vía manual validada", "Validated manual path", "Si hay bloqueo, descarga e ingesta supervisadas", "If blocked, supervised download and ingestion"),
-      node("archivo", "HTML congelado", "Frozen HTML", "Archivo S3 e instantáneas para el procesamiento", "S3 archive and snapshots for processing"),
-    ], copy("La vía manual es una alternativa al acceso automático. Un bloqueo se comunica; no se presenta como un boletín nuevo.", "The manual path is an alternative to automated access. Blocking is reported; it is not presented as a new bulletin."),
-    ["docs/MLOPS_ARCHITECTURE.md", "vp_data/fetchers.py"], false, [
-      { from: "fuente", to: "acceso" },
-      { from: "acceso", to: "archivo", label: copy("acceso permitido", "access allowed") },
-      { from: "acceso", to: "manual", label: copy("WAF", "WAF") },
-      { from: "manual", to: "archivo" },
+  flow("ingesta", copy("Del PDF al almacén y al corte", "From PDF to warehouse and release"),
+    copy("La persona aporta la fuente oficial; Make automatiza la extracción y la validación. Preparación y publicación tienen límites distintos.", "A person supplies the official source; Make automates extraction and validation. Preparation and publication have separate boundaries."), [
+      node("pdf", "PDF oficial", "Official PDF", "Descarga humana y comprobación del mes", "Human download and month check"),
+      node("inbox", "Carpeta de entrada", "Input folder", "data/inbox · un PDF identificado", "data/inbox · one identified PDF"),
+      node("texto", "Make y texto", "Make and text", "Texto posicionado, original conservado", "Positioned text, original retained"),
+      node("tablas", "Cuatro matrices", "Four tables", "País, categoría, FAD/DFF y estados", "Country, category, FAD/DFF and statuses"),
+      node("validar", "Validación cerrada", "Closed validation", "Mes, duplicados, omisiones y procedencia", "Month, duplicates, omissions and provenance"),
+      node("candidato", "Panel y DuckDB", "Panel and DuckDB", "Candidato aislado; nada vivo se sustituye", "Isolated candidate; no live replacement"),
+      node("recibo", "Recibo y evidencia", "Receipt and evidence", "Original, texto, hashes y resultados", "Original, text, hashes and results"),
+      node("publicar", "Publicación explícita", "Explicit publication", "PUBLISH=1 · circuito mensual y entrega", "PUBLISH=1 · monthly path and delivery"),
+      node("rechazo", "Rechazo trazable", "Traceable rejection", "Sin publicación; diagnóstico conservado", "No publication; diagnosis retained"),
+    ], copy("La preparación local no sube S3 ni dispara el cron. Publicar requiere la opción explícita, sus gates y verificación del corte servido. Un PDF ambiguo no se completa a ojo; el bloqueo de la fuente no se declara resuelto.", "Local preparation neither uploads to S3 nor dispatches the cron. Publishing requires the explicit option, its gates and verification of the served release. Ambiguous PDFs are not completed by guesswork; source blocking is not declared resolved."),
+    ["Makefile", "docs/ASSISTED_BULLETIN.md", "pipeline/ingest_pdf.py", "pipeline/bulletin.py"], false, [
+      { from: "pdf", to: "inbox" }, { from: "inbox", to: "texto" },
+      { from: "texto", to: "tablas" }, { from: "tablas", to: "validar" },
+      { from: "validar", to: "candidato", label: copy("válido", "valid") },
+      { from: "validar", to: "rechazo", label: copy("inválido", "invalid") },
+      { from: "candidato", to: "recibo" },
+      { from: "recibo", to: "publicar", label: copy("revisión humana", "human review") },
     ]),
   flow("panel", copy("Panel y almacén analítico", "Panel and analytical warehouse"),
     copy("El panel normalizado alimenta tanto el almacén SQL como las exportaciones; la base se reconstruye, no se consulta desde el navegador.", "The normalized panel feeds both the SQL warehouse and exports; the database is rebuilt, not queried by the browser."), [
@@ -51,7 +59,7 @@ export const COMPONENT_FLOWS: SystemFlow[] = [
   flow("modelado", copy("Características y pronóstico", "Features and forecasting"),
     copy("Las series históricas se transforman y se evalúan respetando la separación temporal antes de emitir pronósticos.", "Historical series are transformed and evaluated with temporal separation before forecasts are emitted."), [
       node("series", "Series del almacén", "Warehouse series", "Categoría × área × tabla desde DuckDB", "Category × area × table from DuckDB"),
-      node("features", "Transformaciones causales", "Causal transformations", "Características calculadas en Python", "Features computed in Python"),
+      node("features", "Transformaciones causales", "Causal transformations", "Rezagos y transformaciones causales", "Lags and causal transformations"),
       node("ajuste", "Entrenamiento", "Training", "Modelos y recetas del catálogo", "Catalog models and recipes"),
       node("evaluacion", "Evaluación temporal", "Temporal evaluation", "Selección y reservado separados", "Separate selection and hold-out data"),
       node("forecast", "Pronóstico del campeón", "Champion forecast", "Puntos, intervalos y metadatos", "Points, intervals and metadata"),
@@ -98,7 +106,7 @@ export const COMPONENT_FLOWS: SystemFlow[] = [
       node("facts", "Hechos canónicos", "Canonical facts", "key_facts y exportaciones derivadas", "key_facts and derived exports"),
       node("latex", "Tesis y paper", "Thesis and paper", "Macros, figuras y prosa contrastada", "Macros, figures and checked prose"),
       node("ci", "CI documental", "Document CI", "Compilación y puertas del documento", "Compilation and document gates"),
-      node("lectura", "Publicación documental", "Document publication", "GitHub y Pull from GitHub en Overleaf", "GitHub and Pull from GitHub in Overleaf"),
+      node("lectura", "Publicación documental", "Document publication", "GitHub y compilación local verificada", "GitHub and verified local compilation"),
     ], copy("El repositorio documental es la autoridad académica; el portal consume sus exportaciones. El contenido nuevo requiere reconciliación, no copiar cifras a mano.", "The document repository is the academic authority; the portal consumes its exports. New content requires reconciliation, not manually copied figures."),
     ["docs/ARCHITECTURE.md", "dvc.yaml"]),
   flow("operacion", copy("Operación mensual y observabilidad", "Monthly operation and observability"),
@@ -118,7 +126,7 @@ export const SYSTEM_FLOW: SystemFlow = {
   title: copy("Del boletín a la evidencia que ves", "From the bulletin to the evidence you see"),
   description: copy("Sigue las flechas y abre cada componente para ver su circuito. Los enlaces de código apuntan a versiones publicadas, no a trabajo local pendiente.", "Follow the arrows and open each component to inspect its flow. Code links point to published versions, not pending local work."),
   nodes: [
-    node("fuente", "Fuente y archivo", "Source and archive", "Visa Bulletin → HTML congelado", "Visa Bulletin → frozen HTML", "ingesta"),
+    node("fuente", "Fuente y archivo", "Source and archive", "PDF humano → Make → fuente validada", "Human PDF → Make → validated source", "ingesta"),
     node("panel", "Panel normalizado", "Normalized panel", "Extracción y limpieza trazables", "Traceable extraction and cleaning", "panel"),
     node("almacen", "Almacén analítico", "Analytical warehouse", "DuckDB, vistas y Parquet", "DuckDB, views and Parquet", "panel"),
     node("modelo", "Modelado", "Modeling", "Series y transformaciones causales", "Series and causal transformations", "modelado"),
@@ -128,7 +136,7 @@ export const SYSTEM_FLOW: SystemFlow = {
     node("portal", "Portal bilingüe", "Bilingual portal", "Build estático y exploración", "Static build and exploration", "web"),
     node("bot", "VisaBot", "VisaBot", "Recuperación y respuestas citadas", "Retrieval and cited answers", "asistente"),
     node("docs", "Tesis y paper", "Thesis and paper", "Documentos y figuras derivados", "Derived documents and figures", "documentos"),
-    node("operar", "Operación mensual", "Monthly operation", "Cron, tracking, deriva y avisos", "Cron, tracking, drift and notifications", "operacion"),
+    node("operar", "Operación mensual", "Monthly operation", "Operación asistida y evidencia por corrida", "Assisted operation and per-run evidence", "operacion"),
   ],
   edges: [
     { from: "fuente", to: "panel" }, { from: "panel", to: "almacen" },

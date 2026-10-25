@@ -93,3 +93,12 @@ details[open] > summary > .system-toggle { transform: rotate(45deg); }
 @media (max-width: 480px) {
   #modelo .metrics-inner { grid-template-columns: minmax(0, 1fr); }
 }
+
+.system-operation { border-block: 1px solid var(--color-rule); padding-block: 1.5rem; margin-block: 2rem; scroll-margin-top: 9rem; }
+.system-operation h3 { font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.25; }
+.system-operation > p { max-width: 80ch; color: var(--color-muted); line-height: 1.7; margin-block: 1rem; }
+.system-operation pre { padding-block: 1rem; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--color-ink); font-size: .9rem; }
+.system-operation ol { padding-left: 1.3rem; max-width: 80ch; }
+.system-operation li { padding-block: .75rem; line-height: 1.7; }
+.system-operation h4 { font-size: 1rem; margin-bottom: .3rem; }
+.system-operation li p { color: var(--color-muted); }
