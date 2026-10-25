@@ -178,7 +178,7 @@ describe("public MLOps plan", () => {
     expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-10-24", status: "done" });
     expect(focus.updatedAt).toBe("2026-10-24");
     expect(planStats().percent).toBe(99);
-    expect(PLAN_META.releaseId).toBe("2026-10-a880a917ede0");
+    expect(PLAN_META.releaseId).toBe("2026-11-5ed564aa4d00");
   });
 
   it("shows D7 as observation 0/2 and does not call it completed", () => {
@@ -289,10 +289,13 @@ describe("public MLOps plan", () => {
     expect(findStory(PLAN_EPICS, "G1").title.es).toBe("Compilación local");
     const academic = PLAN_CLOSEOUT.find((item) => item.id === "academic");
     expect(`${academic?.detail.es} ${academic?.detail.en}`).not.toMatch(/Overleaf/);
-    const november = PLAN_UPDATES.find((item) => item.title.es.startsWith("Noviembre ·"));
-    expect(november?.status).toBe("active");
-    expect(november?.detail.es).toContain("Producción conserva octubre");
-    expect(november?.detail.en).toContain("Production retains October");
+    const rehearsal = PLAN_UPDATES.find((item) => item.title.es.startsWith("Noviembre · Ensayo"));
+    expect(rehearsal?.status).toBe("done");
+    expect(rehearsal?.detail.es).toContain("El ensayo no se publica");
+    const published = PLAN_UPDATES.find((item) => item.title.es.startsWith("A2 · Noviembre publicado"));
+    expect(published?.status).toBe("done");
+    expect(published?.detail.es).toContain(PLAN_META.releaseId);
+    expect(published?.detail.en).toContain(PLAN_META.releaseId);
   });
 
   it("closes F2 only once its governed artifact reaches production", () => {
@@ -332,7 +335,7 @@ describe("public MLOps plan", () => {
   it("names the data commit the plan reports on, in full", () => {
     // `dataMain` es el corte de datos que el plan describe. `webMain` se retiró: pretendía nombrar
     // el commit que lo contiene, lo cual es circular, y ningún componente lo consumía.
-    expect(PLAN_META.dataMain).toBe("b2396c839d1e7d96419b4e8e44a24497fdb1ebbe");
+    expect(PLAN_META.dataMain).toBe("ea10f6069f9d5ee198475bdd21f60060063f4448");
     expect(PLAN_META.dataMain).toMatch(/^[0-9a-f]{40}$/);
     expect(PLAN_META).not.toHaveProperty("webMain");
   });
