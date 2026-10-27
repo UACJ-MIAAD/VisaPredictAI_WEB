@@ -16,6 +16,7 @@ import { type ForecastStore, type ForecastPoint, forecastFor } from "@/lib/data/
 import {
   chartTitle, monthDays, isoDays, pdYear, epochToYear, epochToDate,
   genericChartNote, forecastText, bulletinDiffText,
+  genericChartSummary, forecastSummary, bulletinDiffSummary,
   FAM, EMP, MONTHS_ES, MONTHS_EN,
 } from "./synthetic-builders.mjs";
 
@@ -241,6 +242,15 @@ export function chartContextNote(chart: ChartSpec, lang: Lang): string | null {
   if (chart.kind === "table") return null; // handled by monthTableText (richer)
   if (chart.kind === "bulletinDiff") return bulletinDiffText(chart, lang);
   return genericChartNote(chart.title, lang);
+}
+
+// User-facing twin of chartContextNote: the same facts without the LLM orders,
+// for the extractive fallback (engine.extractive shows this, never the note).
+export function chartUserNote(chart: ChartSpec, lang: Lang): string | null {
+  if (chart.kind === "forecast") return forecastSummary(chart, lang);
+  if (chart.kind === "table") return null; // monthTableText is facts-only already
+  if (chart.kind === "bulletinDiff") return bulletinDiffSummary(chart, lang);
+  return genericChartSummary("subtitle" in chart ? chart.subtitle : undefined, lang);
 }
 
 // status distribution (C/F/U/UNK) — overall or for a slice

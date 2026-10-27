@@ -255,7 +255,11 @@ export async function generate(
 }
 
 // extractive fallback: compose a grounded answer from the top chunks, cited.
-export function extractive(context: Source[], lang: Lang): string {
+export function extractive(sources: Source[], lang: Lang): string {
+  // A synthetic source's `text` is the LLM grounding prompt (it carries orders
+  // such as "describe it, do NOT refuse"); show its user-facing `display`
+  // instead, and drop it if it has none — never print the prompt raw.
+  const context = sources.filter((s) => !s.synthetic || s.display);
   if (!context.length)
     return lang === "en"
       ? "Hi — I'm **VisaBot**. Ask me about the U.S. Visa Bulletin, the multi-series data panel, or the models and CRISP-DM methodology."
@@ -267,7 +271,8 @@ export function extractive(context: Source[], lang: Lang): string {
   const body = context
     .slice(0, 3)
     .map((s) => {
-      const t = s.text.length > 480 ? s.text.slice(0, 480).replace(/\s+\S*$/, "") + "…" : s.text;
+      const raw = s.synthetic ? (s.display as string) : s.text;
+      const t = raw.length > 480 ? raw.slice(0, 480).replace(/\s+\S*$/, "") + "…" : raw;
       return `**${s.title}** [${s.n}]\n\n${t}`;
     })
     .join("\n\n");
