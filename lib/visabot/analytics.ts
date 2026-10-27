@@ -17,7 +17,7 @@ import {
   chartTitle, monthDays, isoDays, pdYear, epochToYear, epochToDate,
   genericChartNote, forecastText, bulletinDiffText,
   genericChartSummary, forecastSummary, bulletinDiffSummary,
-  FAM, EMP, MONTHS_ES, MONTHS_EN,
+  FAM, EMP, MONTHS_ES, MONTHS_EN, nextMonth,
 } from "./synthetic-builders.mjs";
 
 export type Lang = "es" | "en";
@@ -272,6 +272,20 @@ export function buildStatus(panel: Panel, lang: Lang, filter?: Partial<Pick<Visa
   };
 }
 
+// The compare charts plot months on a CATEGORICAL x axis (one slot per row). A
+// month where every series is Current/Unavailable has no priority date and so
+// no row; without it the axis silently skips that stretch (F2A FAD 2019-07 →
+// 2022-07: ticks jumped 2018 → 2024). Fill every month between the first and
+// last row with an empty row so the axis stays uniform in time.
+function monthSpine(byMonth: Map<string, Record<string, number | string | null>>) {
+  const months = [...byMonth.keys()].sort();
+  const out: Record<string, number | string | null>[] = [];
+  if (!months.length) return out;
+  const last = months[months.length - 1];
+  for (let m = months[0]; m <= last; m = nextMonth(m)) out.push(byMonth.get(m) ?? { month: m });
+  return out;
+}
+
 // multi-country priority-date race for a category/table (one line per country)
 export function buildMultiLine(panel: Panel, category: string, table: string, lang: Lang, forecasts?: ForecastStore | null): ChartSpec | null {
   const byMonth = new Map<string, Record<string, number | string | null>>();
@@ -312,7 +326,7 @@ export function buildMultiLine(panel: Panel, category: string, table: string, la
       hasForecast = true;
     }
   }
-  const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const data = monthSpine(byMonth);
   return {
     kind: "multiline",
     title: chartTitle("multiline", { category, table }, lang),
@@ -346,7 +360,7 @@ export function buildBasketCompare(
     }
   }
   if (series.length < 2) return null;
-  const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const data = monthSpine(byMonth);
   return {
     kind: "multiline",
     title: lang === "en" ? "Compare basket · priority dates" : "Cesta de comparación · fechas de prioridad",
