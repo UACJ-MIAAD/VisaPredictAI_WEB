@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
-import { loadForecasts, type Scorecard } from "@/lib/data/forecasts";
+import { loadForecasts, backfillScored, type Scorecard } from "@/lib/data/forecasts";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
 
 const T = {
@@ -128,6 +128,7 @@ export function Scorecard() {
       .replaceAll("{H}", String(SITE_STATS.horizonMonths));
 
   const o = sc.overall;
+  const nScored = backfillScored(sc);
   const cov80 = sc.band80_calibration?.cov80_heldout;
   const byH = Object.entries(sc.by_horizon)
     .map(([h, v]) => ({ h: Number(h), mae: Math.round(v.mae_days) }))
@@ -152,7 +153,8 @@ export function Scorecard() {
           value={`${Math.round(o.cov95 * 100)}%`}
           label={`${t.cov95} (${t.nominal}${cov80 != null ? ` · 80 %: ${Math.round(cov80 * 100)}%` : ""})`}
         />
-        <Stat value={sc.n_scored.toLocaleString(localeOf(lang))} label={t.nScored} />
+        {/* backfill n, the rows behind every figure above; never n_scored (backfill + live) */}
+        {nScored != null && <Stat value={nScored.toLocaleString(localeOf(lang))} label={t.nScored} />}
       </div>
 
       <div className="mt-6 border-l-2 border-[var(--color-accent)] pl-4">
