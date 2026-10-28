@@ -27,7 +27,7 @@ export { PILOT };
 export {
   bandOf, fitDrift, driftBands, buildForecast, forecastText,
   buildMonthTable, monthTableText, buildBulletinDiff, bulletinDiffText,
-  monthLabel, chartTitle, genericChartNote,
+  monthLabel, chartTitle, genericChartNote, priorityYearTick,
 } from "./synthetic-builders.mjs";
 export type { DriftFit, ChartTitleKind } from "./synthetic-builders.mjs";
 

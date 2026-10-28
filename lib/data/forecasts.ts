@@ -18,7 +18,7 @@ import { parseForecastStore, unavailableStore, FORECAST_PATHS } from "./forecast
 import type { ForecastStore, Scorecard } from "./forecasts-core.mjs";
 
 export type { ForecastPoint, SeriesMeta, HorizonScore, Scorecard, ForecastStore } from "./forecasts-core.mjs";
-export { forecastFor, forecastMetaFor } from "./forecasts-core.mjs";
+export { forecastFor, forecastMetaFor, backfillScored } from "./forecasts-core.mjs";
 
 let cache: Promise<ForecastStore> | null = null;
 

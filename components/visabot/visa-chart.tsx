@@ -8,7 +8,16 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ComposedChart, ReferenceLine,
   XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Legend,
 } from "recharts";
-import type { ChartSpec } from "@/lib/visabot/analytics";
+import { type ChartSpec, priorityYearTick } from "@/lib/visabot/analytics";
+
+// Y-axis props over the values a priority-year chart actually plots: month +
+// year ticks (wider axis) when the span is short, plain years otherwise.
+function yearAxis(values: (number | null | undefined)[], lang: "es" | "en") {
+  const v = values.filter((x): x is number => x != null && Number.isFinite(x));
+  if (!v.length) return { tickFormatter: (y: number) => String(Math.round(y)), width: 44 };
+  const [lo, hi] = [Math.min(...v), Math.max(...v)];
+  return { tickFormatter: priorityYearTick(lo, hi, lang), width: hi - lo < 3 ? 80 : 44 };
+}
 import { countryLabel } from "@/lib/data/visa-panel";
 import { useLang } from "@/components/lang-provider";
 import { tr, localeOf } from "@/lib/i18n";
@@ -263,7 +272,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             </defs>
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => m.slice(0, 4)} minTickGap={36} />
-            <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
+            <YAxis tick={AXIS} domain={["auto", "auto"]} {...yearAxis(spec.data.map((d) => d.year), lang)} />
             <Tooltip content={<GlassPill lang={lang} />} />
             <Area type="monotone" dataKey="year" stroke="var(--color-accent)" strokeWidth={2.4} fill="url(#vbLineFill)" dot={false} connectNulls />
           </AreaChart>
@@ -296,7 +305,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
           <ComposedChart data={spec.data} margin={{ top: 6, right: 14, bottom: 0, left: -8 }}>
             <CartesianGrid stroke={GRID} vertical={false} />
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => String(m).slice(0, 7)} minTickGap={40} />
-            <YAxis tick={AXIS} domain={["auto", "auto"]} tickFormatter={(v: number) => String(Math.round(v))} width={44} />
+            <YAxis tick={AXIS} domain={["auto", "auto"]} {...yearAxis(spec.data.flatMap((d) => [d.hist, d.fc, ...(d.band95 ?? [])]), lang)} />
             <Tooltip content={<GlassPill lang={lang} />} />
             {/* prediction bands (outer 95 %, inner 80 %) */}
             <Area dataKey="band95" stroke="none" fill="var(--color-accent)" fillOpacity={0.1} isAnimationActive={false} connectNulls />
