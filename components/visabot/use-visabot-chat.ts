@@ -61,6 +61,7 @@ export function useVisabotChat({
   lang,
   surface,
   prepare,
+  mergeFollowUp,
 }: {
   lang: Lang;
   surface: Surface;
@@ -69,6 +70,10 @@ export function useVisabotChat({
    *  fallback only) and returns the structured descriptors the server rebuilds
    *  the grounding text from (US I1, #30). */
   prepare?: (rq: string, sources: Source[]) => { sources: Source[]; chart?: ChartPayload; synthetics?: SyntheticDescriptor[] };
+  /** console-only: joins a follow-up fragment to the previous question so the
+   *  entities the fragment names (country, table) replace the earlier ones.
+   *  Without it the two are simply concatenated. */
+  mergeFollowUp?: (prev: string, fragment: string) => string;
 }) {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState("");
@@ -190,7 +195,7 @@ export function useVisabotChat({
         /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) ||
         (wc <= 2 && !/\?|qu[eé]|cu[aá]|c[oó]mo|what|how|which|why|when/i.test(q));
       const prevUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-      const rq = isFollowUp && prevUser ? `${prevUser} ${q}` : q;
+      const rq = isFollowUp && prevUser ? (mergeFollowUp ? mergeFollowUp(prevUser, q) : `${prevUser} ${q}`) : q;
 
       let sources: Source[] = [];
       try {
@@ -309,7 +314,7 @@ export function useVisabotChat({
         }
       }
     },
-    [busy, lang, messages, surface, prepare, modelReady],
+    [busy, lang, messages, surface, prepare, mergeFollowUp, modelReady],
   );
 
   const stop = React.useCallback(() => {

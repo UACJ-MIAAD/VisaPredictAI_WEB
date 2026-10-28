@@ -39,7 +39,7 @@ import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import {
   detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
   buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
-  buildBulletinDiff, parseTwoMonths, bulletinDiffText, buildFollowUps,
+  buildBulletinDiff, parseTwoMonths, bulletinDiffText, buildFollowUps, mergeFollowUp,
   monthTableText, chartContextNote, chartUserNote, monthLabel, type Kpi, type ChartSpec,
 } from "@/lib/visabot/analytics";
 
@@ -217,7 +217,7 @@ export function AssistantConsole() {
     messages, setMessages, input, setInput, busy, send, stop, newChat, copy, copiedId,
     atBottom, setAtBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
     semantic, modelReady, dlProgress, constrained, enableSemantic, liveStatus,
-  } = useVisabotChat({ lang, surface: "console", prepare });
+  } = useVisabotChat({ lang, surface: "console", prepare, mergeFollowUp });
 
   // sending from anywhere in the console also closes the mobile drawer
   const sendQ = React.useCallback((t: string) => { setNavOpen(false); void send(t); }, [send]);

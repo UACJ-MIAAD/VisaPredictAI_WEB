@@ -52,6 +52,22 @@ const COUNTRY_ALIASES: [RegExp, string][] = [
 const normalizeCatsUp = (s: string) =>
   s.replace(/\b(EB|F)[ ._-]?(\d)(?:[ ._-]?([AB])(?![A-Z]))?/g, (_m, p, d, x) => p + d + (x || ""));
 
+// Follow-up merge (adversarial audit 28-oct-2026): "¿y para India?" after
+// "¿Cuándo avanza México F3?" was appended to the previous query, and
+// detectEntities takes the FIRST alias in list order, so México won and the
+// follow-up lost its country. A country or table named in the fragment now
+// replaces the previous query's one before the two are joined.
+const TABLE_WORDS = /\b(DFF|FAD)\b|dates for filing|final action/gi;
+export function mergeFollowUp(prev: string, fragment: string): string {
+  let base = prev;
+  if (COUNTRY_ALIASES.some(([re]) => re.test(fragment)) || /\bROW\b/.test(fragment)) {
+    for (const [re] of COUNTRY_ALIASES) base = base.replace(new RegExp(re.source, "gi"), " ");
+    base = base.replace(/\bROW\b/g, " ");
+  }
+  if (new RegExp(TABLE_WORDS.source, "i").test(fragment)) base = base.replace(TABLE_WORDS, " ");
+  return `${base} ${fragment}`.replace(/\s+/g, " ").trim();
+}
+
 export type Entities = { country: string | null; category: string | null; table: string | null; block: string | null };
 
 export function detectEntities(q: string, panel: Panel): Entities {
