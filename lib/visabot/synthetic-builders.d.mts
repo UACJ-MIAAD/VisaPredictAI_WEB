@@ -17,6 +17,7 @@ export declare const pdYear: (d: string) => number;
 export declare const nextMonth: (m: string) => string;
 export declare const epochToYear: (e: number) => number;
 export declare const epochToDate: (e: number) => string;
+export declare const yearToDate: (yr: number) => string;
 
 export type ChartTitleKind =
   | "line" | "compare" | "movement" | "status" | "multiline" | "heatmap" | "radar" | "forecast";
@@ -48,6 +49,7 @@ export declare function forecastSummary(spec: Extract<ChartSpec, { kind: "foreca
 export declare const MONTHS_ES: string[];
 export declare const MONTHS_EN: string[];
 export declare const monthLabel: (m: string, lang: Lang) => string;
+export declare function priorityYearTick(lo: number, hi: number, lang: Lang): (v: number) => string;
 
 export declare function buildMonthTable(panel: Panel, month: string, tableType: string, lang: Lang): ChartSpec | null;
 export declare function monthTableText(spec: Extract<ChartSpec, { kind: "table" }>, lang: Lang): string;

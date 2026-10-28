@@ -7,7 +7,7 @@ export type SeriesMeta = { models: string[]; mase: number; last_month: string };
 export type HorizonScore = { mae_days: number; mase: number; cov95: number };
 export type Scorecard = {
   n_scored: number;
-  overall: { mae_days: number; mase: number; cov80: number; cov95: number };
+  overall: { n?: number; mae_days: number; mase: number; cov80: number; cov95: number };
   by_horizon: Record<string, HorizonScore>;
   // present in the source JSON; optional here so older fixtures still type-check
   caveat?: string;
@@ -33,6 +33,7 @@ export declare function parseForecastStore(
   scorecardJson: Scorecard | null | undefined,
 ): ForecastStore;
 
+export declare function backfillScored(sc: Scorecard | null | undefined): number | null;
 export declare function forecastFor(
   store: ForecastStore | null, country: string, category: string, table: string,
 ): ForecastPoint[] | null;
