@@ -16,7 +16,8 @@ import { type ForecastStore, type ForecastPoint, forecastFor } from "@/lib/data/
 import {
   chartTitle, monthDays, isoDays, pdYear, epochToYear, epochToDate,
   genericChartNote, forecastText, bulletinDiffText,
-  FAM, EMP, MONTHS_ES, MONTHS_EN,
+  genericChartSummary, forecastSummary, bulletinDiffSummary,
+  FAM, EMP, MONTHS_ES, MONTHS_EN, nextMonth,
 } from "./synthetic-builders.mjs";
 
 export type Lang = "es" | "en";
@@ -243,6 +244,15 @@ export function chartContextNote(chart: ChartSpec, lang: Lang): string | null {
   return genericChartNote(chart.title, lang);
 }
 
+// User-facing twin of chartContextNote: the same facts without the LLM orders,
+// for the extractive fallback (engine.extractive shows this, never the note).
+export function chartUserNote(chart: ChartSpec, lang: Lang): string | null {
+  if (chart.kind === "forecast") return forecastSummary(chart, lang);
+  if (chart.kind === "table") return null; // monthTableText is facts-only already
+  if (chart.kind === "bulletinDiff") return bulletinDiffSummary(chart, lang);
+  return genericChartSummary("subtitle" in chart ? chart.subtitle : undefined, lang);
+}
+
 // status distribution (C/F/U/UNK) — overall or for a slice
 export function buildStatus(panel: Panel, lang: Lang, filter?: Partial<Pick<VisaPanelRow, "country" | "category" | "table">>): ChartSpec {
   const labelOf = (s: string) => (s === "F" ? (lang === "en" ? "Final (F)" : "Final (F)") : s === "C" ? "Current (C)" : s === "U" ? (lang === "en" ? "Unavailable (U)" : "No disp. (U)") : s);
@@ -260,6 +270,20 @@ export function buildStatus(panel: Panel, lang: Lang, filter?: Partial<Pick<Visa
     subtitle: lang === "en" ? "How observations split across regimes" : "Cómo se reparten las observaciones por régimen",
     data,
   };
+}
+
+// The compare charts plot months on a CATEGORICAL x axis (one slot per row). A
+// month where every series is Current/Unavailable has no priority date and so
+// no row; without it the axis silently skips that stretch (F2A FAD 2019-07 →
+// 2022-07: ticks jumped 2018 → 2024). Fill every month between the first and
+// last row with an empty row so the axis stays uniform in time.
+function monthSpine(byMonth: Map<string, Record<string, number | string | null>>) {
+  const months = [...byMonth.keys()].sort();
+  const out: Record<string, number | string | null>[] = [];
+  if (!months.length) return out;
+  const last = months[months.length - 1];
+  for (let m = months[0]; m <= last; m = nextMonth(m)) out.push(byMonth.get(m) ?? { month: m });
+  return out;
 }
 
 // multi-country priority-date race for a category/table (one line per country)
@@ -302,7 +326,7 @@ export function buildMultiLine(panel: Panel, category: string, table: string, la
       hasForecast = true;
     }
   }
-  const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const data = monthSpine(byMonth);
   return {
     kind: "multiline",
     title: chartTitle("multiline", { category, table }, lang),
@@ -336,7 +360,7 @@ export function buildBasketCompare(
     }
   }
   if (series.length < 2) return null;
-  const data = [...byMonth.values()].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const data = monthSpine(byMonth);
   return {
     kind: "multiline",
     title: lang === "en" ? "Compare basket · priority dates" : "Cesta de comparación · fechas de prioridad",

@@ -25,6 +25,9 @@ export type Source = {
   // context and sends a structured descriptor instead — the proxy rebuilds the
   // text server-side from hash-verified release data.
   synthetic?: boolean;
+  // User-facing summary of a synthetic source (same facts, no LLM orders) —
+  // what the extractive fallback prints instead of `text`.
+  display?: string;
 };
 
 // US I1 (#30): structured descriptor of a synthetic grounding source. The ONLY

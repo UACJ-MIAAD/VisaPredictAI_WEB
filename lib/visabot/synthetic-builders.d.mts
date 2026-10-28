@@ -28,6 +28,7 @@ export declare function chartTitle(
   lang: Lang,
 ): string;
 export declare function genericChartNote(title: string, lang: Lang): string;
+export declare function genericChartSummary(subtitle: string | undefined, lang: Lang): string;
 
 export declare const bandOf: (b: [number, number] | null | undefined) => [number, number];
 
@@ -42,6 +43,7 @@ export declare function buildForecast(
   horizon?: number, window?: number, forecasts?: ForecastStore | null, index?: PanelIndex,
 ): ChartSpec | null;
 export declare function forecastText(spec: Extract<ChartSpec, { kind: "forecast" }>, lang: Lang): string;
+export declare function forecastSummary(spec: Extract<ChartSpec, { kind: "forecast" }>, lang: Lang): string;
 
 export declare const MONTHS_ES: string[];
 export declare const MONTHS_EN: string[];
@@ -52,3 +54,4 @@ export declare function monthTableText(spec: Extract<ChartSpec, { kind: "table" 
 
 export declare function buildBulletinDiff(panel: Panel, monthA: string, monthB: string, tableType: string, lang: Lang): ChartSpec | null;
 export declare function bulletinDiffText(spec: Extract<ChartSpec, { kind: "bulletinDiff" }>, lang: Lang): string;
+export declare function bulletinDiffSummary(spec: Extract<ChartSpec, { kind: "bulletinDiff" }>, lang: Lang): string;

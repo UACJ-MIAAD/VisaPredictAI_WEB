@@ -40,7 +40,7 @@ import {
   detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
   buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
   buildBulletinDiff, parseTwoMonths, bulletinDiffText, buildFollowUps,
-  monthTableText, chartContextNote, monthLabel, type Kpi, type ChartSpec,
+  monthTableText, chartContextNote, chartUserNote, monthLabel, type Kpi, type ChartSpec,
 } from "@/lib/visabot/analytics";
 
 const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
@@ -193,18 +193,18 @@ export function AssistantConsole() {
     // looks "limited to recent years" — the table covers the full panel range.
     if (chart?.kind === "table") {
       const ml = monthLabel(chart.month, lang);
-      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang), synthetic: true },
+      sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang), display: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang), synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart?.kind === "bulletinDiff") {
       // ground the comparison as real panel data (full per-cell transitions)
-      sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: bulletinDiffText(chart, lang), synthetic: true },
+      sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: bulletinDiffText(chart, lang), display: chartUserNote(chart, lang) ?? undefined, synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart) {
       // Tell the LLM a chart is rendered alongside its answer so it interprets
       // it instead of replying "I can't show graphs" (esp. forecasts).
       const note = chartContextNote(chart, lang);
       if (note)
-        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: localePath("/asistente", lang), text: note, synthetic: true },
+        sources = [{ n: 1, title: chart.title, source: lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", url: localePath("/asistente", lang), text: note, display: chartUserNote(chart, lang) ?? undefined, synthetic: true },
           ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     }
     // Only send the descriptor when a synthetic source was actually attached
