@@ -37,7 +37,8 @@ import { loadPanel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import {
-  detectEntities, buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
+  detectEntities, detectCountries, seriesCompareFacts, seriesCompareText, seriesCompareSummary,
+  buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
   buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
   buildBulletinDiff, parseTwoMonths, bulletinDiffText, buildFollowUps,
   monthTableText, chartContextNote, chartUserNote, monthLabel, type Kpi, type ChartSpec,
@@ -72,7 +73,9 @@ const VisaChart = dynamic(() => import("./visa-chart"), {
 // grounding text from (US I1, #30). The descriptor carries identifiers/months
 // only — never prose, never figures; the proxy recomputes the text from
 // hash-verified release data with the SAME shared builders.
-type ChartAndDescriptor = { chart: ChartPayload; descriptor: SyntheticDescriptor };
+// `grounding` carries a table-shaped note built here with the same shared
+// builder the server uses (the server never takes this text, only the descriptor).
+type ChartAndDescriptor = { chart: ChartPayload; descriptor: SyntheticDescriptor; grounding?: { text: string; display: string } };
 
 function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartAndDescriptor | null {
   const e = detectEntities(q, panel);
@@ -80,6 +83,18 @@ function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: Fo
   const rid = SITE_STATS.releaseId;
   const wrap = (chart: ChartPayload | null, descriptor: SyntheticDescriptor): ChartAndDescriptor | null =>
     chart ? { chart, descriptor } : null;
+  // Two or more countries on one category ("compara México F2A con India F2A"):
+  // a race of just those countries, grounded with each one's real cutoffs and
+  // forecast. Checked first, so the forecast and single-series branches below
+  // can't take only the first country.
+  const named = detectCountries(q).filter((c) => panel.countries.includes(c));
+  if (named.length >= 2 && e.category) {
+    const facts = seriesCompareFacts(panel, named, e.category, t, forecasts);
+    const chart = facts && buildMultiLine(panel, e.category, t, lang, forecasts, facts.countries);
+    if (facts && chart)
+      return { chart, descriptor: { kind: "series_compare", countries: facts.countries, category: e.category, table: t, release_id: rid },
+        grounding: { text: seriesCompareText(facts, lang), display: seriesCompareSummary(facts, lang) } };
+  }
   // Forecast intent — the CORE purpose of the project. Catches the explicit words AND the
   // NATURAL way people ask for a prediction ("¿cuándo llega mi turno?", "en qué mes/año",
   // "cuánto falta", "when will I be current?"), incl. when the user states their priority
@@ -191,7 +206,10 @@ export function AssistantConsole() {
     const chart = res?.chart;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full panel range.
-    if (chart?.kind === "table") {
+    if (res?.grounding && chart) {
+      sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: res.grounding.text, display: res.grounding.display, synthetic: true },
+        ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
+    } else if (chart?.kind === "table") {
       const ml = monthLabel(chart.month, lang);
       sources = [{ n: 1, title: `Visa Bulletin ${ml} · ${chart.tableType}`, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang), display: monthTableText(chart as Extract<ChartSpec, { kind: "table" }>, lang), synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];

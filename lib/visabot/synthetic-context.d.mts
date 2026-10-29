@@ -26,6 +26,7 @@ export type ValidatedDescriptor =
   | { kind: "month_table"; month: string; table: string }
   | { kind: "bulletin_diff"; monthA: string; monthB: string; table: string }
   | { kind: "forecast_note"; country: string; category: string; table: string }
+  | { kind: "series_compare"; countries: string[]; category: string; table: string }
   | { kind: "chart_note"; chart: string; country?: string; category?: string; table?: string; block?: string };
 
 export declare function validateDescriptors(

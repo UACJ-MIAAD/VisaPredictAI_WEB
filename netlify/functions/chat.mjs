@@ -78,8 +78,10 @@ const MAX_CHUNK = 4000; // los chunks del índice miden ≤ ~1.1k; los sintétic
 // como contrato en tests (la nota de abstención I2 sigue pineada por skeleton).
 const VAL = "(?:C|U|—|[0-9]{1,2}[A-Z]{3}[0-9]{2,4}|\\d{4}-\\d{2}-\\d{2}|\\d{1,2} de [a-záéíóú]{3,12} de \\d{4}|[A-Za-z]{3,10} \\d{1,2}, \\d{4}|\\d{1,2} [a-záéíóú]{3,10}\\.? \\d{4})";
 const SEG = `[^;\\n]{1,45} ${VAL}(?:→${VAL})?(?: \\([+−-]?\\d{1,5}d\\))?`;
-const ROW_RX = new RegExp(`^[A-Za-z0-9_·\\- ]{1,16}: ${SEG}(?:; ${SEG})*$`);
+const ROW_RX = new RegExp(`^[A-Za-z0-9_·áéíóúñ\\- ]{1,16}: ${SEG}(?:; ${SEG})*$`);
 const TABLE_HEADERS = [
+  /^A COUNTRY COMPARISON chart is shown to the user right now — describe and interpret it, do NOT refuse\. [A-Z0-9_]{1,16} · (?:FAD|DFF) \(columns: .{3,140}\)\. Every country listed has data in the system\. Official published cutoffs \(C = current, U = unavailable; the change in days is against 12 bulletins earlier\) and the production forecast \d{1,2} months ahead with its 95% band:$/,
+  /^Se está mostrando al usuario una COMPARACIÓN DE PAÍSES — descríbela e interprétala, NO te niegues\. [A-Z0-9_]{1,16} · (?:FAD|DFF) \(columnas: .{3,140}\)\. Todos los países listados tienen datos en el sistema\. Cortes oficiales publicados \(C = al corriente, U = no disponible; el cambio en días es frente a 12 boletines antes\) y el pronóstico de producción a \d{1,2} meses con su banda al 95 %:$/,
   /^U\.S\. Visa Bulletin .{3,40}, (?:FAD|DFF) \(columns: .{3,140}\)\. C = current, U = unavailable, otherwise the priority-date cutoff:$/,
   /^Visa Bulletin de EE\. UU\. .{3,40}, (?:FAD|DFF) \(columnas: .{3,140}\)\. C = al corriente, U = no disponible, en otro caso la fecha de corte:$/,
   /^A BULLETIN COMPARISON chart is shown to the user right now — describe and interpret it, do NOT refuse\. .{3,50} → .{3,50}, (?:FAD|DFF) \(columns: .{3,140}\)\. Summary: \d+ advanced, \d+ retrogressed, \d+ became Current, \d+ became Unavailable, \d+ unchanged\.(?: .{3,220}\.)? These are official published cutoffs, not predictions\. Per cell \(from→to; C=current, U=unavailable\):$/,
