@@ -112,6 +112,8 @@ describe("sonda léxica (BM25, sin embeddings): la pregunta inglesa llega al chu
     ["es", "¿El enrutador por cohorte mejora frente al naïve?"],
   ])("%s · %s", (lang, q) => {
     const got = top(q, lang);
-    expect(got.some((c: { id?: string }) => c.id === `cohort-facts-${lang}`)).toBe(true);
+    // retrieveRanked now returns number[] (pinGrounding), so `got` is typed by the
+    // local array, whose fact-sheet members carry no declared `id`.
+    expect(got.some((c) => (c as { id?: string }).id === `cohort-facts-${lang}`)).toBe(true);
   });
 });
