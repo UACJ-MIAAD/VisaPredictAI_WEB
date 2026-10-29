@@ -28,8 +28,9 @@ export {
   bandOf, fitDrift, driftBands, buildForecast, forecastText,
   buildMonthTable, monthTableText, buildBulletinDiff, bulletinDiffText,
   monthLabel, chartTitle, genericChartNote, priorityYearTick,
+  seriesCompareFacts, seriesCompareText, seriesCompareSummary,
 } from "./synthetic-builders.mjs";
-export type { DriftFit, ChartTitleKind } from "./synthetic-builders.mjs";
+export type { DriftFit, ChartTitleKind, SeriesCompareSpec } from "./synthetic-builders.mjs";
 
 // ── entity detection (visa domain vocabulary) ───────────────────────────────
 const COUNTRY_ALIASES: [RegExp, string][] = [
@@ -53,6 +54,17 @@ const normalizeCatsUp = (s: string) =>
   s.replace(/\b(EB|F)[ ._-]?(\d)(?:[ ._-]?([AB])(?![A-Z]))?/g, (_m, p, d, x) => p + d + (x || ""));
 
 export type Entities = { country: string | null; category: string | null; table: string | null; block: string | null };
+
+// Every country the query names, in the order it names them ("compara México
+// F2A con India F2A" → mexico, india). detectEntities keeps only the first.
+export function detectCountries(q: string): string[] {
+  const hits = COUNTRY_ALIASES.flatMap(([re, c]) => {
+    const m = new RegExp(re.source, re.flags.replace("g", "")).exec(q);
+    return m ? [{ c, at: m.index }] : [];
+  });
+  if (/\bROW\b/.test(q) && !hits.some((h) => h.c === "all_chargeability")) hits.push({ c: "all_chargeability", at: q.search(/\bROW\b/) });
+  return [...new Set(hits.sort((a, b) => a.at - b.at).map((h) => h.c))];
+}
 
 export function detectEntities(q: string, panel: Panel): Entities {
   const country =
@@ -287,13 +299,15 @@ function monthSpine(byMonth: Map<string, Record<string, number | string | null>>
 }
 
 // multi-country priority-date race for a category/table (one line per country)
-export function buildMultiLine(panel: Panel, category: string, table: string, lang: Lang, forecasts?: ForecastStore | null): ChartSpec | null {
+// `only` restricts the race to the countries the user named, in their order.
+export function buildMultiLine(panel: Panel, category: string, table: string, lang: Lang, forecasts?: ForecastStore | null, only?: string[]): ChartSpec | null {
+  const pool = only ?? PILOT;
   const byMonth = new Map<string, Record<string, number | string | null>>();
   const present = new Set<string>();
   // last F history row per country → anchors that country's forecast baseline.
   const lastF = new Map<string, { priorityDate: string; daysSinceBase: number; bulletinMonth: string }>();
   for (const r of panel.rows) {
-    if (r.category !== category || r.table !== table || !PILOT.includes(r.country) || !r.priorityDate) continue;
+    if (r.category !== category || r.table !== table || !pool.includes(r.country) || !r.priorityDate) continue;
     let row = byMonth.get(r.bulletinMonth);
     if (!row) { row = { month: r.bulletinMonth }; byMonth.set(r.bulletinMonth, row); }
     row[r.country] = pdYear(r.priorityDate);
@@ -301,7 +315,7 @@ export function buildMultiLine(panel: Panel, category: string, table: string, la
     present.add(r.country);
     if (r.status === "F" && r.daysSinceBase != null) lastF.set(r.country, { priorityDate: r.priorityDate, daysSinceBase: r.daysSinceBase, bulletinMonth: r.bulletinMonth });
   }
-  const series = PILOT.filter((c) => present.has(c)).map((c) => ({ key: c, label: countryLabel(c, lang) }));
+  const series = pool.filter((c) => present.has(c)).map((c) => ({ key: c, label: countryLabel(c, lang) }));
   if (series.length < 2) return null;
 
   // Forecast continuation per country: a dashed same-colour line beyond each
@@ -329,7 +343,7 @@ export function buildMultiLine(panel: Panel, category: string, table: string, la
   const data = monthSpine(byMonth);
   return {
     kind: "multiline",
-    title: chartTitle("multiline", { category, table }, lang),
+    title: only ? chartTitle("countries", { countries: only, category, table }, lang) : chartTitle("multiline", { category, table }, lang),
     subtitle: lang === "en"
       ? "Each line is a country's priority date over time (dashed = forecast) — who advances fastest"
       : "Cada línea es la fecha de prioridad de un país en el tiempo (punteado = pronóstico) — quién avanza más rápido",

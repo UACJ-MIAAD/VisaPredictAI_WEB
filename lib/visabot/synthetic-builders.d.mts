@@ -20,12 +20,12 @@ export declare const epochToDate: (e: number) => string;
 export declare const yearToDate: (yr: number) => string;
 
 export type ChartTitleKind =
-  | "line" | "compare" | "movement" | "status" | "multiline" | "heatmap" | "radar" | "forecast";
+  | "line" | "compare" | "movement" | "status" | "multiline" | "heatmap" | "radar" | "forecast" | "countries";
 // Returns null only for an unknown kind (unreachable with the typed union —
 // the server module passes untyped descriptor kinds and null-checks itself).
 export declare function chartTitle(
   kind: ChartTitleKind,
-  p: { country?: string | null; category?: string | null; table?: string | null; block?: string | null },
+  p: { country?: string | null; category?: string | null; table?: string | null; block?: string | null; countries?: string[] },
   lang: Lang,
 ): string;
 export declare function genericChartNote(title: string, lang: Lang): string;
@@ -57,3 +57,13 @@ export declare function monthTableText(spec: Extract<ChartSpec, { kind: "table" 
 export declare function buildBulletinDiff(panel: Panel, monthA: string, monthB: string, tableType: string, lang: Lang): ChartSpec | null;
 export declare function bulletinDiffText(spec: Extract<ChartSpec, { kind: "bulletinDiff" }>, lang: Lang): string;
 export declare function bulletinDiffSummary(spec: Extract<ChartSpec, { kind: "bulletinDiff" }>, lang: Lang): string;
+
+export type SeriesCompareSpec = {
+  countries: string[]; category: string; table: string; horizon: number;
+  cols: { country: string; bulletin: string; now: string; prev: string; delta: number | null; fc: string; lo95: string; hi95: string }[];
+};
+export declare function seriesCompareFacts(
+  panel: Panel, countries: string[], category: string, table: string, store: ForecastStore | null | undefined,
+): SeriesCompareSpec | null;
+export declare function seriesCompareText(spec: SeriesCompareSpec, lang: Lang): string;
+export declare function seriesCompareSummary(spec: SeriesCompareSpec, lang: Lang): string;
