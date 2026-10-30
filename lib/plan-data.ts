@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "84ac4740ddae8137ea9e1c3bdce5699ea0605cf3",
+  dataMain: "9bf7267ffe321d3996e708cb05f391dbe9430e06",
   releaseId: "2026-11-5ed564aa4d00",
   releaseStatus: "fresh",
 } as const;
