@@ -1,0 +1,71 @@
+{
+  "schema": "visapredict.academic-review/1",
+  "date": "2026-10-30",
+  "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
+  "source_commit": "50fde7456438e1f406ec6c6286ff1dfb2e10ba84",
+  "derivation": {
+    "kind": "local-cumulative-package",
+    "package": "Entregables_2026-10-30_cierre",
+    "cumulative_pdfs_tracked_in_source_repo": false,
+    "review_manifest_sha256": "24d09f81edc98e26792c0a663ca99e21094cff95b14b4e53cfc93ee3611882f3"
+  },
+  "status": "prepared-not-submitted",
+  "artifacts": [
+    {
+      "id": "A11",
+      "path": "/entregables/2026-10-30/A11.pdf",
+      "sha256": "a0a2495481a3581ce1ec3eedfd8148a775d29ebc7661bae5cb79a7c3b12dc18e",
+      "bytes": 4716723,
+      "pages": 90,
+      "source_package": "2026-10-30_cierre"
+    },
+    {
+      "id": "A12",
+      "path": "/entregables/2026-10-30/A12.pdf",
+      "sha256": "d722ae6b970f45de644d892bfdf190407b2c8a96c0238b2b1ca7324099d7231e",
+      "bytes": 4720200,
+      "pages": 91,
+      "source_package": "2026-10-30_cierre"
+    },
+    {
+      "id": "A13",
+      "path": "/entregables/2026-10-30/A13.pdf",
+      "sha256": "8f690fe602b2f2f0de51e6bb1dc64e219903ddded28d33b890c7a0bf6207cdd4",
+      "bytes": 4726873,
+      "pages": 94,
+      "source_package": "2026-10-30_cierre"
+    },
+    {
+      "id": "A14",
+      "path": "/entregables/2026-10-30/A14.pdf",
+      "sha256": "70dc6cb7237ecbfaeec157974b664b61940a6b2ecc4a2cfda5aef96392a31d88",
+      "bytes": 4801920,
+      "pages": 96,
+      "source_package": "2026-10-30_cierre"
+    },
+    {
+      "id": "B1",
+      "path": "/entregables/2026-10-30/B1.pdf",
+      "sha256": "75abe20c10ac419c73d8179ec48b5f9a658bedeb41fc22e6448c2545d4eca7e2",
+      "bytes": 4813800,
+      "pages": 99,
+      "source_package": "2026-10-30_cierre"
+    },
+    {
+      "id": "B2",
+      "path": "/entregables/2026-10-30/B2.pdf",
+      "sha256": "12ab1637492ff0e37f203c91279651534b5ddd7444e562af1838fedb86118b4e",
+      "bytes": 9523842,
+      "pages": 142,
+      "source_package": "2026-10-30_cierre"
+    },
+    {
+      "id": "B3",
+      "path": "/entregables/2026-10-30/B3.pdf",
+      "sha256": "736ef54c1aacb43526d834b31a3d9cc7a378777098b489e0f08dda2e0b2e860f",
+      "bytes": 3124687,
+      "pages": 23,
+      "source_package": "2026-10-30_cierre"
+    }
+  ]
+}
