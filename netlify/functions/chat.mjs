@@ -33,6 +33,7 @@ import { SITE_STATS } from "../../lib/content/site-stats.generated.mjs";
 import {
   validateDescriptors, loadSyntheticData, buildSyntheticContext, SYNTH_ERR,
 } from "../../lib/visabot/synthetic-context.mjs";
+import { fold, normalizeCodes } from "../../lib/visabot/retrieval-core.mjs";
 
 // Validated forecast horizon (months) interpolated into the system prompt.
 const HORIZON = SITE_STATS.horizonMonths;
@@ -286,7 +287,7 @@ export function truncationNote(lang) {
     : "\n\n_Respuesta incompleta: se agotó el tiempo de generación._";
 }
 
-export function systemPrompt(lang, context, surface) {
+export function systemPrompt(lang, context, surface, query = "") {
   const hasSources = context.length > 0;
   const sources = context
     .map((c) => `[${c.n}] (${c.source}${c.title ? " — " + c.title : ""})\n${c.text}`)
@@ -337,7 +338,45 @@ ${hasSources
 SOURCES:
 ${sources}`
   : `- No sources were retrieved for this query. If it's a greeting or brief chit-chat, introduce yourself as VisaBot in one or two sentences and suggest 2-3 topics you can answer (the U.S. Visa Bulletin, the multi-series data panel, the models and the CRISP-DM methodology). If it's a specific question, say you couldn't find specific information and ask the user to rephrase or be more specific. Do not cite sources (there are none).`}`;
-  return lang === "en" ? en : es;
+  const reminders = topicReminders(lang, query);
+  return (lang === "en" ? en : es) + (reminders ? `\n\n${reminders}` : "");
+}
+
+// Second production battery (29-oct-2026): with the facts already in context,
+// claude-haiku still broke four rules stated mid-prompt (MCS read against the
+// deployed champion, backfill called "not backtested", the naïve answer opened
+// with "No", F expanded as "Final"). Restating the rule in closed form AFTER the
+// sources, only when the question touches its topic, puts it next to the answer.
+const REMINDERS = [
+  {
+    query: /\b(mcs|confidence set|friedman\w*|nemenyi|campeon\w*|champion\w*|gana\w*|ganador\w*|win\w*|modelos?|models?|naive\w*|ingenuo|random walk)\b/,
+    es: "- MCS: escribe sus miembros con esta forma: «El MCS al 90 % de <tabla> es {<miembros>}: los modelos que no se distinguen estadísticamente del MEJOR modelo del hold-out». NUNCA escribas que esos modelos «no se distinguen del campeón» ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.",
+    en: "- MCS: state its members in this form: \"The 90% MCS for <table> is {<members>}: the models statistically indistinguishable from the BEST model in the hold-out\". NEVER write that those models are \"indistinguishable from the champion\" or \"equivalent to the champion\": the deployed champion comes from the champion–challenger gate and the MCS does not compare against it. As each table's deployed recipe, name only the one the sources call the deployed champion; a different recipe the retrospective gate deems \"eligible\" is not thereby the deployed one.",
+  },
+  {
+    query: /\b(naive\w*|ingenuo|random walk)\b/,
+    es: "- NAÏVE-1: si preguntan si el pronóstico ingenuo (naïve-1, random walk) le gana a los modelos, empieza con lo que dicen las fuentes del hold-out a un paso (h=1) y NO abras con «No» ni «No exactamente» cuando las fuentes digan que ningún modelo lo supera con significancia; después explica, sólo con las fuentes, por qué el demostrador sirve otra receta.",
+    en: "- NAÏVE-1: if asked whether the naïve forecast (naïve-1, random walk) beats the models, start with what the sources say about the one-step (h=1) hold-out and do NOT open with \"No\" or \"Not exactly\" when the sources say no model beats it with significance; then explain, from the sources only, why the demonstrator serves another recipe.",
+  },
+  {
+    query: /\b(cobertura|coverage|interval\w*|bandas?|bands?|fiab\w*|reliab\w*|prospectiv\w*|prospective|backfill|verificad\w*|verified|calibra\w*)\b/,
+    es: "- COBERTURA: da sólo las cifras de cobertura que traen las fuentes y para el periodo que dicen; no atribuyas una cobertura al hold-out ni a «los modelos evaluados» si la fuente no la da. La evaluación prospectiva es un backfill sin fuga de información, es decir, una evaluación retrospectiva causal: nunca digas que «no es un backtest» ni que son pronósticos servidos en vivo, salvo lo que la fuente diga de las añadas desde jul-2026.",
+    en: "- COVERAGE: give only the coverage figures the sources provide, for the period they state; do not attribute a coverage to the hold-out or to \"the evaluated models\" unless a source gives it. The prospective evaluation is a leakage-free backfill, i.e. a causal retrospective evaluation: never say it is \"not backtested\" or that the forecasts were served live, beyond what the source says about the vintages since Jul-2026.",
+  },
+  {
+    query: /\b(current|corriente|unavailable|no disponible|status|estados?)\b/,
+    es: "- ESTADOS: copia las definiciones de la fuente de `status` (F, C, U, UNK) sin expandir las letras con otras palabras: F es «se publicó una fecha específica», no «Final». Sólo F es objetivo predictivo.",
+    en: "- STATUSES: copy the definitions from the `status` source (F, C, U, UNK) without expanding the letters into other words: F means \"a specific date was published\", not \"Final\". Only F is a prediction target.",
+  },
+];
+export function topicReminders(lang, query) {
+  const q = normalizeCodes(fold(String(query ?? "")));
+  const lines = REMINDERS.filter((r) => r.query.test(q)).map((r) => (lang === "en" ? r.en : r.es));
+  if (!lines.length) return "";
+  const head = lang === "en"
+    ? "REMINDERS FOR THIS QUESTION (system rules, not sources; they take precedence over how a source is worded):"
+    : "RECORDATORIOS PARA ESTA PREGUNTA (reglas del sistema, no fuentes; mandan sobre la redacción de una fuente):";
+  return [head, ...lines].join("\n");
 }
 
 // Message substituted when the code-block guard fires (see the stream relay).
@@ -693,7 +732,7 @@ const handler = async (req) => {
           body: JSON.stringify({
             model: MODEL,
             max_tokens: MAX_OUTPUT,
-            system: systemPrompt(lang, context, surface),
+            system: systemPrompt(lang, context, surface, query),
             messages,
             stream: true,
           }),
