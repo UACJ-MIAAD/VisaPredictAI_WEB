@@ -9,7 +9,7 @@ export const BULLETIN_OPERATION = {
   },
   prepareCommand: "make bulletin MONTH=YYYY-MM",
   publishCommand: "make bulletin MONTH=YYYY-MM PUBLISH=1 RECEIPT='ruta/receipt.json'",
-  sourceCommit: "53f280fe2847633206163a76c25a591b372c505d",
+  sourceCommit: "84ac4740ddae8137ea9e1c3bdce5699ea0605cf3",
   superseded: {
     browserAdapter: "replaced-by-assisted-pdf-intake",
     twoAutomaticCycles: "replaced-by-per-run-review",
