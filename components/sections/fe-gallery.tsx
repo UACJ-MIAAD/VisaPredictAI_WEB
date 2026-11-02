@@ -146,8 +146,8 @@ const T: Record<
         tag: "Importancia",
         headline: () => "La memoria manda: el avance reciente domina la importancia",
         body: (d) =>
-          `Importancia por ganancia de un LightGBM entrenado sobre el avance mensual de las series familiares FAD, con ${d.lags} rezagos del avance y el calendario cíclico como candidatos: los rezagos recientes concentran la ganancia y el calendario aporta poco — coherente con un panel sin estacionalidad explotable. En el catálogo de caracterización, la selección FRESH + mRMR depura ${d.selIn} características a ${d.selOut}.`,
-        alt: "Barras de importancia por ganancia de un LightGBM: los rezagos recientes del avance dominan sobre el calendario cíclico.",
+          `Importancia de un LightGBM entrenado sobre el avance mensual de las series familiares FAD, medida por el número de divisiones en que interviene cada variable, con ${d.lags} rezagos del avance y el calendario cíclico como candidatos: los rezagos recientes encabezan el orden y el calendario aporta poco — coherente con un panel sin estacionalidad explotable. En el catálogo de caracterización, la selección FRESH + mRMR depura ${d.selIn} características a ${d.selOut}.`,
+        alt: "Barras de importancia por número de divisiones de un LightGBM: los rezagos recientes del avance dominan sobre el calendario cíclico.",
       },
     },
   },
@@ -205,8 +205,8 @@ const T: Record<
         tag: "Importance",
         headline: () => "Memory rules: the recent advance dominates the importance",
         body: (d) =>
-          `Gain importance of a LightGBM trained on the monthly advance of the family FAD series, with ${d.lags} advance lags and the cyclic calendar as candidates: the recent lags concentrate the gain and the calendar contributes little — consistent with a panel without exploitable seasonality. On the characterization catalog, the FRESH + mRMR selection prunes ${d.selIn} features down to ${d.selOut}.`,
-        alt: "Gain-importance bars of a LightGBM: the recent advance lags dominate over the cyclic calendar.",
+          `Importance of a LightGBM trained on the monthly advance of the family FAD series, measured by the number of splits that use each feature, with ${d.lags} advance lags and the cyclic calendar as candidates: the recent lags lead the ranking and the calendar contributes little — consistent with a panel without exploitable seasonality. On the characterization catalog, the FRESH + mRMR selection prunes ${d.selIn} features down to ${d.selOut}.`,
+        alt: "Split-count importance bars of a LightGBM: the recent advance lags dominate over the cyclic calendar.",
       },
     },
   },

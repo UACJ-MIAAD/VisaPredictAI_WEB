@@ -215,7 +215,7 @@
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Lineage</span>
-          <h4 class="card-title" style="font-size:0.98rem;">20 years of drift, auditable</h4>
+          <h4 class="card-title" style="font-size:0.98rem;">20 years of drift, traceable</h4>
           <p style="font-size:0.85rem;"><code>dim_category_alias</code> moves label normalization out of code and into <strong>data</strong>: each published spelling &rarr; canonical category with its month window (48 aliases; EB5_TEA had 7 spellings 2001&ndash;2015).</p>
         </div>
       </div>
@@ -232,7 +232,7 @@
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Provenance</span>
-          <h4 class="card-title" style="font-size:0.98rem;">Load audit + quality</h4>
+          <h4 class="card-title" style="font-size:0.98rem;">Load traceability + quality</h4>
           <p style="font-size:0.85rem;"><code>etl_run</code> records each <em>build</em> (schema version, counts, <strong>trainability score</strong>, temporal floor/ceiling); <code>schema_version</code> marks the evolution. Medallion architecture raw&rarr;panel&rarr;gold.</p>
         </div>
         <div class="card">
@@ -245,8 +245,8 @@
 
     <!-- 04 declared limits -->
     <div class="subsec reveal">
-      <h3><span class="num">05</span> Declared limits (adversarial audit)</h3>
-      <p>An independent audit re-derived the model from scratch. It passed strongly &mdash;<strong>0 orphan foreign keys, 48/48 aliases re-classify to their canonical form, the constraints reject every invalid row, reproducible content</strong>&mdash; and left these limits <strong>unvarnished</strong>:</p>
+      <h3><span class="num">05</span> Declared limits</h3>
+      <p>The model was re-derived from scratch and met the checks &mdash;<strong>0 orphan foreign keys, 48/48 aliases re-classify to their canonical form, the constraints reject every invalid row, reproducible content</strong>&mdash;; these limits remain declared:</p>
       <div class="grid grid--2 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">DV coverage</span>

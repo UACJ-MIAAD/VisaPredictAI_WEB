@@ -2,7 +2,7 @@
     <span class="section-tag">Objective 1 · Deliverable 01</span>
     <h2 class="section-title">Building the database</h2>
     <p class="section-sub">
-      The first deliverable is already built: the multiseries panel $y_{p,c,b,t}$ of the <em>U.S. Visa Bulletin</em> &mdash;extracted, annotated, consolidated, and audited end to end&mdash; from the public repository <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>. This section documents in detail how it was built and what was found along the way.
+      The first deliverable is already built: the multiseries panel $y_{p,c,b,t}$ of the <em>U.S. Visa Bulletin</em> &mdash;extracted, annotated, consolidated, and verified end to end&mdash; from the public repository <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>. This section documents in detail how it was built and what was found along the way.
     </p>
 
     <div class="metrics">
@@ -11,7 +11,7 @@
         <div class="metric reveal reveal--d1"><div class="metric-num">{{census:n_obs:comma}}</div><div class="metric-lbl">Monthly observations</div></div>
         <div class="metric reveal reveal--d2"><div class="metric-num">{{census:n_months}}</div><div class="metric-lbl">Bulletins · Dec-2001 &rarr; {{census:date_last}}</div></div>
         <div class="metric reveal reveal--d3"><div class="metric-num">21</div><div class="metric-lbl">Canonical categories</div></div>
-        <div class="metric reveal reveal--d4"><div class="metric-num">PASS</div><div class="metric-lbl">Mega-audit verdict</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">PASS</div><div class="metric-lbl">Quality verdict</div></div>
       </div>
     </div>
 
@@ -38,7 +38,7 @@
     <!-- D.2 Pipeline -->
     <div class="subsec reveal">
       <h3><span class="num">02</span> Data pipeline architecture</h3>
-      <p>From raw HTML to an audited panel in six reproducible stages, run by a GitHub&nbsp;Action whenever a new bulletin is published.</p>
+      <p>From raw HTML to a verified panel in six reproducible stages, run by a GitHub&nbsp;Action whenever a new bulletin is published.</p>
       <div class="arch reveal mt-2">
         <svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" aria-label="Database construction pipeline">
           <defs>
@@ -80,9 +80,9 @@
           <text x="717" y="146" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">194 series</text>
           <text x="717" y="164" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">{{census:n_obs:comma}} obs</text>
           <text x="717" y="186" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">open-license CSV</text>
-          <!-- 6 Auditoría -->
+          <!-- 6 Verificación -->
           <rect x="805" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
-          <text x="875" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">6. Audit</text>
+          <text x="875" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">6. Verification</text>
           <text x="875" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">12 dimensions</text>
           <text x="875" y="146" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#FFD600">0 critical</text>
           <text x="875" y="170" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.88)">PASS verdict</text>
@@ -102,7 +102,7 @@
     <!-- D.3 Las cinco brechas -->
     <div class="subsec reveal">
       <h3><span class="num">03</span> The five gaps resolved</h3>
-      <p>The inherited base covered only four employment categories, one table, and lost the status information. Each gap was closed with a verified fix (audit <em>before</em>&nbsp;&rarr;&nbsp;<em>after</em>).</p>
+      <p>The inherited base covered only four employment categories, one table, and lost the status information. Each gap was closed with a verified fix (check <em>before</em>&nbsp;&rarr;&nbsp;<em>after</em>).</p>
       <div class="grid grid--3 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H1 · Status</span>
@@ -137,7 +137,7 @@
         <div class="card">
           <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Bonus · Robustness</span>
           <h4 class="card-title" style="font-size:0.98rem;">No silent losses</h4>
-          <p style="font-size:0.85rem;">The audit detected one month (Dec-2007) lost to a transient HTTP failure. A <code>retry</code> with <em>backoff</em> and explicit reporting was added: no month is dropped silently.</p>
+          <p style="font-size:0.85rem;">The check detected one month (Dec-2007) lost to a transient HTTP failure. A <code>retry</code> with <em>backoff</em> and explicit reporting was added: no month is dropped silently.</p>
           <div class="pill-row"><span class="pill pill--g">before: silent failure</span><span class="pill pill--green">now: retry + alert</span></div>
         </div>
       </div>
@@ -204,18 +204,18 @@
         <span class="pill pill--g">0 unexplained gaps</span>
       </div>
       <div class="callout mt-2">
-        <div class="callout-head">🗓️ Honest temporal scope</div>
+        <div class="callout-head">🗓️ Temporal scope</div>
         <p>
           The <em>Final Action Dates</em> have been published since 1992&nbsp;[14], but the structurally homogeneous monthly series that the module consolidates from the bulletin HTML spans continuously from <strong>December&nbsp;2001&nbsp;&ndash;&nbsp;2026 ({{census:n_months}}&nbsp;complete months per series)</strong>. The 1992&ndash;2001 period exists in statistical and archival sources, reserved for later integration. The <em>Dates for Filing</em> exist only since October&nbsp;2015 ({{census:dff_months}}&nbsp;observations).
         </p>
       </div>
     </div>
 
-    <!-- D.6 Mega-auditoría -->
+    <!-- D.6 Control de calidad -->
     <div class="subsec reveal">
-      <h3><span class="num">06</span> Quality mega-audit (12 dimensions)</h3>
+      <h3><span class="num">06</span> Quality control (12 dimensions)</h3>
       <p>
-        The panel undergoes an exhaustive audit: schema, completeness, series inventory, status distribution, gaps, key uniqueness, date validity, FAD&nbsp;vs&nbsp;DFF coherence, jump anomalies, source&harr;panel reconciliation, coverage matrix, and trainability. <strong>Verdict: PASS</strong> &mdash; zero critical findings, zero warnings.
+        The panel undergoes an exhaustive check: schema, completeness, series inventory, status distribution, gaps, key uniqueness, date validity, FAD&nbsp;vs&nbsp;DFF coherence, jump anomalies, source&harr;panel reconciliation, coverage matrix, and trainability. <strong>Verdict: PASS</strong> &mdash; zero critical findings, zero warnings.
       </p>
 
       <h4>Administrative status distribution</h4>

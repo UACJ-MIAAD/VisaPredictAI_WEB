@@ -41,7 +41,7 @@
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">reports/ · docs/</span>
           <h4 class="card-title" style="font-size:0.98rem;">Reports and docs</h4>
-          <p style="font-size:0.85rem;">The quality audits (12 dimensions) are written to <code>reports/</code>; the operational documentation (e.g. the DVC strategy) lives in <code>docs/</code>.</p>
+          <p style="font-size:0.85rem;">The quality checks (12 dimensions) are written to <code>reports/</code>; the operational documentation (e.g. the DVC strategy) lives in <code>docs/</code>.</p>
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">tests/</span>
@@ -71,12 +71,12 @@ make install   <span style="color:var(--gris);"># = pip install -e ".[dev]"  (ru
 make scrape    <span style="color:var(--gris);"># writes data/raw/*.csv</span>
 make panel     <span style="color:var(--gris);"># consolidates data/processed/visa_panel_long.csv</span>
 make check     <span style="color:var(--gris);"># ruff + mypy + pytest (coverage gate)</span>
-make audit     <span style="color:var(--gris);"># audits → reports/</span></pre>
+make audit     <span style="color:var(--gris);"># quality checks → reports/</span></pre>
     </div>
 
-    <!-- E.4 Adaptaciones honestas -->
+    <!-- E.4 Adaptaciones al proyecto -->
     <div class="subsec reveal">
-      <h3><span class="num">04</span> Honest adaptations</h3>
+      <h3><span class="num">04</span> Project adaptations</h3>
       <p>CCDS is a starting point, not a dogma. What serves a <strong>data acquisition</strong> project is adopted, and what does not yet apply is deliberately left out &mdash;no filler structure.</p>
       <div class="pill-row">
         <span class="pill pill--green">MIT license in a public repo</span>
