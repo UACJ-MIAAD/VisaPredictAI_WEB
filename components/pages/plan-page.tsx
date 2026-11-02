@@ -475,8 +475,8 @@ export function PlanPage({ lang }: { lang: Lang }) {
             <strong>{es ? "Contrato de actualización" : "Update contract"}</strong>
             <p>
               {es
-                ? "Cada avance modifica la fuente tipada del plan, recalcula el porcentaje, pasa tests y se publica por una PR auditable. Un plan no equivale a trabajo terminado."
-                : "Every advance updates the typed plan source, recalculates progress, passes tests and ships through an auditable PR. Planned work is not completed work."}
+                ? "Cada avance modifica la fuente tipada del plan, recalcula el porcentaje, pasa tests y se publica por una PR revisable. Un plan no equivale a trabajo terminado."
+                : "Every advance updates the typed plan source, recalculates progress, passes tests and ships through a reviewable PR. Planned work is not completed work."}
             </p>
           </aside>
         </div>
