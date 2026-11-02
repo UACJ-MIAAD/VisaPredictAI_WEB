@@ -11,7 +11,7 @@
         <div class="metric reveal reveal--d1"><div class="metric-num">2</div><div class="metric-lbl">CI workflows</div></div>
         <div class="metric reveal reveal--d2"><div class="metric-num">&ge;65&nbsp;%</div><div class="metric-lbl">Coverage floor (CI gate)</div></div>
         <div class="metric reveal reveal--d3"><div class="metric-num">ruff+mypy</div><div class="metric-lbl">Lint · format · types</div></div>
-        <div class="metric reveal reveal--d4"><div class="metric-num">0</div><div class="metric-lbl">Critical audit findings</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">0</div><div class="metric-lbl">Critical findings</div></div>
       </div>
     </div>
 
@@ -128,7 +128,7 @@
       </div>
     </div>
 
-    <!-- M.5 Contrato + auditorías + versionado -->
+    <!-- M.5 Contrato + controles + versionado -->
     <div class="subsec reveal">
       <h3><span class="num">05</span> Data contract, lineage, and versioning</h3>
       <div class="grid grid--2 mt-2">
@@ -138,7 +138,7 @@
           <ul style="font-size:0.85rem;margin-top:0.4rem;">
             <li>Hard panel invariants as executable tests (the schema <em>is</em> the contract).</li>
             <li><strong>Cell-level lineage</strong>: `raw_value` preserves the original cell exactly as published.</li>
-            <li>Programmatic audit of <strong>12 dimensions</strong> with a PASS verdict (0 critical findings).</li>
+            <li>Programmatic check of <strong>12 dimensions</strong> with a PASS verdict (0 critical findings).</li>
             <li>Pre-commit hooks: large-file blocking, end-of-line, YAML/TOML, ruff.</li>
           </ul>
         </div>
