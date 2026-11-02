@@ -1315,13 +1315,13 @@
     <div class="subsec reveal">
       <h3><span class="num">1.2</span> Definición del problema</h3>
       <p>
-        <strong>No se identificó, en la revisión preliminar,</strong> trabajo académico publicado que ofrezca un sistema predictivo abierto, reproducible y sistemáticamente evaluado sobre el panel multiserie del <em>Visa&nbsp;Bulletin</em> con intervalos de predicción al 95&nbsp;%. Las plataformas comerciales existentes son cajas negras sin metodología, datos ni protocolo de evaluación publicados de forma auditable.
+        <strong>No se identificó, en la revisión preliminar,</strong> trabajo académico publicado que ofrezca un sistema predictivo abierto, reproducible y sistemáticamente evaluado sobre el panel multiserie del <em>Visa&nbsp;Bulletin</em> con intervalos de predicción al 95&nbsp;%. Las plataformas comerciales existentes son cajas negras sin metodología, datos ni protocolo de evaluación publicados de forma verificable.
       </p>
       <p>
         <strong>La consecuencia directa</strong> es que millones de solicitantes deben planificar decisiones de mediano y largo plazo (estabilidad familiar, profesional y financiera) sobre estimaciones opacas o con métodos de baja calidad. Las cifras del rezago se documentan en la Sección&nbsp;1.1 [4], [6].
       </p>
       <p>
-        <strong>La necesidad</strong> es construir una base de datos longitudinal pública del <em>Visa&nbsp;Bulletin</em> 1992&ndash;2026 y un sistema predictivo evaluable que convierta más de tres décadas de datos en pronósticos auditables con intervalos de predicción al 95&nbsp;%, llenando una brecha verificable de la literatura aplicada.
+        <strong>La necesidad</strong> es construir una base de datos longitudinal pública del <em>Visa&nbsp;Bulletin</em> 1992&ndash;2026 y un sistema predictivo evaluable que convierta más de tres décadas de datos en pronósticos verificables con intervalos de predicción al 95&nbsp;%, llenando una brecha verificable de la literatura aplicada.
       </p>
     </div>
 
@@ -1345,7 +1345,7 @@
       <h3><span class="num">1.4</span> Justificación</h3>
       <h4>Contribución social</h4>
       <p>
-        El proceso de obtención de la residencia permanente afecta a millones de personas en términos de estabilidad familiar, laboral y financiera. Cerca de 4&nbsp;millones permanecen en el extranjero esperando una visa de base familiar [6], dentro del rezago global del USCIS de 11.5&nbsp;millones de casos pendientes para todos los formularios [4]. El proyecto apoya la planificación de los solicitantes con intervalos de predicción al 95&nbsp;% y mayor transparencia que las herramientas cerradas no auditables del mercado.
+        El proceso de obtención de la residencia permanente afecta a millones de personas en términos de estabilidad familiar, laboral y financiera. Cerca de 4&nbsp;millones permanecen en el extranjero esperando una visa de base familiar [6], dentro del rezago global del USCIS de 11.5&nbsp;millones de casos pendientes para todos los formularios [4]. El proyecto apoya la planificación de los solicitantes con intervalos de predicción al 95&nbsp;% y mayor transparencia que las herramientas cerradas no verificables del mercado.
       </p>
       <h4>Contribución técnica</h4>
       <p>
@@ -1750,7 +1750,7 @@
     <span class="section-tag">Objetivo 1 · Entregable 01</span>
     <h2 class="section-title">Construcción de la base de datos</h2>
     <p class="section-sub">
-      El primer entregable ya está construido: el panel multiserie $y_{p,c,b,t}$ del <em>U.S. Visa Bulletin</em> &mdash;extraído, anotado, consolidado y auditado de extremo a extremo&mdash; desde el repositorio público <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>. Esta sección documenta con detalle cómo se levantó y qué se halló en el camino.
+      El primer entregable ya está construido: el panel multiserie $y_{p,c,b,t}$ del <em>U.S. Visa Bulletin</em> &mdash;extraído, anotado, consolidado y verificado de extremo a extremo&mdash; desde el repositorio público <a href="https://github.com/UACJ-MIAAD/VisaPredictAI" target="_blank" rel="noopener">VisaPredictAI</a>. Esta sección documenta con detalle cómo se levantó y qué se halló en el camino.
     </p>
 
     <div class="metrics">
@@ -1759,7 +1759,7 @@
         <div class="metric reveal reveal--d1"><div class="metric-num">{{census:n_obs:comma}}</div><div class="metric-lbl">Observaciones mensuales</div></div>
         <div class="metric reveal reveal--d2"><div class="metric-num">{{census:n_months}}</div><div class="metric-lbl">Boletines · dic-2001 &rarr; {{census:date_last}}</div></div>
         <div class="metric reveal reveal--d3"><div class="metric-num">21</div><div class="metric-lbl">Categorías canónicas</div></div>
-        <div class="metric reveal reveal--d4"><div class="metric-num">APTO</div><div class="metric-lbl">Veredicto mega-auditoría</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">APTO</div><div class="metric-lbl">Veredicto de calidad</div></div>
       </div>
     </div>
 
@@ -1786,7 +1786,7 @@
     <!-- D.2 Pipeline -->
     <div class="subsec reveal">
       <h3><span class="num">02</span> Arquitectura del pipeline de datos</h3>
-      <p>De HTML crudo a panel auditado en seis etapas reproducibles, ejecutadas por una GitHub&nbsp;Action al publicarse un nuevo boletín.</p>
+      <p>De HTML crudo a panel verificado en seis etapas reproducibles, ejecutadas por una GitHub&nbsp;Action al publicarse un nuevo boletín.</p>
       <div class="arch reveal mt-2">
         <svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" aria-label="Pipeline de construcción de la base de datos">
           <defs>
@@ -1828,9 +1828,9 @@
           <text x="717" y="146" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">194 series</text>
           <text x="717" y="164" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.9)">{{census:n_obs:comma}} obs</text>
           <text x="717" y="186" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#FFD600">CSV licencia abierta</text>
-          <!-- 6 Auditoría -->
+          <!-- 6 Verificación -->
           <rect x="805" y="55" width="140" height="160" rx="14" fill="url(#bdBlue)"/>
-          <text x="875" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">6. Auditoría</text>
+          <text x="875" y="90" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="#fff">6. Verificación</text>
           <text x="875" y="118" text-anchor="middle" font-family="DM Sans" font-size="9.5" fill="rgba(255,255,255,0.88)">12 dimensiones</text>
           <text x="875" y="146" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#FFD600">0 críticos</text>
           <text x="875" y="170" text-anchor="middle" font-family="DM Sans" font-size="9" fill="rgba(255,255,255,0.88)">veredicto APTO</text>
@@ -1850,7 +1850,7 @@
     <!-- D.3 Las cinco brechas -->
     <div class="subsec reveal">
       <h3><span class="num">03</span> Las cinco brechas resueltas</h3>
-      <p>La base heredada cubría sólo cuatro categorías de empleo, una tabla y perdía la información de estado. Cada brecha se cerró con una corrección verificada (auditoría <em>antes</em>&nbsp;&rarr;&nbsp;<em>después</em>).</p>
+      <p>La base heredada cubría sólo cuatro categorías de empleo, una tabla y perdía la información de estado. Cada brecha se cerró con una corrección verificada (control <em>antes</em>&nbsp;&rarr;&nbsp;<em>después</em>).</p>
       <div class="grid grid--3 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">H1 · Estado</span>
@@ -1885,7 +1885,7 @@
         <div class="card">
           <span class="card-tag" style="color:var(--amarillo-d);background:rgba(255,214,0,0.18);">Bonus · Robustez</span>
           <h4 class="card-title" style="font-size:0.98rem;">Sin pérdidas silenciosas</h4>
-          <p style="font-size:0.85rem;">La auditoría detectó un mes (dic-2007) perdido por un fallo HTTP transitorio. Se añadió <code>retry</code> con <em>backoff</em> y reporte explícito: ningún mes se descarta en silencio.</p>
+          <p style="font-size:0.85rem;">El control detectó un mes (dic-2007) perdido por un fallo HTTP transitorio. Se añadió <code>retry</code> con <em>backoff</em> y reporte explícito: ningún mes se descarta en silencio.</p>
           <div class="pill-row"><span class="pill pill--g">antes: caída silenciosa</span><span class="pill pill--green">ahora: reintento + aviso</span></div>
         </div>
       </div>
@@ -1959,11 +1959,11 @@
       </div>
     </div>
 
-    <!-- D.6 Mega-auditoría -->
+    <!-- D.6 Control de calidad -->
     <div class="subsec reveal">
-      <h3><span class="num">06</span> Mega-auditoría de calidad (12 dimensiones)</h3>
+      <h3><span class="num">06</span> Control de calidad (12 dimensiones)</h3>
       <p>
-        El panel se somete a una auditoría exhaustiva: esquema, completitud, inventario de series, distribución de estado, huecos, unicidad de clave, validez de fechas, coherencia FAD&nbsp;vs&nbsp;DFF, anomalías de salto, reconciliación fuente&harr;panel, matriz de cobertura y entrenabilidad. <strong>Veredicto: APTO</strong> &mdash; cero hallazgos críticos, cero advertencias.
+        El panel se somete a un control exhaustivo: esquema, completitud, inventario de series, distribución de estado, huecos, unicidad de clave, validez de fechas, coherencia FAD&nbsp;vs&nbsp;DFF, anomalías de salto, reconciliación fuente&harr;panel, matriz de cobertura y entrenabilidad. <strong>Veredicto: APTO</strong> &mdash; cero hallazgos críticos, cero advertencias.
       </p>
 
       <h4>Distribución de estado administrativo</h4>
@@ -2105,7 +2105,7 @@
         <div class="metric reveal reveal--d1"><div class="metric-num">2</div><div class="metric-lbl">Workflows de CI</div></div>
         <div class="metric reveal reveal--d2"><div class="metric-num">&ge;65&nbsp;%</div><div class="metric-lbl">Piso de cobertura (gate CI)</div></div>
         <div class="metric reveal reveal--d3"><div class="metric-num">ruff+mypy</div><div class="metric-lbl">Lint · formato · tipos</div></div>
-        <div class="metric reveal reveal--d4"><div class="metric-num">0</div><div class="metric-lbl">Críticos en auditoría</div></div>
+        <div class="metric reveal reveal--d4"><div class="metric-num">0</div><div class="metric-lbl">Hallazgos críticos</div></div>
       </div>
     </div>
 
@@ -2222,7 +2222,7 @@
       </div>
     </div>
 
-    <!-- M.5 Contrato + auditorías + versionado -->
+    <!-- M.5 Contrato + controles + versionado -->
     <div class="subsec reveal">
       <h3><span class="num">05</span> Contrato de datos, linaje y versionado</h3>
       <div class="grid grid--2 mt-2">
@@ -2232,7 +2232,7 @@
           <ul style="font-size:0.85rem;margin-top:0.4rem;">
             <li>Invariantes duras del panel como pruebas ejecutables (el esquema <em>es</em> el contrato).</li>
             <li><strong>Linaje a nivel celda</strong>: `raw_value` conserva la celda original tal cual se publicó.</li>
-            <li>Auditoría programática de <strong>12 dimensiones</strong> con veredicto APTO (0 hallazgos críticos).</li>
+            <li>Control programático de <strong>12 dimensiones</strong> con veredicto APTO (0 hallazgos críticos).</li>
             <li>Hooks de pre-commit: bloqueo de archivos grandes, fin de línea, YAML/TOML, ruff.</li>
           </ul>
         </div>
@@ -2297,7 +2297,7 @@
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">reports/ · docs/</span>
           <h4 class="card-title" style="font-size:0.98rem;">Reportes y docs</h4>
-          <p style="font-size:0.85rem;">Las auditorías de calidad (12 dimensiones) se escriben en <code>reports/</code>; la documentación operativa (p.&nbsp;ej. la estrategia DVC) vive en <code>docs/</code>.</p>
+          <p style="font-size:0.85rem;">Los controles de calidad (12 dimensiones) se escriben en <code>reports/</code>; la documentación operativa (p.&nbsp;ej. la estrategia DVC) vive en <code>docs/</code>.</p>
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">tests/</span>
@@ -2327,7 +2327,7 @@ make install   <span style="color:var(--gris);"># = pip install -e ".[dev]"  (ru
 make scrape    <span style="color:var(--gris);"># escribe data/raw/*.csv</span>
 make panel     <span style="color:var(--gris);"># consolida data/processed/visa_panel_long.csv</span>
 make check     <span style="color:var(--gris);"># ruff + mypy + pytest (gate de cobertura)</span>
-make audit     <span style="color:var(--gris);"># auditorías → reports/</span></pre>
+make audit     <span style="color:var(--gris);"># controles de calidad → reports/</span></pre>
     </div>
 
     <!-- E.4 Adaptaciones al proyecto -->
@@ -2565,7 +2565,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Linaje</span>
-          <h4 class="card-title" style="font-size:0.98rem;">20 años de deriva, auditables</h4>
+          <h4 class="card-title" style="font-size:0.98rem;">20 años de deriva, trazables</h4>
           <p style="font-size:0.85rem;"><code>dim_category_alias</code> saca la normalización de etiquetas del código a <strong>datos</strong>: cada grafía publicada &rarr; categoría canónica con su ventana de meses (48 alias; EB5_TEA tuvo 7 grafías 2001&ndash;2015).</p>
         </div>
       </div>
@@ -2582,7 +2582,7 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
         </div>
         <div class="card">
           <span class="card-tag" style="color:var(--azul);background:rgba(0,60,166,0.1);">Provenance</span>
-          <h4 class="card-title" style="font-size:0.98rem;">Auditoría de carga + calidad</h4>
+          <h4 class="card-title" style="font-size:0.98rem;">Trazabilidad de carga + calidad</h4>
           <p style="font-size:0.85rem;"><code>etl_run</code> registra cada <em>build</em> (versión de esquema, conteos, <strong>score de entrenabilidad</strong>, piso/techo temporal); <code>schema_version</code> marca la evolución. Arquitectura medallón raw&rarr;panel&rarr;gold.</p>
         </div>
         <div class="card">
