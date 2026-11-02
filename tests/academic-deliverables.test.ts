@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { PLAN_DELIVERABLES } from "@/lib/plan-data";
-import manifest from "../public/entregables/2026-10-30/manifest.json";
+import manifest from "../public/entregables/2026-11-01/manifest.json";
+import cumulative from "../public/entregables/2026-10-30/manifest.json";
 import previous from "../public/entregables/2026-10-25/manifest.json";
 import historical from "../public/entregables/2026-10-24/manifest.json";
 
@@ -20,9 +21,10 @@ describe("cumulative academic catalog", () => {
   });
 
   it("binds the active URLs to the exact reviewed PDF bytes and accredited page counts", () => {
-    const pages = { A11: 90, A12: 91, A13: 94, A14: 96, B1: 99, B2: 142, B3: 23 };
+    const pages = { A11: 90, A12: 91, A13: 94, A14: 96, B1: 99, B2: 142, B3: 26 };
     for (const artifact of manifest.artifacts) {
-      expect(artifact.path).toBe(`/entregables/2026-10-30/${artifact.id}.pdf`);
+      const folder = artifact.id === "B3" ? "2026-11-01" : "2026-10-30";
+      expect(artifact.path).toBe(`/entregables/${folder}/${artifact.id}.pdf`);
       const bytes = readFileSync(`public${artifact.path}`);
       expect(bytes.subarray(0, 5).toString()).toBe("%PDF-");
       expect(bytes.length).toBe(artifact.bytes);
@@ -31,15 +33,20 @@ describe("cumulative academic catalog", () => {
     }
   });
 
-  it("preserves the earlier catalogs byte for byte and replaces every active PDF", () => {
-    for (const earlier of [historical, previous]) {
+  it("reuses the 30 October reports unchanged and replaces only the presentation", () => {
+    for (const artifact of manifest.artifacts.filter((item) => item.id !== "B3")) {
+      expect(cumulative.artifacts.find((item) => item.id === artifact.id)).toMatchObject({ path: artifact.path, sha256: artifact.sha256 });
+    }
+    expect(cumulative.artifacts.find((item) => item.id === "B3")?.sha256)
+      .not.toBe(manifest.artifacts.find((item) => item.id === "B3")?.sha256);
+  });
+
+  it("preserves the earlier catalogs byte for byte", () => {
+    for (const earlier of [historical, previous, cumulative]) {
       for (const artifact of earlier.artifacts) {
         const bytes = readFileSync(`public${artifact.path}`);
         expect(createHash("sha256").update(bytes).digest("hex")).toBe(artifact.sha256);
       }
-    }
-    for (const artifact of manifest.artifacts) {
-      expect(previous.artifacts.find((item) => item.id === artifact.id)?.sha256).not.toBe(artifact.sha256);
     }
   });
 });
