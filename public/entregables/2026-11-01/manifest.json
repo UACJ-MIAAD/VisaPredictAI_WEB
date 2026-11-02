@@ -68,8 +68,8 @@
     {
       "id": "B3",
       "path": "/entregables/2026-11-01/B3.pdf",
-      "sha256": "2d42b3f18620db45a4c76cab3a700464b0a7a73e1d55ea0cfb53d565908f4fde",
-      "bytes": 3293601,
+      "sha256": "b066b701835427856806c2e8517c25be84a23e95ecacfe97e710b36c495efe43",
+      "bytes": 3293584,
       "pages": 26,
       "source_package": "2026-10-30_B3_v15"
     }
