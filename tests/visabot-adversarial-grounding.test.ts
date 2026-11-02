@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { pinGrounding } from "@/lib/visabot/retrieval-core.mjs";
 import { mergeFollowUp, detectEntities } from "@/lib/visabot/analytics";
-import { systemPrompt } from "../netlify/functions/chat.mjs";
+import { systemPrompt, topicReminders } from "../netlify/functions/chat.mjs";
 
 // Adversarial audit of the live VisaBot (28-oct-2026): each case below is a
 // wrong answer production gave, reduced to the grounding gap that caused it.
@@ -96,4 +96,70 @@ describe("system prompt grounding rules", () => {
       expect(p).toMatch(lang === "es" ? /SIN GRÁFICO NO HAY PRONÓSTICO/ : /NO CHART, NO FORECAST/);
     });
   }
+});
+
+// Second production battery (29-oct-2026): four answers still broke rules that
+// were already in the prompt. Each case is the question that failed.
+describe("topic reminders restated after the sources", () => {
+  it("DFF winner: the MCS is read against the best model, never the champion", () => {
+    const r = topicReminders("es", "¿Qué modelo gana en la tabla DFF y con qué MASE?");
+    expect(r).toMatch(/MEJOR modelo del hold-out/);
+    expect(r).toMatch(/NUNCA escribas que esos modelos «no se distinguen del campeón»/);
+    expect(r).not.toMatch(/COBERTURA|ESTADOS/);
+  });
+
+  it("naïve question: does not open by denying the hold-out verdict", () => {
+    const r = topicReminders("es", "¿Es cierto que el pronóstico ingenuo le gana a tus modelos?");
+    expect(r).toMatch(/NAÏVE-1/);
+    expect(r).toMatch(/NO abras con «No» ni «No exactamente»/);
+    expect(r).toMatch(/^- MCS/m);
+  });
+
+  it("EN coverage: no invented hold-out coverage and the backfill is not 'not backtested'", () => {
+    const r = topicReminders("en", "How reliable are your prediction intervals? Give me the coverage numbers.");
+    expect(r).toMatch(/^REMINDERS FOR THIS QUESTION/);
+    expect(r).toMatch(/leakage-free backfill/);
+    expect(r).toMatch(/never say it is "not backtested"/);
+  });
+
+  it("Current: letters are not expanded (F is not 'Final')", () => {
+    const r = topicReminders("es", "¿Qué significa que una categoría esté 'Current' o 'C' y el sistema lo predice?");
+    expect(r).toMatch(/F es «se publicó una fecha específica», no «Final»/);
+  });
+
+  it("unrelated questions get no reminder block", () => {
+    expect(topicReminders("es", "¿Qué es la retrogresión?")).toBe("");
+    expect(systemPrompt("es", [], "console", "¿Qué es la retrogresión?")).not.toMatch(/RECORDATORIOS/);
+  });
+
+  it("the block closes the system prompt, after the sources", () => {
+    const ctx = [{ n: 1, source: "Repo · Model card", title: "5. Evaluación", text: "MCS" }];
+    const p = systemPrompt("es", ctx, "console", "¿Qué modelo gana en DFF?");
+    expect(p.indexOf("RECORDATORIOS PARA ESTA PREGUNTA")).toBeGreaterThan(p.indexOf("FUENTES:"));
+    expect(p.trimEnd().endsWith("ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.")).toBe(true);
+  });
+});
+
+describe("the handler sends the reminders for the user's question", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+  it("the Anthropic body carries the MCS reminder for the DFF-winner question", async () => {
+    process.env.ANTHROPIC_API_KEY = "test-key-never-used";
+    const bodies: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string | URL, init?: RequestInit) => {
+      if (!String(url).startsWith("https://api.anthropic.com")) throw new Error(`unexpected fetch ${String(url)}`);
+      bodies.push(String(init?.body));
+      return new Response('data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
+        { status: 200, headers: { "content-type": "text/event-stream" } });
+    }));
+    const { default: handler } = await import("../netlify/functions/chat.mjs");
+    const res = await handler(new Request("https://visapredictai.com/.netlify/functions/chat", {
+      method: "POST",
+      headers: { origin: "http://localhost:3000", "content-type": "application/json" },
+      body: JSON.stringify({ lang: "es", query: "¿Qué modelo gana en la tabla DFF y con qué MASE?", surface: "console" }),
+    }));
+    expect(res.status).toBe(200);
+    await res.text();
+    const { system } = JSON.parse(bodies[0]) as { system: string };
+    expect(system).toMatch(/RECORDATORIOS PARA ESTA PREGUNTA[\s\S]*MEJOR modelo del hold-out/);
+  });
 });
