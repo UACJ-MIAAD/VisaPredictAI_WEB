@@ -1670,7 +1670,7 @@
       <div class="levels">
         <div class="level level--min">
           <span class="level-tag">Mínimo</span>
-          <h4>Reporte honesto del experimento</h4>
+          <h4>Reporte completo del experimento</h4>
           <p>Construcción reproducible del dataset, ejecución completa del walk-forward sobre la cobertura piloto, reporte de métricas escaladas e intervalos de predicción al 95&nbsp;%. <strong>No requiere</strong> que ningún modelo no lineal supere a los lineales: el reporte de un resultado nulo también satisface el nivel mínimo.</p>
         </div>
         <div class="level level--sat">
@@ -1952,7 +1952,7 @@
         <span class="pill pill--g">0 huecos no explicados</span>
       </div>
       <div class="callout mt-2">
-        <div class="callout-head">🗓️ Alcance temporal honesto</div>
+        <div class="callout-head">🗓️ Alcance temporal</div>
         <p>
           Las <em>Final Action Dates</em> se publican desde 1992&nbsp;[14], pero la serie mensual estructuralmente homogénea que el módulo consolida desde el HTML del boletín abarca de forma continua <strong>diciembre&nbsp;de&nbsp;2001&nbsp;&ndash;&nbsp;2026 ({{census:n_months}}&nbsp;meses completos por serie)</strong>. El periodo 1992&ndash;2001 existe en fuentes estadísticas y de archivo, reservado a integración posterior. Las <em>Dates for Filing</em> sólo existen desde octubre&nbsp;de&nbsp;2015 ({{census:dff_months}}&nbsp;observaciones).
         </p>
@@ -2330,9 +2330,9 @@ make check     <span style="color:var(--gris);"># ruff + mypy + pytest (gate de 
 make audit     <span style="color:var(--gris);"># auditorías → reports/</span></pre>
     </div>
 
-    <!-- E.4 Adaptaciones honestas -->
+    <!-- E.4 Adaptaciones al proyecto -->
     <div class="subsec reveal">
-      <h3><span class="num">04</span> Adaptaciones honestas</h3>
+      <h3><span class="num">04</span> Adaptaciones al proyecto</h3>
       <p>CCDS es un punto de partida, no un dogma. Se adopta lo que sirve a un proyecto de <strong>adquisición de datos</strong> y se omite, a conciencia, lo que aún no aplica &mdash;sin estructura de relleno.</p>
       <div class="pill-row">
         <span class="pill pill--green">licencia MIT en repo público</span>
@@ -2595,8 +2595,8 @@ make audit     <span style="color:var(--gris);"># auditorías → reports/</span
 
     <!-- 04 límites declarados -->
     <div class="subsec reveal">
-      <h3><span class="num">05</span> Límites declarados (auditoría adversarial)</h3>
-      <p>Una auditoría independiente re-derivó el modelo desde cero. Pasó fuerte &mdash;<strong>0 claves foráneas huérfanas, 48/48 alias re-clasifican a su canónico, las constraints rechazan toda fila inválida, contenido reproducible</strong>&mdash; y dejó estos límites <strong>sin barnizar</strong>:</p>
+      <h3><span class="num">05</span> Límites declarados</h3>
+      <p>El modelo se re-derivó desde cero y cumplió los controles &mdash;<strong>0 claves foráneas huérfanas, 48/48 alias re-clasifican a su canónico, las constraints rechazan toda fila inválida, contenido reproducible</strong>&mdash;; quedan estos límites declarados:</p>
       <div class="grid grid--2 mt-2">
         <div class="card">
           <span class="card-tag" style="color:var(--gris);background:rgba(85,85,89,0.12);">Cobertura DV</span>

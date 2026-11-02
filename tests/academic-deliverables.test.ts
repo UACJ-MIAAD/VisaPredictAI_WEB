@@ -10,7 +10,7 @@ import historical from "../public/entregables/2026-10-24/manifest.json";
 describe("cumulative academic catalog", () => {
   it("offers exactly the reviewed activities without claiming submission or Git storage of the derived PDFs", () => {
     expect(manifest.status).toBe("prepared-not-submitted");
-    expect(manifest.source_commit).toBe("50fde7456438e1f406ec6c6286ff1dfb2e10ba84");
+    expect(manifest.source_commit).toBe("8159b5a11e2b2fadb577bdb7ff64befb8cbc1486");
     expect(manifest.derivation.kind).toBe("local-cumulative-package");
     expect(manifest.derivation.cumulative_pdfs_tracked_in_source_repo).toBe(false);
     expect(manifest.derivation.review_manifest_sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -23,8 +23,7 @@ describe("cumulative academic catalog", () => {
   it("binds the active URLs to the exact reviewed PDF bytes and accredited page counts", () => {
     const pages = { A11: 90, A12: 91, A13: 94, A14: 96, B1: 99, B2: 142, B3: 26 };
     for (const artifact of manifest.artifacts) {
-      const folder = artifact.id === "B3" ? "2026-11-01" : "2026-10-30";
-      expect(artifact.path).toBe(`/entregables/${folder}/${artifact.id}.pdf`);
+      expect(artifact.path).toBe(`/entregables/2026-11-01/${artifact.id}.pdf`);
       const bytes = readFileSync(`public${artifact.path}`);
       expect(bytes.subarray(0, 5).toString()).toBe("%PDF-");
       expect(bytes.length).toBe(artifact.bytes);
@@ -33,12 +32,12 @@ describe("cumulative academic catalog", () => {
     }
   });
 
-  it("reuses the 30 October reports unchanged and replaces only the presentation", () => {
-    for (const artifact of manifest.artifacts.filter((item) => item.id !== "B3")) {
-      expect(cumulative.artifacts.find((item) => item.id === artifact.id)).toMatchObject({ path: artifact.path, sha256: artifact.sha256 });
+  it("replaces every 30 October file with the neutral-wording version at the same page count", () => {
+    for (const artifact of manifest.artifacts) {
+      const earlier = cumulative.artifacts.find((item) => item.id === artifact.id);
+      expect(earlier?.sha256).not.toBe(artifact.sha256);
+      if (artifact.id !== "B3") expect(earlier?.pages).toBe(artifact.pages);
     }
-    expect(cumulative.artifacts.find((item) => item.id === "B3")?.sha256)
-      .not.toBe(manifest.artifacts.find((item) => item.id === "B3")?.sha256);
   });
 
   it("preserves the earlier catalogs byte for byte", () => {

@@ -287,7 +287,7 @@ describe("public MLOps plan", () => {
     expect(PLAN_DELIVERABLES.map((item) => item.id)).toEqual(["A11", "A12", "A13", "A14", "B1", "B2", "B3", "C1"]);
     expect(PLAN_DELIVERABLES.filter((item) => item.status === "prepared")).toHaveLength(7);
     for (const item of PLAN_DELIVERABLES.filter((item) => item.status === "prepared")) {
-      expect(item.pdf).toBe(`/entregables/${item.id === "B3" ? "2026-11-01" : "2026-10-30"}/${item.id}.pdf`);
+      expect(item.pdf).toBe(`/entregables/2026-11-01/${item.id}.pdf`);
     }
     expect(PLAN_DELIVERABLES.find((item) => item.id === "B3")?.scope).toEqual({
       es: "26 diapositivas · PDF, PowerPoint y guion",

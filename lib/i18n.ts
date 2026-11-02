@@ -344,8 +344,8 @@ const S = {
     en: "The system forecasts published dates (F status); it does not predict regime changes (C/U).",
   },
   pronEmpty: {
-    es: "Esta combinación no tiene suficientes fechas publicadas (estado F) para anclar un pronóstico honesto.",
-    en: "This combination does not have enough published dates (F status) to anchor an honest forecast.",
+    es: "Esta combinación no tiene suficientes fechas publicadas (estado F) para anclar un pronóstico confiable.",
+    en: "This combination does not have enough published dates (F status) to anchor a reliable forecast.",
   },
 
   // ── /resultados · galería de pronósticos (patrón: galería filtrable + tiers + lightbox)
