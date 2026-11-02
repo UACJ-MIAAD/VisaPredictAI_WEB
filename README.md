@@ -138,7 +138,7 @@ npm run guard:test        # suite del guardián de código del proxy
 
 El golden set curado vive en [`evals/golden/`](evals/golden) (factual,
 forecast, multiturn, poisoning, unanswerable, más un hold-out); sus umbrales y
-**limitaciones honestas** (una cita presente no equivale a *faithfulness*)
+**limitaciones** (una cita presente no equivale a *faithfulness*)
 están en [`docs/VISABOT_EVAL.md`](docs/VISABOT_EVAL.md). Manual del operador:
 [`docs/VISABOT.md`](docs/VISABOT.md).
 
@@ -174,7 +174,7 @@ npm run test:coverage   # vitest + pisos de cobertura por área
 npm run test:e2e        # Playwright sobre el export de out/
 ```
 
-- **Cobertura honesta, con denominador visible:** la config de vitest
+- **Cobertura con denominador visible:** la config de vitest
   instrumenta **todo** `lib/` + `netlify/functions/` (los módulos sin tests
   cuentan al 0 %; componentes React y `*.generated.ts` quedan fuera, ver
   [`vitest.config.ts`](vitest.config.ts)). Baseline medida el 2026-07-12:
