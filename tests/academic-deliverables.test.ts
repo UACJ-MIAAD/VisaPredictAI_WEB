@@ -11,7 +11,7 @@ import historical from "../public/entregables/2026-10-24/manifest.json";
 describe("cumulative academic catalog", () => {
   it("offers exactly the reviewed activities without claiming submission or Git storage of the derived PDFs", () => {
     expect(manifest.status).toBe("prepared-not-submitted");
-    expect(manifest.source_commit).toBe("1cfb4be35f3bddb92b01bfd181f6d01b5054516a");
+    expect(manifest.source_commit).toBe("aeef34595f2c4de0e9ff7eec20d85a638f3f9aa7");
     expect(manifest.derivation.kind).toBe("local-cumulative-package");
     expect(manifest.derivation.cumulative_pdfs_tracked_in_source_repo).toBe(false);
     expect(manifest.derivation.review_manifest_sha256).toMatch(/^[a-f0-9]{64}$/);

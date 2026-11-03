@@ -2,60 +2,60 @@
   "schema": "visapredict.academic-review/1",
   "date": "2026-11-02",
   "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
-  "source_commit": "1cfb4be35f3bddb92b01bfd181f6d01b5054516a",
+  "source_commit": "aeef34595f2c4de0e9ff7eec20d85a638f3f9aa7",
   "derivation": {
     "kind": "local-cumulative-package",
     "package": "Entregables_2026-11-02_flotantes_y_apendice + B3 v15",
     "cumulative_pdfs_tracked_in_source_repo": false,
-    "review_manifest_sha256": "dc4b2737083442aa0225e5771b2f34ec8cdeb32c8ecb283221d1897466a161c0"
+    "review_manifest_sha256": "6758b42002fb3e72289e689fa43b3bf21bf332879c14c3151211f6cc1bda40be"
   },
   "status": "prepared-not-submitted",
   "artifacts": [
     {
       "id": "A11",
       "path": "/entregables/2026-11-02/A11.pdf",
-      "sha256": "2ac407c694ecd71798f44bd254b97e6101de2c9150c064d19a32c6f1354e155d",
-      "bytes": 4720365,
+      "sha256": "86fdade57ff5743b8dbd33d2e274f5f6be02f69b08d611ef7779d29eb10edd62",
+      "bytes": 4720070,
       "pages": 94,
       "source_package": "2026-11-02_flotantes_y_apendice"
     },
     {
       "id": "A12",
       "path": "/entregables/2026-11-02/A12.pdf",
-      "sha256": "578d30a1b8361d68ccbef106abe53dec5c4a69e4f2be33134a16fea5afde1d3e",
-      "bytes": 4724269,
+      "sha256": "3296b3ff9e652d61e3511d754e37104702efa8779a75462f0e1679e562e42bcd",
+      "bytes": 4723960,
       "pages": 95,
       "source_package": "2026-11-02_flotantes_y_apendice"
     },
     {
       "id": "A13",
       "path": "/entregables/2026-11-02/A13.pdf",
-      "sha256": "ef899d310572ec52c540277f502aa6247f7dd9a00d5d87ea88920517a34c5e43",
-      "bytes": 4731043,
+      "sha256": "a44b014f561508f11e69f591e38dbf03bdb3970a454dae992fd6d72fc20fa5d7",
+      "bytes": 4730729,
       "pages": 97,
       "source_package": "2026-11-02_flotantes_y_apendice"
     },
     {
       "id": "A14",
       "path": "/entregables/2026-11-02/A14.pdf",
-      "sha256": "327e7ee0cfceb6c63634fd34fc357023bc2402c73d1318dedb187f7212d6f3b2",
-      "bytes": 4805498,
+      "sha256": "67bef18c4da432bf1c020f1daf45813371cb2d431e4a280bcda2823a6307b7b0",
+      "bytes": 4805226,
       "pages": 99,
       "source_package": "2026-11-02_flotantes_y_apendice"
     },
     {
       "id": "B1",
       "path": "/entregables/2026-11-02/B1.pdf",
-      "sha256": "de5ace008adca1b4c9c0dc74161d1f580c462dc467f46c555b9b3ed9effd2c44",
-      "bytes": 4817636,
+      "sha256": "c968d3c8fbf37f851c00a35dd1b793c8ef2d7e0b1a68d4ba33bb28b583ef46de",
+      "bytes": 4817321,
       "pages": 102,
       "source_package": "2026-11-02_flotantes_y_apendice"
     },
     {
       "id": "B2",
       "path": "/entregables/2026-11-02/B2.pdf",
-      "sha256": "1648576d4dc5f3c82113fe832374df26168f39119dcf6cdbaa4a449ae18b9aa4",
-      "bytes": 9526457,
+      "sha256": "8c3b5a0cd81580e1542339d0a75e405e6783e67e88bd02ef53b7b06724e6164d",
+      "bytes": 9526257,
       "pages": 143,
       "source_package": "2026-11-02_flotantes_y_apendice"
     },
