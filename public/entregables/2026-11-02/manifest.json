@@ -1,0 +1,71 @@
+{
+  "schema": "visapredict.academic-review/1",
+  "date": "2026-11-02",
+  "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
+  "source_commit": "1cfb4be35f3bddb92b01bfd181f6d01b5054516a",
+  "derivation": {
+    "kind": "local-cumulative-package",
+    "package": "Entregables_2026-11-02_flotantes_y_apendice + B3 v15",
+    "cumulative_pdfs_tracked_in_source_repo": false,
+    "review_manifest_sha256": "dc4b2737083442aa0225e5771b2f34ec8cdeb32c8ecb283221d1897466a161c0"
+  },
+  "status": "prepared-not-submitted",
+  "artifacts": [
+    {
+      "id": "A11",
+      "path": "/entregables/2026-11-02/A11.pdf",
+      "sha256": "2ac407c694ecd71798f44bd254b97e6101de2c9150c064d19a32c6f1354e155d",
+      "bytes": 4720365,
+      "pages": 94,
+      "source_package": "2026-11-02_flotantes_y_apendice"
+    },
+    {
+      "id": "A12",
+      "path": "/entregables/2026-11-02/A12.pdf",
+      "sha256": "578d30a1b8361d68ccbef106abe53dec5c4a69e4f2be33134a16fea5afde1d3e",
+      "bytes": 4724269,
+      "pages": 95,
+      "source_package": "2026-11-02_flotantes_y_apendice"
+    },
+    {
+      "id": "A13",
+      "path": "/entregables/2026-11-02/A13.pdf",
+      "sha256": "ef899d310572ec52c540277f502aa6247f7dd9a00d5d87ea88920517a34c5e43",
+      "bytes": 4731043,
+      "pages": 97,
+      "source_package": "2026-11-02_flotantes_y_apendice"
+    },
+    {
+      "id": "A14",
+      "path": "/entregables/2026-11-02/A14.pdf",
+      "sha256": "327e7ee0cfceb6c63634fd34fc357023bc2402c73d1318dedb187f7212d6f3b2",
+      "bytes": 4805498,
+      "pages": 99,
+      "source_package": "2026-11-02_flotantes_y_apendice"
+    },
+    {
+      "id": "B1",
+      "path": "/entregables/2026-11-02/B1.pdf",
+      "sha256": "de5ace008adca1b4c9c0dc74161d1f580c462dc467f46c555b9b3ed9effd2c44",
+      "bytes": 4817636,
+      "pages": 102,
+      "source_package": "2026-11-02_flotantes_y_apendice"
+    },
+    {
+      "id": "B2",
+      "path": "/entregables/2026-11-02/B2.pdf",
+      "sha256": "1648576d4dc5f3c82113fe832374df26168f39119dcf6cdbaa4a449ae18b9aa4",
+      "bytes": 9526457,
+      "pages": 143,
+      "source_package": "2026-11-02_flotantes_y_apendice"
+    },
+    {
+      "id": "B3",
+      "path": "/entregables/2026-11-02/B3.pdf",
+      "sha256": "b066b701835427856806c2e8517c25be84a23e95ecacfe97e710b36c495efe43",
+      "bytes": 3293584,
+      "pages": 26,
+      "source_package": "2026-10-30_B3_v15"
+    }
+  ]
+}
