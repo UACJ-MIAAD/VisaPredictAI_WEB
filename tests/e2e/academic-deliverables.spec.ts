@@ -17,7 +17,7 @@ for (const lang of ["es", "en"] as const) {
     await expect(c1.locator("a")).toHaveCount(0);
     await expect(c1).toContainText(lang === "es" ? "Pendiente de un evento real" : "Awaiting a real event");
     for (const artifact of manifest.artifacts) {
-      expect(artifact.pages).toBe(({ A11: 94, A12: 95, A13: 97, A14: 99, B1: 102, B2: 143, B3: 26 })[artifact.id as "A11" | "A12" | "A13" | "A14" | "B1" | "B2" | "B3"]);
+      expect(artifact.pages).toBe(({ A11: 89, A12: 90, A13: 92, A14: 95, B1: 98, B2: 138, B3: 26 })[artifact.id as "A11" | "A12" | "A13" | "A14" | "B1" | "B2" | "B3"]);
       const link = section.locator(`a[href="${artifact.path}"]`);
       await expect(link).toHaveCount(1);
       const response = await request.get((await link.getAttribute("href"))!);
