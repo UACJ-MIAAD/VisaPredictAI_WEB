@@ -11,7 +11,7 @@ import historical from "../public/entregables/2026-10-24/manifest.json";
 describe("cumulative academic catalog", () => {
   it("offers exactly the reviewed activities without claiming submission or Git storage of the derived PDFs", () => {
     expect(manifest.status).toBe("prepared-not-submitted");
-    expect(manifest.source_commit).toBe("aeef34595f2c4de0e9ff7eec20d85a638f3f9aa7");
+    expect(manifest.source_commit).toBe("52e60cb02efc4284b0eaa1e995c5393aeae57552");
     expect(manifest.derivation.kind).toBe("local-cumulative-package");
     expect(manifest.derivation.cumulative_pdfs_tracked_in_source_repo).toBe(false);
     expect(manifest.derivation.review_manifest_sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -22,7 +22,7 @@ describe("cumulative academic catalog", () => {
   });
 
   it("binds the active URLs to the exact reviewed PDF bytes and accredited page counts", () => {
-    const pages = { A11: 94, A12: 95, A13: 97, A14: 99, B1: 102, B2: 143, B3: 26 };
+    const pages = { A11: 89, A12: 90, A13: 92, A14: 95, B1: 98, B2: 138, B3: 26 };
     for (const artifact of manifest.artifacts) {
       expect(artifact.path).toBe(`/entregables/2026-11-02/${artifact.id}.pdf`);
       const bytes = readFileSync(`public${artifact.path}`);
