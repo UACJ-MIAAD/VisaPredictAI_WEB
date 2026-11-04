@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { blockExternal } from "./helpers";
 import { createHash } from "node:crypto";
-import manifest from "../../public/entregables/2026-11-02/manifest.json";
+import manifest from "../../public/entregables/2026-11-04/manifest.json";
 
 for (const lang of ["es", "en"] as const) {
   test(`academic review PDFs · ${lang}`, async ({ page, context, request }) => {
@@ -10,8 +10,10 @@ for (const lang of ["es", "en"] as const) {
     const section = page.locator("#entregables");
     await expect(section.locator("li")).toHaveCount(8);
     await expect(section.locator("a")).toHaveCount(7);
-    await expect(section.locator('a[href^="/entregables/2026-10-24/"]')).toHaveCount(0);
-    await expect(section.locator('a[href^="/entregables/2026-10-25/"]')).toHaveCount(0);
+    await expect(section.locator('a[href^="/entregables/"]:not([href^="/entregables/2026-11-04/"])')).toHaveCount(0);
+    for (const retired of ["2026-10-24", "2026-10-25", "2026-10-30", "2026-11-01", "2026-11-02"]) {
+      expect((await request.get(`/entregables/${retired}/manifest.json`)).status()).toBe(404);
+    }
     await expect(section).toContainText(lang === "es" ? "se compila y verifica en local" : "compiled and verified locally");
     const c1 = section.locator("li").filter({ has: page.getByRole("heading", { name: /^C1 ·/ }) });
     await expect(c1.locator("a")).toHaveCount(0);

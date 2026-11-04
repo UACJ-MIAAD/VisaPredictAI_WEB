@@ -1,0 +1,71 @@
+{
+  "schema": "visapredict.academic-review/1",
+  "date": "2026-11-04",
+  "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
+  "source_commit": "d57aafec52a0a6b04517521b18a99ca30898bde8",
+  "derivation": {
+    "kind": "local-cumulative-package",
+    "package": "Entregables_2026-11-04_remanentes_auditoria + B3 v15",
+    "cumulative_pdfs_tracked_in_source_repo": false,
+    "review_manifest_sha256": "ff54de794930696fd5786c46b77cdfb00594a6c1da9aca50592ff703450a8136"
+  },
+  "status": "prepared-not-submitted",
+  "artifacts": [
+    {
+      "id": "A11",
+      "path": "/entregables/2026-11-04/A11.pdf",
+      "sha256": "b120fd7fa8b7af5ffa4cf826023a61ada168102d5998c81666482c18f1e41770",
+      "bytes": 4724663,
+      "pages": 89,
+      "source_package": "2026-11-04_remanentes_auditoria"
+    },
+    {
+      "id": "A12",
+      "path": "/entregables/2026-11-04/A12.pdf",
+      "sha256": "1aa8fbe74057a23e019f45484f2070dc59e9c02ebb2ae65a2dbc0ed98cf1385f",
+      "bytes": 4728439,
+      "pages": 90,
+      "source_package": "2026-11-04_remanentes_auditoria"
+    },
+    {
+      "id": "A13",
+      "path": "/entregables/2026-11-04/A13.pdf",
+      "sha256": "9f9afa0dd87774c6361a77129551d78f53a5ee1e81205d06b752de8f6efc2b7b",
+      "bytes": 4734770,
+      "pages": 92,
+      "source_package": "2026-11-04_remanentes_auditoria"
+    },
+    {
+      "id": "A14",
+      "path": "/entregables/2026-11-04/A14.pdf",
+      "sha256": "f3ce761b5a8afec226d2cf40b605ffc38c8056d96e70b7ca2ee98c465e13a128",
+      "bytes": 4804051,
+      "pages": 95,
+      "source_package": "2026-11-04_remanentes_auditoria"
+    },
+    {
+      "id": "B1",
+      "path": "/entregables/2026-11-04/B1.pdf",
+      "sha256": "1cdab09dfb3570a1fb6bd63ab2be77ea8ce55a04b0dc1c0e950c00b45e23fe5a",
+      "bytes": 4815902,
+      "pages": 98,
+      "source_package": "2026-11-04_remanentes_auditoria"
+    },
+    {
+      "id": "B2",
+      "path": "/entregables/2026-11-04/B2.pdf",
+      "sha256": "92e6d47f0f6e0d53888d4ce43701ca2b5532d22015abc4fa53999e5eed887f19",
+      "bytes": 9525078,
+      "pages": 138,
+      "source_package": "2026-11-04_remanentes_auditoria"
+    },
+    {
+      "id": "B3",
+      "path": "/entregables/2026-11-04/B3.pdf",
+      "sha256": "b066b701835427856806c2e8517c25be84a23e95ecacfe97e710b36c495efe43",
+      "bytes": 3293584,
+      "pages": 26,
+      "source_package": "2026-10-30_B3_v15"
+    }
+  ]
+}
