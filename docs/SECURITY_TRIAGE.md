@@ -4,8 +4,8 @@
 
 Los parches Next 15.5.28 y DOMPurify 3.4.17 y las fuentes locales están
 integrados por [PR #59](https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/pull/59),
-squash `9e71551`, con CI de main verde. El sitio de noviembre se publicó después
-desde `main@7bb252b`; no siguen siendo cambios locales pendientes de push.
+squash `f8ad0a7`, con CI de main verde. El sitio de noviembre se publicó después
+desde `main@761fbd1`; no siguen siendo cambios locales pendientes de push.
 
 La consulta nueva `npm audit --omit=dev --json` del 25-oct a las 03:00Z
 (24-oct en Nueva York), sobre el mismo lock, termina rc 0: **cero avisos de
@@ -43,7 +43,7 @@ desarrollo de braces conservan su triage; no se declaran resueltos por este parc
 ### Estado anterior del runtime RAG (histórico, misma fecha)
 
 El **runtime RAG integrado el 22-oct-2026 por PR #56**, squash
-`6790aa0`. CI de PR, control semanal y CI de main verdes; el de main necesitó
+`23b484a`. CI de PR, control semanal y CI de main verdes; el de main necesitó
 un segundo intento por una descarga fallida de fuentes de Google. Producción
 verifica el consentimiento y la activación del motor. El audit del lock publicado
 tiene **cero avisos de producción** y cinco paquetes de desarrollo afectados por
@@ -107,7 +107,7 @@ El resultado de producción cero no se presenta como audit completo limpio.
 
 ## Registro histórico del candidato C3 (2026-10-20)
 
-Inventario nuevo sobre el lock exacto: la base web `88cb073` presenta **15 paquetes
+Inventario nuevo sobre el lock exacto: la base web `0b044ac` presenta **15 paquetes
 afectados por 5 GHSA distintos**; producción tiene 6 paquetes y 2 GHSA, sin altos
 ni críticos. Tras la corrección quedan **10 paquetes y 2 GHSA**; producción, 5
 paquetes de una sola cadena moderada. Son conteos de paquetes y advisories distintos.
@@ -150,7 +150,7 @@ historias de cierre conservan su propio alcance.
 
 El job semanal falló desde el 14-sep: ese día por un `ETIMEDOUT` al instalar
 `onnxruntime-node` (red, no audit) y desde el 21-sep por avisos nuevos. Audit medido el
-2026-10-12 con Node 22.19 / npm 10.9.3 sobre el lock de `main@3ae16ff`: **producción
+2026-10-12 con Node 22.19 / npm 10.9.3 sobre el lock de `main@10986d9`: **producción
 (`--omit=dev`) 15 avisos únicos en 11 paquetes, 4 high**; con dev, 20 únicos. El gate
 salía rc 1. Remediación (lockfile regenerado con npm, sin `--force` ni excepciones):
 
@@ -180,7 +180,7 @@ Evidencia del audit antes/después, delta del lockfile y fichas oficiales:
 
 Entonces el audit completo era 0/0/0/0/0 y no había filas de triage.
 
-### Remediación H1 (PR #2, squash → `main@9d0929d`, 2026-09-02)
+### Remediación H1 (PR #2, squash → `main@e69173d`, 2026-09-02)
 
 Los 17 avisos colapsaban en cinco cadenas; todas se cerraron con upgrades reales, ninguna
 con `--force` ni con excepción:
@@ -197,7 +197,7 @@ con `--force` ni con excepción:
   conservan: no forman parte de la superficie de producción (`--omit=dev`).
 - Verificación: `npm ci` reproducible (lockfile v3, Node 22.23.2 / npm 10.9.8); suite web
   (vitest + typecheck + build offline) verde en la PR; CI de push `33590123625` verde;
-  **Scheduled quality `33592819714` verde** sobre `main@9d0929d` (ejecución manual del
+  **Scheduled quality `33592819714` verde** sobre `main@e69173d` (ejecución manual del
   2-sep-2026 tras el merge); readback local `npm audit --json` → `{info:0, low:0,
   moderate:0, high:0, critical:0}`.
 - Evidencia de la remediación (auditoría antes/después, diff del lockfile, clasificación de

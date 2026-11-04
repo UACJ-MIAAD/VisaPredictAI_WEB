@@ -16,7 +16,7 @@ export type SystemFlow = {
 };
 
 const DATA = `https://github.com/UACJ-MIAAD/VisaPredictAI/blob/${BULLETIN_OPERATION.sourceCommit}/`;
-const WEB = "https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/blob/6790aa0ee96ae2c8546af7cd3fe0c0b0de2c401f/";
+const WEB = "https://github.com/UACJ-MIAAD/VisaPredictAI_WEB/blob/23b484a2de9593a22574298e7545d74242734a42/";
 // The DDL catalog fixture was built at this published commit. Its source files
 // are byte-identical in the October release; retain the catalog's exact origin.
 const SCHEMA_DATA = "https://github.com/UACJ-MIAAD/VisaPredictAI/blob/a6036ec20eaf5ecb17b1cce43fe2ecea9436a82b/";
