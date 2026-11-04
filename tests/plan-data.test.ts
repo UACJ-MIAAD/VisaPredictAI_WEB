@@ -263,7 +263,7 @@ describe("public MLOps plan", () => {
 
   it("closes E5 only with the web squash that put the cohorts in production", () => {
     const e5 = PLAN_EPICS.flatMap((epic) => epic.stories).find((item) => item.id === "E5");
-    expect(e5).toMatchObject({ status: "done", evidence: "ea1b8c5" });
+    expect(e5).toMatchObject({ status: "done", evidence: "05fd213" });
     const published = PLAN_UPDATES.find((entry) => entry.title.es.startsWith("E5"));
     expect(published?.status).toBe("done");
     expect(published?.detail.es).toMatch(/PR web #52.*producci[oó]n/);
