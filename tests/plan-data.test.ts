@@ -176,8 +176,8 @@ describe("public MLOps plan", () => {
     expect(focus.deferred).toEqual([]);
     expect(findStory(PLAN_EPICS, "D5")).toMatchObject({ status: "done", evidence: "6ff06fd" });
     expect(findStory(PLAN_EPICS, "A6").status).toBe("done");
-    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-11-04", status: "done" });
-    expect(focus.updatedAt).toBe("2026-11-04");
+    expect(PLAN_UPDATES[0]).toMatchObject({ date: "2026-11-07", status: "done" });
+    expect(focus.updatedAt).toBe("2026-11-07");
     expect(planStats().percent).toBe(100);
     expect(PLAN_META.releaseId).toBe("2026-11-5ed564aa4d00");
   });

@@ -2,12 +2,12 @@
   "schema": "visapredict.academic-review/1",
   "date": "2026-11-04",
   "source_repo": "UACJ-MIAAD/VisaPredictAI_LaTeX",
-  "source_commit": "d57aafec52a0a6b04517521b18a99ca30898bde8",
+  "source_commit": "a59a9e8766a2924f9f74e799182647c03bd309f3",
   "derivation": {
     "kind": "local-cumulative-package",
-    "package": "Entregables_2026-11-04_remanentes_auditoria + B3 v15",
+    "package": "Entregables_2026-11-04_remanentes_auditoria + errata 2026-11-07 (B2) + B3 v15",
     "cumulative_pdfs_tracked_in_source_repo": false,
-    "review_manifest_sha256": "ff54de794930696fd5786c46b77cdfb00594a6c1da9aca50592ff703450a8136"
+    "review_manifest_sha256": "cb117f8f53fe548794effd791803dfdfc4377f26d1a63cd6ec6911a6be40c899"
   },
   "status": "prepared-not-submitted",
   "artifacts": [
@@ -54,10 +54,10 @@
     {
       "id": "B2",
       "path": "/entregables/2026-11-04/B2.pdf",
-      "sha256": "92e6d47f0f6e0d53888d4ce43701ca2b5532d22015abc4fa53999e5eed887f19",
-      "bytes": 9525078,
+      "sha256": "32350b307946ef99d77831502d87397d1b2b7bfbb13c23b50f7821435c694b58",
+      "bytes": 9525427,
       "pages": 138,
-      "source_package": "2026-11-04_remanentes_auditoria"
+      "source_package": "2026-11-07_errata_backfill"
     },
     {
       "id": "B3",
