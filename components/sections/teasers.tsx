@@ -23,7 +23,7 @@ const T = {
     fcCta: "Ver el pronóstico de tu categoría",
     evTitle: "La evidencia, contra la realidad",
     evBody:
-      "Cada pronóstico usa solo la información disponible hasta su origen y se califica contra el boletín real publicado (backfill sin fuga de información).",
+      "Cada pronóstico se califica contra el boletín real publicado. El registro histórico es un backfill congelado antes del relleno causal de huecos: orientativo hasta regenerarlo.",
     evCta: "Ver el marcador prospectivo",
     mae: "días de error medio (MAE)",
     mase: "MASE (vs naïve estacional)",
@@ -37,7 +37,7 @@ const T = {
     fcCta: "See your category's forecast",
     evTitle: "The evidence, against reality",
     evBody:
-      "Every forecast uses only information available at its origin and is graded against the real published bulletin (a leakage-free backfill).",
+      "Every forecast is graded against the real published bulletin. The historical ledger is a backfill frozen before the causal gap fill: indicative until regenerated.",
     evCta: "See the prospective scorecard",
     mae: "days mean error (MAE)",
     mase: "MASE (vs seasonal naïve)",

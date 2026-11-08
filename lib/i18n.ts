@@ -390,9 +390,9 @@ const S = {
   resSortMase: { es: "Precisión", en: "Accuracy" },
   resSortBacklog: { es: "Espera", en: "Wait" },
   resSortMovement: { es: "Avance", en: "Movement" },
-  // scorecard chip (verified out-of-sample accuracy; leakage-free backfill — A1)
+  // scorecard chip (out-of-sample accuracy; backfill frozen before the causal gap fill — A1, errata 7-nov-2026)
   resScoreLabel: { es: "Precisión verificada", en: "Verified accuracy" },
-  resScoreTip: { es: "Pronósticos calificados contra boletines ya publicados (backfill sin fuga de información).", en: "Forecasts graded against already-published bulletins (leakage-free backfill)." },
+  resScoreTip: { es: "Pronósticos calificados contra boletines ya publicados (backfill congelado en jun-2026, antes del relleno causal de huecos; orientativo hasta regenerarlo).", en: "Forecasts graded against already-published bulletins (backfill frozen in Jun 2026, before the causal gap fill; indicative until regenerated)." },
   // card face signals
   resWait: { es: "espera", en: "wait" },
   resYr: { es: "a", en: "yr" }, // años / years — compact unit

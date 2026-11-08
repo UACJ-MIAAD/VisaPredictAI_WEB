@@ -118,7 +118,8 @@ describe("topic reminders restated after the sources", () => {
   it("EN coverage: no invented hold-out coverage and the backfill is not 'not backtested'", () => {
     const r = topicReminders("en", "How reliable are your prediction intervals? Give me the coverage numbers.");
     expect(r).toMatch(/^REMINDERS FOR THIS QUESTION/);
-    expect(r).toMatch(/leakage-free backfill/);
+    expect(r).toMatch(/backfill frozen in Jun 2026, before the causal gap fill/);
+    expect(r).not.toMatch(/leakage-free/);
     expect(r).toMatch(/never say it is "not backtested"/);
   });
 

@@ -3,8 +3,9 @@
 // Prospective accuracy leaderboard: the deployed model GRADED AGAINST REALITY, accruing one
 // bulletin at a time. Reads the frozen-forecast scorecard (public/data/forecast_scorecard.json,
 // fetched at build from the data repo). Distinct from a backtest: every number here is a
-// forecast built only from information available at its origin month and later scored against
-// the real cutoff (a leakage-free backfill to date; live vintages are frozen at emission since
+// forecast frozen at its origin month and later scored against the real cutoff (a backfill frozen
+// in Jun 2026, before the causal gap fill: origins inside a gap inherited a bidirectional
+// interpolation, so it is indicative until regenerated; live vintages are frozen at emission since
 // the Jul-2026 deployment — A1, plan auditoría 2026-07-11).
 
 import * as React from "react";
@@ -28,7 +29,7 @@ const T = {
     eyebrow: "Evaluación prospectiva",
     title: "Qué tan bien predijo el sistema, contra la realidad",
     intro:
-      "Cada pronóstico aquí se generó solo con la información disponible hasta su mes de origen y luego se calificó contra la fecha real del boletín: un backfill sin fuga de información (desde jul-2026, las añadas nuevas se congelan al emitirse). La precisión se acumula un mes a la vez.",
+      "Cada pronóstico aquí se calificó contra la fecha real del boletín. Las añadas históricas son un backfill congelado en jun-2026, antes del relleno causal de huecos: los orígenes dentro de un hueco heredaron una interpolación bidireccional, así que el registro es orientativo hasta regenerarlo (desde jul-2026, las añadas nuevas se congelan al emitirse). La precisión se acumula un mes a la vez.",
     nScored: "pronósticos calificados",
     mae: "Error medio absoluto",
     maeUnit: "días",
@@ -40,7 +41,7 @@ const T = {
     horizon: "Horizonte (meses)",
     maeAxis: "MAE (días)",
     caveatFallback:
-      "Registro tipo backfill sin fuga de información (las añadas servidas en vivo se acumulan desde jul-2026); muestra pequeña y creciente; la cobertura 80 % reportada es out-of-sample.",
+      "Registro tipo backfill, congelado antes del relleno causal de huecos y orientativo hasta regenerarlo (las añadas servidas en vivo se acumulan desde jul-2026); muestra pequeña y creciente; la cobertura 80 % reportada es out-of-sample.",
     methodTitle: "A un mes, nadie le gana al random walk",
     methodBody:
       "El marco comparativo de {N} modelos dejó un hallazgo incómodo y valioso: en el pronóstico puntual a un mes, ningún modelo supera al random walk — con cerca de {PCT} % de los meses congelados, la fila que no se mueve es difícil de vencer. El valor del sistema está en lo que el random walk no da: el horizonte de {H} meses, los intervalos calibrados y la coherencia entre tablas. El campeón desplegado (mediana de Theta+ETS+SARIMA en FAD; SARIMA en DFF) sigue en producción; el retador ingenuo pasó el gate de promoción, pero la promoción está retenida hasta confirmarse prospectivamente en todos los horizontes — su añada mensual se congela en un ledger sombra. Las bandas 80 / 95 % se escalan por horizonte con los cuantiles empíricos del propio ledger prospectivo (calibradas solo sobre fechas F, con ajuste adaptativo ACI), y cada publicación respeta un cono de coherencia (FAD ≤ DFF; país ≤ mundial).",
@@ -49,7 +50,7 @@ const T = {
     eyebrow: "Prospective evaluation",
     title: "How well the system forecast — against reality",
     intro:
-      "Each forecast here was built only from information available at its origin month and later graded against the real bulletin cutoff: a leakage-free backfill (from Jul 2026 onward, new vintages are frozen at emission). Accuracy accrues one month at a time.",
+      "Each forecast here was graded against the real bulletin cutoff. The historical vintages are a backfill frozen in Jun 2026, before the causal gap fill: origins inside a gap inherited a bidirectional interpolation, so the ledger is indicative until regenerated (from Jul 2026 onward, new vintages are frozen at emission). Accuracy accrues one month at a time.",
     nScored: "forecasts graded",
     mae: "Mean absolute error",
     maeUnit: "days",
@@ -61,7 +62,7 @@ const T = {
     horizon: "Horizon (months)",
     maeAxis: "MAE (days)",
     caveatFallback:
-      "A leakage-free backfill ledger (live vintages accrue since Jul 2026); small and growing sample; the reported 80% coverage is out-of-sample.",
+      "A backfill ledger frozen before the causal gap fill, indicative until regenerated (live vintages accrue since Jul 2026); small and growing sample; the reported 80% coverage is out-of-sample.",
     methodTitle: "At one month out, nothing beats the random walk",
     methodBody:
       "The {N}-model comparison surfaced an uncomfortable, valuable finding: on one-month-ahead point forecasts, no model beats the random walk — with about {PCT}% of months frozen, the row that does not move is hard to outdo. The system's value lies in what the random walk cannot give: the {H}-month horizon, calibrated intervals and cross-table coherence. The deployed champion (median of Theta+ETS+SARIMA on FAD; SARIMA on DFF) stays in production; the naïve challenger passed the promotion gate, but promotion is held until it is confirmed prospectively across all horizons — its monthly vintages are frozen in a shadow ledger. The 80 / 95% bands are scaled per horizon with the empirical quantiles of the prospective ledger itself (calibrated on F-status dates only, with adaptive ACI adjustment), and every release respects a coherence cone (FAD ≤ DFF; country ≤ worldwide).",
