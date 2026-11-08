@@ -253,6 +253,15 @@ export const PLAN_DELIVERABLES = [
 
 export const PLAN_UPDATES: PlanUpdate[] = [
   {
+    date: "2026-11-07",
+    title: c("G6 · Errata del registro por horizonte", "G6 · Horizon-ledger errata"),
+    detail: c(
+      "El documento y B2 ya no llaman «sin fuga» al registro por horizonte: sus añadas se congelaron en junio, antes del relleno causal de huecos, y los orígenes que caen dentro de un hueco heredaron la interpolación bidireccional. Se lee como orientativo hasta regenerarlo. Documental main a59a9e8; B2 conserva sus 138 páginas, sin errores, desbordes ni referencias indefinidas.",
+      "The document and B2 no longer call the horizon ledger leakage-free: its vintages were frozen in June, before the causal gap fill, and origins inside a gap inherited the bidirectional interpolation. It reads as indicative until regenerated. Documentary main a59a9e8; B2 keeps its 138 pages with no errors, overflows or undefined references."
+    ),
+    status: "done",
+  },
+  {
     date: "2026-11-04",
     title: c("G6 · Remanentes de la revisión ciega", "G6 · Blind-review remainders"),
     detail: c(

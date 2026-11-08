@@ -18,7 +18,7 @@ export type ForecastStore = {
   method: Record<string, string>; // table -> human method description
   series: Map<string, ForecastPoint[]>; // "country|category|table" -> future points
   meta: Map<string, SeriesMeta>;
-  scorecard: Scorecard | null; // prospective scorecard (leakage-free backfill: origin-truncated vs realized)
+  scorecard: Scorecard | null; // prospective scorecard (backfill frozen before the causal gap fill vs realized; indicative until regenerated)
   horizonMonths: number; // forecast horizon, derived from the pipeline (0 when no forecasts shipped)
   status: "ok" | "production_unavailable";
   reason?: string; // human-readable cause when status is production_unavailable
