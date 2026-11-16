@@ -66,13 +66,13 @@ export function VisaObservatory({panel,country,category,table,lang,onCountry,onE
     <div className="vb-observatory-scrubber">
       <MoveHorizontal size={14} aria-hidden="true"/>
       <input type="range" min="0" max={Math.max(0,rows.length-1)} value={Math.max(0,at)} disabled={rows.length<2}
-        onChange={e=>setInspected(Number(e.target.value))} aria-label={en?"Explore bulletin month":"Explorar mes del boletín"}
+        onChange={e=>setInspected(Number(e.target.value))} aria-label={en?"Explore bulletin month":"Recorre los meses del boletín"}
         aria-valuetext={selected?`${monthLabel(selected.bulletinMonth,lang)}: ${display}`:undefined}/>
       <span>{en?"EXPLORE":"RECORRE"}</span>
     </div>
     <div className="vb-observatory-footer">
       <div className="vb-country-switch" role="group" aria-label={en?"Choose a chargeability area":"Elegir área de cargabilidad"}>
-        {(panel?.countries??[]).map(c=><button key={c} type="button" aria-label={countryLabel(c,lang)} aria-pressed={country===c} onClick={()=>{setInspected(null);onCountry(c);}}>{SHORT[c]??countryLabel(c,lang)}</button>)}
+        {(panel?.countries??[]).map(c=><button key={c} type="button" aria-label={`${countryLabel(c,lang)}${SHORT[c]?` (${SHORT[c]})`:""}`} aria-pressed={country===c} onClick={()=>{setInspected(null);onCountry(c);}}>{SHORT[c]??countryLabel(c,lang)}</button>)}
       </div>
       <button className="vb-observatory-explore" onClick={onExplore} disabled={!panel} aria-label={en?"View forecast for this series":"Ver pronóstico de esta serie"}><span className="vb-observatory-explore-label">{en?"View forecast":"Ver pronóstico"}</span><ArrowUpRight size={18} aria-hidden="true"/></button>
     </div>

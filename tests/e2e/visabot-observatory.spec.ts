@@ -13,13 +13,18 @@ for(const lang of ["es","en"] as const)for(const theme of ["light","dark"] as co
     await expect(instrument.locator("[data-vb-observation]")).toHaveText(series("mexico").at(-1)!.priorityDate!);
     await page.getByRole("button",{name:lang==="es"?"Modo presentación":"Presentation mode",exact:true}).click();
     const slider=instrument.getByRole("slider");
+    await expect(slider).toHaveAccessibleName(new RegExp(await instrument.locator(".vb-observatory-scrubber > span").innerText(),"i"));
     await slider.focus();await slider.press("Home");
     await expect(instrument.locator("[data-vb-observation]")).toHaveText(series("mexico")[0].priorityDate!);
     await slider.press("End");
     await expect(instrument.locator("[data-vb-observation]")).toHaveText(series("mexico").at(-1)!.priorityDate!);
-    await instrument.getByRole("button",{name:"India",exact:true}).click();
+    for(const button of await instrument.getByRole("group").getByRole("button").all()) {
+      const visible=(await button.innerText()).trim();
+      await expect(button).toHaveAccessibleName(new RegExp(visible,"i"));
+    }
+    await instrument.getByRole("button",{name:/India/}).click();
     await expect(instrument.locator("[data-vb-observation]")).toHaveText(series("india").at(-1)!.priorityDate!);
-    await expect(instrument.getByRole("button",{name:"India",exact:true})).toBeFocused();
+    await expect(instrument.getByRole("button",{name:/India/})).toBeFocused();
     await expect(page.locator('[data-vb-starter="forecast"]')).toContainText("India");
     const input=page.locator(".vb-console textarea");await input.fill("Un borrador intacto");
     await page.getByRole("button",{name:lang==="es"?"Haz tu pregunta":"Ask your question",exact:true}).click();
