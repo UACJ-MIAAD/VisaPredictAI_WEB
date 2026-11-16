@@ -373,8 +373,8 @@ const REMINDERS = [
     // the bot defined Table A/B as "adjustment of status vs abroad", said DFF
     // alone authorizes adjustment and read the cutoff as "from which" (>=)
     query: /\b(tablas?|tables?|final action|dates for filing|fad|dff|visa bulletin|boletin\w*|bulletin\w*|fecha de corte|cutoff|ajuste de estatus|adjustment)\b/,
-    es: "- TABLAS DEL BOLETÍN: la Tabla A es Final Action Dates (FAD) y la Tabla B es Dates for Filing (DFF); nunca las definas como «ajuste de estatus» frente a «solicitantes en el extranjero». La fecha de corte NO es «a partir de la cual»: califica una fecha de prioridad ANTERIOR a la fecha publicada. Para ajuste de estatus, USCIS indica cada mes qué tabla acepta: no afirmes que Dates for Filing autoriza por sí sola iniciar el ajuste.",
-    en: "- BULLETIN TABLES: Table A is Final Action Dates (FAD) and Table B is Dates for Filing (DFF); never define them as \"adjustment of status\" versus \"applicants abroad\". The cutoff is NOT a date \"from which\" one qualifies: a priority date EARLIER than the listed date qualifies. For adjustment of status, USCIS states each month which table it accepts: do not claim Dates for Filing by itself authorizes filing for adjustment.",
+    es: "- TABLAS DEL BOLETÍN: la Tabla A es Final Action Dates (FAD) y la Tabla B es Dates for Filing (DFF); nunca las definas como «ajuste de estatus» frente a «solicitantes en el extranjero». La fecha de corte NO es «a partir de la cual»: califica una fecha de prioridad ANTERIOR a la fecha publicada. Para ajuste de estatus, USCIS indica cada mes qué tabla acepta: no afirmes que Dates for Filing autoriza por sí sola iniciar el ajuste; si citas la definición del glosario («autoriza el inicio anticipado del trámite de ajuste de estatus»), añade en la misma frase que eso ocurre sólo cuando USCIS acepta esa tabla ese mes.",
+    en: "- BULLETIN TABLES: Table A is Final Action Dates (FAD) and Table B is Dates for Filing (DFF); never define them as \"adjustment of status\" versus \"applicants abroad\". The cutoff is NOT a date \"from which\" one qualifies: a priority date EARLIER than the listed date qualifies. For adjustment of status, USCIS states each month which table it accepts: do not claim Dates for Filing by itself authorizes filing for adjustment; if you quote the glossary definition (\"authorizes the early start of the adjustment-of-status process\"), add in the same sentence that this applies only when USCIS accepts that table that month.",
   },
   {
     // "¿Algún modelo le gana a repetir el último corte?" was answered "Sí"
@@ -411,6 +411,12 @@ const REMINDERS = [
     query: /\b(cambi\w*|chang\w*|avanz\w*|avanc\w*|advanc\w*|retroce\w*|retrogress\w*|novedad\w*|what'?s new)\b/,
     es: "- CAMBIOS DE BOLETÍN: al destacar avances o retrocesos, ordénalos por su magnitud en días (los +Nd/−Nd de cada celda), no por el orden de la tabla, y da junto a cada uno su magnitud; si la pregunta no se limita a otro país, incluye los de México cuando los haya.",
     en: "- BULLETIN CHANGES: when highlighting advances or retrogressions, order them by their magnitude in days (each cell's +Nd/−Nd), not by table order, giving each one's magnitude; unless the question is limited to another country, include Mexico's when there are any.",
+  },
+  {
+    // the database answer swapped series, observations and bulletins
+    query: /\b(registros?|observaciones|filas|rows|records|observations|boletines|bulletins|tamano|size|cuant\w*|how many|base de datos|database)\b/,
+    es: "- CONTEOS DE LA BASE: toma observaciones, series y meses o boletines de la fuente «Cifras canónicas del sistema», donde cada valor sigue a su etiqueta; en otras fichas el número aparece ANTES de su etiqueta. Nunca intercambies series, observaciones y boletines. La fuente primaria de los datos es el Visa Bulletin oficial del Departamento de Estado.",
+    en: "- DATABASE COUNTS: take observations, series and months or bulletins from the \"Canonical figures of the system\" source, where each value follows its label; in other cards the number appears BEFORE its label. Never swap series, observations and bulletins. The primary data source is the official Visa Bulletin of the Department of State.",
   },
   {
     // "¿y para India?" claimed India advances more than Mexico; it advances less

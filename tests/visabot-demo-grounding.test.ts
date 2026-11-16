@@ -10,6 +10,7 @@ const CHUNKS = [
   { kind: "academic", lang: "es", sourceId: "resumen", title: "Resumen", text: "x" },
   { kind: "docs", lang: "es", sourceId: "ingenieria", title: "5. Evaluación", text: "mcs" },
   { kind: "docs", lang: "en", sourceId: "ingenieria", title: "5. Evaluación", text: "mcs" },
+  { lang: "es", title: "Cifras canónicas del sistema", text: "Series estructurales: 194" },
 ];
 const titles = (idx: number[]) => idx.map((i) => CHUNKS[i].title);
 
@@ -84,6 +85,12 @@ describe("demo reminders", () => {
   it("the base prompt no longer calls the horizon 'validated months'", () => {
     expect(systemPrompt("es", [], "console", "")).not.toMatch(/meses validados/);
     expect(systemPrompt("en", [], "console", "")).not.toMatch(/validated \d+ months/);
+  });
+
+  it("preview run: database counts come from the fact sheet and are never swapped", () => {
+    const q = "¿Cuántos registros y series tiene la base de datos?";
+    expect(titles(pinGrounding([0], CHUNKS, "es", q))).toContain("Cifras canónicas del sistema");
+    expect(topicReminders("es", q)).toMatch(/Nunca intercambies series, observaciones y boletines/);
   });
 
   it("leaves unrelated questions without reminders", () => {
