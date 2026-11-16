@@ -24,6 +24,7 @@ export interface GuionSlide {
   startSeconds: number;
   paragraphs: string[];
   cue: string;
+  sourceNote?: string;
   links: GuionLink[];
   image: string;
 }
@@ -658,6 +659,11 @@ export default function GuionReader({ data }: GuionReaderProps) {
                   {paragraph}
                 </p>
               ))}
+              {currentSlide.sourceNote ? (
+                <aside className={styles.cueBox} aria-label="Fuente y alcance del dato, no se lee en voz alta">
+                  {currentSlide.sourceNote}
+                </aside>
+              ) : null}
             </div>
 
             <footer className={styles.readerFooter}>
