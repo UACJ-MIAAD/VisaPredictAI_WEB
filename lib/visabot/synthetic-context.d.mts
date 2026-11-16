@@ -42,7 +42,7 @@ export declare function loadSyntheticData(opts: {
   now?: () => number;
 }): Promise<SyntheticData>;
 
-export type RebuiltSource = { n: number; title: string; source: string; text: string };
+export type RebuiltSource = { n: number; title: string; source: string; text: string; display?: string };
 export declare function buildSyntheticContext(
   descriptors: ValidatedDescriptor[],
   data: SyntheticData,

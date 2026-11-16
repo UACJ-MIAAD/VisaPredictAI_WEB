@@ -53,7 +53,10 @@ async function loadIndex(): Promise<Loaded> {
     const json = (await raw.json()) as Index;
     const { docTf, docLen, idf, avgdl } = buildBM25(json.chunks);
     return { meta: json, dim: json.dim, docTf, docLen, idf, avgdl };
-  })();
+  })().catch((error) => {
+    _index = null; // a transient CDN error must not poison this page forever
+    throw error;
+  });
   return _index;
 }
 
@@ -185,6 +188,7 @@ export async function generate(
   surface: "widget" | "console" = "widget",
   synthetics?: SyntheticDescriptor[],
 ): Promise<GenResult> {
+  signal?.throwIfAborted();
   let res: Response;
   try {
     res = await fetch("/.netlify/functions/chat", {
@@ -204,10 +208,12 @@ export async function generate(
       }),
       signal,
     });
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw error;
     return { text: extractive(context, lang), extractive: true };
   }
 
+  signal?.throwIfAborted();
   if (res.status === 503 || !res.ok || !res.body) {
     // no key / unavailable → honest extractive answer
     return { text: extractive(context, lang), extractive: true };
@@ -217,40 +223,58 @@ export async function generate(
   const dec = new TextDecoder();
   let buf = "",
     full = "",
-    erred = false;
+    erred = false,
+    completed = false;
   let serverSources: ServerSource[] | undefined;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    // Runaway guard: a malformed stream with no frame boundary must not grow the
-    // buffer without bound — bail to the extractive fallback instead.
-    if (buf.length > 1_000_000) {
-      erred = true;
-      break;
-    }
-    const parts = buf.split("\n\n");
-    buf = parts.pop() || "";
-    for (const p of parts) {
-      // an SSE event may carry MULTIPLE data: lines that concatenate
-      const payload = p.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("\n");
-      if (!payload) continue;
-      try {
-        const ev = JSON.parse(payload);
-        if (ev.t === "delta" && ev.text) {
-          full += ev.text;
-          onDelta(ev.text);
-        } else if (ev.t === "sources" && Array.isArray(ev.sources)) {
-          serverSources = ev.sources as ServerSource[]; // US I1: server-rebuilt synthetics
-        } else if (ev.t === "error") {
-          erred = true;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf = (buf + dec.decode(value, { stream: true })).replace(/\r\n/g, "\n");
+      // A malformed stream with no frame boundary must stay bounded.
+      if (buf.length > 1_000_000) {
+        erred = true;
+        break;
+      }
+      const parts = buf.split("\n\n");
+      buf = parts.pop() || "";
+      for (const p of parts) {
+        // SSE permits multiple data lines in one frame.
+        const payload = p.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(5).trim()).join("\n");
+        if (!payload) continue;
+        try {
+          const ev = JSON.parse(payload);
+          if (ev.t === "delta" && ev.text) {
+            full += ev.text;
+            onDelta(ev.text);
+          } else if (ev.t === "sources" && Array.isArray(ev.sources)) {
+            serverSources = ev.sources as ServerSource[];
+          } else if (ev.t === "error") {
+            erred = true;
+          } else if (ev.t === "done") {
+            completed = true;
+          }
+        } catch {
+          /* ignore ping / keep-alive */
         }
-      } catch {
-        /* ignore ping / keep-alive */
       }
     }
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    erred = true;
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
   }
-  if (erred && !full) return { text: extractive(context, lang), extractive: true };
+  signal?.throwIfAborted();
+  if (!full.trim()) return { text: extractive(context, lang), extractive: true };
+  if ((erred || !completed) && !/_(?:Incomplete answer|Respuesta incompleta):/.test(full)) {
+    const note = lang === "en"
+      ? "\n\n_Incomplete answer: the connection was interrupted._"
+      : "\n\n_Respuesta incompleta: se interrumpió la conexión._";
+    full += note;
+    onDelta(note);
+  }
   return { text: full, extractive: false, serverSources };
 }
 

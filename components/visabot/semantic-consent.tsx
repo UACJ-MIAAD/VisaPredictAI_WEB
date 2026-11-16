@@ -15,17 +15,19 @@ export function SemanticConsent({
   semantic,
   constrained,
   onEnable,
+  compact = false,
 }: {
   lang: Lang;
   semantic: boolean; // download already started/consented
   constrained: boolean; // saveData / 2g connection detected
   onEnable: () => void;
+  compact?: boolean;
 }) {
   if (semantic) return null;
   return (
-    <div className="flex items-center gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
+    <div className="vb-semantic-consent flex items-center gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2">
       <p className="min-w-0 flex-1 text-[0.65rem] leading-snug text-[var(--color-muted)]">
-        {tr(lang, "vbSemanticHint")}
+        {tr(lang, compact ? "vbSemanticHintCompact" : "vbSemanticHint")}
         {constrained && (
           <>
             {" "}

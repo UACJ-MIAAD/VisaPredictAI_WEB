@@ -12,6 +12,8 @@
 import * as React from "react";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
+import { resolveConversationQuery } from "@/lib/visabot/conversation";
+import {PRIORITY_SOURCE,isPriorityQuery,priorityCheckSummary} from "@/lib/visabot/priority-check.mjs";
 import {
   retrieve,
   generate,
@@ -38,7 +40,9 @@ export function mergeServerSources(local: Source[], server: ServerSource[] | und
   const byText = new Map(local.map((s) => [s.text, s]));
   return server.map((sv) => {
     const l = byText.get(sv.text) ?? local.find((s) => s.synthetic && s.n === sv.n);
-    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? "", synthetic: l?.synthetic };
+    const priority=Object.values(PRIORITY_SOURCE).includes(sv.source);
+    const fallback=sv.source===PRIORITY_SOURCE.en?"/en/datos-historicos/#historico":"/datos-historicos/#historico";
+    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? (priority?fallback:""), synthetic: l?.synthetic ?? priority };
   });
 }
 
@@ -147,9 +151,23 @@ export function useVisabotChat({
     return () => clearInterval(iv);
   }, [semantic, modelReady]);
 
+  const positionedChartRef = React.useRef<ChartPayload | undefined>(undefined);
   // autoscroll on new content if pinned to bottom
   React.useEffect(() => {
-    if (atBottom) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    const thread = scrollRef.current;
+    if (!atBottom || !thread) return;
+    if (!messages.length) { thread.scrollTo({top:0}); return; }
+    const last = messages[messages.length - 1];
+    const chart = last.chart && thread.querySelector(`#vb-chart-${messages.length - 1}`);
+    const reply = chart?.closest(".vb-assistant-turn");
+    // A completed chart answer opens at its visual, rather than scrolling past
+    // the whole plot to the end of its explanatory text. Do this once per chart;
+    // returning to the bottom later must not bounce the reader back to the plot.
+    if (reply && positionedChartRef.current !== last.chart) {
+      positionedChartRef.current = last.chart;
+      thread.scrollTo({top:thread.scrollTop + reply.getBoundingClientRect().top - thread.getBoundingClientRect().top - 12});
+    }
+    else thread.scrollTo({ top: thread.scrollHeight });
   }, [messages, atBottom]);
 
   // Reset the auto-grown textarea back to one row once it is cleared (after
@@ -179,6 +197,7 @@ export function useVisabotChat({
       const mySeq = ++seqRef.current; // claim this turn
       const alive = () => seqRef.current === mySeq; // still the active turn?
       setInput("");
+      setAtBottom(true);
       setBusy(true);
       setLiveStatus(tr(lang, "vbThinking"));
       track("VisaBot Query", surface === "console" ? { lang, surface } : { lang });
@@ -190,12 +209,7 @@ export function useVisabotChat({
       // 1–2 word fragment that is NOT itself a standalone question. Short direct
       // questions ("¿qué es FAD?", "what is DFF?") are left untouched so their
       // retrieval isn't polluted by the previous topic (finding 9).
-      const wc = q.split(/\s+/).length;
-      const isFollowUp =
-        /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) ||
-        (wc <= 2 && !/\?|qu[eé]|cu[aá]|c[oó]mo|what|how|which|why|when/i.test(q));
-      const prevUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-      const rq = isFollowUp && prevUser ? (mergeFollowUp ? mergeFollowUp(prevUser, q) : `${prevUser} ${q}`) : q;
+      const rq = resolveConversationQuery(q, messages.filter((m) => m.role === "user").map((m) => m.content), mergeFollowUp);
 
       let sources: Source[] = [];
       try {
@@ -220,6 +234,10 @@ export function useVisabotChat({
         /* console: conversational — a chart can still ground the answer */
       }
 
+      // Stop/new chat may happen while retrieval is still loading. Do not
+      // start a fresh request after that turn has been invalidated.
+      if (!alive()) return;
+
       // console-only: build the chart + synthetic grounding sources from the
       // follow-up-augmented query (rq), so "FAD" after "zoom india F1" still
       // resolves country+category+intent.
@@ -239,7 +257,7 @@ export function useVisabotChat({
       let tFirst = 0;
       try {
         const res = await generate(
-          q,
+          isPriorityQuery(rq) ? rq : q,
           history,
           sources,
           lang,
@@ -264,6 +282,10 @@ export function useVisabotChat({
         // extractive fallback keeps the local list: it is composed client-side
         // from those very chunks, with no server prompt involved.
         const displayed = res.extractive ? sources : mergeServerSources(sources, res.serverSources);
+        // A page kept open across releases must not render an older local card
+        // beside newer server facts. Keep the authoritative text in that case.
+        const answerChart=chart?.kind==="priorityCheck" && !res.extractive &&
+          !res.serverSources?.some(s=>s.source===PRIORITY_SOURCE[lang] && s.text===priorityCheckSummary(chart,lang)) ? undefined : chart;
         const truncated = isTruncated(res.text); // server timeout cut (note appended by chat.mjs)
         setMessages((m) => {
           if (!alive()) return m;
@@ -273,7 +295,7 @@ export function useVisabotChat({
             content: res.text,
             sources: displayed,
             extractive: res.extractive,
-            chart,
+            chart:answerChart,
             ...(truncated ? { incomplete: true } : {}),
           };
           return c;
@@ -345,6 +367,7 @@ export function useVisabotChat({
   const newChat = React.useCallback(() => {
     stop();
     setMessages([]);
+    setAtBottom(true);
     inputRef.current?.focus();
   }, [stop]);
 

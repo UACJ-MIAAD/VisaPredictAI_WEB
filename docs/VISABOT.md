@@ -103,6 +103,38 @@ and re-embeds ~590 chunks (~1–2 min) — acceptable at weekly cadence.
 
 ## Local commands
 
+Adversarial live probes (explicit target required; these consume the target's
+model credits):
+
+```bash
+node scripts/visabot-adversarial-live.mjs https://deploy-preview-N--visapredictai.netlify.app /tmp/visabot-live.json
+# Optional third argument selects comma-separated case ids for a targeted rerun.
+```
+
+The runner respects the 12 requests/minute budget and records full answers,
+server sources, request contexts and typed errors. Forecast probes compare the
+four exact dates in the server-rebuilt source with the answer, accepting ISO,
+Spanish and English date spellings. HTTP 200 and passing regex checks are not
+a faithfulness certificate: review the saved prose, especially historical
+model-card claims about backfill and long-horizon performance. Preserve 429s
+as rate-limit evidence; rerun affected cases after the window expires.
+
+Direct console requests to show one forecast or compare bulletins return the
+server-rebuilt summary; the model does not retype the dates or counts. Forecast
+summaries retain series MASE and a separately labelled global track record.
+Personal priority-date questions use a verified date comparison over the exact
+country/category/table and latest bulletin: earlier, equal, later, Current,
+unavailable and unknown are distinct. They show a comparison card, not a future
+waiting curve. Only an available production forecast can add an uncertain
+central-path reading inside its published horizon; no appointment or approval
+is inferred. Ambiguous inputs ask for clarification. A stale local card is
+discarded if its facts differ from the server's verified comparison.
+Other interpretation and multi-series comparison questions retain generation.
+The sealed protocol chunk asserting that naïve-1 degrades at longer horizons is
+excluded from current answer context while it contains that superseded claim;
+the original source artifact remains preserved. A known text hash establishes
+authenticity, not the validity of every historical assertion it contains.
+
 ```bash
 npm run build:rag    # (re)build the index + download model/wasm into public/
 npm run rag:check    # Node self-check: probe queries must retrieve the right chunk

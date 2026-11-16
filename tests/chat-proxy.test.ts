@@ -128,6 +128,12 @@ describe("sanitizeContext (injection allowlist — finding 13)", () => {
   });
 
   const ragIndexPath = join(process.cwd(), "public", "rag", "index.json");
+  it.skipIf(!existsSync(ragIndexPath))("does not treat the obsolete long-horizon rationale as current evidence just because its hash is known", () => {
+    const chunks = JSON.parse(readFileSync(ragIndexPath, "utf8")).chunks;
+    const old = chunks.find((c: {title: string}) => /^Modelo de producción .*\(2\/3\)$/.test(c.title));
+    expect(old).toBeTruthy();
+    expect(sanitizeContext([{n:1,...old}])).toEqual([]);
+  });
   it.skipIf(!existsSync(ragIndexPath))("neutralizes an instructional client title by overriding it with the index's canonical metadata", () => {
     // Auditoría 12-jul-2026: title/source ya NO se interpolan desde el payload — se
     // reescriben desde el índice por el hash del texto. Un título instruccional del

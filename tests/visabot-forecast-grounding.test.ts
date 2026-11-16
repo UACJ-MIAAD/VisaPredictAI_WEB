@@ -13,9 +13,10 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { DATA_PINS } from "../lib/content/data-pins.generated.mjs";
 import { resetSyntheticData } from "@/lib/visabot/synthetic-context.mjs";
+import { validSyntheticShape } from "../netlify/functions/chat.mjs";
 import { buildPanel } from "@/lib/data/panel-core";
 import { parseForecastStore, backfillScored } from "@/lib/data/forecasts-core.mjs";
-import { buildForecast, chartUserNote, priorityYearTick } from "@/lib/visabot/analytics";
+import { buildForecast, buildBulletinDiff, chartUserNote, forecastText, priorityYearTick } from "@/lib/visabot/analytics";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dataFile = (name: string) => readFileSync(join(root, "public", "data", name));
@@ -34,6 +35,7 @@ const [LO95, HI95] = [iso(Number(f4[7])), iso(Number(f4[8]))];
 const DECIMAL_BAND = /\[\d{4}\.\d, \d{4}\.\d\]|≈ \d{4}\.\d/;
 
 describe("forecast grounding over the released artifacts (chat handler → Anthropic body)", () => {
+  let testNow=Date.now();
   let sentBodies: string[] = [];
   const resLike = (buf: Buffer | null) => ({
     ok: !!buf,
@@ -52,23 +54,34 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     throw new Error(`unexpected fetch ${u}`);
   });
 
-  const ask = async (lang: "es" | "en") => {
+  const ask = async (lang: "es" | "en", direct = false, queryOverride?: string, comparison = false) => {
     const { default: handler } = await import("../netlify/functions/chat.mjs");
     const res = await handler(new Request("https://visapredictai.com/.netlify/functions/chat", {
       method: "POST",
       headers: { origin: "http://localhost:3000", "content-type": "application/json" },
       body: JSON.stringify({
-        lang, query: lang === "en" ? "Show me the Mexico F4 forecast" : "Muéstrame el pronóstico de México F4", surface: "console",
-        synthetics: [{ kind: "forecast_note", country: "mexico", category: "F4", table: "FAD", release_id: DATA_PINS.releaseId }],
+        lang, query: queryOverride ?? (direct
+          ? (lang === "en" ? "Show me the Mexico F4 forecast" : "Muéstrame el pronóstico de México F4")
+          : (lang === "en" ? "Explain the Mexico F4 forecast" : "Explica el pronóstico de México F4")), surface: "console",
+        synthetics: comparison
+          ? [{kind:"bulletin_diff",monthA:"2026-10",monthB:"2026-11",table:"FAD",release_id:DATA_PINS.releaseId}]
+          : [{ kind: "forecast_note", country: "mexico", category: "F4", table: "FAD", release_id: DATA_PINS.releaseId }],
       }),
     }));
     expect(res.status).toBe(200);
-    await res.text();
+    const raw = await res.text();
+    if (direct) {
+      expect(sentBodies).toHaveLength(0);
+      return raw.split("\n\n").flatMap(frame => {
+        try { const e = JSON.parse(frame.replace(/^data: /, "")); return e.t === "delta" ? [e.text] : []; } catch { return []; }
+      }).join("");
+    }
     expect(sentBodies).toHaveLength(1);
     return (JSON.parse(sentBodies[0]) as { system: string }).system;
   };
 
   beforeEach(() => {
+    vi.spyOn(Date,"now").mockReturnValue(testNow+=61_000);
     process.env.ANTHROPIC_API_KEY = "test-key-never-used";
     process.env.VISABOT_DATA_BASE = "https://cdn.test";
     sentBodies = [];
@@ -76,12 +89,45 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     vi.stubGlobal("fetch", fetchStub);
   });
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     delete process.env.VISABOT_DATA_BASE;
     resetSyntheticData();
   });
 
   for (const lang of ["es", "en"] as const) {
+    it(`${lang}: priority checks return the exact country's current cutoff without generation`, async () => {
+      const answer = await ask(lang, true, lang === "es" ? "cuando me toca F2A pd sept 19 2024 mexicano" : "When is my turn, Mexican F2A priority date September 19 2024?");
+      expect(answer).toContain("2026-04-22");
+      expect(answer).toContain("2024-09-19");
+      expect(answer).not.toContain("2026-10-22");
+      expect(answer).not.toMatch(/tu turno ya pas[oó]|your turn has passed/i);
+    });
+    it(`${lang}: direct bulletin changes use the same table counts without model rewriting`, async () => {
+      const spec = buildBulletinDiff(buildPanel(String(dataFile("visa_panel_long.csv"))), "2026-10", "2026-11", "FAD", lang)!;
+      if (spec.kind !== "bulletinDiff") throw new Error("expected comparison table");
+      const answer = await ask(lang, true, lang === "es" ? "¿Qué cambió en el boletín de noviembre 2026, FAD?" : "What changed in the November 2026 bulletin, FAD?", true);
+      expect(answer).toContain(`${spec.summary.advanced} ${lang === "es" ? "avanzaron" : "advanced"}`);
+      expect(answer).toContain(`${spec.summary.unchanged} ${lang === "es" ? "sin cambio" : "unchanged"}`);
+      expect(answer).toContain("FAD");
+      expect(answer).toContain("[1]");
+      expect(answer).not.toMatch(/do NOT refuse|NO te niegues/);
+    });
+    it(`${lang}: explaining why bulletin cutoffs changed retains generation`, async () => {
+      await ask(lang, false, lang === "es" ? "¿Qué cambió y por qué en el boletín de noviembre 2026 FAD?" : "What changed and why in the November 2026 FAD bulletin?", true);
+    });
+    it(`${lang}: a direct forecast request returns verified figures without an LLM copying them`, async () => {
+      const answer = await ask(lang, true);
+      expect(answer).toContain(`[${LO95}, ${HI95}]`);
+      expect(answer).toContain("[1]");
+      expect(answer).toContain("F4");
+      expect(answer).not.toMatch(/being shown to the user|Se está mostrando al usuario|NO digas|do NOT/);
+    });
+    it(`${lang}: a priority-date question gets a verified comparison even when phrased as a forecast`, async () => {
+      await ask(lang, true, lang === "en"
+        ? "Show the Mexico F4 forecast: when does it reach my priority date 2010-01-01?"
+        : "Muéstrame México F4: ¿cuándo alcanza mi fecha de prioridad 2010-01-01?");
+    });
     it(`${lang}: the 95 % band reaches the model as exact ISO dates, never decimal years`, async () => {
       const system = await ask(lang);
       expect(system).toContain(`[${LO95}, ${HI95}]`);
@@ -102,6 +148,32 @@ describe("the same facts on the client side", () => {
   const store = parseForecastStore(String(dataFile("forecasts.csv")),
     JSON.parse(String(dataFile("forecasts_meta.json"))), scorecard);
   const spec = buildForecast(panel, "mexico", "F4", "FAD", "es", 12, 48, store)!;
+  it.each(["es", "en"] as const)("%s: a current series carries its latest status, separately from its historical dated cutoff", (lang) => {
+    const series = panel.rows.filter(r => r.country === "india" && r.category === "F2A" && r.table === "DFF").sort((a,b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+    const last = series.at(-1)!;
+    expect(last.status).toBe("C");
+    const chart = buildForecast(panel, "india", "F2A", "DFF", lang, 12, 48, store)!;
+    if (chart.kind !== "forecast") throw new Error("expected forecast");
+    const summary = chartUserNote(chart, lang)!;
+    expect(summary).toContain(`${last.bulletinMonth}: ${lang === "en" ? "status" : "estado"} C`);
+    expect(summary).toContain(lang === "en" ? "historical" : "histórico");
+    expect(summary.slice(0, 180)).toContain(`${last.bulletinMonth}: ${lang === "en" ? "status" : "estado"} C`);
+  });
+
+  it("every chartable released series passes the server's synthetic grammar in both languages", () => {
+    const keys = [...new Set(panel.rows.map(r => `${r.country}|${r.category}|${r.table}`))];
+    const rejected: string[] = [];
+    let count = 0;
+    for (const key of keys) for (const lang of ["es", "en"] as const) {
+      const [country, category, table] = key.split("|");
+      const chart = buildForecast(panel, country, category, table, lang, 12, 48, store);
+      if (chart?.kind !== "forecast") continue;
+      count++;
+      if (!validSyntheticShape(lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", forecastText(chart, lang))) rejected.push(`${key}/${lang}`);
+    }
+    expect(count).toBeGreaterThan(0);
+    expect(rejected).toEqual([]);
+  });
 
   it("the offline fallback summary shows the same ISO band", () => {
     const s = chartUserNote(spec, "es")!;

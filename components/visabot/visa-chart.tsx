@@ -254,12 +254,21 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
     // (título + subtítulo) los anuncia. La variante "table" es contenido tabular real
     // (mantiene su semántica nativa, sin role).
     <figure
-      role={spec.kind === "table" || spec.kind === "bulletinDiff" ? undefined : "img"}
-      aria-label={spec.kind === "table" || spec.kind === "bulletinDiff" ? undefined : `${spec.title}. ${spec.subtitle}`}
-      className="mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3"
+      role={spec.kind === "table" || spec.kind === "bulletinDiff" || spec.kind === "priorityCheck" ? undefined : "img"}
+      aria-label={spec.kind === "table" || spec.kind === "bulletinDiff" || spec.kind === "priorityCheck" ? undefined : `${spec.title}. ${spec.subtitle}`}
+      className="vb-chart-card mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3"
     >
       <figcaption className="mb-0.5 font-serif text-sm font-bold text-[var(--color-ink)]">{spec.title}</figcaption>
       <p className="mb-2 text-[0.72rem] text-[var(--color-muted)]">{spec.subtitle}</p>
+      {spec.kind === "priorityCheck" && <div data-vb-priority-result={spec.result} className="space-y-4 py-2">
+        <p className="border-l-4 border-[var(--color-accent)] pl-3 text-base font-semibold leading-relaxed text-[var(--color-ink)]">{spec.statement}</p>
+        <dl className="grid grid-cols-1 gap-3 rounded-xl bg-[var(--color-surface-soft)] p-4 text-sm sm:grid-cols-2">
+          {spec.priorityDate && <div><dt className="text-xs text-[var(--color-muted)]">{lang === "es" ? "Tu fecha de prioridad" : "Your priority date"}</dt><dd className="mt-1 font-semibold tabular-nums">{spec.priorityDate}</dd></div>}
+          {spec.cutoff && <div><dt className="text-xs text-[var(--color-muted)]">{lang === "es" ? "Corte publicado" : "Published cutoff"}</dt><dd className="mt-1 font-semibold tabular-nums">{spec.cutoff}</dd></div>}
+        </dl>
+        {spec.forecastNote && <p className="text-sm leading-relaxed text-[var(--color-ink)]">{spec.forecastNote}</p>}
+        <p className="text-xs leading-relaxed text-[var(--color-muted)]">{spec.disclaimer}</p>
+      </div>}
 
       {spec.kind === "line" && (
         <ResponsiveContainer width="100%" height={250}>

@@ -17,7 +17,7 @@ import {
   chartTitle, monthDays, isoDays, pdYear, epochToYear, epochToDate,
   genericChartNote, forecastText, bulletinDiffText,
   genericChartSummary, forecastSummary, bulletinDiffSummary,
-  FAM, EMP, MONTHS_ES, MONTHS_EN, nextMonth,
+  FAM, EMP, MONTHS_ES, MONTHS_EN, nextMonth, monthLabel,
 } from "./synthetic-builders.mjs";
 
 export type Lang = "es" | "en";
@@ -33,39 +33,27 @@ export {
 export type { DriftFit, ChartTitleKind, SeriesCompareSpec } from "./synthetic-builders.mjs";
 
 // ── entity detection (visa domain vocabulary) ───────────────────────────────
-const COUNTRY_ALIASES: [RegExp, string][] = [
-  [/m[eé]xico|mexican|mexico/i, "mexico"],
-  [/\bindia\b|\bindi[oa]\b/i, "india"],
-  [/\bchina\b|\bchin[oa]\b/i, "china"],
-  [/filipin|philippin/i, "philippines"],
-  // "all chargeability" residual area. The bare word "row" is NOT here: it
-  // matched English "row" (e.g. "the first row"), a false all_chargeability
-  // detection — only the UPPERCASE abbreviation ROW is accepted, below.
-  [/all charge?ability|resto del mundo|todos los pa[ií]ses/i, "all_chargeability"],
-];
-
-// Collapse letter↔digit separators in category codes so "EB-5", "EB 5", "F2-A"
-// match the panel codes EB5/F2A (finding 7). Uppercase form (detectEntities
-// works on the uppercased query).
-// The optional [AB] suffix must NOT be followed by another letter, or it would
-// absorb the first letter of an adjacent word ("F1 backlog"→"F1BACKLOG",
-// "EB2 based"→"EB2BASED") and break detection of the most common phrasings.
-const normalizeCatsUp = (s: string) =>
-  s.replace(/\b(EB|F)[ ._-]?(\d)(?:[ ._-]?([AB])(?![A-Z]))?/g, (_m, p, d, x) => p + d + (x || ""));
+import { COUNTRY_ALIASES, queryEntities } from "./query-entities.mjs";
+import {parsePriorityDate} from "./priority-check.mjs";
 
 // Follow-up merge (adversarial audit 28-oct-2026): "¿y para India?" after
 // "¿Cuándo avanza México F3?" was appended to the previous query, and
 // detectEntities takes the FIRST alias in list order, so México won and the
 // follow-up lost its country. A country or table named in the fragment now
 // replaces the previous query's one before the two are joined.
-const TABLE_WORDS = /\b(DFF|FAD)\b|dates for filing|final action/gi;
+const TABLE_WORDS = /\b(DFF|FAD)\b|dates for filing|final action(?: dates)?|acci[oó]n final|presentaci[oó]n/gi;
+const CATEGORY_WORDS = /\b(?:EB|F)[ ._-]?\d(?:[ ._-]?[AB](?![A-Z]))?(?:_[A-Z]+)*\b/gi;
 export function mergeFollowUp(prev: string, fragment: string): string {
   let base = prev;
+  if(parsePriorityDate(fragment).date) {
+    for(const date of parsePriorityDate(base).fragments) base=base.replace(date," ");
+  }
   if (COUNTRY_ALIASES.some(([re]) => re.test(fragment)) || /\bROW\b/.test(fragment)) {
     for (const [re] of COUNTRY_ALIASES) base = base.replace(new RegExp(re.source, "gi"), " ");
     base = base.replace(/\bROW\b/g, " ");
   }
   if (new RegExp(TABLE_WORDS.source, "i").test(fragment)) base = base.replace(TABLE_WORDS, " ");
+  if (new RegExp(CATEGORY_WORDS.source, "i").test(fragment)) base = base.replace(CATEGORY_WORDS, " ");
   return `${base} ${fragment}`.replace(/\s+/g, " ").trim();
 }
 
@@ -83,34 +71,12 @@ export function detectCountries(q: string): string[] {
 }
 
 export function detectEntities(q: string, panel: Panel): Entities {
-  const country =
-    COUNTRY_ALIASES.find(([re]) => re.test(q))?.[1] ?? (/\bROW\b/.test(q) ? "all_chargeability" : null);
-  const up = ` ${normalizeCatsUp(q.toUpperCase())} `;
-  // longest category code first so EB5_RURAL wins over EB5
-  const cats = [...panel.categories].sort((a, b) => b.length - a.length);
-  let category: string | null = null;
-  for (const c of cats) {
-    // Escape BEFORE widening "_" into [ _-]? — the old inverted order escaped
-    // the freshly inserted brackets, turning every underscored code (EB5_RURAL,
-    // EB4_RW…) into unmatched literal text that silently degraded to its parent.
-    const pat = c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/_/g, "[ _-]?");
-    if (new RegExp(`(?<![A-Z0-9])${pat}(?![A-Z0-9])`).test(up)) { category = c; break; }
-  }
-  const table = /\bDFF\b|DATES FOR FILING|PRESENTACI/i.test(q)
-    ? "DFF"
-    : /\bFAD\b|FINAL ACTION|ACCI[OÓ]N FINAL/i.test(q)
-      ? "FAD"
-      : null;
-  const block = /\bempleo\b|employment|\bEB\b/i.test(q) || /\bEB[1-5]/i.test(q)
-    ? "empleo"
-    : /\bfamilia\b|family|\bF[1-4]/i.test(q)
-      ? "familia"
-      : null;
-  return { country, category, table, block };
+  return queryEntities(q, panel);
 }
 
 // ── chart specs ─────────────────────────────────────────────────────────────
 export type ChartSpec =
+  | import("./priority-check.mjs").PriorityCheckSpec
   | { kind: "line"; title: string; subtitle: string; yLabel: string; data: { month: string; year: number | null; date: string | null }[] }
   | { kind: "compare"; title: string; subtitle: string; data: { country: string; label: string; years: number | null; date: string | null }[] }
   | { kind: "movement"; title: string; subtitle: string; data: { month: string; movement: number }[] }
@@ -119,6 +85,7 @@ export type ChartSpec =
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
   | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string; fallback?: boolean;
+      latestObservation?: { month: string; status: string };
       // true when the production forecast STORE failed to load (fetch error), as
       // opposed to `fallback` (this one series has no pre-generated forecast).
       // forecastText must then declare the outage instead of fabricating context.
@@ -198,15 +165,15 @@ export function reachesPriorityDate(
   const bad = { status: "invalid" as const, month: null };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(priorityDate) || !rows) return bad;
   const m = isoDays(priorityDate);
-  if (!Number.isFinite(m)) return bad;
+  if (!Number.isFinite(m) || new Date(m * 86400000).toISOString().slice(0, 10) !== priorityDate) return bad;
   const fobs = rows.filter((r) => r.status === "F" && r.priorityDate && r.daysSinceBase != null);
   const last = fobs[fobs.length - 1];
   if (!last || last.priorityDate == null || last.daysSinceBase == null) return bad;
   const baseEpoch = isoDays(last.priorityDate) - (last.daysSinceBase as number);
   const pdDays = m - baseEpoch; // user's date in the forecast's daysSinceBase units
-  if ((last.daysSinceBase as number) >= pdDays) return { status: "past", month: null };
+  if ((last.daysSinceBase as number) > pdDays) return { status: "past", month: null };
   if (!fc || !fc.length) return { status: "beyond", month: null };
-  const hit = fc.find((p) => p.days >= pdDays);
+  const hit = fc.find((p) => p.days > pdDays);
   return hit ? { status: "within", month: hit.date.slice(0, 7) } : { status: "beyond", month: null };
 }
 
@@ -580,6 +547,6 @@ export function buildPanorama(panel: Panel, lang: Lang): Kpi[] {
     { label: lang === "en" ? "Predictable (F)" : "Predecibles (F)", value: `${pctF}%`, hint: lang === "en" ? "rows with a final date" : "filas con fecha final" },
     { label: lang === "en" ? "Areas" : "Áreas", value: String(panel.countries.length), hint: lang === "en" ? "countries / chargeability" : "países / cargabilidad" },
     { label: lang === "en" ? "Categories" : "Categorías", value: String(panel.categories.length), hint: lang === "en" ? "family + employment" : "familia + empleo" },
-    { label: lang === "en" ? "Latest bulletin" : "Último boletín", value: panel.monthRange[1], hint: `${panel.monthRange[0]} → ${panel.monthRange[1]}` },
+    { label: lang === "en" ? "Latest bulletin" : "Último boletín", value: monthLabel(panel.monthRange[1], lang), hint: `${panel.monthRange[0]} → ${panel.monthRange[1]}` },
   ];
 }

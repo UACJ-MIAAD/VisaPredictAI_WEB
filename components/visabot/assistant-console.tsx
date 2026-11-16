@@ -15,7 +15,7 @@ import {
   Sparkles, Send, Square, ArrowDown, RotateCcw, BookOpen,
   TrendingUp, BarChart3, ArrowUpDown, PieChart as PieIcon, X, Info,
   LineChart as LineIcon, Grid3x3, Radar as RadarIcon, SlidersHorizontal,
-  Lightbulb, Database, Cpu, Quote, AreaChart as ForecastIcon,
+  Lightbulb, Database, Cpu, Quote, AreaChart as ForecastIcon, Maximize2, Minimize2, ArrowUpRight,
 } from "lucide-react";
 
 type PromptCat = { icon: string; cat: string; items: string[] };
@@ -27,20 +27,19 @@ import { localePath } from "@/lib/site-map";
 import { tr } from "@/lib/i18n";
 import { useFocusTrap } from "@/lib/use-focus-trap";
 import { track } from "@/lib/analytics";
-import { Markdown } from "./markdown";
 import { ChatThread } from "./chat-thread";
 import { AssistantSidebar, type ToolDef, type ToolKind } from "./assistant-sidebar";
 import { SemanticConsent } from "./semantic-consent";
 import { useVisabotChat } from "./use-visabot-chat";
+import { chartForQuery } from "@/lib/visabot/chart-router";
 import type { ChartPayload, Source, SyntheticDescriptor } from "./types";
-import { loadPanel, type Panel } from "@/lib/data/visa-panel";
+import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import {
-  detectEntities, detectCountries, seriesCompareFacts, seriesCompareText, seriesCompareSummary,
   buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
-  buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable, parseMonth,
-  buildBulletinDiff, parseTwoMonths, bulletinDiffText, buildFollowUps, mergeFollowUp,
+  buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable,
+  buildBulletinDiff, bulletinDiffText, buildFollowUps, mergeFollowUp,
   monthTableText, chartContextNote, chartUserNote, monthLabel, type Kpi, type ChartSpec,
 } from "@/lib/visabot/analytics";
 
@@ -69,92 +68,6 @@ const VisaChart = dynamic(() => import("./visa-chart"), {
   loading: () => <div className="mt-2 h-[250px] animate-pulse rounded-xl border border-border bg-[var(--color-surface-soft)]" />,
 });
 
-// A chart for the query PLUS the structured descriptor the server rebuilds its
-// grounding text from (US I1, #30). The descriptor carries identifiers/months
-// only — never prose, never figures; the proxy recomputes the text from
-// hash-verified release data with the SAME shared builders.
-// `grounding` carries a table-shaped note built here with the same shared
-// builder the server uses (the server never takes this text, only the descriptor).
-type ChartAndDescriptor = { chart: ChartPayload; descriptor: SyntheticDescriptor; grounding?: { text: string; display: string } };
-
-function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartAndDescriptor | null {
-  const e = detectEntities(q, panel);
-  const t = e.table || "FAD";
-  const rid = SITE_STATS.releaseId;
-  const wrap = (chart: ChartPayload | null, descriptor: SyntheticDescriptor): ChartAndDescriptor | null =>
-    chart ? { chart, descriptor } : null;
-  // Two or more countries on one category ("compara México F2A con India F2A"):
-  // a race of just those countries, grounded with each one's real cutoffs and
-  // forecast. Checked first, so the forecast and single-series branches below
-  // can't take only the first country.
-  const named = detectCountries(q).filter((c) => panel.countries.includes(c));
-  if (named.length >= 2 && e.category) {
-    const facts = seriesCompareFacts(panel, named, e.category, t, forecasts);
-    const chart = facts && buildMultiLine(panel, e.category, t, lang, forecasts, facts.countries);
-    if (facts && chart)
-      return { chart, descriptor: { kind: "series_compare", countries: facts.countries, category: e.category, table: t, release_id: rid },
-        grounding: { text: seriesCompareText(facts, lang), display: seriesCompareSummary(facts, lang) } };
-  }
-  // Forecast intent — the CORE purpose of the project. Catches the explicit words AND the
-  // NATURAL way people ask for a prediction ("¿cuándo llega mi turno?", "en qué mes/año",
-  // "cuánto falta", "when will I be current?"), incl. when the user states their priority
-  // date. Checked FIRST so "tabla de asignación" in such a question doesn't hijack it.
-  const wantsForecast =
-    /predic|pron[oó]stic|forecast|proyec|predict|futuro|zoom|abanico|fan[ -]?chart|estimaci[oó]n/i.test(q) ||
-    /cu[aá]ndo|cu[aá]nto\s+(falta|tiempo|tardar|me)|qu[eé]\s+(mes|a[ñn]o|fecha)|mi\s+turno|me\s+toca|llegar[aá]?|alcanz|ponerse al d[ií]a|al corriente/i.test(q) ||
-    /when|how long|my turn|be current|get current|catch up|reach my|my priority date/i.test(q);
-  if (wantsForecast && e.category) {
-    const country = e.country || "mexico";
-    // horizon derived from the shipped forecasts (regla #0); 12 only as the
-    // drift-fallback default inside buildForecast when no store loaded.
-    return wrap(
-      buildForecast(panel, country, e.category, t, lang, forecasts?.horizonMonths || undefined, 48, forecasts),
-      { kind: "forecast_note", country, category: e.category, table: t, release_id: rid },
-    );
-  }
-  // Compare two bulletins: needs TWO months, checked BEFORE the single-month
-  // table branch (so "compara el boletín de X con Y" isn't hijacked by "boletín").
-  if (/compar|versus|\bvs\b|diferencia|difference|contra|frente a|cambi[oó]|changed?/i.test(q)) {
-    const mm = parseTwoMonths(q, panel);
-    if (mm)
-      return wrap(buildBulletinDiff(panel, mm[0], mm[1], t, lang),
-        { kind: "bulletin_diff", monthA: mm[0], monthB: mm[1], table: t, release_id: rid });
-  }
-  // Monthly bulletin snapshot: "tabla/boletín de <mes>" → full-history snapshot. Only when
-  // it is NOT a forecast question (guarded above), so the word "tabla" can't hijack it.
-  if (!wantsForecast && /\btabla\b|\bbolet[ií]n\b|\bbulletin\b|\btable\b|snapshot/i.test(q)) {
-    const m = parseMonth(q, panel);
-    if (m) return wrap(buildMonthTable(panel, m, t, lang), { kind: "month_table", month: m, table: t, release_id: rid });
-  }
-  const move = /movimiento|retroces|avanc|movement|retrogress|advanc/i.test(q);
-  const status = /estado|current|disponib|status|r[eé]gimen|c\/f\/u/i.test(q);
-  if (/mapa de calor|matriz|heatmap|matrix/i.test(q)) {
-    const block = e.block || (e.category ? blockOf(e.category) : "familia");
-    return wrap(buildHeatmap(panel, block, t, lang), { kind: "chart_note", chart: "heatmap", block, table: t, release_id: rid });
-  }
-  if (/radar|huella|fingerprint/i.test(q))
-    return wrap(buildRadar(panel, t, lang), { kind: "chart_note", chart: "radar", table: t, release_id: rid });
-  if (/carrera|todos los pa[ií]s|all countr|cada pa[ií]s|\brace\b/i.test(q) && e.category)
-    return wrap(buildMultiLine(panel, e.category, t, lang, forecasts),
-      { kind: "chart_note", chart: "multiline", category: e.category, table: t, release_id: rid });
-  if (e.country && e.category) {
-    if (move)
-      return wrap(buildMovement(panel, e.country, e.category, t, lang),
-        { kind: "chart_note", chart: "movement", country: e.country, category: e.category, table: t, release_id: rid });
-    if (status)
-      return wrap(buildStatus(panel, lang, { country: e.country, category: e.category, table: t }),
-        { kind: "chart_note", chart: "status", country: e.country, category: e.category, table: t, release_id: rid });
-    return wrap(buildLine(panel, e.country, e.category, t, lang),
-      { kind: "chart_note", chart: "line", country: e.country, category: e.category, table: t, release_id: rid });
-  }
-  if (e.category)
-    return wrap(buildCompare(panel, e.category, t, lang),
-      { kind: "chart_note", chart: "compare", category: e.category, table: t, release_id: rid });
-  if (e.country && status)
-    return wrap(buildStatus(panel, lang, { country: e.country }),
-      { kind: "chart_note", chart: "status", country: e.country, release_id: rid });
-  return null;
-}
 
 export function AssistantConsole() {
   const { lang } = useLang();
@@ -163,6 +76,7 @@ export function AssistantConsole() {
   const [panelErr, setPanelErr] = React.useState(false);
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [navOpen, setNavOpen] = React.useState(false); // mobile sidebar drawer
+  const [stage, setStage] = React.useState(false);
   // J2 — ultra-wide (≥1920px): the sidebar splits into a controls-only left
   // rail + an insights right rail (KPIs, quick questions). Driven by
   // matchMedia instead of CSS-hidden duplicates so every control exists
@@ -177,13 +91,14 @@ export function AssistantConsole() {
   }, []);
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
+  const stageTrapRef = useFocusTrap<HTMLDivElement>(stage && !navOpen && !howOpen && !promptsOpen);
   const howTrapRef = useFocusTrap<HTMLDivElement>(howOpen);
   const promptsTrapRef = useFocusTrap<HTMLDivElement>(promptsOpen);
   const navTrapRef = useFocusTrap<HTMLElement>(navOpen); // mobile tools drawer (finding 10)
   const [prompts, setPrompts] = React.useState<PromptCat[]>([]);
   const [promptsView, setPromptsView] = React.useState<PromptCat[]>([]); // shuffled subset shown in the modal
   const openPrompts = () => {
-    setPromptsView(prompts.map((p) => ({ ...p, items: sample(p.items, 6) }))); // 6 random per category, fresh each open
+    setPromptsView(prompts.map((p) => ({ ...p, items: stage ? p.items.slice(0, 6) : sample(p.items, 6) })));
     setPromptsOpen(true);
   };
 
@@ -206,7 +121,11 @@ export function AssistantConsole() {
     const chart = res?.chart;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full panel range.
-    if (res?.grounding && chart) {
+    if (res?.grounding && chart?.kind === "priorityCheck") {
+      // The exact comparison is also the entire offline fallback; unrelated
+      // retrieved bulletin cells must never overwrite its country or cutoff.
+      sources=[{n:1,title:chart.title,source:panelSource(lang),url:localePath("/datos-historicos",lang)+"#historico",text:res.grounding.text,display:res.grounding.display,synthetic:true}];
+    } else if (res?.grounding && chart) {
       sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: res.grounding.text, display: res.grounding.display, synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart?.kind === "table") {
@@ -228,7 +147,7 @@ export function AssistantConsole() {
     // Only send the descriptor when a synthetic source was actually attached
     // (a table chart always grounds; other kinds only when their note exists).
     const grounded = sources.some((s) => s.synthetic);
-    return { sources, chart: chart || undefined, synthetics: res && grounded ? [res.descriptor] : undefined };
+    return { sources, chart: chart || undefined, synthetics: res?.descriptor && grounded ? [res.descriptor] : undefined };
   }, [panel, lang, forecasts]);
 
   const {
@@ -238,7 +157,11 @@ export function AssistantConsole() {
   } = useVisabotChat({ lang, surface: "console", prepare, mergeFollowUp });
 
   // sending from anywhere in the console also closes the mobile drawer
-  const sendQ = React.useCallback((t: string) => { setNavOpen(false); void send(t); }, [send]);
+  const sendQ = React.useCallback((t: string) => {
+    setNavOpen(false);
+    void send(t);
+    inputRef.current?.focus({preventScroll: true});
+  }, [send, inputRef]);
 
   React.useEffect(() => {
     warm();
@@ -259,10 +182,20 @@ export function AssistantConsole() {
   }, [panel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setNavOpen(false); setHowOpen(false); setPromptsOpen(false); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") {
+      if (!navOpen && !howOpen && !promptsOpen) setStage(false);
+      setNavOpen(false); setHowOpen(false); setPromptsOpen(false);
+    } };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  }, [navOpen, howOpen, promptsOpen]);
+
+  React.useEffect(() => {
+    if (!stage) return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = overflow; };
+  }, [stage]);
 
   const runTool = (kind: ToolKind) => {
     if (!panel) return;
@@ -309,19 +242,30 @@ export function AssistantConsole() {
     month, setMonth, monthB, setMonthB,
   };
 
+  const latestMonth = panel?.monthRange[1] || SITE_STATS.dateLast.slice(0, 7);
+  const starters = [
+    { id: "forecast", icon: ForecastIcon, title: tr(lang, "acStarterForecast"), hint: `${countryLabel(country, lang)} · ${category} · ${table}`,
+      query: lang === "en" ? `Show the ${countryLabel(country, lang)} ${category} ${table} forecast` : `Muéstrame el pronóstico de ${countryLabel(country, lang)} ${category} ${table}` },
+    { id: "changes", icon: ArrowUpDown, title: tr(lang, "acStarterChanges"), hint: `${monthLabel(latestMonth, lang)} · ${table}`,
+      query: lang === "en" ? `What changed in the ${monthLabel(latestMonth, lang)} bulletin, ${table}?` : `¿Qué cambió en el boletín de ${monthLabel(latestMonth, lang)}, ${table}?` },
+    { id: "evidence", icon: Cpu, title: tr(lang, "acStarterEvidence"), hint: tr(lang, "acStarterEvidenceHint"),
+      query: lang === "en" ? "Which models does the project compare and which one wins?" : "¿Qué modelos compara el proyecto y cuál gana?" },
+  ];
+
   return (
-    <div id="asistente" className="vb-console flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden border-t border-border bg-[var(--color-bg)]">
+    <div id="asistente" ref={stageTrapRef} role={stage ? "dialog" : undefined} aria-modal={stage || undefined} aria-label={stage ? tr(lang, "acPresentationLabel") : undefined}
+      className={`vb-console ${stage ? "vb-stage" : ""} flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden border-t border-border bg-[var(--color-bg)]`}>
       {/* J2 — centered workspace frame: full-bleed up to 1720px, then centered
           with hairline side borders so ultra-wide monitors (1920–3440px) get a
           bounded app frame instead of a panel glued left + dead right half. */}
       <div data-vb-frame className="mx-auto flex h-full w-full max-w-[1720px] flex-col overflow-hidden min-[1720px]:border-x min-[1720px]:border-border">
       {/* console topbar */}
-      <header className="flex items-center gap-2 border-b border-border bg-[var(--color-surface)] px-3 py-2.5 sm:px-4">
+      <header className="vb-console-topbar flex items-center gap-2 border-b border-border bg-[var(--color-surface)] px-3 py-2.5 sm:px-4">
         {/* QW5 (WCAG 2.5.3): accessible name contains the visible text "Panel" */}
-        <button className="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] lg:hidden" onClick={() => setNavOpen(true)} aria-label={tr(lang, "acPanelToggleLabel")}>
+        <button className={`flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-ink)] ${stage ? "" : "lg:hidden"}`} onClick={() => setNavOpen(true)} aria-label={tr(lang, "acPanelToggleLabel")}>
           <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "acPanelToggle")}
         </button>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent-btn)] text-white"><Sparkles className="h-4.5 w-4.5" aria-hidden /></span>
+        <span className="vb-console-mark flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent-btn)] text-white"><Sparkles className="h-4.5 w-4.5" aria-hidden /></span>
         <div className="min-w-0">
           {/* QW6: the console title is the page's single <h1> (/asistente had none);
               Tailwind preflight resets h1 margins/size so the look is unchanged. */}
@@ -332,6 +276,11 @@ export function AssistantConsole() {
           </div>
         </div>
         <div className="flex-1" />
+        <button type="button" onClick={() => setStage(v => !v)} aria-pressed={stage} aria-label={tr(lang, stage ? "acExitPresentation" : "acPresentation")}
+          title={tr(lang, stage ? "acExitPresentation" : "acPresentation")} className="vb-stage-toggle vb-sq">
+          {stage ? <Minimize2 className="h-4 w-4" aria-hidden /> : <Maximize2 className="h-4 w-4" aria-hidden />}
+          <span className="hidden xl:inline">{tr(lang, stage ? "acExitPresentation" : "acPresentation")}</span>
+        </button>
         <button onClick={openPrompts} className="vb-sq flex items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-1.5 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-ink)] sm:px-2.5" aria-label={tr(lang, "acExamples")}>
           <Lightbulb className="h-3.5 w-3.5" aria-hidden /> <span className="hidden sm:inline">{tr(lang, "acExamples")}</span>
         </button>
@@ -349,15 +298,15 @@ export function AssistantConsole() {
       <div className="flex min-h-0 flex-1">
         {/* desktop sidebar — on ultra-wide the insights blocks move to the
             right rail below, so this rail keeps only context + tools */}
-        <aside className="hidden w-[300px] shrink-0 border-r border-border bg-[var(--color-surface)] lg:block 2xl:w-[320px]">
+        <aside className="vb-controls-rail hidden w-[300px] shrink-0 border-r border-border bg-[var(--color-surface)] lg:block 2xl:w-[320px]">
           <AssistantSidebar sections={ultra ? "controls" : "all"} {...sidebarProps} />
         </aside>
 
         {/* mobile/tablet drawer */}
         {navOpen && (
           <>
-            <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setNavOpen(false)} aria-hidden />
-            <aside ref={navTrapRef} role="dialog" aria-modal="true" aria-label={tr(lang, "acTools")} className="fixed inset-y-0 left-0 z-50 w-[84%] max-w-[320px] border-r border-border bg-[var(--color-surface)] shadow-2xl lg:hidden">
+            <div className={`fixed inset-0 z-40 bg-black/40 ${stage ? "" : "lg:hidden"}`} onClick={() => setNavOpen(false)} aria-hidden />
+            <aside ref={navTrapRef} role="dialog" aria-modal="true" aria-label={tr(lang, "acTools")} className={`fixed inset-y-0 left-0 z-50 w-[84%] max-w-[320px] border-r border-border bg-[var(--color-surface)] shadow-2xl ${stage ? "" : "lg:hidden"}`}>
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <span className="font-serif text-sm font-bold">{tr(lang, "vbName")}</span>
                 <button className="vb-iconbtn" onClick={() => setNavOpen(false)} aria-label={tr(lang, "acCloseTools")}><X className="h-4 w-4" aria-hidden /></button>
@@ -371,21 +320,24 @@ export function AssistantConsole() {
 
         {/* chat column — min-w-0 lets it shrink below the table's min-width so the
             table scrolls inside its own box instead of widening the whole column */}
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="vb-conversation-pane relative flex min-h-0 min-w-0 flex-1 flex-col">
           <p className="sr-only" role="status" aria-live="polite">{liveStatus}</p>
           {/* overscroll-contain: reaching the thread's edge never chains the
               scroll to the page (the composer stays put on mobile) */}
-          <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-5 sm:px-6" role="log" aria-live="off">
-            <div className="mx-auto min-w-0 max-w-[820px] space-y-4 2xl:max-w-[900px]">
+          <div ref={scrollRef} onScroll={onScroll} className="vb-thread flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-5 sm:px-6" role="log" aria-live="off">
+            <div className="vb-thread-inner mx-auto min-w-0 max-w-[820px] space-y-5 2xl:max-w-[900px]">
               {messages.length === 0 ? (
-                <div className="flex min-h-[40vh] flex-col items-start justify-center gap-3">
-                  <Markdown text={tr(lang, "vbWelcome")} />
-                  <p className="text-sm text-[var(--color-muted)]">{tr(lang, "acStartHint")}</p>
-                  {/* suggestion chips are noisy on small screens — hide on mobile,
-                      keep the blue "¿Qué puedes preguntar?" button below as the entry point */}
-                  <div className="hidden flex-wrap gap-2 pt-1 sm:flex">
-                    {suggestions.slice(0, 4).map((s) => (
-                      <button key={s} onClick={() => sendQ(s)} className="vb-suggest text-[0.8rem]">{s}</button>
+                <div className="vb-home">
+                  <div className="vb-home-eyebrow"><BookOpen className="h-3.5 w-3.5" aria-hidden /> Visa Bulletin <span aria-hidden>·</span> {monthLabel(latestMonth, lang)}</div>
+                  <h2 className="vb-home-title">{tr(lang, "acHeroTitle")}<em>{tr(lang, "acHeroAccent")}</em></h2>
+                  <p className="vb-home-lead">{tr(lang, "acHeroLead")}</p>
+                  <div className="vb-start-grid">
+                    {starters.map((s, i) => (
+                      <button key={s.id} data-vb-starter={s.id} onClick={() => sendQ(s.query)} className="vb-start-card">
+                        <span className="vb-start-card-top"><s.icon className="h-5 w-5" aria-hidden /><span aria-hidden>0{i + 1}</span></span>
+                        <strong>{s.title}</strong><span className="vb-start-hint">{s.hint}</span>
+                        <ArrowUpRight className="vb-start-arrow h-4 w-4" aria-hidden />
+                      </button>
                     ))}
                   </div>
                   {prompts.length > 0 && (
@@ -418,13 +370,14 @@ export function AssistantConsole() {
           {/* AZ1 — semantic engine consent (no ~150 MB download without a gesture) */}
           <SemanticConsent
             lang={lang}
+            compact
             semantic={semantic}
             constrained={constrained}
             onEnable={() => enableSemantic()}
           />
 
           {/* safe-area padding so the composer clears the iOS home indicator */}
-          <div className="border-t border-border bg-[var(--color-surface)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+          <div className="vb-composer border-t border-border bg-[var(--color-surface)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
             <form onSubmit={(e) => { e.preventDefault(); sendQ(input); }} className="mx-auto flex max-w-[820px] items-end gap-2 2xl:max-w-[900px]">
               <textarea
                 ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
@@ -439,6 +392,7 @@ export function AssistantConsole() {
                 <button type="submit" disabled={!input.trim()} className="vb-sendbtn disabled:opacity-40" aria-label={tr(lang, "vbSend")} title={tr(lang, "vbSend")}><Send className="h-4 w-4" aria-hidden /></button>
               )}
             </form>
+            <p className="vb-composer-hint">{tr(lang, "acComposerHint")}</p>
           </div>
         </div>
 
@@ -446,7 +400,7 @@ export function AssistantConsole() {
             sidebar content relocated, so the former dead band beside the
             thread carries the panorama instead of empty background */}
         {ultra && (
-          <aside className="hidden w-[320px] shrink-0 border-l border-border bg-[var(--color-surface)] min-[1920px]:block">
+          <aside className="vb-insights-rail hidden w-[320px] shrink-0 border-l border-border bg-[var(--color-surface)] min-[1920px]:block">
             <AssistantSidebar sections="insights" {...sidebarProps} />
           </aside>
         )}

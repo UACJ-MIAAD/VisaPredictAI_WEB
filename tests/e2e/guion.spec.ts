@@ -53,6 +53,12 @@ test("desktop uses equal presentation and script panes with controls below", asy
 
 test("keyboard navigation and the live bulletin link work without revealing text", async ({ page }) => {
   await page.goto("/guion/");
+  // Static HTML can be visible before React has installed keyboard handlers.
+  // Establish readiness through the real controls, rather than a fixed delay.
+  await page.getByRole("button", { name: "Lámina siguiente", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(data.slides[1].title);
+  await page.getByRole("button", { name: "Lámina anterior", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(data.slides[0].title);
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(data.slides[1].title);
   await page.keyboard.press("ArrowRight");

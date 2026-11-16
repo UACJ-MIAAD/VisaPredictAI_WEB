@@ -9,7 +9,7 @@
 //     of the Claude proxy / surface prompt);
 //   • onSpeak — widget only (read-aloud action).
 import * as React from "react";
-import { Check, Copy, Loader2, Volume2 } from "lucide-react";
+import { Check, Copy, Loader2, Volume2, Sparkles, LineChart } from "lucide-react";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
@@ -47,17 +47,20 @@ export function ChatThread({
             <div className="vb-bubble vb-user">{m.content}</div>
           </div>
         ) : (
-          <div key={i} className={`group/msg space-y-2 ${wide ? "min-w-0" : ""}`}>
+          <div key={i} className={`vb-assistant-turn group/msg space-y-2 ${wide ? "min-w-0" : ""}`}>
+            {wide && <div className="vb-answer-author"><Sparkles className="h-3.5 w-3.5" aria-hidden /><strong>{tr(lang, "vbName")}</strong>
+              {m.chart && <span><LineChart className="h-3 w-3" aria-hidden />{tr(lang, "acPanelChart")}</span>}
+            </div>}
             <div className={`vb-bubble vb-bot ${wide ? "min-w-0 max-w-full overflow-hidden" : ""}`}>
+              {m.chart && renderChart ? <div id={`vb-chart-${i}`} tabIndex={-1} className="vb-answer-chart">{renderChart(m.chart)}</div> : null}
               {m.content ? (
-                <Markdown text={m.content} sources={m.sources} />
+                m.chart?.kind === "priorityCheck" ? null : <Markdown text={m.content} sources={m.chart ? m.sources?.map(s => s.synthetic ? {...s, url: `#vb-chart-${i}`} : s) : m.sources} />
               ) : (
                 <span className="flex items-center gap-2 text-[var(--color-muted)]">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                   {tr(lang, "vbThinking")}
                 </span>
               )}
-              {m.chart && renderChart ? renderChart(m.chart) : null}
               {m.extractive && m.content && (
                 <p className="mt-2 text-[0.68rem] italic text-[var(--color-muted)]">
                   {tr(lang, "vbExtractiveNote")}
@@ -84,12 +87,12 @@ export function ChatThread({
                   .map((s) => (
                     <a
                       key={s.n}
-                      href={s.url}
+                      href={m.chart && s.synthetic ? `#vb-chart-${i}` : s.url}
                       onClick={() => track("VisaBot Source Click", { lang, source: s.source })}
                       className="vb-chip"
                       title={`${s.source}${s.title ? " — " + s.title : ""}`}
                     >
-                      [{s.n}] {s.source}
+                      <span>[{s.n}]</span> <span className="truncate">{s.title || s.source}</span>
                     </a>
                   ))}
               </div>
@@ -97,7 +100,7 @@ export function ChatThread({
 
             {/* actions */}
             {m.content && (
-              <div className="flex gap-1 pl-1 opacity-0 transition group-hover/msg:opacity-100">
+              <div className={`flex gap-1 pl-1 transition ${wide ? "opacity-100" : "opacity-0 group-hover/msg:opacity-100 group-focus-within/msg:opacity-100 [@media(hover:none)]:opacity-100"}`}>
                 <button
                   onClick={() => onCopy(i, m.content)}
                   className="vb-iconbtn"
@@ -128,7 +131,7 @@ export function ChatThread({
 
       {/* contextual follow-up chips under the latest answer */}
       {followUps && followUps.length > 0 && onFollowUp && (
-        <div className="flex flex-wrap gap-1.5 pl-1 pt-1" aria-label={tr(lang, "vbFollowUps")}>
+        <div className="flex flex-wrap gap-1.5 pl-1 pt-1" role="group" aria-label={tr(lang, "vbFollowUps")}>
           {followUps.map((f) => (
             <button key={f} onClick={() => onFollowUp(f)} className="vb-suggest text-[0.76rem]">
               {f}

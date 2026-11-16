@@ -41,6 +41,7 @@ import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { DATA_REPO_RAW as REPO_RAW, dataRepoRawAt } from "../lib/repo.mjs";
 import { MODEL_CARD_PATH, modelCardForCut, sourcePinForCut } from "../lib/release-model-card.mjs";
+import { bulletinFactText } from "../lib/visabot/bulletin-facts.mjs";
 import { cohortChunks, readCohortFacts } from "../lib/data/cohort-facts.mjs";
 import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
 import { censusValues, renderCensus } from "../lib/census-bindings.mjs";
@@ -530,16 +531,8 @@ async function collectFacts() {
     for (const lang of ["es", "en"]) {
       const url = localePath("/datos-historicos", lang) + "#boletines";
       const rows = feed.months[feed.latest_month] || [];
-      const adv = rows.filter((x) => (x.delta_days ?? 0) > 0);
-      const ret = rows.filter((x) => (x.delta_days ?? 0) < 0);
       const lbl = monthLabel(feed.latest_month, lang);
-      const cn = (c) => CN[c]?.[lang] || c;
-      const fmtList = (xs) =>
-        xs.slice(0, 12).map((x) => `${cn(x.country)} ${x.category} ${x.table} (${x.raw_value || "—"})`).join("; ");
-      const text =
-        lang === "es"
-          ? `Boletín más reciente del Visa Bulletin: ${lbl}. Se publicaron ${rows.length} series. Avanzaron ${adv.length} y retrocedieron ${ret.length}. Avances destacados: ${fmtList(adv)}. Retrocesos: ${fmtList(ret)}. Estas son fechas oficiales publicadas, no predicciones del modelo.`
-          : `Most recent U.S. Visa Bulletin: ${lbl}. ${rows.length} series published. ${adv.length} advanced and ${ret.length} retrogressed. Notable advances: ${fmtList(adv)}. Retrogressions: ${fmtList(ret)}. These are official published dates, not model predictions.`;
+      const text = bulletinFactText(rows, lbl, lang, (c) => CN[c]?.[lang] || c);
       // source_type "live_fact" + valid_from = the bulletin month (US I6): the
       // ONE feed deliberately read from `main` — it exists to track freshness.
       add({ lang, kind: "fact", source_type: "live_fact", valid_from: feed.latest_month, source: lang === "es" ? "Boletín en vivo" : "Live bulletin", sourceId: "boletines", url, title: `Boletín ${lbl}`, text });

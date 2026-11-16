@@ -137,7 +137,8 @@ describe("topic reminders restated after the sources", () => {
     const ctx = [{ n: 1, source: "Repo · Model card", title: "5. Evaluación", text: "MCS" }];
     const p = systemPrompt("es", ctx, "console", "¿Qué modelo gana en DFF?");
     expect(p.indexOf("RECORDATORIOS PARA ESTA PREGUNTA")).toBeGreaterThan(p.indexOf("FUENTES:"));
-    expect(p.trimEnd().endsWith("ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.")).toBe(true);
+    // more reminders may follow (demo rehearsal 15-nov); the MCS one must sit in the block after the sources
+    expect(p.slice(p.indexOf("RECORDATORIOS PARA ESTA PREGUNTA")).includes("ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.")).toBe(true);
   });
 });
 
