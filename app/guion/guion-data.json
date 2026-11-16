@@ -1,6 +1,6 @@
 {
   "title": "Guion de la Cumbre",
-  "version": "MINI v12r1",
+  "version": "MINI v13",
   "plannedSeconds": 900,
   "event": {
     "date": "Miércoles 18 de noviembre de 2026",
@@ -105,16 +105,21 @@
     },
     {
       "number": 5,
-      "title": "Pasan diez años. El corte solo avanza cuatro.",
+      "title": "El corte todavía no alcanza la fecha de Ana",
       "seconds": 29,
       "startSeconds": 273,
       "paragraphs": [
-        "Estos dos relojes muestran el problema. En otra categoría familiar, México F4, pasaron diez años, de noviembre de 2016 a noviembre de 2026, pero el corte avanzó sólo cuatro.",
-        "La distancia pasó de diecinueve y medio a veinticinco y medio años. Es atraso del boletín, no la espera personal de alguien. Por eso necesitamos estudiar cómo se mueve la fila."
+        "Esta fila resume el caso de Ana. Las personas de la izquierda tienen fechas anteriores al corte del quince de mayo de 2010. Ana aparece en azul, con el quince de mayo de 2011: todavía sigue esperando. Su fecha permanece fija; el límite del boletín puede cambiar. Las personas son ilustrativas y no representan cantidades de solicitantes."
       ],
-      "cue": "Señalar los dos relojes y la brecha creciente.",
-      "links": [],
-      "image": "/presentacion-cumbre/laminas/05.jpg"
+      "cue": "Leer la fila de izquierda a derecha. Señalar el corte, las personas con fechas anteriores y Ana en azul. Su prioridad debe ser estrictamente anterior al corte, además de cumplir los demás requisitos.",
+      "links": [
+        {
+          "label": "Fuente del corte: Visa Bulletin noviembre de 2026 · PDF oficial",
+          "href": "https://travel.state.gov/content/dam/visas/Bulletins/visabulletin_November2026.pdf"
+        }
+      ],
+      "image": "/presentacion-cumbre/laminas/05.jpg",
+      "sourceNote": "Figura 3. Fila ilustrativa, no conteo de solicitantes. México F2B, FAD de noviembre de 2026: corte 15 may 2010; prioridad ficticia de Ana 15 may 2011. Fuente del corte: Departamento de Estado, Visa Bulletin de noviembre de 2026, p. 2."
     },
     {
       "number": 6,
