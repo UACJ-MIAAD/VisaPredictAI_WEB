@@ -8,7 +8,8 @@ test.beforeEach(async ({ context }) => { await blockExternal(context); });
 test("the full opening and all 21 scripts are readable with matching thumbnails", async ({ page }) => {
   await page.goto("/guion/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Guion de la Cumbre");
-  await expect(page.getByText(/^Soy Javier Rebull y mi asesor/)).toBeVisible();
+  await expect(page.getByText("Hola, Buenas Noches Soy Javier Rebull y mi asesor es el Dr. Vicente García Jiménez.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Soy estudiante de la Maestría en Inteligencia Artificial y Analítica de Datos de la UACJ.", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Lámina anterior", exact: true })).toBeDisabled();
   await page.screenshot({ path: test.info().outputPath("desktop.png"), fullPage: true });
   for (let i = 0; i < data.slides.length; i++) {
@@ -65,7 +66,7 @@ test("fullscreen failure preserves the readable script", async ({ page }) => {
   await page.goto("/guion/");
   await page.getByRole("button", { name: "Pantalla completa", exact: true }).click();
   await expect(page.getByRole("button", { name: "Cerrar aviso de pantalla completa" })).toBeVisible();
-  await expect(page.getByText(/^Soy Javier Rebull y mi asesor/)).toBeVisible();
+  await expect(page.getByText(/^Hola, Buenas Noches Soy Javier Rebull y mi asesor/)).toBeVisible();
 });
 
 for (const theme of ["light", "dark"] as const) {
