@@ -238,6 +238,10 @@ const S = {
   // ── Assistant console (dedicated /asistente section)
   acTag: { es: "Asistente del proyecto · RAG", en: "Project assistant · RAG" },
   acTitle: { es: "Conversa con VisaBot", en: "Chat with VisaBot" },
+  acObservatoryEdition: {es:"OBSERVATORIO",en:"OBSERVATORY"},
+  acAskNow:{es:"Haz tu pregunta",en:"Ask your question"},
+  acObservatoryAssurance:{es:"Datos publicados. Fuentes a la vista.",en:"Published data. Sources in view."},
+  acChoosePath:{es:"Tres formas de empezar",en:"Three ways to begin"},
   acHeroTitle: { es: "Entiende el corte.", en: "Understand the cutoff." },
   acHeroAccent: { es: "Explora lo que sigue.", en: "Explore what comes next." },
   acHeroLead: { es: "Fechas, cambios y pronósticos del Visa Bulletin, con el contexto y las fuentes a la vista.", en: "Visa Bulletin dates, changes and forecasts, with context and sources in view." },
