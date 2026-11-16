@@ -20,6 +20,10 @@
 .slideTitle { margin: 0 0 1.35rem; font-family: var(--font-playfair), Georgia, serif; font-size: clamp(1.15rem,1.5vw,1.45rem); line-height: 1.3; overflow-wrap: break-word; }
 .spokenBody { font-size: var(--guion-font-size,28px); min-width: 0; }
 .spokenParagraph { margin: 0 0 1.15em; font-size: inherit; line-height: 1.55; overflow-wrap: anywhere; }
+.liveVisit { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--color-border); border-radius: .4rem; background: var(--color-surface-soft); font-size: var(--guion-font-size,28px); }
+.liveVisit h3 { margin: 0 0 .75rem; font-size: 1rem; line-height: 1.4; }
+.liveVisit > a { display: inline-block; margin-bottom: 1rem; font-size: .875rem; }
+.liveVisit p:last-child { margin-bottom: 0; }
 .cueBox { margin: 1rem 0 0; padding: .8rem 1rem; border-radius: .3rem; background: var(--color-surface-soft); color: var(--color-muted); font-size: .875rem; line-height: 1.55; overflow-wrap: anywhere; }
 .cueBox strong { color: var(--color-ink); }
 .linksList { margin: 1rem 0 0; padding-left: 1.2rem; font-size: .875rem; }

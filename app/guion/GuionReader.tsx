@@ -25,6 +25,7 @@ export interface GuionSlide {
   paragraphs: string[];
   cue: string;
   sourceNote?: string;
+  liveVisit?: { seconds: number; link: GuionLink; paragraphs: string[] };
   links: GuionLink[];
   image: string;
 }
@@ -407,6 +408,13 @@ export default function GuionReader({ data }: GuionReaderProps) {
                 <p key={`${currentSlide.number}-p-${pIndex}`} className={styles.spokenParagraph}>{paragraph}</p>
               ))}
             </div>
+            {currentSlide.liveVisit ? (
+              <section className={styles.liveVisit} aria-label="Guion para la visita al Visa Bulletin">
+                <h3>Al abrir el Visa Bulletin · {currentSlide.liveVisit.seconds} segundos</h3>
+                <a href={currentSlide.liveVisit.link.href} target="_blank" rel="noopener noreferrer" className={styles.resourceLink}>{currentSlide.liveVisit.link.label} (abre en pestaña nueva)</a>
+                {currentSlide.liveVisit.paragraphs.map((paragraph, i) => <p key={i} className={styles.spokenParagraph}>{paragraph}</p>)}
+              </section>
+            ) : null}
             {currentSlide.cue.trim() ? (
               <p className={styles.cueBox}><strong>Indicación, no se dice: </strong>{currentSlide.cue}</p>
             ) : null}

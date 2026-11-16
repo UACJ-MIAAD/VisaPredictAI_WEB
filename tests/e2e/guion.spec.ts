@@ -68,6 +68,18 @@ test("keyboard navigation and the live bulletin link work without revealing text
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(data.slides[1].title);
 });
 
+test("bulletin visit has its own spoken guide and slide4 separates filing from approval", async ({ page }) => {
+  await page.goto("/guion/");
+  await page.getByLabel("Ir a lámina").selectOption("2");
+  const visit = page.getByRole("region", { name: "Guion para la visita al Visa Bulletin", exact: true });
+  for (const paragraph of data.slides[2].liveVisit!.paragraphs) await expect(visit.getByText(paragraph, { exact: true })).toBeVisible();
+  await expect(visit.getByRole("link")).toHaveAttribute("href", "https://travel.state.gov/content/dam/visas/Bulletins/visabulletin_November2026.pdf");
+  await expect(visit.getByRole("link")).toHaveAttribute("target", "_blank");
+  await page.getByRole("button", { name: "Lámina siguiente", exact: true }).click();
+  for (const paragraph of data.slides[3].paragraphs) await expect(page.getByText(paragraph, { exact: true })).toBeVisible();
+  await expect(page.getByText(data.slides[3].sourceNote!, { exact: true })).toBeVisible();
+});
+
 test("font size is bounded and stored as a numeric preference", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("visapredictai_guion_font_px", "500"));
   await page.goto("/guion/");
