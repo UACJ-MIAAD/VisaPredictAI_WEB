@@ -55,6 +55,15 @@ describe("seriesSignals", () => {
 
 describe("reachesPriorityDate", () => {
   const iso = (d: number) => new Date((Date.UTC(1975, 0, 1) / 86400000 + d) * 86400000).toISOString().slice(0, 10);
+  it("requires the current cutoff to be strictly later than the priority date", () => {
+    expect(reachesPriorityDate(rows, null, iso(lastDays)).status).toBe("beyond");
+  });
+  it("does not count equality with a projected cutoff as crossing", () => {
+    expect(reachesPriorityDate(rows, fc, iso(fc[0].days)).month).toBe("2024-02");
+  });
+  it("rejects a calendar date that JavaScript silently normalizes", () => {
+    expect(reachesPriorityDate(rows, fc, "2000-02-30").status).toBe("invalid");
+  });
   it("says 'past' when the date is already behind the current cutoff", () => {
     expect(reachesPriorityDate(rows, fc, iso(lastDays - 100)).status).toBe("past");
   });

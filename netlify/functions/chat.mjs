@@ -364,9 +364,9 @@ const REMINDERS = [
     en: "- COVERAGE: give only the coverage figures the sources provide, for the period they state; do not attribute a coverage to the hold-out or to \"the evaluated models\" unless a source gives it. The prospective evaluation is a backfill frozen in Jun 2026, before the causal gap fill; indicative until regenerated, i.e. a retrospective evaluation: never say it is \"not backtested\" or that the forecasts were served live, beyond what the source says about the vintages since Jul-2026.",
   },
   {
-    query: /\b(current|corriente|unavailable|no disponible|status|estados?)\b/,
-    es: "- ESTADOS: copia las definiciones de la fuente de `status` (F, C, U, UNK) sin expandir las letras con otras palabras: F es «se publicó una fecha específica», no «Final». Sólo F es objetivo predictivo.",
-    en: "- STATUSES: copy the definitions from the `status` source (F, C, U, UNK) without expanding the letters into other words: F means \"a specific date was published\", not \"Final\". Only F is a prediction target.",
+    query: /\b(current|corriente|unavailable|no disponible|status|estados?|c|f|u|unk)\b/,
+    es: "- ESTADOS: copia las definiciones de la fuente de `status` (F, C, U, UNK) sin expandir las letras con otras palabras: F es «se publicó una fecha específica», no «Final». Sólo F es objetivo predictivo. U significa que no hay números de visa autorizados para emisión: NO es una celda vacía ni un dato faltante; esos casos son UNK. C indica disponibilidad numérica para los solicitantes que cumplen los requisitos, no aprobación automática ni ausencia de todo tiempo de espera.",
+    en: "- STATUSES: copy the definitions from the `status` source (F, C, U, UNK) without expanding the letters into other words: F means \"a specific date was published\", not \"Final\". Only F is a prediction target. U means no visa numbers are authorized for issuance: it is NOT an empty cell or missing data; those cases are UNK. C indicates numerical availability for qualified applicants, not automatic approval or absence of all waiting time.",
   },  // Demo rehearsal (15-nov-2026, graded by an independent agent against the
   // served artifacts): seven more answers broke rules no reminder restated.
   {

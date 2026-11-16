@@ -12,6 +12,7 @@
 import * as React from "react";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
+import { resolveConversationQuery } from "@/lib/visabot/conversation";
 import {
   retrieve,
   generate,
@@ -190,12 +191,7 @@ export function useVisabotChat({
       // 1–2 word fragment that is NOT itself a standalone question. Short direct
       // questions ("¿qué es FAD?", "what is DFF?") are left untouched so their
       // retrieval isn't polluted by the previous topic (finding 9).
-      const wc = q.split(/\s+/).length;
-      const isFollowUp =
-        /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) ||
-        (wc <= 2 && !/\?|qu[eé]|cu[aá]|c[oó]mo|what|how|which|why|when/i.test(q));
-      const prevUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-      const rq = isFollowUp && prevUser ? (mergeFollowUp ? mergeFollowUp(prevUser, q) : `${prevUser} ${q}`) : q;
+      const rq = resolveConversationQuery(q, messages.filter((m) => m.role === "user").map((m) => m.content), mergeFollowUp);
 
       let sources: Source[] = [];
       try {
@@ -219,6 +215,10 @@ export function useVisabotChat({
         }
         /* console: conversational — a chart can still ground the answer */
       }
+
+      // Stop/new chat may happen while retrieval is still loading. Do not
+      // start a fresh request after that turn has been invalidated.
+      if (!alive()) return;
 
       // console-only: build the chart + synthetic grounding sources from the
       // follow-up-augmented query (rq), so "FAD" after "zoom india F1" still

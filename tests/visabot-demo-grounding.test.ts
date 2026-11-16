@@ -25,6 +25,10 @@ describe("cutoff rule: only a priority date EARLIER than the cutoff is current",
 });
 
 describe("demo reminders", () => {
+  it("C/F/U questions distinguish unavailable numbers from missing data", () => {
+    expect(topicReminders("en", "What do C, F and U mean in this database?")).toMatch(/NOT an empty cell or missing data/);
+    expect(topicReminders("es", "¿Qué significan C, F y U?")).toMatch(/NO es una celda vacía ni un dato faltante/);
+  });
   it("Table A/B: tables are FAD/DFF and DFF does not by itself authorize adjustment", () => {
     for (const q of ["¿Cuál es la diferencia entre Final Action Dates y Dates for Filing?", "¿Qué es el Visa Bulletin?"]) {
       const r = topicReminders("es", q);

@@ -30,6 +30,9 @@ const panel = buildPanel(PANEL_CSV);
 
 // ── (1) descriptor validation ────────────────────────────────────────────────
 describe("validateDescriptors (whitelist + release pinning)", () => {
+  it.each(["toString", "constructor", "__proto__", "hasOwnProperty", ["status"], { toString: "line" }])("rejects inherited or coerced chart keys: %j", (chart) => {
+    expect(validateDescriptors([{kind: "chart_note", chart, release_id: RID}])).toEqual({error: "bad_request"});
+  });
   it("accepts every legitimate descriptor kind", () => {
     const v = validateDescriptors([
       { kind: "month_table", month: "2024-07", table: "FAD", release_id: RID },

@@ -1,9 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { buildPanel } from "@/lib/data/panel-core";
-import { detectEntities, parseMonth } from "@/lib/visabot/analytics";
+import { detectEntities, parseMonth, mergeFollowUp } from "@/lib/visabot/analytics";
 import { PANEL_CSV } from "./fixtures";
 
 const panel = buildPanel(PANEL_CSV);
+
+describe("adversarial entity replacements", () => {
+  it.each(["¿y F1?", "and F 1?"])("replaces the old category: %s", (fragment) => {
+    expect(detectEntities(mergeFollowUp("Pronóstico México F2A FAD", fragment), panel).category).toBe("F1");
+  });
+  it("replaces a Spanish table name with an acronym", () => {
+    expect(detectEntities(mergeFollowUp("México F2A presentación", "¿y FAD?"), panel).table).toBe("FAD");
+  });
+});
 
 describe("detectEntities", () => {
   it("detects country + category + table from Spanish text", () => {

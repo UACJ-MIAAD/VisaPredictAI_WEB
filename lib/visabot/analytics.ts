@@ -58,7 +58,8 @@ const normalizeCatsUp = (s: string) =>
 // detectEntities takes the FIRST alias in list order, so México won and the
 // follow-up lost its country. A country or table named in the fragment now
 // replaces the previous query's one before the two are joined.
-const TABLE_WORDS = /\b(DFF|FAD)\b|dates for filing|final action/gi;
+const TABLE_WORDS = /\b(DFF|FAD)\b|dates for filing|final action(?: dates)?|acci[oó]n final|presentaci[oó]n/gi;
+const CATEGORY_WORDS = /\b(?:EB|F)[ ._-]?\d(?:[ ._-]?[AB](?![A-Z]))?(?:_[A-Z]+)*\b/gi;
 export function mergeFollowUp(prev: string, fragment: string): string {
   let base = prev;
   if (COUNTRY_ALIASES.some(([re]) => re.test(fragment)) || /\bROW\b/.test(fragment)) {
@@ -66,6 +67,7 @@ export function mergeFollowUp(prev: string, fragment: string): string {
     base = base.replace(/\bROW\b/g, " ");
   }
   if (new RegExp(TABLE_WORDS.source, "i").test(fragment)) base = base.replace(TABLE_WORDS, " ");
+  if (new RegExp(CATEGORY_WORDS.source, "i").test(fragment)) base = base.replace(CATEGORY_WORDS, " ");
   return `${base} ${fragment}`.replace(/\s+/g, " ").trim();
 }
 
@@ -198,15 +200,15 @@ export function reachesPriorityDate(
   const bad = { status: "invalid" as const, month: null };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(priorityDate) || !rows) return bad;
   const m = isoDays(priorityDate);
-  if (!Number.isFinite(m)) return bad;
+  if (!Number.isFinite(m) || new Date(m * 86400000).toISOString().slice(0, 10) !== priorityDate) return bad;
   const fobs = rows.filter((r) => r.status === "F" && r.priorityDate && r.daysSinceBase != null);
   const last = fobs[fobs.length - 1];
   if (!last || last.priorityDate == null || last.daysSinceBase == null) return bad;
   const baseEpoch = isoDays(last.priorityDate) - (last.daysSinceBase as number);
   const pdDays = m - baseEpoch; // user's date in the forecast's daysSinceBase units
-  if ((last.daysSinceBase as number) >= pdDays) return { status: "past", month: null };
+  if ((last.daysSinceBase as number) > pdDays) return { status: "past", month: null };
   if (!fc || !fc.length) return { status: "beyond", month: null };
-  const hit = fc.find((p) => p.days >= pdDays);
+  const hit = fc.find((p) => p.days > pdDays);
   return hit ? { status: "within", month: hit.date.slice(0, 7) } : { status: "beyond", month: null };
 }
 

@@ -28,7 +28,9 @@ export function isGuardRefusal(text: string): boolean {
 
 /** Was this answer cut by a server timeout (idle/total) — marked incomplete? */
 export function isTruncated(text: string): boolean {
-  return text.includes(TRUNCATION_MARKERS.es) || text.includes(TRUNCATION_MARKERS.en);
+  return text.includes(TRUNCATION_MARKERS.es) || text.includes(TRUNCATION_MARKERS.en) ||
+    text.includes("Respuesta incompleta: se interrumpió la conexión.") ||
+    text.includes("Incomplete answer: the connection was interrupted.");
 }
 
 /** Bucketize a duration for analytics (aggregate, low-cardinality — no raw ms). */
