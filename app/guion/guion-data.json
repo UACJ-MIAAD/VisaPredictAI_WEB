@@ -1,0 +1,305 @@
+{
+  "title": "Guion de la Cumbre",
+  "version": "MINI v11",
+  "plannedSeconds": 900,
+  "event": {
+    "date": "Miércoles 18 de noviembre de 2026",
+    "time": "19:00 Ciudad Juárez · 20:00 CDMX",
+    "place": "III Cumbre Nacional de Posgrados · UACJ"
+  },
+  "slides": [
+    {
+      "number": 1,
+      "title": "Predicción de fechas de prioridad en el Visa Bulletin de Estados Unidos considerando país o área de cargabilidad, categoría migratoria y tipo de tabla",
+      "seconds": 40,
+      "startSeconds": 0,
+      "paragraphs": [
+        "Soy Javier Rebull y mi asesor es el Dr. Vicente García Jiménez.",
+        "Soy estudiante de la Maestría en Inteligencia Artificial y Analítica de Datos de la Universidad Autónoma de Ciudad Juárez.",
+        "Hoy les presento el proyecto titulado: Predicción de fechas de prioridad en el Visa Bulletin de Estados Unidos considerando país o área de cargabilidad, categoría migratoria y tipo de tabla."
+      ],
+      "cue": "Pronunciar el título completo con calma; pausa breve antes de avanzar.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/01.jpg"
+    },
+    {
+      "number": 2,
+      "title": "De la espera al pronóstico",
+      "seconds": 25,
+      "startSeconds": 43,
+      "paragraphs": [
+        "Primero analizaremos el caso y el problema: entenderemos la espera, los objetivos y la propuesta de solución.",
+        "Después revisaremos cómo construimos el pronóstico: metodología, diseño experimental y resultados obtenidos.",
+        "Por último veremos cómo se consulta el resultado en una pequeña demostración y cerraremos con conclusiones."
+      ],
+      "cue": "Recorrer los tres bloques de izquierda a derecha.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/02.jpg"
+    },
+    {
+      "number": 3,
+      "title": "¿Cómo planear una vida sin saber cuándo llegará?",
+      "seconds": 30,
+      "startSeconds": 71,
+      "paragraphs": [
+        "El Visa Bulletin es el boletín mensual del Departamento de Estado de Estados Unidos. Cada mes publica, por país, categoría y tabla, una fecha de corte.",
+        "En las categorías de preferencia los cupos son limitados, así que ese corte puede avanzar, detenerse o retroceder, mientras las personas toman decisiones de familia y trabajo. Nuestra pregunta es: ¿cuándo podría el corte alcanzar una fecha de prioridad, y con qué incertidumbre?"
+      ],
+      "cue": "Enlace oficial bajo la definición. Visita opcional al boletín vigente: señalar ambas tablas; descontar ese tiempo de los 75 s de la demo (lámina 18).",
+      "links": [
+        {
+          "label": "Abrir Visa Bulletin oficial",
+          "href": "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
+        }
+      ],
+      "image": "/presentacion-cumbre/laminas/03.jpg"
+    },
+    {
+      "number": 4,
+      "title": "Dos tablas, dos cortes para Ana",
+      "seconds": 55,
+      "startSeconds": 104,
+      "paragraphs": [
+        "Pensemos en Ana, un caso ilustrativo: mexicana, hija soltera adulta de un residente permanente, en la categoría F2B. Su fecha de prioridad es el quince de mayo de 2011 y no cambia.",
+        "El boletín de noviembre de 2026 publica dos cortes. La Tabla A, para decisión final, o FAD, marca el quince de mayo de 2010. La Tabla B, para presentar documentos, o DFF, marca el veintidós de marzo de 2011.",
+        "En las dos, la prioridad de Ana es posterior al corte; todavía no queda cubierta, porque la regla exige una prioridad anterior. Para ajuste de estatus, USCIS indica qué tabla usar. Lo que pronosticamos es el corte, no la fecha de Ana."
+      ],
+      "cue": "Señalar Tabla A (FAD), luego Tabla B (DFF); marcar la prioridad de Ana frente a cada corte.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/04.jpg"
+    },
+    {
+      "number": 5,
+      "title": "Pasan diez años. El corte solo avanza cuatro.",
+      "seconds": 35,
+      "startSeconds": 162,
+      "paragraphs": [
+        "El problema tiene dos relojes. En México F4, de noviembre de 2016 a noviembre de 2026 pasaron diez años de calendario, pero el corte solo avanzó cuatro años de fechas. La distancia creció de diecinueve y medio a veinticinco y medio años.",
+        "Eso mide el atraso del boletín, no la espera personal de alguien. Hay un límite general por país, pero no atribuimos la causa a una sola regla. Por eso tiene sentido pronosticar el corte y mostrar su error."
+      ],
+      "cue": "Señalar los dos relojes y la brecha creciente.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/05.jpg"
+    },
+    {
+      "number": 6,
+      "title": "Objetivo general y objetivos específicos",
+      "seconds": 35,
+      "startSeconds": 200,
+      "paragraphs": [
+        "De ahí sale el objetivo general: desarrollar un sistema predictivo para las series del Visa Bulletin que estime, mes a mes, las fechas de prioridad por país o área, categoría y tipo de tabla; es decir, en la práctica, las fechas de corte publicadas.",
+        "Para lograrlo planteamos cinco objetivos específicos: construir la base, caracterizar las series, comparar modelos lineales y no lineales, evaluarlos con validación temporal e intervalos, y entregar un demostrador de consulta."
+      ],
+      "cue": "No leer la lámina; el texto en pantalla queda tal cual.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/06.jpg"
+    },
+    {
+      "number": 7,
+      "title": "Una pregunta distinta, seis etapas conectadas",
+      "seconds": 25,
+      "startSeconds": 238,
+      "paragraphs": [
+        "Los estudios revisados pronostican flujos migratorios o clasifican solicitudes de visa. Nuestra pregunta es otra: cómo cambiará el corte y cuánto nos equivocamos.",
+        "Seguimos CRISP-DM en seis etapas, y el ciclo permite volver atrás: al detectar un relleno que usaba información futura, regresamos a preparar los datos."
+      ],
+      "cue": "Señalar la flecha de retorno a preparación.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/07.jpg"
+    },
+    {
+      "number": 8,
+      "title": "Arquitectura de VisaPredict AI",
+      "seconds": 25,
+      "startSeconds": 266,
+      "paragraphs": [
+        "Así se ve el flujo completo. El boletín oficial alimenta una base analítica. El motor prepara las variables, compara modelos y emite una versión de pronósticos.",
+        "Esa misma versión alimenta el portal, VisaBot y el documento. La publicación pasa siempre por controles y por una decisión humana."
+      ],
+      "cue": "Seguir el flujo con el puntero; las herramientas se explican en la lámina 14.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/08.jpg"
+    },
+    {
+      "number": 9,
+      "title": "Convertimos páginas del boletín en una base que se puede analizar",
+      "seconds": 40,
+      "startSeconds": 294,
+      "paragraphs": [
+        "El primer paso fue convertir páginas en datos. Trescientos boletines se volvieron veintiocho mil doscientos once registros, con mes, área, categoría, tabla, estado y corte. Una serie sigue la misma combinación mes a mes.",
+        "En el censo de noviembre hay ciento noventa y cuatro series observadas, ciento treinta y seis con fecha, noventa y siete elegibles y ochenta y seis con proyección actual. Los modelos se comparan en veinticinco series familiares por tabla. Medimos trescientas cincuenta y cuatro omisiones; su corrección sigue pendiente."
+      ],
+      "cue": "Bajar por el embudo del censo.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/09.jpg"
+    },
+    {
+      "number": 10,
+      "title": "La serie se congela, salta y retrocede; la preparación usa solo el pasado",
+      "seconds": 50,
+      "startSeconds": 337,
+      "paragraphs": [
+        "Esta es la historia completa de México F2B. La fecha se congela, salta y a veces retrocede; los huecos no se interpolan.",
+        "Abajo está el cambio entre observaciones. Veinticuatro de veinticinco series familiares FAD requieren trabajar con ese cambio, es decir, diferenciar.",
+        "Con él hicimos la ingeniería de variables usando solo el pasado: rezagos, mes, año fiscal y máscaras de faltantes retrasadas. La escala se ajusta solo con entrenamiento y el relleno repite lo ya publicado."
+      ],
+      "cue": "Señalar las guías en los picos reales (+539 / −439) del panel inferior.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/10.jpg"
+    },
+    {
+      "number": 11,
+      "title": "24 modelos, tres familias: la complejidad se probó",
+      "seconds": 40,
+      "startSeconds": 390,
+      "paragraphs": [
+        "Comparamos veinticuatro modelos en tres familias: clásicos, árboles y redes. Como referencia hay tres ideas: repetir la última fecha, seguir el ritmo promedio y el modelo del proyecto, que en FAD combina Theta, ETS y SARIMA.",
+        "Para los árboles, Optuna hizo ciento cincuenta ensayos por grupo en un tramo de búsqueda y otro tramo confirmó el ajuste: se aceptaron nueve de doce grupos; los otros tres conservaron la configuración por defecto.",
+        "Medimos con MASE, un error escalado: cuanto menor, mejor."
+      ],
+      "cue": "Señalar 9/12 aceptados y 3 por defecto.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/11.jpg"
+    },
+    {
+      "number": 12,
+      "title": "Qué historia ve cada fase antes de pronosticar",
+      "seconds": 50,
+      "startSeconds": 433,
+      "paragraphs": [
+        "Para comparar con justicia, la Tabla 1 resume qué historia ve cada fase, con México F2B en decisión final. La historia base va de diciembre de 2001 a septiembre de 2021. Siguen veinticuatro meses de búsqueda y doce de confirmación; luego los hiperparámetros quedan fijos.",
+        "La prueba final va de octubre de 2024 a septiembre de 2026: el primer pronóstico usa el pasado hasta septiembre de 2024 y el último, hasta agosto de 2026. La historia crece en cada origen y las redes se reajustan cada doce meses. En DFF el inicio varía por serie."
+      ],
+      "cue": "Recorrer la tabla por filas, de la historia base a la prueba final.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/12.jpg"
+    },
+    {
+      "number": 13,
+      "title": "En los dos años recientes, a un mes, repetir tuvo el menor error medio",
+      "seconds": 50,
+      "startSeconds": 486,
+      "paragraphs": [
+        "Este es el resultado principal. En la prueba final, la prueba A, con veinticinco series FAD y a un mes, repetir el último corte tuvo el menor error medio: un MASE de cero punto ciento cincuenta y siete.",
+        "Fue el mejor en dieciséis de veinticinco series, y ningún rival lo superó de forma significativa. Además, en seis de cada diez casos la fecha no cambió.",
+        "Este resultado vale para esta ventana y este plazo; no lo extendemos a otros horizontes. Aporta evidencia al cuarto objetivo, pero la evaluación a doce meses sigue pendiente."
+      ],
+      "cue": "Señalar 0.157 y 16/25; no comentar otros horizontes.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/13.jpg"
+    },
+    {
+      "number": 14,
+      "title": "Del boletín a una versión verificable",
+      "seconds": 30,
+      "startSeconds": 539,
+      "paragraphs": [
+        "Aquí se une el desarrollo con la operación. Git, DVC, S3 y MLflow guardan código, datos, artefactos y experimentos, para poder rastrear cada versión.",
+        "Cada mes se valida el PDF, se prepara un candidato y una persona revisa el recibo. Después se pronostica, se verifican contratos, huellas de archivos y pruebas automáticas, y se publica. Si algo falla, no se publica. El seguimiento de error y cobertura cierra el ciclo."
+      ],
+      "cue": "Seguir el ciclo mensual; señalar el punto de bloqueo.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/14.jpg"
+    },
+    {
+      "number": 15,
+      "title": "Qué modelo usa cada serie",
+      "seconds": 45,
+      "startSeconds": 572,
+      "paragraphs": [
+        "Este tablero muestra qué modelo usa cada combinación de área, categoría y tabla. M es la mediana de Theta, ETS y SARIMA; S es SARIMA.",
+        "Una aclaración importante: M y S son asignaciones de esta versión, no los ganadores de la prueba A.",
+        "Hay noventa y siete series con asignación: ochenta y seis con proyección actual y once que conservan pronósticos anteriores, marcadas con asterisco. Las celdas grises no tienen modelo asignado. Cambiar un modelo requiere evidencia y decisión humana."
+      ],
+      "cue": "Señalar una celda M, una S, un asterisco y una gris.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/15.jpg"
+    },
+    {
+      "number": 16,
+      "title": "86 series: su historia y su pronóstico",
+      "seconds": 25,
+      "startSeconds": 620,
+      "paragraphs": [
+        "La galería muestra la historia y el pronóstico de las ochenta y seis series con proyección actual, cada una en su escala y con banda nominal del noventa y cinco por ciento.",
+        "Es una vista de alcance, no ochenta y seis validaciones. El detalle de Ana lo vemos en la siguiente lámina."
+      ],
+      "cue": "Señalar el panel Ana · MX F2B FAD; el zoom está en la lámina 17.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/16.jpg"
+    },
+    {
+      "number": 17,
+      "title": "Para Ana, la incertidumbre sigue siendo grande",
+      "seconds": 55,
+      "startSeconds": 648,
+      "paragraphs": [
+        "Volvemos a Ana, ahora en detalle. Aquí la banda es nominal del ochenta por ciento, distinta de la del noventa y cinco de la galería. Describe dónde podría estar el corte, no cuándo llegará su turno.",
+        "A doce meses, esa banda abarca unos cuatro años de fechas de corte; no son cuatro años de espera personal. Y su cobertura a ese plazo todavía no está medida.",
+        "Para dimensionar el error: en septiembre de 2026, a un mes, el error en esta serie fue de cuatrocientos dos días. En la prueba de robustez, seis de seiscientos pares de modelo y serie fallaron.",
+        "Por eso, lo que manda sigue siendo el boletín oficial."
+      ],
+      "cue": "Señalar la banda 80 % y su ancho a 12 meses; luego el dato de 402 días.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/17.jpg"
+    },
+    {
+      "number": 18,
+      "title": "Demostración de VisaPredict AI",
+      "seconds": 75,
+      "startSeconds": 706,
+      "paragraphs": [
+        "Pasemos a la demostración: México, F2B, decisión final.",
+        "Primero aparece la historia publicada; después, el pronóstico, que empieza en diciembre de 2026, con bandas nominales del ochenta y del noventa y cinco por ciento; al final, el error y la fuente.",
+        "El portal consulta resultados ya emitidos; no reentrena modelos en vivo. Si hay conexión, lo abro dentro de este mismo tiempo; si la red falla, esta captura muestra la misma consulta.",
+        "Y recuerden: el rango describe el corte del boletín, no el mes en que Ana obtendría su visa."
+      ],
+      "cue": "Llamadas «Pronóstico desde dic. 2026» y «Bandas 80 % / 95 %». Si hubo visita en L3, descontarla de estos 75 s. Sin red, quedarse en la captura.",
+      "links": [
+        {
+          "label": "Abrir portal de pronósticos",
+          "href": "https://visapredictai.com/resultados/"
+        }
+      ],
+      "image": "/presentacion-cumbre/laminas/18.jpg"
+    },
+    {
+      "number": 19,
+      "title": "El pronóstico del corte debe mostrar su error",
+      "seconds": 35,
+      "startSeconds": 784,
+      "paragraphs": [
+        "Cierro con tres ideas. Primero, el boletín se convirtió en una base de ciento noventa y cuatro series observadas. Segundo, en la prueba reciente a un mes, ningún rival superó con significancia a repetir, y eso depende de la ventana y del plazo. Tercero, el demostrador muestra el pronóstico junto con su banda, que no es la espera de Ana.",
+        "Queda trabajo: medir la cobertura a doce meses, corregir las omisiones, repetir las comparaciones con datos corregidos y dar seguimiento prospectivo."
+      ],
+      "cue": "Tono pausado; mirar al público en el trabajo futuro.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/19.jpg"
+    },
+    {
+      "number": 20,
+      "title": "Referencias citadas",
+      "seconds": 10,
+      "startSeconds": 822,
+      "paragraphs": [
+        "Estas son las referencias citadas, incluidas las fuentes oficiales enlazadas en la presentación."
+      ],
+      "cue": "Avanzar sin leer referencias.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/20.jpg"
+    },
+    {
+      "number": 21,
+      "title": "Gracias por su atención",
+      "seconds": 15,
+      "startSeconds": 835,
+      "paragraphs": [
+        "Ana aún no sabe cuándo. Pero ahora sabe cuánto no sabemos.",
+        "Muchas gracias; quedo atento a sus preguntas."
+      ],
+      "cue": "Pausa tras la segunda frase antes de agradecer.",
+      "links": [],
+      "image": "/presentacion-cumbre/laminas/21.jpg"
+    }
+  ]
+}
