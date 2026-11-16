@@ -1,5 +1,7 @@
 # Guion de la Cumbre · ruta /guion/
 
+Revisión vigente: MINI v14. Rediseña únicamente la lámina 19 («Resultados y próximos pasos»): cifras principales a la izquierda y secuencia de trabajo futuro a la derecha, con alineación izquierda. Conserva las 21 notas habladas y las otras 20 láminas. Fuentes, PDF vectorial y PPTX en `Presentaciones/2026-11-16_B3_MINI_v14/`; el PDF se compone desde las fuentes vectoriales, sin rasterizar páginas. La imagen web 19 deriva de ese PDF. La descripción v13 siguiente conserva el antecedente de la fila restaurada.
+
 Página de lectura y ensayo, sin añadirla al menú público. Usa el layout raíz y las fuentes/colores existentes; `robots` marca noindex/nofollow, lo que no constituye control de acceso. No incorpora servicios, dependencias ni tracking nuevos.
 
 Contenido vigente: `app/guion/guion-data.json`, sincronizado con `Presentaciones/2026-11-15_B3_MINI_v13/notas.json`. V13 restaura la fila de personas original (versión completa v37, lámina8) en la lámina5 de la mini, con Ana en azul y la prioridad posterior al corte. Sustituye la explicación de los dos relojes; conserva21láminas, las dos tablas de4, visita de3, objetivos, arquitectura, MLOps y resultados. Sólo cambia la imagen05, su título, guion y fuente; las otras20láminas y notas del PPTX son exactas a v12r1. Generación de esta revisión en `preparar.py`/`generar.py`/`render_fila.cjs`; validación en `validar.py`. Los párrafos y `liveVisit.paragraphs` se dicen en voz alta; `cue` y `sourceNote` no. No usar generadores anteriores para sobrescribir esta revisión.

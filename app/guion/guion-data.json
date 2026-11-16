@@ -1,6 +1,6 @@
 {
   "title": "Guion de la Cumbre",
-  "version": "MINI v13",
+  "version": "MINI v14",
   "plannedSeconds": 900,
   "event": {
     "date": "Miércoles 18 de noviembre de 2026",
@@ -303,7 +303,7 @@
     },
     {
       "number": 19,
-      "title": "El pronóstico del corte debe mostrar su error",
+      "title": "Resultados y próximos pasos",
       "seconds": 34,
       "startSeconds": 825,
       "paragraphs": [
