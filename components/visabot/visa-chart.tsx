@@ -256,7 +256,7 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
     <figure
       role={spec.kind === "table" || spec.kind === "bulletinDiff" ? undefined : "img"}
       aria-label={spec.kind === "table" || spec.kind === "bulletinDiff" ? undefined : `${spec.title}. ${spec.subtitle}`}
-      className="mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3"
+      className="vb-chart-card mt-2 max-w-full min-w-0 overflow-hidden rounded-xl border border-border bg-[var(--color-bg)] p-3"
     >
       <figcaption className="mb-0.5 font-serif text-sm font-bold text-[var(--color-ink)]">{spec.title}</figcaption>
       <p className="mb-2 text-[0.72rem] text-[var(--color-muted)]">{spec.subtitle}</p>

@@ -148,9 +148,23 @@ export function useVisabotChat({
     return () => clearInterval(iv);
   }, [semantic, modelReady]);
 
+  const positionedChartRef = React.useRef<ChartPayload | undefined>(undefined);
   // autoscroll on new content if pinned to bottom
   React.useEffect(() => {
-    if (atBottom) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    const thread = scrollRef.current;
+    if (!atBottom || !thread) return;
+    if (!messages.length) { thread.scrollTo({top:0}); return; }
+    const last = messages[messages.length - 1];
+    const chart = last.chart && thread.querySelector(`#vb-chart-${messages.length - 1}`);
+    const reply = chart?.closest(".vb-assistant-turn");
+    // A completed chart answer opens at its visual, rather than scrolling past
+    // the whole plot to the end of its explanatory text. Do this once per chart;
+    // returning to the bottom later must not bounce the reader back to the plot.
+    if (reply && positionedChartRef.current !== last.chart) {
+      positionedChartRef.current = last.chart;
+      thread.scrollTo({top:thread.scrollTop + reply.getBoundingClientRect().top - thread.getBoundingClientRect().top - 12});
+    }
+    else thread.scrollTo({ top: thread.scrollHeight });
   }, [messages, atBottom]);
 
   // Reset the auto-grown textarea back to one row once it is cleared (after
@@ -180,6 +194,7 @@ export function useVisabotChat({
       const mySeq = ++seqRef.current; // claim this turn
       const alive = () => seqRef.current === mySeq; // still the active turn?
       setInput("");
+      setAtBottom(true);
       setBusy(true);
       setLiveStatus(tr(lang, "vbThinking"));
       track("VisaBot Query", surface === "console" ? { lang, surface } : { lang });
@@ -345,6 +360,7 @@ export function useVisabotChat({
   const newChat = React.useCallback(() => {
     stop();
     setMessages([]);
+    setAtBottom(true);
     inputRef.current?.focus();
   }, [stop]);
 

@@ -17,7 +17,7 @@ import {
   chartTitle, monthDays, isoDays, pdYear, epochToYear, epochToDate,
   genericChartNote, forecastText, bulletinDiffText,
   genericChartSummary, forecastSummary, bulletinDiffSummary,
-  FAM, EMP, MONTHS_ES, MONTHS_EN, nextMonth,
+  FAM, EMP, MONTHS_ES, MONTHS_EN, nextMonth, monthLabel,
 } from "./synthetic-builders.mjs";
 
 export type Lang = "es" | "en";
@@ -583,6 +583,6 @@ export function buildPanorama(panel: Panel, lang: Lang): Kpi[] {
     { label: lang === "en" ? "Predictable (F)" : "Predecibles (F)", value: `${pctF}%`, hint: lang === "en" ? "rows with a final date" : "filas con fecha final" },
     { label: lang === "en" ? "Areas" : "Áreas", value: String(panel.countries.length), hint: lang === "en" ? "countries / chargeability" : "países / cargabilidad" },
     { label: lang === "en" ? "Categories" : "Categorías", value: String(panel.categories.length), hint: lang === "en" ? "family + employment" : "familia + empleo" },
-    { label: lang === "en" ? "Latest bulletin" : "Último boletín", value: panel.monthRange[1], hint: `${panel.monthRange[0]} → ${panel.monthRange[1]}` },
+    { label: lang === "en" ? "Latest bulletin" : "Último boletín", value: monthLabel(panel.monthRange[1], lang), hint: `${panel.monthRange[0]} → ${panel.monthRange[1]}` },
   ];
 }

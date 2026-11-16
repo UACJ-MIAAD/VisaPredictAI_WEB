@@ -6,6 +6,9 @@ import { PANEL_CSV } from "./fixtures";
 const panel = buildPanel(PANEL_CSV);
 
 describe("conversation retrieval follows the whole chain", () => {
+  it.each(["Gracias", "Perfecto", "Thank you", "radar", "heatmap"])("%s starts a fresh intent instead of repeating a forecast", q => {
+    expect(resolveConversationQuery(q, ["Pronóstico México F3 FAD"], mergeFollowUp)).toBe(q);
+  });
   it.each([
     ["Pronóstico de México F2A FAD", "¿y India?", "¿y DFF?"],
     ["Mexico F2A FAD forecast", "and India?", "and DFF?"],

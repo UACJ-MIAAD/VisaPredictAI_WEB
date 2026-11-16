@@ -8,9 +8,10 @@ export function resolveConversationQuery(
   let resolved = "";
   for (const turn of [...previous, query]) {
     const q = turn.trim();
-    const wc = q.split(/\s+/).length;
+    const fragment = q.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/^[¿¡\s]+|[?!.,\s]+$/g, "");
+    const entityOnly = /^(?:(?:para|for|en|in)\s+)?(?:mexico|india|china|filipinas|philippines|resto del mundo|all chargeability|fad|dff|final action(?: dates)?|dates for filing|accion final|presentacion|f[ ._-]?\d(?:[ ._-]?[ab])?|eb[ ._-]?\d(?:[ _-][a-z]+)*)$/.test(fragment) || q === "ROW";
     const follows = /^(¿?\s*y\b|¿?\s*and\b|pero|adem[aá]s|tambi[eé]n|also|but)\b/i.test(q) ||
-      (wc <= 2 && !/\?|qu[eé]|cu[aá]|c[oó]mo|what|how|which|why|when/i.test(q));
+      entityOnly;
     resolved = follows && resolved ? merge(resolved, q) : q;
   }
   return resolved;
