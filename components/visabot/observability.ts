@@ -30,7 +30,9 @@ export function isGuardRefusal(text: string): boolean {
 export function isTruncated(text: string): boolean {
   return text.includes(TRUNCATION_MARKERS.es) || text.includes(TRUNCATION_MARKERS.en) ||
     text.includes("Respuesta incompleta: se interrumpió la conexión.") ||
-    text.includes("Incomplete answer: the connection was interrupted.");
+    text.includes("Incomplete answer: the connection was interrupted.") ||
+    text.includes("Respuesta incompleta: se alcanzó el límite de tokens de generación.") ||
+    text.includes("Incomplete answer: the generation token limit was reached.");
 }
 
 /** Bucketize a duration for analytics (aggregate, low-cardinality — no raw ms). */

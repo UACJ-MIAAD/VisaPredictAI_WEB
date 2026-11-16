@@ -13,9 +13,10 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { DATA_PINS } from "../lib/content/data-pins.generated.mjs";
 import { resetSyntheticData } from "@/lib/visabot/synthetic-context.mjs";
+import { validSyntheticShape } from "../netlify/functions/chat.mjs";
 import { buildPanel } from "@/lib/data/panel-core";
 import { parseForecastStore, backfillScored } from "@/lib/data/forecasts-core.mjs";
-import { buildForecast, chartUserNote, priorityYearTick } from "@/lib/visabot/analytics";
+import { buildForecast, chartUserNote, forecastText, priorityYearTick } from "@/lib/visabot/analytics";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dataFile = (name: string) => readFileSync(join(root, "public", "data", name));
@@ -102,6 +103,32 @@ describe("the same facts on the client side", () => {
   const store = parseForecastStore(String(dataFile("forecasts.csv")),
     JSON.parse(String(dataFile("forecasts_meta.json"))), scorecard);
   const spec = buildForecast(panel, "mexico", "F4", "FAD", "es", 12, 48, store)!;
+  it.each(["es", "en"] as const)("%s: a current series carries its latest status, separately from its historical dated cutoff", (lang) => {
+    const series = panel.rows.filter(r => r.country === "india" && r.category === "F2A" && r.table === "DFF").sort((a,b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+    const last = series.at(-1)!;
+    expect(last.status).toBe("C");
+    const chart = buildForecast(panel, "india", "F2A", "DFF", lang, 12, 48, store)!;
+    if (chart.kind !== "forecast") throw new Error("expected forecast");
+    const summary = chartUserNote(chart, lang)!;
+    expect(summary).toContain(`${last.bulletinMonth}: ${lang === "en" ? "status" : "estado"} C`);
+    expect(summary).toContain(lang === "en" ? "historical" : "histórico");
+    expect(summary.slice(0, 180)).toContain(`${last.bulletinMonth}: ${lang === "en" ? "status" : "estado"} C`);
+  });
+
+  it("every chartable released series passes the server's synthetic grammar in both languages", () => {
+    const keys = [...new Set(panel.rows.map(r => `${r.country}|${r.category}|${r.table}`))];
+    const rejected: string[] = [];
+    let count = 0;
+    for (const key of keys) for (const lang of ["es", "en"] as const) {
+      const [country, category, table] = key.split("|");
+      const chart = buildForecast(panel, country, category, table, lang, 12, 48, store);
+      if (chart?.kind !== "forecast") continue;
+      count++;
+      if (!validSyntheticShape(lang === "en" ? "Live chart (real data panel)" : "Gráfico en vivo (panel de datos real)", forecastText(chart, lang))) rejected.push(`${key}/${lang}`);
+    }
+    expect(count).toBeGreaterThan(0);
+    expect(rejected).toEqual([]);
+  });
 
   it("the offline fallback summary shows the same ISO band", () => {
     const s = chartUserNote(spec, "es")!;

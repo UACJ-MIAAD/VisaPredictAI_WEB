@@ -25,6 +25,17 @@ describe("cutoff rule: only a priority date EARLIER than the cutoff is current",
 });
 
 describe("demo reminders", () => {
+  it.each(["es", "en"] as const)("%s: acronyms are defined even for a question about error metrics", (lang) => {
+    const p = systemPrompt(lang, [], "console", "What error metrics does the project use?");
+    expect(p).toContain("FAD = Final Action Dates; DFF = Dates for Filing");
+  });
+  it("explicitly supersedes historical leakage-free wording for metric questions", () => {
+    expect(topicReminders("en", "What error metrics does the project use?")).toMatch(/current gap-fill caveat supersedes that label/);
+    expect(topicReminders("es", "¿Algún modelo le gana a repetir el último corte?")).toMatch(/Separa motivación de diseño de evidencia medida/);
+  });
+  it("does not promise becoming current next month after equality", () => {
+    expect(topicReminders("en", "My priority date equals the cutoff. Am I current?")).toMatch(/does NOT guarantee becoming current the following month/);
+  });
   it("C/F/U questions distinguish unavailable numbers from missing data", () => {
     expect(topicReminders("en", "What do C, F and U mean in this database?")).toMatch(/NOT an empty cell or missing data/);
     expect(topicReminders("es", "¿Qué significan C, F y U?")).toMatch(/NO es una celda vacía ni un dato faltante/);

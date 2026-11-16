@@ -121,6 +121,7 @@ export type ChartSpec =
   | { kind: "heatmap"; title: string; subtitle: string; rows: string[]; cols: string[]; m: ({ value: number | null; date: string | null })[][]; max: number; unit: string }
   | { kind: "radar"; title: string; subtitle: string; names: string[]; data: Record<string, number | string | null>[] }
   | { kind: "forecast"; title: string; subtitle: string; yLabel: string; splitMonth: string; note?: string; fallback?: boolean;
+      latestObservation?: { month: string; status: string };
       // true when the production forecast STORE failed to load (fetch error), as
       // opposed to `fallback` (this one series has no pre-generated forecast).
       // forecastText must then declare the outage instead of fabricating context.

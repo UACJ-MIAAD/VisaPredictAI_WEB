@@ -18,6 +18,7 @@ import { dirname, join } from "node:path";
 import handler, { truncationNote } from "../netlify/functions/chat.mjs";
 import { resetSyntheticData } from "../lib/visabot/synthetic-context.mjs";
 import { DATA_PINS } from "../lib/content/data-pins.generated.mjs";
+import { isTruncated } from "@/components/visabot/observability";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -64,7 +65,8 @@ const okUpstream = () =>
   new Response(
     'data: {"type":"message_start","message":{"usage":{"input_tokens":321}}}\n\n' +
       deltaFrame("ok") +
-      'data: {"type":"message_delta","usage":{"output_tokens":7}}\n\n',
+      'data: {"type":"message_delta","usage":{"output_tokens":7}}\n\n' +
+      'data: {"type":"message_stop"}\n\n',
     { status: 200, headers: { "content-type": "text/event-stream" } },
   );
 
@@ -123,6 +125,34 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
         throw new Error(`unexpected fetch ${u}`);
       }),
     );
+
+  it.each(["es", "en"] as const)("%s: reaching the token limit is explicitly incomplete, even without a usage field", async (lang) => {
+    stubAnthropic(() => new Response(deltaFrame("Partial answer") +
+      'data: {"type":"message_delta","delta":{"stop_reason":"max_tokens"}}\n\n' +
+      'data: {"type":"message_stop"}\n\n'));
+    const res = await handler(mkReq({lang, query: "Explica el proyecto"}));
+    const text = await res.text();
+    expect(text).toContain('{"t":"truncated","reason":"max_tokens"}');
+    expect(text).toMatch(lang === "es" ? /Respuesta incompleta:.*límite/ : /Incomplete answer:.*limit/);
+    expect(text).not.toMatch(/timed out|agotó el tiempo/);
+    expect(isTruncated(truncationNote(lang, "max_tokens"))).toBe(true);
+  });
+
+  it("a silent upstream EOF is not passed off as a completed answer", async () => {
+    stubAnthropic(() => new Response(deltaFrame("Partial answer")));
+    const text = await (await handler(mkReq({lang: "en", query: "Explain FAD"}))).text();
+    expect(text).toContain('"t":"error"');
+    expect(text).toContain("Partial answer");
+  });
+
+  it("accepts upstream CRLF frames split byte by byte and observes message_stop", async () => {
+    const bytes = enc.encode((deltaFrame("México") + 'data: {"type":"message_stop"}\n\n').replace(/\n/g, "\r\n"));
+    stubAnthropic(() => new Response(new ReadableStream({start(c) {for (const b of bytes) c.enqueue(Uint8Array.of(b)); c.close();}})));
+    const text = await (await handler(mkReq({lang: "en", query: "Explain FAD"}))).text();
+    const deltas = framesOf(text).map(x => JSON.parse(x)).filter(x => x.t === "delta").map(x => x.text).join("");
+    expect(deltas).toBe("México");
+    expect(text).not.toContain('"t":"error"');
+  });
 
   // ── (1) request id ─────────────────────────────────────────────────────────
   it("x-request-id on success, unique per request", async () => {

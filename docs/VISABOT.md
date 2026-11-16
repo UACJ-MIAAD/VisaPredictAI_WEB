@@ -103,6 +103,22 @@ and re-embeds ~590 chunks (~1–2 min) — acceptable at weekly cadence.
 
 ## Local commands
 
+Adversarial live probes (explicit target required; these consume the target's
+model credits):
+
+```bash
+node scripts/visabot-adversarial-live.mjs https://deploy-preview-N--visapredictai.netlify.app /tmp/visabot-live.json
+# Optional third argument selects comma-separated case ids for a targeted rerun.
+```
+
+The runner respects the 12 requests/minute budget and records full answers,
+server sources, request contexts and typed errors. Forecast probes compare the
+four exact dates in the server-rebuilt source with the answer, accepting ISO,
+Spanish and English date spellings. HTTP 200 and passing regex checks are not
+a faithfulness certificate: review the saved prose, especially historical
+model-card claims about backfill and long-horizon performance. Preserve 429s
+as rate-limit evidence; rerun affected cases after the window expires.
+
 ```bash
 npm run build:rag    # (re)build the index + download model/wasm into public/
 npm run rag:check    # Node self-check: probe queries must retrieve the right chunk

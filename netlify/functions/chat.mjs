@@ -281,7 +281,10 @@ const errStream = (code, rid) =>
 // timeout. The client renders it italic (markdown) and detects the marker
 // (components/visabot/observability.ts, cross-pinned in tests) to flag the
 // message incomplete and count the truncation — aggregate only, never text.
-export function truncationNote(lang) {
+export function truncationNote(lang, reason) {
+  if (reason === "max_tokens") return lang === "en"
+    ? "\n\n_Incomplete answer: the generation token limit was reached._"
+    : "\n\n_Respuesta incompleta: se alcanzó el límite de tokens de generación._";
   return lang === "en"
     ? "\n\n_Incomplete answer: generation timed out._"
     : "\n\n_Respuesta incompleta: se agotó el tiempo de generación._";
@@ -295,6 +298,7 @@ export function systemPrompt(lang, context, surface, query = "") {
   const es = `Eres VisaBot, el asistente del proyecto académico VisaPredict AI (anteproyecto MIAAD, UACJ): un sistema que pronostica fechas de prioridad del U.S. Visa Bulletin por país o área de cargabilidad, categoría migratoria y tipo de tabla.
 
 REGLAS:
+- ACRÓNIMOS FIJOS: FAD = Final Action Dates; DFF = Dates for Filing. Conserva estas expansiones aunque la pregunta trate de métricas, modelos u otro tema.
 - No inventes datos, cifras ni fechas. No das asesoría legal migratoria individualizada; pero SÍ respondes preguntas de pronóstico con las cifras del modelo (ver la regla de pronósticos abajo): pronosticar el movimiento de las fechas de corte ES el propósito del proyecto, no algo que debas evitar.
 - PRECEDENCIA TEMPORAL: el documento del anteproyecto (mayo 2026) describe el PLAN («se comparará», «candidatos»); los RESULTADOS ya medidos viven en las fuentes de ejecución (model card del modelo desplegado, evaluación prospectiva, scorecard, boletín). Si las fuentes mezclan plan y resultados, responde con los RESULTADOS vigentes y aclara en una frase que el anteproyecto era la propuesta inicial. En particular, el TAMAÑO del marco comparativo es el que digan las fuentes de ejecución (la propuesta nombraba menos candidatos; el marco ejecutado creció).
 - CATEGORÍAS: F1, F2A, F2B, F3, F4 y EB-1 a EB-5 son preferencias de RESIDENCIA PERMANENTE del boletín, no visas temporales; F1 NO es la visa de estudiante F-1. No existen otras categorías familiares (no hay F5 ni F6): si preguntan por una que no existe, dilo así, sin atribuirle un significado. Defínelas SOLO con lo que diga la fuente del glosario; si una subcategoría no está en las fuentes, dilo y remite a travel.state.gov en vez de definirla de memoria.
@@ -318,6 +322,7 @@ ${sources}`
   const en = `You are VisaBot, the assistant for the VisaPredict AI academic project (MIAAD thesis proposal, UACJ): a system that forecasts U.S. Visa Bulletin priority dates by country or chargeability area, immigration category and table type.
 
 RULES:
+- FIXED ACRONYMS: FAD = Final Action Dates; DFF = Dates for Filing. Keep these expansions even when the question is about metrics, models or another topic.
 - Never invent data, figures or dates. You do not give individualized immigration legal advice; but you DO answer forecast questions with the model's figures (see the forecast rule below): forecasting cutoff-date movement IS the purpose of the project, not something to avoid.
 - TEMPORAL PRECEDENCE: the proposal document (May 2026) describes the PLAN ("will compare", "candidates"); MEASURED RESULTS live in the execution sources (deployed-model card, prospective evaluation, scorecard, bulletin). When sources mix plan and results, answer with the CURRENT results and note in one sentence that the proposal was the initial plan. In particular, the SIZE of the comparison framework is whatever the execution sources state (the proposal named fewer candidates; the executed framework grew).
 - CATEGORIES: F1, F2A, F2B, F3, F4 and EB-1 to EB-5 are the bulletin's PERMANENT-RESIDENCE preferences, not temporary visas; F1 is NOT the F-1 student visa. There are no other family categories (no F5 or F6): if asked about one that does not exist, say so without assigning it a meaning. Define them ONLY from what the glossary source says; if a subcategory is not in the sources, say so and refer to travel.state.gov instead of defining it from memory.
@@ -348,6 +353,21 @@ ${sources}`
 // with "No", F expanded as "Final"). Restating the rule in closed form AFTER the
 // sources, only when the question touches its topic, puts it next to the answer.
 const REMINDERS = [
+  {
+    query: /\b(error\w*|metric\w*|metrica\w*|evalu\w*|naive\w*|ingenuo|repetir|repeating|modelos?|models?|champion|campeon\w*|backfill|prospectiv\w*|prospective)\b/,
+    es: "- ALCANCE DE LA EVIDENCIA: la frase histórica de la model card «backfill sin fuga de información; añadas servidas en vivo desde jul-2026» NO acredita que el backfill esté libre de fuga ni que esas cifras provengan de pronósticos servidos en vivo. La advertencia vigente sobre el relleno de huecos la sustituye: el backfill es orientativo y necesita regenerarse. Tampoco repitas como resultado probado que el naïve-1 «se degrada» a plazos largos o que otra receta lo supera en ese horizonte: eso requiere la evaluación multi-horizonte corregida que sigue pendiente. Separa motivación de diseño de evidencia medida.",
+    en: "- SCOPE OF EVIDENCE: the model card's historical phrase \"backfill sin fuga de información; añadas servidas en vivo desde jul-2026\" does NOT establish that the backfill is leakage-free or that its figures come from live-served forecasts. The current gap-fill caveat supersedes that label: the backfill is indicative and needs regeneration. Likewise, do not repeat as a proven result that naïve-1 \"degrades\" at longer leads or that another recipe beats it there: the corrected multi-horizon evaluation is still pending. Separate design motivation from measured evidence.",
+  },
+  {
+    query: /\b(fecha de prioridad|priority date|fecha de corte|cutoff|corriente|current)\b/,
+    es: "- CORTE Y TIEMPO: igualdad no basta; la fecha de prioridad debe ser estrictamente anterior. Estar justo en el límite NO garantiza pasar el mes siguiente: el corte puede quedar igual o retroceder. No prometas un avance mensual ni una fecha futura sin el pronóstico pertinente, que tampoco es garantía.",
+    en: "- CUTOFF AND TIMING: equality is insufficient; the priority date must be strictly earlier. Being at the threshold does NOT guarantee becoming current the following month: the cutoff can stay unchanged or retrogress. Do not promise a monthly advance or a future date without the relevant forecast, which is not a guarantee either.",
+  },
+  {
+    query: /\b(pronostic\w*|forecast\w*|priority date|fecha de prioridad|current|corriente)\b/,
+    es: "- ESTADO MÁS RECIENTE: si el gráfico informa un boletín posterior con estado C, U o UNK, indica ese estado y ese mes antes de interpretar la proyección numérica. El último corte con fecha es histórico y NO reemplaza el estado vigente. C no necesita compararse con ese corte antiguo; U no autoriza emisión aunque una fecha sea anterior al corte histórico. No confundas el mes del boletín (entre paréntesis) con la fecha de prioridad del corte.",
+    en: "- LATEST STATUS: if the chart reports a later bulletin with status C, U or UNK, state that status and month before interpreting the numeric projection. The last dated cutoff is historical and does NOT replace the current status. C does not require comparison against that old cutoff; U does not authorize issuance even if a date precedes the historical cutoff. Do not confuse the bulletin month (in parentheses) with the cutoff priority date.",
+  },
   {
     query: /\b(mcs|confidence set|friedman\w*|nemenyi|campeon\w*|champion\w*|gana\w*|ganador\w*|win\w*|modelos?|models?|naive\w*|ingenuo|random walk)\b/,
     es: "- MCS: escribe sus miembros con esta forma: «El MCS al 90 % de <tabla> es {<miembros>}: los modelos que no se distinguen estadísticamente del MEJOR modelo del hold-out». NUNCA escribas que esos modelos «no se distinguen del campeón» ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.",
@@ -846,12 +866,14 @@ const handler = async (req) => {
 
       const reader = upstream.body.getReader();
       let buf = "";
+      let upstreamComplete = false;
+      let upstreamFailed = false;
       try {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
           armIdle();
-          buf += decoder.decode(value, { stream: true });
+          buf = (buf + decoder.decode(value, { stream: true })).replace(/\r\n/g, "\n");
           if (buf.length > 1_000_000) { obs.error = "runaway"; send({ t: "error", code: "server" }); break; } // runaway frame guard
           const events = buf.split("\n\n");
           buf = events.pop() || "";
@@ -866,10 +888,14 @@ const handler = async (req) => {
               } else if (data.type === "message_start") {
                 // token usage when the upstream provides it (US I5, aggregate only)
                 obs.tokens_in = data.message?.usage?.input_tokens ?? obs.tokens_in;
-              } else if (data.type === "message_delta" && data.usage) {
-                obs.tokens_out = data.usage.output_tokens ?? obs.tokens_out;
+              } else if (data.type === "message_delta") {
+                obs.tokens_out = data.usage?.output_tokens ?? obs.tokens_out;
+                if (data.delta?.stop_reason === "max_tokens") truncated = "max_tokens";
+              } else if (data.type === "message_stop") {
+                upstreamComplete = true;
               } else if (data.type === "error") {
                 obs.error = "upstream_error";
+                upstreamFailed = true;
                 send({ t: "error", code: "server" });
               }
             } catch {
@@ -878,12 +904,20 @@ const handler = async (req) => {
           }
           // US I5: once the code guard fired, nothing more will ever be emitted —
           // stop paying the upstream for tokens the relay would swallow.
-          if (guard.blocked) { upstreamCtrl.abort(); break; }
+          if (guard.blocked || upstreamFailed) { upstreamCtrl.abort(); break; }
+          if (upstreamComplete) break;
+        }
+        if (!upstreamComplete && !upstreamFailed && !guard.blocked && !truncated && !clientGone && !obs.error) {
+          obs.error = "premature_eof";
+          send({ t: "error", code: "server" });
         }
       } catch {
         // AbortError from one of OURS (timeout → `truncated` set; client cancel
         // → `clientGone`) or a genuine network drop mid-stream.
         if (!truncated && !clientGone) { obs.error = "stream"; send({ t: "error", code: "server" }); }
+      } finally {
+        await reader.cancel().catch(() => {});
+        reader.releaseLock();
       }
       clearTimers();
       // flush the code guard's held 2-char tail (empty when a fence blocked), then
@@ -901,7 +935,7 @@ const handler = async (req) => {
       if (truncated) {
         // Mark the cut answer as incomplete IN the answer (rendered italic by
         // the client; skipped when the guard already closed it with a refusal).
-        if (!guard.blocked) send({ t: "delta", text: truncationNote(lang) });
+        if (!guard.blocked) send({ t: "delta", text: truncationNote(lang, truncated) });
         send({ t: "truncated", reason: truncated });
       }
       finish();
