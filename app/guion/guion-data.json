@@ -47,7 +47,7 @@
         "Pensemos en una fila: cada persona tiene una fecha que marca su lugar, llamada fecha de prioridad. El Visa Bulletin es el boletín mensual que publica hasta qué fechas pueden avanzar los trámites, según el país y la categoría.",
         "El problema es que ese límite puede avanzar, quedarse detenido o retroceder. Las familias conocen su lugar en la fila, pero no cuándo llegará su turno. Nuestro proyecto busca anticipar cómo cambiará ese límite y mostrar la incertidumbre del pronóstico."
       ],
-      "cue": "Al terminar la explicación, abrir el PDF oficial de noviembre de2026 y usar el guion de visita de30s. En el PDF, preferencias familiares: Tabla A en página2 y Tabla B en página3; señalar fila F2B y columna México. Los30s ya están incluidos en los102s de esta lámina. Sin red, usar las capturas de la lámina4.",
+      "cue": "Al terminar la explicación, abrir el PDF oficial de noviembre de 2026 y usar el guion de visita de 30 s. En el PDF, preferencias familiares: Tabla A en página 2 y Tabla B en página 3; señalar fila F2B y columna México. Los 30 s ya están incluidos en los 102 s de esta lámina. Sin red, usar las capturas de la lámina 4.",
       "sourceNote": "Fuente del dato: Departamento de Estado, Annual Report of Immigrant Visa Applicants, al 1 de noviembre de 2023, pp. 1–3: 4,034,061 personas registradas en el NVC en preferencias familiares y laborales, incluidos cónyuges e hijos con derecho derivado. Excluye ajustes de estatus pendientes ante USCIS; no es el total actual de personas esperando una Green Card.",
       "links": [
         {
@@ -92,7 +92,7 @@
       "cue": "Señalar primero Tabla B/DFF y después Tabla A/FAD. La prioridad de Ana debe ser estrictamente anterior al corte, no igual. Distinguir presentación de expediente de aprobación final; no garantizar elegibilidad ni aprobación por la fecha sola.",
       "links": [
         {
-          "label": "Fuente: Visa Bulletin noviembre2026 · tablas y regla de prioridad",
+          "label": "Fuente: Visa Bulletin noviembre de 2026 · tablas y regla de prioridad",
           "href": "https://travel.state.gov/content/dam/visas/Bulletins/visabulletin_November2026.pdf"
         },
         {
@@ -101,7 +101,7 @@
         }
       ],
       "image": "/presentacion-cumbre/laminas/04.jpg",
-      "sourceNote": "DFF = Dates for Filing (fechas para presentar documentos). FAD = Final Action Dates (fechas para la decisión final). Fuente: Visa Bulletin de noviembre de2026, pp.1–3. Para ajuste, USCIS determina la tabla de presentación cada mes; además deben cumplirse los requisitos de elegibilidad. La disponibilidad de un cupo no garantiza la aprobación."
+      "sourceNote": "DFF = Dates for Filing (fechas para presentar documentos). FAD = Final Action Dates (fechas para la decisión final). Fuente: Visa Bulletin de noviembre de 2026, pp. 1–3. Para ajuste, USCIS determina la tabla de presentación cada mes; además deben cumplirse los requisitos de elegibilidad. La disponibilidad de un cupo no garantiza la aprobación."
     },
     {
       "number": 5,
@@ -287,7 +287,7 @@
         "Consultemos ahora México F2B en decisión final. Aquí vemos la historia, el pronóstico desde diciembre de 2026, sus bandas, el error y la fuente.",
         "La página muestra cálculos ya realizados. El rango corresponde al corte del boletín, no al mes en que Ana recibiría su visa."
       ],
-      "cue": "Demo del portal de30s: elegir México/F2B/decisión final y señalar historia, pronóstico desde diciembre2026, bandas80%/95%, error y fuente. La visita al boletín tiene sus30s en la lámina3; no descontarla otra vez. Sin red, usar la captura.",
+      "cue": "Demo del portal de 30 s: elegir México/F2B/decisión final y señalar historia, pronóstico desde diciembre de 2026, bandas 80 %/95 %, error y fuente. La visita al boletín tiene sus 30 s en la lámina 3; no descontarla otra vez. Sin red, usar la captura.",
       "links": [
         {
           "label": "Abrir portal de pronósticos",
