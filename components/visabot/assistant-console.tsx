@@ -30,6 +30,7 @@ import { track } from "@/lib/analytics";
 import { ChatThread } from "./chat-thread";
 import { AssistantSidebar, type ToolDef, type ToolKind } from "./assistant-sidebar";
 import { SemanticConsent } from "./semantic-consent";
+import {VisaObservatory} from "./visa-observatory";
 import { useVisabotChat } from "./use-visabot-chat";
 import { chartForQuery } from "@/lib/visabot/chart-router";
 import type { ChartPayload, Source, SyntheticDescriptor } from "./types";
@@ -328,12 +329,22 @@ export function AssistantConsole() {
             <div className="vb-thread-inner mx-auto min-w-0 max-w-[820px] space-y-5 2xl:max-w-[900px]">
               {messages.length === 0 ? (
                 <div className="vb-home">
-                  <div className="vb-home-eyebrow"><BookOpen className="h-3.5 w-3.5" aria-hidden /> Visa Bulletin <span aria-hidden>·</span> {monthLabel(latestMonth, lang)}</div>
-                  <h2 className="vb-home-title">{tr(lang, "acHeroTitle")}<em>{tr(lang, "acHeroAccent")}</em></h2>
-                  <p className="vb-home-lead">{tr(lang, "acHeroLead")}</p>
+                  <div className="vb-hero-composition">
+                    <div className="vb-hero-story">
+                      <div className="vb-home-eyebrow"><BookOpen className="h-3.5 w-3.5" aria-hidden /> Visa Bulletin <span aria-hidden>·</span> {monthLabel(latestMonth, lang)}</div>
+                      <div className="vb-hero-edition" aria-hidden="true">VISABOT <span>/</span> {tr(lang,"acObservatoryEdition")}</div>
+                      <h2 className="vb-home-title">{tr(lang, "acHeroTitle")}<em>{tr(lang, "acHeroAccent")}</em></h2>
+                      <p className="vb-home-lead">{tr(lang, "acHeroLead")}</p>
+                      <button className="vb-hero-ask" onClick={()=>inputRef.current?.focus({preventScroll:true})}>{tr(lang,"acAskNow")} <ArrowUpRight className="h-4 w-4" aria-hidden/></button>
+                      <p className="vb-hero-assurance"><span aria-hidden="true"/>{tr(lang,"acObservatoryAssurance")}</p>
+                    </div>
+                    <VisaObservatory panel={panel} country={country} category={category} table={table} lang={lang} onCountry={setCountry}
+                      onExplore={()=>sendQ(starters[0].query)}/>
+                  </div>
+                  <div className="vb-journey-label"><span>{tr(lang,"acChoosePath")}</span><span aria-hidden="true">01 — 03</span></div>
                   <div className="vb-start-grid">
                     {starters.map((s, i) => (
-                      <button key={s.id} data-vb-starter={s.id} onClick={() => sendQ(s.query)} className="vb-start-card">
+                      <button key={s.id} data-vb-starter={s.id} disabled={s.id!=="evidence"&&!panel} onClick={() => sendQ(s.query)} className="vb-start-card">
                         <span className="vb-start-card-top"><s.icon className="h-5 w-5" aria-hidden /><span aria-hidden>0{i + 1}</span></span>
                         <strong>{s.title}</strong><span className="vb-start-hint">{s.hint}</span>
                         <ArrowUpRight className="vb-start-arrow h-4 w-4" aria-hidden />
