@@ -1,6 +1,6 @@
 {
   "title": "Guion de la Cumbre",
-  "version": "MINI v11r2",
+  "version": "MINI v12",
   "plannedSeconds": 900,
   "event": {
     "date": "Miércoles 18 de noviembre de 2026",
@@ -71,9 +71,9 @@
       "seconds": 55,
       "startSeconds": 149,
       "paragraphs": [
-        "Pensemos en Ana, un caso ilustrativo: mexicana, hija soltera adulta de un residente permanente, en la categoría F2B. Su fecha de prioridad es el quince de mayo de 2011 y no cambia.",
-        "El boletín de noviembre de 2026 publica dos cortes. La Tabla A, para decisión final, o FAD, marca el quince de mayo de 2010. La Tabla B, para presentar documentos, o DFF, marca el veintidós de marzo de 2011.",
-        "En las dos, la prioridad de Ana es posterior al corte; todavía no queda cubierta, porque la regla exige una prioridad anterior. Para ajuste de estatus, USCIS indica qué tabla usar. Lo que pronosticamos es el corte, no la fecha de Ana."
+        "Veámoslo con Ana, un caso ilustrativo. Es mexicana, hija adulta y soltera de un residente permanente: categoría F2B. Su lugar en la fila es el quince de mayo de 2011.",
+        "En noviembre de 2026, la Tabla A llega al quince de mayo de 2010 para la decisión final. La B llega al veintidós de marzo de 2011 para presentar documentos. Sus siglas en inglés son FAD y DFF.",
+        "Ana aún no queda cubierta: necesita una fecha anterior al corte. Para quienes tramitan desde Estados Unidos, la autoridad migratoria indica qué tabla usar para presentar la solicitud. Buscamos anticipar ese corte que cambia cada mes."
       ],
       "cue": "Señalar Tabla A (FAD), luego Tabla B (DFF); marcar la prioridad de Ana frente a cada corte.",
       "links": [],
@@ -82,11 +82,11 @@
     {
       "number": 5,
       "title": "Pasan diez años. El corte solo avanza cuatro.",
-      "seconds": 35,
+      "seconds": 30,
       "startSeconds": 207,
       "paragraphs": [
-        "El problema tiene dos relojes. En México F4, de noviembre de 2016 a noviembre de 2026 pasaron diez años de calendario, pero el corte solo avanzó cuatro años de fechas. La distancia creció de diecinueve y medio a veinticinco y medio años.",
-        "Eso mide el atraso del boletín, no la espera personal de alguien. Hay un límite general por país, pero no atribuimos la causa a una sola regla. Por eso tiene sentido pronosticar el corte y mostrar su error."
+        "Estos dos relojes muestran el problema. En otra categoría familiar, México F4, pasaron diez años, de noviembre de 2016 a noviembre de 2026, pero el corte avanzó sólo cuatro.",
+        "La distancia pasó de diecinueve y medio a veinticinco y medio años. Es atraso del boletín, no la espera personal de alguien. Por eso necesitamos estudiar cómo se mueve la fila."
       ],
       "cue": "Señalar los dos relojes y la brecha creciente.",
       "links": [],
@@ -96,10 +96,10 @@
       "number": 6,
       "title": "Objetivo general y objetivos específicos",
       "seconds": 35,
-      "startSeconds": 245,
+      "startSeconds": 240,
       "paragraphs": [
-        "De ahí sale el objetivo general: desarrollar un sistema predictivo para las series del Visa Bulletin que estime, mes a mes, las fechas de prioridad por país o área, categoría y tipo de tabla; es decir, en la práctica, las fechas de corte publicadas.",
-        "Para lograrlo planteamos cinco objetivos específicos: construir la base, caracterizar las series, comparar modelos lineales y no lineales, evaluarlos con validación temporal e intervalos, y entregar un demostrador de consulta."
+        "El objetivo es desarrollar un sistema que estime cómo cambiará cada mes la fecha publicada para cada país, categoría migratoria y tabla. La fecha personal de Ana permanece fija; lo que intentamos anticipar es el límite que debe alcanzarla.",
+        "Lo dividimos en cinco tareas: reunir los datos, entender su comportamiento, probar distintos modelos, medir sus errores y ofrecer una consulta sencilla. Un modelo es un método que usa la historia disponible para calcular lo que podría pasar después."
       ],
       "cue": "No leer la lámina; el texto en pantalla queda tal cual.",
       "links": [],
@@ -108,11 +108,11 @@
     {
       "number": 7,
       "title": "Una pregunta distinta, seis etapas conectadas",
-      "seconds": 25,
-      "startSeconds": 283,
+      "seconds": 30,
+      "startSeconds": 278,
       "paragraphs": [
-        "Los estudios revisados pronostican flujos migratorios o clasifican solicitudes de visa. Nuestra pregunta es otra: cómo cambiará el corte y cuánto nos equivocamos.",
-        "Seguimos CRISP-DM en seis etapas, y el ciclo permite volver atrás: al detectar un relleno que usaba información futura, regresamos a preparar los datos."
+        "Los trabajos revisados estudian, por ejemplo, cuántas personas migran o cómo clasificar solicitudes. Aquí preguntamos cómo cambiará el corte del boletín y cuánto podemos equivocarnos.",
+        "Seguimos una guía de seis etapas, llamada CRISP-DM: entender el problema, conocer los datos, prepararlos, construir modelos, evaluarlos y poner los resultados a disposición del usuario. Podemos volver atrás: cuando detectamos una preparación que usaba información del futuro, regresamos a corregir los datos."
       ],
       "cue": "Señalar la flecha de retorno a preparación.",
       "links": [],
@@ -121,11 +121,11 @@
     {
       "number": 8,
       "title": "Arquitectura de VisaPredict AI",
-      "seconds": 25,
+      "seconds": 20,
       "startSeconds": 311,
       "paragraphs": [
-        "Así se ve el flujo completo. El boletín oficial alimenta una base analítica. El motor prepara las variables, compara modelos y emite una versión de pronósticos.",
-        "Esa misma versión alimenta el portal, VisaBot y el documento. La publicación pasa siempre por controles y por una decisión humana."
+        "El boletín oficial alimenta nuestra base de datos. Con esa historia preparamos la información, probamos modelos y generamos una versión de pronósticos.",
+        "El portal, el asistente VisaBot y el documento consultan la misma versión. Antes de publicarla hay controles y revisión humana."
       ],
       "cue": "Seguir el flujo con el puntero; las herramientas se explican en la lámina 14.",
       "links": [],
@@ -135,10 +135,10 @@
       "number": 9,
       "title": "Convertimos páginas del boletín en una base que se puede analizar",
       "seconds": 40,
-      "startSeconds": 339,
+      "startSeconds": 334,
       "paragraphs": [
-        "El primer paso fue convertir páginas en datos. Trescientos boletines se volvieron veintiocho mil doscientos once registros, con mes, área, categoría, tabla, estado y corte. Una serie sigue la misma combinación mes a mes.",
-        "En el censo de noviembre hay ciento noventa y cuatro series observadas, ciento treinta y seis con fecha, noventa y siete elegibles y ochenta y seis con proyección actual. Los modelos se comparan en veinticinco series familiares por tabla. Medimos trescientas cincuenta y cuatro omisiones; su corrección sigue pendiente."
+        "Convertimos trescientos boletines en veintiocho mil doscientos once registros. Al ordenar una combinación mes a mes obtenemos una serie: por ejemplo, la historia de México F2B en la Tabla A.",
+        "El censo de noviembre tiene ciento noventa y cuatro series observadas: ciento treinta y seis contienen fechas, noventa y siete tienen modelo asignado y ochenta y seis tienen proyección actual. Comparamos modelos en veinticinco series familiares por tabla. Detectamos trescientas cincuenta y cuatro omisiones que aún deben corregirse."
       ],
       "cue": "Bajar por el embudo del censo.",
       "links": [],
@@ -147,12 +147,12 @@
     {
       "number": 10,
       "title": "La serie se congela, salta y retrocede; la preparación usa solo el pasado",
-      "seconds": 50,
-      "startSeconds": 382,
+      "seconds": 45,
+      "startSeconds": 377,
       "paragraphs": [
-        "Esta es la historia completa de México F2B. La fecha se congela, salta y a veces retrocede; los huecos no se interpolan.",
-        "Abajo está el cambio entre observaciones. Veinticuatro de veinticinco series familiares FAD requieren trabajar con ese cambio, es decir, diferenciar.",
-        "Con él hicimos la ingeniería de variables usando solo el pasado: rezagos, mes, año fiscal y máscaras de faltantes retrasadas. La escala se ajusta solo con entrenamiento y el relleno repite lo ya publicado."
+        "Ésta es la historia de México F2B: el corte permanece quieto, da saltos y a veces retrocede. Los huecos quedan visibles; no inventamos fechas para unirlos.",
+        "La gráfica inferior muestra cuánto cambió entre una observación y la siguiente. En veinticuatro de veinticinco series familiares de la Tabla A conviene trabajar con esos cambios, en lugar de usar directamente la fecha. A eso se le llama diferenciar.",
+        "Después construimos pistas para el modelo: valores anteriores, mes, año fiscal y señales de datos faltantes. La regla es usar sólo lo que ya se conocía en ese momento, sin darle pistas del futuro."
       ],
       "cue": "Señalar las guías en los picos reales (+539 / −439) del panel inferior.",
       "links": [],
@@ -161,12 +161,12 @@
     {
       "number": 11,
       "title": "24 modelos, tres familias: la complejidad se probó",
-      "seconds": 40,
-      "startSeconds": 435,
+      "seconds": 50,
+      "startSeconds": 425,
       "paragraphs": [
-        "Comparamos veinticuatro modelos en tres familias: clásicos, árboles y redes. Como referencia hay tres ideas: repetir la última fecha, seguir el ritmo promedio y el modelo del proyecto, que en FAD combina Theta, ETS y SARIMA.",
-        "Para los árboles, Optuna hizo ciento cincuenta ensayos por grupo en un tramo de búsqueda y otro tramo confirmó el ajuste: se aceptaron nueve de doce grupos; los otros tres conservaron la configuración por defecto.",
-        "Medimos con MASE, un error escalado: cuanto menor, mejor."
+        "Probamos veinticuatro modelos de tres familias: métodos estadísticos, árboles que combinan reglas de decisión y redes que buscan patrones más complejos. También incluimos referencias sencillas: repetir la última fecha o continuar el ritmo promedio.",
+        "Para ajustar los árboles, una herramienta llamada Optuna probó ciento cincuenta configuraciones por grupo. Otro periodo comprobó si el ajuste ayudaba: aceptamos nueve de doce grupos; los otros tres conservaron su configuración por defecto.",
+        "Para comparar usamos una medida llamada MASE. Pone los errores en una escala comparable entre series que se mueven a ritmos distintos. Cuanto menor sea el valor, menor es el error."
       ],
       "cue": "Señalar 9/12 aceptados y 3 por defecto.",
       "links": [],
@@ -178,8 +178,9 @@
       "seconds": 50,
       "startSeconds": 478,
       "paragraphs": [
-        "Para comparar con justicia, la Tabla 1 resume qué historia ve cada fase, con México F2B en decisión final. La historia base va de diciembre de 2001 a septiembre de 2021. Siguen veinticuatro meses de búsqueda y doce de confirmación; luego los hiperparámetros quedan fijos.",
-        "La prueba final va de octubre de 2024 a septiembre de 2026: el primer pronóstico usa el pasado hasta septiembre de 2024 y el último, hasta agosto de 2026. La historia crece en cada origen y las redes se reajustan cada doce meses. En DFF el inicio varía por serie."
+        "Para saber si un modelo funciona, debe pronosticar meses cuya respuesta todavía no conoce. Esta tabla muestra cómo lo hicimos con México F2B en la Tabla A.",
+        "La base va de diciembre de 2001 a septiembre de 2021. Siguen veinticuatro meses para buscar ajustes y doce para confirmarlos; después dejamos fija la configuración.",
+        "La prueba final va de octubre de 2024 a septiembre de 2026. El primer pronóstico usa datos hasta septiembre de 2024; el último, hasta agosto de 2026. La historia crece en cada paso y las redes se reajustan cada doce meses. En la Tabla B, los periodos varían por serie."
       ],
       "cue": "Recorrer la tabla por filas, de la historia base a la prueba final.",
       "links": [],
@@ -191,9 +192,9 @@
       "seconds": 50,
       "startSeconds": 531,
       "paragraphs": [
-        "Este es el resultado principal. En la prueba final, la prueba A, con veinticinco series FAD y a un mes, repetir el último corte tuvo el menor error medio: un MASE de cero punto ciento cincuenta y siete.",
-        "Fue el mejor en dieciséis de veinticinco series, y ningún rival lo superó de forma significativa. Además, en seis de cada diez casos la fecha no cambió.",
-        "Este resultado vale para esta ventana y este plazo; no lo extendemos a otros horizontes. Aporta evidencia al cuarto objetivo, pero la evaluación a doce meses sigue pendiente."
+        "El resultado principal fue que una regla muy sencilla tuvo el menor error promedio: suponer que el próximo mes se repetirá el último corte. En las gráficas se llama naïve.",
+        "En la prueba final, con veinticinco series de la Tabla A y pronósticos a un mes, obtuvo un MASE de cero punto uno cinco siete. Fue la mejor en dieciséis de las veinticinco series. Las pruebas estadísticas no permitieron afirmar que otro modelo fuera mejor. Además, en seis de cada diez casos la fecha no cambió.",
+        "Esto vale para ese periodo y para un mes de anticipación. Todavía falta evaluar el desempeño a doce meses."
       ],
       "cue": "Señalar 0.157 y 16/25; no comentar otros horizontes.",
       "links": [],
@@ -205,8 +206,8 @@
       "seconds": 30,
       "startSeconds": 584,
       "paragraphs": [
-        "Aquí se une el desarrollo con la operación. Git, DVC, S3 y MLflow guardan código, datos, artefactos y experimentos, para poder rastrear cada versión.",
-        "Cada mes se valida el PDF, se prepara un candidato y una persona revisa el recibo. Después se pronostica, se verifican contratos, huellas de archivos y pruebas automáticas, y se publica. Si algo falla, no se publica. El seguimiento de error y cobertura cierra el ciclo."
+        "Cada resultado debe poder rastrearse hasta los datos, el código y el modelo que lo produjeron. Las herramientas de la lámina guardan ese historial.",
+        "Este trabajo de operación se llama MLOps. Partimos del PDF oficial y revisamos una versión candidata con controles automáticos y revisión humana. Si algo falla, no se publica. El ciclo incluye comprobar después los pronósticos con los boletines reales."
       ],
       "cue": "Seguir el ciclo mensual; señalar el punto de bloqueo.",
       "links": [],
@@ -215,12 +216,12 @@
     {
       "number": 15,
       "title": "Qué modelo usa cada serie",
-      "seconds": 45,
+      "seconds": 40,
       "startSeconds": 617,
       "paragraphs": [
-        "Este tablero muestra qué modelo usa cada combinación de área, categoría y tabla. M es la mediana de Theta, ETS y SARIMA; S es SARIMA.",
-        "Una aclaración importante: M y S son asignaciones de esta versión, no los ganadores de la prueba A.",
-        "Hay noventa y siete series con asignación: ochenta y seis con proyección actual y once que conservan pronósticos anteriores, marcadas con asterisco. Las celdas grises no tienen modelo asignado. Cambiar un modelo requiere evidencia y decisión humana."
+        "Este tablero muestra qué método usa cada serie. M combina tres pronósticos y toma el valor central. S usa un método estadístico llamado SARIMA. Las celdas grises no tienen modelo asignado.",
+        "Hay noventa y siete series con asignación: ochenta y seis con proyección actual y once que conservan pronósticos anteriores, señaladas con asterisco.",
+        "Son las asignaciones publicadas, no los ganadores de la comparación anterior. Cambiar un método requiere revisar la evidencia y una decisión humana."
       ],
       "cue": "Señalar una celda M, una S, un asterisco y una gris.",
       "links": [],
@@ -229,11 +230,11 @@
     {
       "number": 16,
       "title": "86 series: su historia y su pronóstico",
-      "seconds": 25,
-      "startSeconds": 665,
+      "seconds": 30,
+      "startSeconds": 660,
       "paragraphs": [
-        "La galería muestra la historia y el pronóstico de las ochenta y seis series con proyección actual, cada una en su escala y con banda nominal del noventa y cinco por ciento.",
-        "Es una vista de alcance, no ochenta y seis validaciones. El detalle de Ana lo vemos en la siguiente lámina."
+        "Aquí vemos las ochenta y seis historias con proyección actual. Cada recuadro usa su propia escala.",
+        "La banda alrededor del pronóstico es un rango de incertidumbre. Su etiqueta del noventa y cinco por ciento es el nivel previsto por el método: falta comprobar su cumplimiento real a doce meses. Mostrar todas las gráficas no significa haberlas validado. Acerquemos el caso de Ana."
       ],
       "cue": "Señalar el panel Ana · MX F2B FAD; el zoom está en la lámina 17.",
       "links": [],
@@ -245,10 +246,9 @@
       "seconds": 55,
       "startSeconds": 693,
       "paragraphs": [
-        "Volvemos a Ana, ahora en detalle. Aquí la banda es nominal del ochenta por ciento, distinta de la del noventa y cinco de la galería. Describe dónde podría estar el corte, no cuándo llegará su turno.",
-        "A doce meses, esa banda abarca unos cuatro años de fechas de corte; no son cuatro años de espera personal. Y su cobertura a ese plazo todavía no está medida.",
-        "Para dimensionar el error: en septiembre de 2026, a un mes, el error en esta serie fue de cuatrocientos dos días. En la prueba de robustez, seis de seiscientos pares de modelo y serie fallaron.",
-        "Por eso, lo que manda sigue siendo el boletín oficial."
+        "Aquí la banda usa un nivel del ochenta por ciento; antes vimos noventa y cinco. Describe posibles fechas de corte, no la probabilidad de que Ana reciba su visa en ese mes.",
+        "A doce meses, el rango abarca unos cuatro años de fechas de corte. Eso muestra gran incertidumbre; no son cuatro años de espera personal. Falta comprobar cuántas veces el corte real cae dentro de esa banda a ese plazo.",
+        "Para esta serie, el pronóstico a un mes de septiembre de 2026 se apartó del valor real en cuatrocientos dos días. Además, seis de seiscientas combinaciones de modelo y serie fallaron en las pruebas de funcionamiento. La referencia para el trámite sigue siendo el boletín oficial."
       ],
       "cue": "Señalar la banda 80 % y su ancho a 12 meses; luego el dato de 402 días.",
       "links": [],
@@ -260,12 +260,11 @@
       "seconds": 60,
       "startSeconds": 751,
       "paragraphs": [
-        "Pasemos a la demostración: México, F2B, decisión final.",
-        "Primero aparece la historia publicada; después, el pronóstico, que empieza en diciembre de 2026, con bandas nominales del ochenta y del noventa y cinco por ciento; al final, el error y la fuente.",
-        "El portal consulta resultados ya emitidos; no reentrena modelos en vivo. Si hay conexión, lo abro dentro de este mismo tiempo; si la red falla, esta captura muestra la misma consulta.",
-        "Y recuerden: el rango describe el corte del boletín, no el mes en que Ana obtendría su visa."
+        "Vamos a consultar el caso de Ana: México, categoría F2B, Tabla A para decisión final.",
+        "Primero vemos lo que publicó el boletín a lo largo del tiempo. Después aparece el pronóstico desde diciembre de 2026, acompañado de los rangos de incertidumbre del ochenta y del noventa y cinco por ciento. También podemos consultar el error y la fuente.",
+        "La página muestra resultados ya calculados. El rango se refiere al corte del boletín: no promete el mes en que Ana recibirá su visa."
       ],
-      "cue": "Llamadas «Pronóstico desde dic. 2026» y «Bandas 80 % / 95 %». Si hubo visita en L3, descontarla de estos 60 s. Sin red, quedarse en la captura.",
+      "cue": "Demostración de hasta 60 s. Si hubo visita al boletín en L3, descontarla de este tiempo. Sin conexión, explicar la captura. Recorrer historia, pronóstico, bandas, error y fuente; no reentrenar en vivo.",
       "links": [
         {
           "label": "Abrir portal de pronósticos",
@@ -280,8 +279,9 @@
       "seconds": 35,
       "startSeconds": 814,
       "paragraphs": [
-        "Cierro con tres ideas. Primero, el boletín se convirtió en una base de ciento noventa y cuatro series observadas. Segundo, en la prueba reciente a un mes, ningún rival superó con significancia a repetir, y eso depende de la ventana y del plazo. Tercero, el demostrador muestra el pronóstico junto con su banda, que no es la espera de Ana.",
-        "Queda trabajo: medir la cobertura a doce meses, corregir las omisiones, repetir las comparaciones con datos corregidos y dar seguimiento prospectivo."
+        "El proyecto deja tres resultados: una base para estudiar el boletín, una comparación de modelos y una herramienta para consultar pronósticos con sus límites.",
+        "La comparación mostró que, en los dos años evaluados y a un mes, los métodos más complejos no demostraron ser mejores que repetir el último corte.",
+        "El siguiente paso es corregir las omisiones, repetir las comparaciones, evaluar los errores y los rangos a doce meses, y comprobar los nuevos pronósticos conforme lleguen los boletines reales."
       ],
       "cue": "Tono pausado; mirar al público en el trabajo futuro.",
       "links": [],
@@ -293,7 +293,7 @@
       "seconds": 10,
       "startSeconds": 852,
       "paragraphs": [
-        "Estas son las referencias citadas, incluidas las fuentes oficiales enlazadas en la presentación."
+        "Aquí están las fuentes del proyecto, incluidas las páginas oficiales que podemos consultar."
       ],
       "cue": "Avanzar sin leer referencias.",
       "links": [],
@@ -305,10 +305,10 @@
       "seconds": 15,
       "startSeconds": 865,
       "paragraphs": [
-        "Ana aún no sabe cuándo. Pero ahora sabe cuánto no sabemos.",
+        "Ana necesita planear su vida. Nuestro aporte es mostrar un pronóstico con sus límites, para que una estimación no se confunda con una promesa.",
         "Muchas gracias; quedo atento a sus preguntas."
       ],
-      "cue": "Pausa tras la segunda frase antes de agradecer.",
+      "cue": "Mirar al público y pausar antes de agradecer.",
       "links": [],
       "image": "/presentacion-cumbre/laminas/21.jpg"
     }

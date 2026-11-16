@@ -100,7 +100,6 @@ export default function GuionReader({ data }: GuionReaderProps) {
   const [liveStatus, setLiveStatus] = useState<string>("");
 
   const shellRef = useRef<HTMLDivElement | null>(null);
-  const asideNavRef = useRef<HTMLElement | null>(null);
   const readerAnchorRef = useRef<HTMLDivElement | null>(null);
   const scriptZoneRef = useRef<HTMLDivElement | null>(null);
   const baseElapsedRef = useRef<number>(0);
@@ -187,28 +186,6 @@ export default function GuionReader({ data }: GuionReaderProps) {
     [data.slides, resetReadingScroll, totalSlides]
   );
 
-  useEffect(() => {
-    const navEl = asideNavRef.current;
-    if (!navEl) {
-      return;
-    }
-    const activeButton = navEl.querySelector<HTMLButtonElement>(
-      `[data-slide-index="${currentIndex}"]`
-    );
-    if (!activeButton) {
-      return;
-    }
-    const navTop = navEl.scrollTop;
-    const navBottom = navTop + navEl.clientHeight;
-    const itemTop = activeButton.offsetTop;
-    const itemBottom = itemTop + activeButton.offsetHeight;
-
-    if (itemTop < navTop) {
-      navEl.scrollTop = Math.max(0, itemTop - 8);
-    } else if (itemBottom > navBottom) {
-      navEl.scrollTop = itemBottom - navEl.clientHeight + 8;
-    }
-  }, [currentIndex]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -391,306 +368,92 @@ export default function GuionReader({ data }: GuionReaderProps) {
 
   return (
     <div ref={shellRef} className={styles.shell}>
-      <div className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">
-        {liveStatus}
-      </div>
-
+      <div className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">{liveStatus}</div>
       <header className={styles.topHeader}>
-        <div className={styles.brandBlock}>
-          <div className={styles.brandRow}>
-            <Link href="/" className={styles.backLink}>
-              VisaPredictAI
-            </Link>
-            <span className={styles.separator} aria-hidden="true">
-              /
-            </span>
-            <span className={styles.sectionBadge}>Exposición académica</span>
-          </div>
+        <div className={styles.brandRow}>
+          <Link href="/" className={styles.backLink}>VisaPredictAI</Link>
           <h1 className={styles.pageTitle}>{data.title}</h1>
-          <p className={styles.eventMeta}>
-            <span>{data.event.date}</span>
-            <span className={styles.dot} aria-hidden="true">
-              ·
-            </span>
-            <span>{data.event.time}</span>
-            <span className={styles.dot} aria-hidden="true">
-              ·
-            </span>
-            <span>{data.event.place}</span>
-          </p>
         </div>
-
-        <div className={styles.controlsCluster} role="group" aria-label="Herramientas de ensayo y lectura">
-          <div className={styles.timerBox}>
-            <div className={styles.timerFigures}>
-              <span className={styles.timerLabel}>Ensayo</span>
-              <span className={styles.timerMono}>
-                {formatTimecode(elapsedSeconds)}
-              </span>
-              <span className={styles.timerTotal}>
-                / {formatTimecode(data.plannedSeconds)} previsto
-              </span>
-            </div>
-            <div className={styles.timerActions}>
-              <button
-                type="button"
-                onClick={handleToggleTimer}
-                className={styles.controlBtn}
-                aria-label={`${timerActionLabel} cronómetro de ensayo`}
-              >
-                {timerActionLabel}
-              </button>
-              <button
-                type="button"
-                onClick={handleResetTimer}
-                disabled={elapsedSeconds === 0 && !isRunning}
-                className={styles.controlBtn}
-                aria-label="Reiniciar cronómetro de ensayo"
-              >
-                Reiniciar
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.readingTools}>
-            <div className={styles.fontControls} role="group" aria-label="Tamaño de letra del guion">
-              <button
-                type="button"
-                onClick={() => adjustFontSize(-FONT_STEP)}
-                disabled={fontSize <= MIN_FONT_SIZE}
-                className={styles.controlBtn}
-                aria-label="Reducir tamaño de letra"
-              >
-                A−
-              </button>
-              <span className={styles.fontReadout} aria-hidden="true">
-                {fontSize}px
-              </span>
-              <button
-                type="button"
-                onClick={() => adjustFontSize(FONT_STEP)}
-                disabled={fontSize >= MAX_FONT_SIZE}
-                className={styles.controlBtn}
-                aria-label="Aumentar tamaño de letra"
-              >
-                A+
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleToggleFullscreen}
-              aria-pressed={isFullscreen}
-              className={styles.controlBtn}
-            >
-              {isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
-            </button>
-          </div>
-        </div>
+        <p className={styles.eventMeta}>{data.event.date} · {data.event.time}</p>
       </header>
 
       {fullscreenError ? (
         <div className={styles.noticeBanner}>
           <span>{fullscreenError}</span>
-          <button
-            type="button"
-            onClick={() => setFullscreenError(null)}
-            className={styles.dismissBtn}
-            aria-label="Cerrar aviso de pantalla completa"
-          >
-            Cerrar
-          </button>
+          <button type="button" onClick={() => setFullscreenError(null)} className={styles.controlBtn} aria-label="Cerrar aviso de pantalla completa">Cerrar</button>
         </div>
       ) : null}
 
-      <div className={styles.mobileNavBar}>
-        <label htmlFor={mobileSelectId} className={styles.mobileSelectLabel}>
-          Ir a lámina
-        </label>
-        <select
-          id={mobileSelectId}
-          value={currentIndex}
-          onChange={(event) => selectSlideByIndex(Number(event.target.value))}
-          className={styles.mobileSelect}
-        >
-          {data.slides.map((slide, idx) => (
-            <option key={slide.number} value={idx}>
-              {slide.number}. {slide.title} ({formatTimecode(slide.seconds)})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={styles.workspace}>
-        <aside
-          ref={asideNavRef}
-          className={styles.sidebar}
-          aria-label="Índice de láminas"
-        >
-          <div className={styles.sidebarHeader}>
-            <span className={styles.sidebarTitle}>Índice ({totalSlides})</span>
-            <span className={styles.sidebarTotal}>
-              {formatTimecode(data.plannedSeconds)} previsto
-            </span>
+      <main ref={readerAnchorRef} className={styles.workspace}>
+        <section className={styles.slidePane} aria-label="Lámina de la presentación">
+          <div className={styles.paneHeader}>
+            <span>Presentación</span>
+            <strong className={styles.slideCounter}>Lámina {currentSlide.number} / {totalSlides}</strong>
           </div>
-          <ol className={styles.slideList}>
-            {data.slides.map((slide, idx) => {
-              const isActive = idx === currentIndex;
-              return (
-                <li key={slide.number} className={styles.slideListItem}>
-                  <button
-                    type="button"
-                    data-slide-index={idx}
-                    onClick={() => selectSlideByIndex(idx)}
-                    aria-current={isActive ? "step" : undefined}
-                    className={`${styles.slideNavBtn} ${
-                      isActive ? styles.slideNavBtnActive : ""
-                    }`}
-                  >
-                    <span className={styles.slideNavNum}>
-                      {String(slide.number).padStart(2, "0")}
-                    </span>
-                    <span className={styles.slideNavTitle}>{slide.title}</span>
-                    <span className={styles.slideNavTime}>
-                      {formatTimecode(slide.seconds)}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </aside>
+          <figure className={styles.slideFigure}>
+            <Image src={currentSlide.image} alt={`Lámina ${currentSlide.number} de ${totalSlides}: ${currentSlide.title}`} width={1600} height={900} unoptimized priority className={styles.slideImage} />
+          </figure>
+        </section>
 
-        <main ref={readerAnchorRef} className={styles.readerMain}>
-          <div className={styles.slideDeckBar}>
-            <div className={styles.slideMetaPrimary}>
-              <p className={styles.slideCounter}>
-                Lámina {currentSlide.number} / {totalSlides}
-              </p>
-              <div className={styles.slideTimings}>
-                <span>
-                  Inicio previsto:{" "}
-                  <strong className={styles.monoStrong}>
-                    {formatTimecode(currentSlide.startSeconds)}
-                  </strong>
-                </span>
-                <span className={styles.dot} aria-hidden="true">
-                  ·
-                </span>
-                <span>
-                  Duración prevista:{" "}
-                  <strong className={styles.monoStrong}>
-                    {formatTimecode(currentSlide.seconds)}
-                  </strong>
-                </span>
-              </div>
+        <section className={styles.readingPane} aria-label="Guion para decir en voz alta" style={scriptStyle}>
+          <div ref={scriptZoneRef} className={styles.scriptZone} role="region" aria-label="Texto del guion, desplazamiento independiente" tabIndex={0}>
+            <div className={styles.paneHeader}>
+              <span>Guion para decir en voz alta</span>
+              <span>{formatTimecode(currentSlide.seconds)} previstos</span>
             </div>
-
-            <div className={styles.stepButtons}>
-              <button
-                type="button"
-                onClick={() => selectSlideByIndex(currentIndex - 1)}
-                disabled={isFirstSlide}
-                className={styles.navStepBtn}
-                aria-label="Lámina anterior"
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                onClick={() => selectSlideByIndex(currentIndex + 1)}
-                disabled={isLastSlide}
-                className={styles.navStepBtn}
-                aria-label="Lámina siguiente"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-
-          <div ref={scriptZoneRef} className={styles.scriptZone} style={scriptStyle}>
-            <div className={styles.slideOverview}>
-              <div className={styles.slideHeadingBlock}>
-                <h2 className={styles.slideTitle}>{currentSlide.title}</h2>
-                {currentSlide.cue.trim().length > 0 ? (
-                  <p className={styles.cueBox}>
-                    <span className={styles.cueLabel}>Indicación: </span>
-                    {currentSlide.cue}
-                  </p>
-                ) : null}
-                {currentSlide.links.length > 0 ? (
-                  <ul className={styles.linksList} aria-label="Referencias de esta lámina">
-                    {currentSlide.links.map((link) => {
-                      const external = isExternalHref(link.href);
-                      return (
-                        <li key={`${link.href}-${link.label}`}>
-                          <a
-                            href={link.href}
-                            target={external ? "_blank" : undefined}
-                            rel={external ? "noopener noreferrer" : undefined}
-                            className={styles.resourceLink}
-                          >
-                            {link.label}
-                            {external ? " (abre en pestaña nueva)" : ""}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null}
-              </div>
-
-              <figure className={styles.thumbnailFrame}>
-                <Image
-                  src={currentSlide.image}
-                  alt={`Miniatura de la lámina ${currentSlide.number} de ${totalSlides}: ${currentSlide.title}`}
-                  width={1600}
-                  height={900}
-                  unoptimized
-                  priority
-                  className={styles.thumbnailImg}
-                />
-              </figure>
-            </div>
-
+            <h2 className={styles.slideTitle}>{currentSlide.title}</h2>
             <div className={styles.spokenBody}>
               {currentSlide.paragraphs.map((paragraph, pIndex) => (
-                <p key={`${currentSlide.number}-p-${pIndex}`} className={styles.spokenParagraph}>
-                  {paragraph}
-                </p>
+                <p key={`${currentSlide.number}-p-${pIndex}`} className={styles.spokenParagraph}>{paragraph}</p>
               ))}
-              {currentSlide.sourceNote ? (
-                <aside className={styles.cueBox} aria-label="Fuente y alcance del dato, no se lee en voz alta">
-                  {currentSlide.sourceNote}
-                </aside>
-              ) : null}
             </div>
-
-            <footer className={styles.readerFooter}>
-              <button
-                type="button"
-                onClick={() => selectSlideByIndex(currentIndex - 1)}
-                disabled={isFirstSlide}
-                className={styles.navStepBtn}
-              >
-                Anterior
-              </button>
-              <span className={styles.footerIndicator}>
-                Lámina {currentSlide.number} / {totalSlides}
-              </span>
-              <button
-                type="button"
-                onClick={() => selectSlideByIndex(currentIndex + 1)}
-                disabled={isLastSlide}
-                className={styles.navStepBtn}
-              >
-                Siguiente
-              </button>
-            </footer>
+            {currentSlide.cue.trim() ? (
+              <p className={styles.cueBox}><strong>Indicación, no se dice: </strong>{currentSlide.cue}</p>
+            ) : null}
+            {currentSlide.sourceNote ? (
+              <aside className={styles.cueBox} aria-label="Fuente y alcance del dato, no se lee en voz alta">{currentSlide.sourceNote}</aside>
+            ) : null}
+            {currentSlide.links.length ? (
+              <ul className={styles.linksList} aria-label="Referencias de esta lámina">
+                {currentSlide.links.map(link => {
+                  const external = isExternalHref(link.href);
+                  return <li key={`${link.href}-${link.label}`}><a href={link.href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className={styles.resourceLink}>{link.label}{external ? " (abre en pestaña nueva)" : ""}</a></li>;
+                })}
+              </ul>
+            ) : null}
           </div>
-        </main>
-      </div>
+        </section>
+      </main>
+
+      <footer className={styles.controlsBar} role="group" aria-label="Herramientas de ensayo y lectura">
+        <div className={styles.navigation}>
+          <button type="button" onClick={() => selectSlideByIndex(currentIndex - 1)} disabled={isFirstSlide} className={styles.controlBtn} aria-label="Lámina anterior">← Anterior</button>
+          <label htmlFor={mobileSelectId} className={styles.srOnly}>Ir a lámina</label>
+          <select id={mobileSelectId} value={currentIndex} onChange={event => selectSlideByIndex(Number(event.target.value))} className={styles.slideSelect}>
+            {data.slides.map((slide, idx) => <option key={slide.number} value={idx}>{slide.number} / {totalSlides} · {slide.title}</option>)}
+          </select>
+          <button type="button" onClick={() => selectSlideByIndex(currentIndex + 1)} disabled={isLastSlide} className={styles.controlBtn} aria-label="Lámina siguiente">Siguiente →</button>
+        </div>
+
+        <div className={styles.timerBox}>
+          <div className={styles.timerFigures}>
+            <span className={styles.timerLabel}>Ensayo</span>
+            <strong className={styles.timerMono}>{formatTimecode(elapsedSeconds)}</strong>
+            <span className={styles.timerTotal}>/ {formatTimecode(data.plannedSeconds)}</span>
+          </div>
+          <button type="button" onClick={handleToggleTimer} className={styles.controlBtn} aria-label={`${timerActionLabel} cronómetro de ensayo`}>{timerActionLabel}</button>
+          <button type="button" onClick={handleResetTimer} disabled={elapsedSeconds === 0 && !isRunning} className={styles.controlBtn} aria-label="Reiniciar cronómetro de ensayo">Reiniciar</button>
+        </div>
+
+        <div className={styles.readingTools}>
+          <div className={styles.fontControls} role="group" aria-label="Tamaño de letra del guion">
+            <button type="button" onClick={() => adjustFontSize(-FONT_STEP)} disabled={fontSize <= MIN_FONT_SIZE} className={styles.controlBtn} aria-label="Reducir tamaño de letra">A−</button>
+            <span className={styles.fontReadout} aria-hidden="true">{fontSize}px</span>
+            <button type="button" onClick={() => adjustFontSize(FONT_STEP)} disabled={fontSize >= MAX_FONT_SIZE} className={styles.controlBtn} aria-label="Aumentar tamaño de letra">A+</button>
+          </div>
+          <button type="button" onClick={handleToggleFullscreen} aria-pressed={isFullscreen} className={styles.controlBtn}>{isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}</button>
+        </div>
+      </footer>
     </div>
   );
 }
-

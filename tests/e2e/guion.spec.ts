@@ -17,12 +17,38 @@ test("the full opening and all 21 scripts are readable with matching thumbnails"
     const slide = data.slides[i];
     await expect(page.getByRole("heading", { level: 2 })).toHaveText(slide.title);
     await expect(page.getByText(slide.paragraphs[0], { exact: true })).toBeVisible();
-    const image = page.getByRole("img", { name: new RegExp(`Miniatura de la lámina ${slide.number} de`) });
+    const image = page.getByRole("img", { name: new RegExp(`^Lámina ${slide.number} de`) });
     await expect(image).toHaveAttribute("src", slide.image);
     await expect(image).toHaveJSProperty("naturalWidth", 1280);
   }
   await expect(page.getByRole("button", { name: "Lámina siguiente", exact: true })).toBeDisabled();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+});
+
+test("desktop uses equal presentation and script panes with controls below", async ({ page }) => {
+  for (const width of [1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/guion/");
+    const slidePane = page.getByRole("region", { name: "Lámina de la presentación", exact: true });
+    const scriptPane = page.getByRole("region", { name: "Guion para decir en voz alta", exact: true });
+    const controls = page.getByRole("group", { name: "Herramientas de ensayo y lectura", exact: true });
+    const left = await slidePane.boundingBox();
+    const right = await scriptPane.boundingBox();
+    const bottom = await controls.boundingBox();
+    expect(left && right && bottom).toBeTruthy();
+    expect(Math.abs(left!.width - right!.width)).toBeLessThan(2);
+    expect(left!.width / width).toBeGreaterThan(0.45);
+    expect(right!.x).toBeGreaterThan(left!.x + left!.width);
+    expect(bottom!.y).toBeGreaterThanOrEqual(right!.y + right!.height - 1);
+    expect(bottom!.y + bottom!.height).toBeLessThanOrEqual(901);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const reader = page.getByRole("region", { name: "Texto del guion, desplazamiento independiente" });
+    await reader.evaluate(el => { el.scrollTop = el.scrollHeight; });
+    expect((await slidePane.boundingBox())!.y).toBe(left!.y);
+    await page.getByRole("button", { name: "Lámina siguiente", exact: true }).click();
+    expect(await reader.evaluate(el => el.scrollTop)).toBe(0);
+    if (width === 1440) await page.screenshot({ path: test.info().outputPath("split-desktop.png"), fullPage: true });
+  }
 });
 
 test("keyboard navigation and the live bulletin link work without revealing text", async ({ page }) => {
@@ -73,6 +99,15 @@ test("fullscreen failure preserves the readable script", async ({ page }) => {
   await expect(page.getByText(/^Hola, Buenas Noches Soy Javier Rebull y mi asesor/)).toBeVisible();
 });
 
+test("fullscreen can be entered and left while retaining the practice controls", async ({ page }) => {
+  await page.goto("/guion/");
+  await page.getByRole("button", { name: "Pantalla completa", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
+  await expect(page.getByRole("button", { name: "Salir de pantalla completa", exact: true })).toBeInViewport();
+  await page.getByRole("button", { name: "Salir de pantalla completa", exact: true }).click();
+  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(false);
+});
+
 for (const theme of ["light", "dark"] as const) {
   test(`mobile navigation, no overflow and accessibility · ${theme}`, async ({ page }) => {
     await forceTheme(page, theme);
@@ -81,6 +116,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByLabel("Ir a lámina").selectOption("2");
     await expect(page.getByRole("heading", { level: 2 })).toHaveText(data.slides[2].title);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await expect(page.getByRole("button", { name: "Lámina siguiente", exact: true })).toBeInViewport();
     const violations = (await new AxeBuilder({ page }).analyze()).violations.filter(v => ["serious", "critical"].includes(v.impact ?? ""));
     expect(violations.map(v => ({ id: v.id, targets: v.nodes.map(n => n.target) }))).toEqual([]);
     await page.screenshot({ path: test.info().outputPath(`mobile-${theme}.png`), fullPage: true });
