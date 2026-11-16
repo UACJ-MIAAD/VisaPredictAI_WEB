@@ -97,6 +97,8 @@ describe("demo reminders", () => {
     const b = topicReminders("es", "¿Qué significan las bandas del 80 % y del 95 % del pronóstico?");
     expect(b).toMatch(/NOMINALES/);
     expect(b).toMatch(/ANTES del límite inferior, es muy probable/);
+    expect(b).toMatch(/no digas que «probablemente» la alcance/);
+    expect(topicReminders("es", "¿Qué tan grande es el error del pronóstico?")).toMatch(/nunca digas que esas cifras son «desde julio de 2026»/);
     expect(topicReminders("es", "Muéstrame el pronóstico de México F2B")).toMatch(/es el de ESA serie/);
     expect(topicReminders("es", "Muéstrame el pronóstico de México F2B")).toMatch(/volatilidad/);
     expect(topicReminders("es", "¿Qué modelos compara el proyecto y cuál gana?")).toMatch(/no sobrevive a Holm/);

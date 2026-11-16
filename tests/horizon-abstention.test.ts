@@ -1,7 +1,7 @@
 // US I2 (plan auditoría 3 repos 12-jul-2026): beyond-horizon ABSTENTION + fail-closed
 // forecast store. Four contracts under test:
 //   (a) the system prompt and the note templates order abstention beyond the
-//       validated horizon and contain NO instruction to extrapolate;
+//       published horizon and contain NO instruction to extrapolate;
 //   (b) the OLD note (which ordered a pace-based extrapolation) is REJECTED by
 //       the server's synthetic-shape guard — and since US I1 the note is
 //       GENERATED server-side from verified data, so a stale/manipulated client
@@ -50,7 +50,7 @@ describe("(a)+(d) system prompt: derived horizon + abstention order", () => {
     expect(p).toContain(`proyección a ${H} meses`);
     expect(p).toContain(`MÁS ALLÁ de los ${H} meses publicados`);
     expect(p).toContain("remite al boletín oficial en travel.state.gov");
-    expect(p).toContain("NO des ninguna fecha ni estimación fuera del horizonte validado");
+    expect(p).toContain("NO des ninguna fecha ni estimación fuera del horizonte publicado");
     expect(p).not.toMatch(/estimaci[oó]n aproximada/); // the extrapolation order is dead
   });
 
@@ -59,7 +59,7 @@ describe("(a)+(d) system prompt: derived horizon + abstention order", () => {
     expect(p).toContain(`${H}-month projection`);
     expect(p).toContain(`BEYOND the published ${H} months`);
     expect(p).toContain("official Visa Bulletin at travel.state.gov");
-    expect(p).toContain("do NOT give any date or estimate past the validated horizon");
+    expect(p).toContain("do NOT give any date or estimate past the published horizon");
     expect(p).not.toMatch(/pace-based estimate/);
   });
 
@@ -73,14 +73,14 @@ describe("(a) new forecast note: abstention + last validated band, accepted by t
   it.each(["es", "en"] as const)("%s note orders abstention and passes the synthetic-shape self-check", (lang) => {
     const note = forecastText(fspec(lang), lang);
     if (lang === "en") {
-      expect(note).toContain("as the furthest validated reading");
+      expect(note).toContain("as the furthest published reading");
       expect(note).toContain("official Visa Bulletin (travel.state.gov)");
-      expect(note).toContain("do NOT give any date or estimate beyond the validated horizon");
+      expect(note).toContain("do NOT give any date or estimate beyond the published horizon");
       expect(note).not.toMatch(/pace-based/);
     } else {
-      expect(note).toContain("ofrece como última lectura validada");
+      expect(note).toContain("ofrece como última lectura publicada");
       expect(note).toContain("boletín oficial (travel.state.gov)");
-      expect(note).toContain("NO des ninguna fecha ni estimación más allá del horizonte validado");
+      expect(note).toContain("NO des ninguna fecha ni estimación más allá del horizonte publicado");
       expect(note).not.toMatch(/estimaci[oó]n aproximada/);
     }
     // US I1: the note is server-generated; this grammar gates it before the prompt.
