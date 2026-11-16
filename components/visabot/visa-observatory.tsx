@@ -12,7 +12,9 @@ const stamp=(m:string)=>Date.parse(`${m}-01T00:00:00Z`);
 /** A real historical series, drawn as an instrument rather than decoration.
  * Every selectable point is an observation; C/U/missing dates break the path. */
 export function VisaObservatory({panel,country,category,table,lang,onCountry,onExplore}:Props){
-  const id="vb-"+React.useId().replace(/[^a-z0-9_-]/gi,"");
+  // The page owns one instrument. Keep paint IDs identical in the static export
+  // and hydrated tree even when their surrounding React tree differs.
+  const id=`vb-observatory-${country}-${category}-${table}`;
   const [inspected,setInspected]=React.useState<number|null>(null);
   React.useEffect(()=>setInspected(null),[country,category,table]);
   const rows=React.useMemo(()=>panel?.rows.filter(r=>r.country===country&&r.category===category&&r.table===table)
