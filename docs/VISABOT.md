@@ -119,10 +119,17 @@ a faithfulness certificate: review the saved prose, especially historical
 model-card claims about backfill and long-horizon performance. Preserve 429s
 as rate-limit evidence; rerun affected cases after the window expires.
 
-Direct console requests to show one forecast return the server-rebuilt summary
-with its exact dates, series MASE and separately labelled global track record.
-The model does not retype these figures. Questions about a priority date,
-interpretation, comparisons or an explicit future year keep the generative path.
+Direct console requests to show one forecast or compare bulletins return the
+server-rebuilt summary; the model does not retype the dates or counts. Forecast
+summaries retain series MASE and a separately labelled global track record.
+Personal priority-date questions use a verified date comparison over the exact
+country/category/table and latest bulletin: earlier, equal, later, Current,
+unavailable and unknown are distinct. They show a comparison card, not a future
+waiting curve. Only an available production forecast can add an uncertain
+central-path reading inside its published horizon; no appointment or approval
+is inferred. Ambiguous inputs ask for clarification. A stale local card is
+discarded if its facts differ from the server's verified comparison.
+Other interpretation and multi-series comparison questions retain generation.
 The sealed protocol chunk asserting that naïve-1 degrades at longer horizons is
 excluded from current answer context while it contains that superseded claim;
 the original source artifact remains preserved. A known text hash establishes
