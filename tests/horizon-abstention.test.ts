@@ -48,7 +48,7 @@ describe("(a)+(d) system prompt: derived horizon + abstention order", () => {
   it("ES prompt interpolates SITE_STATS.horizonMonths and orders abstention", () => {
     const p = systemPrompt("es", [], "console");
     expect(p).toContain(`proyección a ${H} meses`);
-    expect(p).toContain(`MÁS ALLÁ de los ${H} meses validados`);
+    expect(p).toContain(`MÁS ALLÁ de los ${H} meses publicados`);
     expect(p).toContain("remite al boletín oficial en travel.state.gov");
     expect(p).toContain("NO des ninguna fecha ni estimación fuera del horizonte validado");
     expect(p).not.toMatch(/estimaci[oó]n aproximada/); // the extrapolation order is dead
@@ -57,7 +57,7 @@ describe("(a)+(d) system prompt: derived horizon + abstention order", () => {
   it("EN prompt interpolates SITE_STATS.horizonMonths and orders abstention", () => {
     const p = systemPrompt("en", [], "console");
     expect(p).toContain(`${H}-month projection`);
-    expect(p).toContain(`BEYOND the validated ${H} months`);
+    expect(p).toContain(`BEYOND the published ${H} months`);
     expect(p).toContain("official Visa Bulletin at travel.state.gov");
     expect(p).toContain("do NOT give any date or estimate past the validated horizon");
     expect(p).not.toMatch(/pace-based estimate/);

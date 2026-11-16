@@ -75,6 +75,17 @@ describe("demo reminders", () => {
     expect(topicReminders("es", "¿y para India?")).toMatch(/COMPARACIONES/);
   });
 
+  it("Carbon review: the verb 'significan' does not trigger the naïve rule; 'avances' and 'confiable' do trigger theirs", () => {
+    expect(topicReminders("es", "¿Qué significan las bandas del 80 % y del 95 % del pronóstico?")).not.toMatch(/DIRECCIÓN DE LA PREGUNTA/);
+    expect(topicReminders("es", "¿Hubo avances en noviembre?")).toMatch(/magnitud en días/);
+    expect(titles(pinGrounding([0], CHUNKS, "es", "¿Qué tan confiable es el pronóstico?"))).toContain("5. Evaluación");
+  });
+
+  it("the base prompt no longer calls the horizon 'validated months'", () => {
+    expect(systemPrompt("es", [], "console", "")).not.toMatch(/meses validados/);
+    expect(systemPrompt("en", [], "console", "")).not.toMatch(/validated \d+ months/);
+  });
+
   it("leaves unrelated questions without reminders", () => {
     expect(topicReminders("es", "¿Qué es la retrogresión?")).toBe("");
   });
