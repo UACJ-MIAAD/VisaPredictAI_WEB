@@ -93,6 +93,16 @@ describe("demo reminders", () => {
     expect(topicReminders("es", q)).toMatch(/Nunca intercambies series, observaciones y boletines/);
   });
 
+  it("round 3: bands read the right way, no invented causes, no misread Holm line, no mixed bulletin lines", () => {
+    const b = topicReminders("es", "¿Qué significan las bandas del 80 % y del 95 % del pronóstico?");
+    expect(b).toMatch(/NOMINALES/);
+    expect(b).toMatch(/ANTES del límite inferior, es muy probable/);
+    expect(topicReminders("es", "Muéstrame el pronóstico de México F2B")).toMatch(/es el de ESA serie/);
+    expect(topicReminders("es", "Muéstrame el pronóstico de México F2B")).toMatch(/volatilidad/);
+    expect(topicReminders("es", "¿Qué modelos compara el proyecto y cuál gana?")).toMatch(/no sobrevive a Holm/);
+    expect(topicReminders("es", "¿Qué cambió en el boletín de noviembre 2026?")).toMatch(/nunca combines la categoría de una línea con la fecha de otra/);
+  });
+
   it("leaves unrelated questions without reminders", () => {
     expect(topicReminders("es", "¿Qué es la retrogresión?")).toBe("");
   });
