@@ -34,6 +34,10 @@ test("keyboard navigation and the live bulletin link work without revealing text
   await expect(link).toHaveAttribute("href", "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html");
   await expect(link).toHaveAttribute("target", "_blank");
   await expect(link).toHaveAttribute("rel", /noopener/);
+  await expect(page.getByText(data.slides[2].paragraphs[0], { exact: true })).toBeVisible();
+  await expect(page.getByText(/en noviembre de 2023, el Centro Nacional de Visas registraba más de cuatro millones/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Fuente: 4,034,061 personas · NVC, 1 nov\. 2023 · pp\. 1–3/ })).toHaveAttribute("href", "https://travel.state.gov/content/dam/visas/Statistics/Immigrant-Statistics/WaitingList/WaitingListItem_2023_vF.pdf");
+  await expect(page.getByText(/Excluye ajustes de estatus pendientes ante USCIS; no es el total actual/)).toBeVisible();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(data.slides[1].title);
 });

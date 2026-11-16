@@ -1,6 +1,6 @@
 {
   "title": "Guion de la Cumbre",
-  "version": "MINI v11",
+  "version": "MINI v11r2",
   "plannedSeconds": 900,
   "event": {
     "date": "Miércoles 18 de noviembre de 2026",
@@ -39,17 +39,28 @@
     {
       "number": 3,
       "title": "¿Cómo planear una vida sin saber cuándo llegará?",
-      "seconds": 30,
+      "seconds": 75,
       "startSeconds": 71,
       "paragraphs": [
-        "El Visa Bulletin es el boletín mensual del Departamento de Estado de Estados Unidos. Cada mes publica, por país, categoría y tabla, una fecha de corte.",
-        "En las categorías de preferencia los cupos son limitados, así que ese corte puede avanzar, detenerse o retroceder, mientras las personas toman decisiones de familia y trabajo. Nuestra pregunta es: ¿cuándo podría el corte alcanzar una fecha de prioridad, y con qué incertidumbre?"
+        "Una Green Card es la tarjeta que acredita que una persona puede vivir y trabajar permanentemente en Estados Unidos. Para quien realiza el trámite desde otro país, la visa de inmigrante permite viajar y solicitar el ingreso como residente. Después recibe su Green Card.",
+        "Para muchas familias, esto significa poder reunirse y construir una vida juntas. Pero en ciertas categorías hay más solicitantes que lugares disponibles: en noviembre de 2023, el Centro Nacional de Visas registraba más de cuatro millones de personas en espera.",
+        "Pensemos en una fila: cada persona tiene una fecha que marca su lugar, llamada fecha de prioridad. El Visa Bulletin es el boletín mensual que publica hasta qué fechas pueden avanzar los trámites, según el país y la categoría.",
+        "El problema es que ese límite puede avanzar, quedarse detenido o retroceder. Las familias conocen su lugar en la fila, pero no cuándo llegará su turno. Nuestro proyecto busca anticipar cómo cambiará ese límite y mostrar la incertidumbre del pronóstico."
       ],
-      "cue": "Enlace oficial bajo la definición. Visita opcional al boletín vigente: señalar ambas tablas; descontar ese tiempo de los 75 s de la demo (lámina 18).",
+      "cue": "Explicar la fila con calma. La precisión de la fuente se consulta, no se lee en voz alta. Visita opcional al boletín: descontarla de los 60 s de la demo (lámina 18).",
+      "sourceNote": "Fuente del dato: Departamento de Estado, Annual Report of Immigrant Visa Applicants, al 1 de noviembre de 2023, pp. 1–3: 4,034,061 personas registradas en el NVC en preferencias familiares y laborales, incluidos cónyuges e hijos con derecho derivado. Excluye ajustes de estatus pendientes ante USCIS; no es el total actual de personas esperando una Green Card.",
       "links": [
         {
           "label": "Abrir Visa Bulletin oficial",
           "href": "https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html"
+        },
+        {
+          "label": "Fuente: 4,034,061 personas · NVC, 1 nov. 2023 · pp. 1–3",
+          "href": "https://travel.state.gov/content/dam/visas/Statistics/Immigrant-Statistics/WaitingList/WaitingListItem_2023_vF.pdf"
+        },
+        {
+          "label": "Visa de inmigrante y residencia permanente · Departamento de Estado",
+          "href": "https://travel.state.gov/content/travel/en/us-visas/immigrate/family-immigration.html"
         }
       ],
       "image": "/presentacion-cumbre/laminas/03.jpg"
@@ -58,7 +69,7 @@
       "number": 4,
       "title": "Dos tablas, dos cortes para Ana",
       "seconds": 55,
-      "startSeconds": 104,
+      "startSeconds": 149,
       "paragraphs": [
         "Pensemos en Ana, un caso ilustrativo: mexicana, hija soltera adulta de un residente permanente, en la categoría F2B. Su fecha de prioridad es el quince de mayo de 2011 y no cambia.",
         "El boletín de noviembre de 2026 publica dos cortes. La Tabla A, para decisión final, o FAD, marca el quince de mayo de 2010. La Tabla B, para presentar documentos, o DFF, marca el veintidós de marzo de 2011.",
@@ -72,7 +83,7 @@
       "number": 5,
       "title": "Pasan diez años. El corte solo avanza cuatro.",
       "seconds": 35,
-      "startSeconds": 162,
+      "startSeconds": 207,
       "paragraphs": [
         "El problema tiene dos relojes. En México F4, de noviembre de 2016 a noviembre de 2026 pasaron diez años de calendario, pero el corte solo avanzó cuatro años de fechas. La distancia creció de diecinueve y medio a veinticinco y medio años.",
         "Eso mide el atraso del boletín, no la espera personal de alguien. Hay un límite general por país, pero no atribuimos la causa a una sola regla. Por eso tiene sentido pronosticar el corte y mostrar su error."
@@ -85,7 +96,7 @@
       "number": 6,
       "title": "Objetivo general y objetivos específicos",
       "seconds": 35,
-      "startSeconds": 200,
+      "startSeconds": 245,
       "paragraphs": [
         "De ahí sale el objetivo general: desarrollar un sistema predictivo para las series del Visa Bulletin que estime, mes a mes, las fechas de prioridad por país o área, categoría y tipo de tabla; es decir, en la práctica, las fechas de corte publicadas.",
         "Para lograrlo planteamos cinco objetivos específicos: construir la base, caracterizar las series, comparar modelos lineales y no lineales, evaluarlos con validación temporal e intervalos, y entregar un demostrador de consulta."
@@ -98,7 +109,7 @@
       "number": 7,
       "title": "Una pregunta distinta, seis etapas conectadas",
       "seconds": 25,
-      "startSeconds": 238,
+      "startSeconds": 283,
       "paragraphs": [
         "Los estudios revisados pronostican flujos migratorios o clasifican solicitudes de visa. Nuestra pregunta es otra: cómo cambiará el corte y cuánto nos equivocamos.",
         "Seguimos CRISP-DM en seis etapas, y el ciclo permite volver atrás: al detectar un relleno que usaba información futura, regresamos a preparar los datos."
@@ -111,7 +122,7 @@
       "number": 8,
       "title": "Arquitectura de VisaPredict AI",
       "seconds": 25,
-      "startSeconds": 266,
+      "startSeconds": 311,
       "paragraphs": [
         "Así se ve el flujo completo. El boletín oficial alimenta una base analítica. El motor prepara las variables, compara modelos y emite una versión de pronósticos.",
         "Esa misma versión alimenta el portal, VisaBot y el documento. La publicación pasa siempre por controles y por una decisión humana."
@@ -124,7 +135,7 @@
       "number": 9,
       "title": "Convertimos páginas del boletín en una base que se puede analizar",
       "seconds": 40,
-      "startSeconds": 294,
+      "startSeconds": 339,
       "paragraphs": [
         "El primer paso fue convertir páginas en datos. Trescientos boletines se volvieron veintiocho mil doscientos once registros, con mes, área, categoría, tabla, estado y corte. Una serie sigue la misma combinación mes a mes.",
         "En el censo de noviembre hay ciento noventa y cuatro series observadas, ciento treinta y seis con fecha, noventa y siete elegibles y ochenta y seis con proyección actual. Los modelos se comparan en veinticinco series familiares por tabla. Medimos trescientas cincuenta y cuatro omisiones; su corrección sigue pendiente."
@@ -137,7 +148,7 @@
       "number": 10,
       "title": "La serie se congela, salta y retrocede; la preparación usa solo el pasado",
       "seconds": 50,
-      "startSeconds": 337,
+      "startSeconds": 382,
       "paragraphs": [
         "Esta es la historia completa de México F2B. La fecha se congela, salta y a veces retrocede; los huecos no se interpolan.",
         "Abajo está el cambio entre observaciones. Veinticuatro de veinticinco series familiares FAD requieren trabajar con ese cambio, es decir, diferenciar.",
@@ -151,7 +162,7 @@
       "number": 11,
       "title": "24 modelos, tres familias: la complejidad se probó",
       "seconds": 40,
-      "startSeconds": 390,
+      "startSeconds": 435,
       "paragraphs": [
         "Comparamos veinticuatro modelos en tres familias: clásicos, árboles y redes. Como referencia hay tres ideas: repetir la última fecha, seguir el ritmo promedio y el modelo del proyecto, que en FAD combina Theta, ETS y SARIMA.",
         "Para los árboles, Optuna hizo ciento cincuenta ensayos por grupo en un tramo de búsqueda y otro tramo confirmó el ajuste: se aceptaron nueve de doce grupos; los otros tres conservaron la configuración por defecto.",
@@ -165,7 +176,7 @@
       "number": 12,
       "title": "Qué historia ve cada fase antes de pronosticar",
       "seconds": 50,
-      "startSeconds": 433,
+      "startSeconds": 478,
       "paragraphs": [
         "Para comparar con justicia, la Tabla 1 resume qué historia ve cada fase, con México F2B en decisión final. La historia base va de diciembre de 2001 a septiembre de 2021. Siguen veinticuatro meses de búsqueda y doce de confirmación; luego los hiperparámetros quedan fijos.",
         "La prueba final va de octubre de 2024 a septiembre de 2026: el primer pronóstico usa el pasado hasta septiembre de 2024 y el último, hasta agosto de 2026. La historia crece en cada origen y las redes se reajustan cada doce meses. En DFF el inicio varía por serie."
@@ -178,7 +189,7 @@
       "number": 13,
       "title": "En los dos años recientes, a un mes, repetir tuvo el menor error medio",
       "seconds": 50,
-      "startSeconds": 486,
+      "startSeconds": 531,
       "paragraphs": [
         "Este es el resultado principal. En la prueba final, la prueba A, con veinticinco series FAD y a un mes, repetir el último corte tuvo el menor error medio: un MASE de cero punto ciento cincuenta y siete.",
         "Fue el mejor en dieciséis de veinticinco series, y ningún rival lo superó de forma significativa. Además, en seis de cada diez casos la fecha no cambió.",
@@ -192,7 +203,7 @@
       "number": 14,
       "title": "Del boletín a una versión verificable",
       "seconds": 30,
-      "startSeconds": 539,
+      "startSeconds": 584,
       "paragraphs": [
         "Aquí se une el desarrollo con la operación. Git, DVC, S3 y MLflow guardan código, datos, artefactos y experimentos, para poder rastrear cada versión.",
         "Cada mes se valida el PDF, se prepara un candidato y una persona revisa el recibo. Después se pronostica, se verifican contratos, huellas de archivos y pruebas automáticas, y se publica. Si algo falla, no se publica. El seguimiento de error y cobertura cierra el ciclo."
@@ -205,7 +216,7 @@
       "number": 15,
       "title": "Qué modelo usa cada serie",
       "seconds": 45,
-      "startSeconds": 572,
+      "startSeconds": 617,
       "paragraphs": [
         "Este tablero muestra qué modelo usa cada combinación de área, categoría y tabla. M es la mediana de Theta, ETS y SARIMA; S es SARIMA.",
         "Una aclaración importante: M y S son asignaciones de esta versión, no los ganadores de la prueba A.",
@@ -219,7 +230,7 @@
       "number": 16,
       "title": "86 series: su historia y su pronóstico",
       "seconds": 25,
-      "startSeconds": 620,
+      "startSeconds": 665,
       "paragraphs": [
         "La galería muestra la historia y el pronóstico de las ochenta y seis series con proyección actual, cada una en su escala y con banda nominal del noventa y cinco por ciento.",
         "Es una vista de alcance, no ochenta y seis validaciones. El detalle de Ana lo vemos en la siguiente lámina."
@@ -232,7 +243,7 @@
       "number": 17,
       "title": "Para Ana, la incertidumbre sigue siendo grande",
       "seconds": 55,
-      "startSeconds": 648,
+      "startSeconds": 693,
       "paragraphs": [
         "Volvemos a Ana, ahora en detalle. Aquí la banda es nominal del ochenta por ciento, distinta de la del noventa y cinco de la galería. Describe dónde podría estar el corte, no cuándo llegará su turno.",
         "A doce meses, esa banda abarca unos cuatro años de fechas de corte; no son cuatro años de espera personal. Y su cobertura a ese plazo todavía no está medida.",
@@ -246,15 +257,15 @@
     {
       "number": 18,
       "title": "Demostración de VisaPredict AI",
-      "seconds": 75,
-      "startSeconds": 706,
+      "seconds": 60,
+      "startSeconds": 751,
       "paragraphs": [
         "Pasemos a la demostración: México, F2B, decisión final.",
         "Primero aparece la historia publicada; después, el pronóstico, que empieza en diciembre de 2026, con bandas nominales del ochenta y del noventa y cinco por ciento; al final, el error y la fuente.",
         "El portal consulta resultados ya emitidos; no reentrena modelos en vivo. Si hay conexión, lo abro dentro de este mismo tiempo; si la red falla, esta captura muestra la misma consulta.",
         "Y recuerden: el rango describe el corte del boletín, no el mes en que Ana obtendría su visa."
       ],
-      "cue": "Llamadas «Pronóstico desde dic. 2026» y «Bandas 80 % / 95 %». Si hubo visita en L3, descontarla de estos 75 s. Sin red, quedarse en la captura.",
+      "cue": "Llamadas «Pronóstico desde dic. 2026» y «Bandas 80 % / 95 %». Si hubo visita en L3, descontarla de estos 60 s. Sin red, quedarse en la captura.",
       "links": [
         {
           "label": "Abrir portal de pronósticos",
@@ -267,7 +278,7 @@
       "number": 19,
       "title": "El pronóstico del corte debe mostrar su error",
       "seconds": 35,
-      "startSeconds": 784,
+      "startSeconds": 814,
       "paragraphs": [
         "Cierro con tres ideas. Primero, el boletín se convirtió en una base de ciento noventa y cuatro series observadas. Segundo, en la prueba reciente a un mes, ningún rival superó con significancia a repetir, y eso depende de la ventana y del plazo. Tercero, el demostrador muestra el pronóstico junto con su banda, que no es la espera de Ana.",
         "Queda trabajo: medir la cobertura a doce meses, corregir las omisiones, repetir las comparaciones con datos corregidos y dar seguimiento prospectivo."
@@ -280,7 +291,7 @@
       "number": 20,
       "title": "Referencias citadas",
       "seconds": 10,
-      "startSeconds": 822,
+      "startSeconds": 852,
       "paragraphs": [
         "Estas son las referencias citadas, incluidas las fuentes oficiales enlazadas en la presentación."
       ],
@@ -292,7 +303,7 @@
       "number": 21,
       "title": "Gracias por su atención",
       "seconds": 15,
-      "startSeconds": 835,
+      "startSeconds": 865,
       "paragraphs": [
         "Ana aún no sabe cuándo. Pero ahora sabe cuánto no sabemos.",
         "Muchas gracias; quedo atento a sus preguntas."
