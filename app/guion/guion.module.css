@@ -1,0 +1,63 @@
+.shell { height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); color: var(--color-ink); font-family: var(--font-dm), system-ui, sans-serif; }
+.shell *, .shell *::before, .shell *::after { box-sizing: border-box; }
+.shell:fullscreen { height: 100dvh; background: var(--color-bg); }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.emptyState { max-width: 40rem; margin: 4rem auto; padding: 1.5rem; }
+.topHeader { flex: none; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .3rem 1.5rem; padding: .65rem 1.25rem; border-bottom: 1px solid var(--color-border); }
+.brandRow { display: flex; align-items: baseline; flex-wrap: wrap; gap: .85rem; }
+.backLink { font-size: .8rem; color: var(--color-accent); font-weight: 600; text-decoration: underline; text-underline-offset: .18em; }
+.pageTitle { margin: 0; font-family: var(--font-playfair), Georgia, serif; font-size: 1.25rem; font-weight: 700; }
+.eventMeta { margin: 0; color: var(--color-muted); font-size: .75rem; }
+.workspace { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1.25rem; flex: 1 1 0; min-height: 0; padding: 1rem 1.25rem; }
+.slidePane { display: flex; flex-direction: column; gap: .75rem; min-width: 0; min-height: 0; }
+.paneHeader { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: baseline; gap: .4rem .8rem; color: var(--color-muted); font-size: .8rem; margin-bottom: .75rem; }
+.slidePane > .paneHeader { margin-bottom: 0; }
+.slideCounter { color: var(--color-accent); font-family: var(--font-space-mono), monospace; font-size: .9rem; }
+.slideFigure { margin: 0; flex: 1 1 0; min-height: 0; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: .5rem; background: var(--color-surface-soft); }
+.slideImage { width: 100%; height: 100%; object-fit: contain; display: block; }
+.readingPane { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--color-border); border-radius: .5rem; }
+.scriptZone { height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem 1.5rem 2rem; scrollbar-gutter: stable; }
+.slideTitle { margin: 0 0 1.35rem; font-family: var(--font-playfair), Georgia, serif; font-size: clamp(1.15rem,1.5vw,1.45rem); line-height: 1.3; overflow-wrap: break-word; }
+.spokenBody { font-size: var(--guion-font-size,28px); min-width: 0; }
+.spokenParagraph { margin: 0 0 1.15em; font-size: inherit; line-height: 1.55; overflow-wrap: anywhere; }
+.liveVisit { margin: 1.5rem 0; padding: 1rem; border: 1px solid var(--color-border); border-radius: .4rem; background: var(--color-surface-soft); font-size: var(--guion-font-size,28px); }
+.liveVisit h3 { margin: 0 0 .75rem; font-size: 1rem; line-height: 1.4; }
+.liveVisit > a { display: inline-block; margin-bottom: 1rem; font-size: .875rem; }
+.liveVisit p:last-child { margin-bottom: 0; }
+.cueBox { margin: 1rem 0 0; padding: .8rem 1rem; border-radius: .3rem; background: var(--color-surface-soft); color: var(--color-muted); font-size: .875rem; line-height: 1.55; overflow-wrap: anywhere; }
+.cueBox strong { color: var(--color-ink); }
+.linksList { margin: 1rem 0 0; padding-left: 1.2rem; font-size: .875rem; }
+.linksList li + li { margin-top: .65rem; }
+.resourceLink { color: var(--color-accent); text-decoration: underline; text-underline-offset: .18em; overflow-wrap: anywhere; line-height: 1.5; }
+.controlsBar { flex: none; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .65rem 1rem; padding: .8rem 1.25rem; border-top: 1px solid var(--color-border); background: var(--color-bg); z-index: 10; }
+.navigation { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.slideSelect { width: clamp(9rem,20vw,24rem); min-width: 0; height: 44px; border: 1px solid var(--color-border); border-radius: .35rem; background: var(--color-bg); color: var(--color-ink); font-family: inherit; font-size: .85rem; padding: .5rem; text-overflow: ellipsis; }
+.controlBtn { min-height: 44px; appearance: none; border: 1px solid var(--color-border); background: var(--color-bg); color: var(--color-ink); border-radius: .35rem; font-family: inherit; font-size: .85rem; font-weight: 500; line-height: 1.2; padding: .5rem .7rem; cursor: pointer; }
+.controlBtn:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+.controlBtn:disabled { opacity: .45; cursor: not-allowed; }
+.controlBtn[aria-pressed="true"] { background: var(--color-surface-soft); border-color: var(--color-accent); }
+.controlBtn:focus-visible, .slideSelect:focus-visible, .resourceLink:focus-visible, .backLink:focus-visible, .scriptZone:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.timerBox, .readingTools, .fontControls { display: flex; align-items: center; gap: .4rem; min-width: 0; }
+.timerFigures { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem; padding-right: .35rem; }
+.timerLabel { color: var(--color-muted); font-size: .7rem; text-transform: uppercase; }
+.timerMono, .timerTotal, .fontReadout { font-family: var(--font-space-mono), monospace; font-variant-numeric: tabular-nums; }
+.timerMono { font-size: .95rem; }
+.timerTotal, .fontReadout { font-size: .75rem; color: var(--color-muted); }
+.readingTools { gap: .75rem; }
+.fontReadout { min-width: 2.5rem; text-align: center; }
+.noticeBanner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex: none; padding: .5rem 1.25rem; background: var(--color-surface-soft); font-size: .875rem; }
+@media (max-width: 899px) {
+  .shell { height: auto; min-height: 100dvh; overflow: visible; }
+  .shell:fullscreen { height: 100dvh; overflow-y: auto; }
+  .topHeader { padding: .75rem; }
+  .workspace { grid-template-columns: minmax(0,1fr); flex: none; padding: .75rem; gap: 1rem; }
+  .slideFigure { flex: none; aspect-ratio: 16/9; }
+  .readingPane { overflow: visible; }
+  .scriptZone { height: auto; overflow: visible; padding: 1rem; }
+  .controlsBar { position: sticky; bottom: 0; padding: .65rem .75rem; gap: .5rem; box-shadow: 0 -4px 16px #0000000a; }
+  .navigation { width: 100%; }
+  .slideSelect { flex: 1; width: 0; }
+  .timerBox { flex-wrap: wrap; }
+  .readingTools { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .shell, .shell * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
