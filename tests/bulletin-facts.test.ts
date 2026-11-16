@@ -33,4 +33,10 @@ describe("bulletinFactText", () => {
   it("has an English twin", () => {
     expect(bulletinFactText(rows, "November 2026", "en", (c) => c)).toMatch(/Largest retrogressions: none\./);
   });
+  it.each(["es", "en"] as const)("%s separates combined counts from each table", lang => {
+    const text = bulletinFactText(rows, "2026-11", lang, name);
+    expect(text).toMatch(/(?:FAD \+ DFF|DFF \+ FAD)/);
+    expect(text).toContain(lang === "es" ? "FAD: 4 series; 3 avanzaron, 0 retrocedieron, 1 sin movimiento o sin fecha" : "FAD: 4 series; 3 advanced, 0 retrogressed, 1 unchanged or undated");
+    expect(text).toContain(lang === "es" ? "DFF: 1 series; 0 avanzaron, 0 retrocedieron, 1 sin movimiento o sin fecha" : "DFF: 1 series; 0 advanced, 0 retrogressed, 1 unchanged or undated");
+  });
 });

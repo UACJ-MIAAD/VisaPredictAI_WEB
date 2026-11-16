@@ -28,6 +28,8 @@ function datesIn(text) {
   return dates;
 }
 const cases = [
+  { id: "bulletin-es", lang: "es", q: "¿Qué cambió en el boletín de noviembre 2026, FAD?", synthetics: [{kind:"bulletin_diff", monthA:"2026-10", monthB:"2026-11", table:"FAD", release_id:release.release_id}] },
+  { id: "bulletin-en", lang: "en", q: "What changed in the November 2026 bulletin, FAD?", synthetics: [{kind:"bulletin_diff", monthA:"2026-10", monthB:"2026-11", table:"FAD", release_id:release.release_id}] },
   { id: "equal-es", lang: "es", q: "Mi fecha de prioridad es exactamente igual al corte FAD publicado. ¿Ya estoy al corriente?", must: /no|todav[ií]a/, mustNot: /^S[ií]\b/ },
   { id: "equal-en", lang: "en", q: "My priority date equals the published FAD cutoff exactly. Am I current?", must: /not|no\b|earlier/, mustNot: /^Yes\b|will become current in the (following|next) month/i },
   { id: "status-en", lang: "en", q: "What do C, F and U mean in this database? Is U a missing observation?", must: /not.*(missing|empty)|no.*(numbers|issuance)/s, mustNot: /U[^\n]{0,100}means[^\n]{0,60}(missing data|empty cell)/ },
@@ -77,13 +79,16 @@ for (const c of cases.filter(c => !selected || selected.has(c.id))) {
     const expectedDates = forecastSource ? [...datesIn(forecastSource.text)] : [];
     const answerDates = datesIn(answer);
     const seriesMase = forecastSource?.text.match(/(?:hold-out MASE|MASE hold-out) ([0-9.]+)/)?.[1]?.replace(/\.$/, "");
+    const comparisonSource = sources.find(s=>/COMPARACIÓN DE BOLETINES|A BULLETIN COMPARISON/.test(s.text));
+    const comparisonCount = comparisonSource?.text.match(/(?:Resumen|Summary): (\d+) (avanzaron|advanced)/);
     const expectedStatus = c.status ?? 200;
     const checks = { status:res.status===expectedStatus, nonempty:expectedStatus!==200 || !!answer.trim(),
       noError:expectedStatus!==200 || !events.some(e=>e.t==="error"),
       must:!c.must || c.must.test(answer), mustNot:!c.mustNot || !c.mustNot.test(answer),
       citations:phantomCitations.length===0,
       forecastDates:!c.synthetics?.some(s=>s.kind==="forecast_note") || (expectedDates.length >= 4 && expectedDates.every(d=>answerDates.has(d))),
-      seriesMase:!seriesMase || answer.includes(seriesMase) };
+      seriesMase:!seriesMase || answer.includes(seriesMase),
+      comparisonCount:!c.synthetics?.some(s=>s.kind==="bulletin_diff") || (!!comparisonCount && answer.includes(`${comparisonCount[1]} ${comparisonCount[2]}`)) };
     record = {id:c.id,lang:c.lang,query:c.q,ms:Date.now()-started,status:res.status,checks,pass:Object.values(checks).every(Boolean),answer,phantomCitations,events,context,synthetics:c.synthetics};
   } catch (error) { record={id:c.id,query:c.q,error:String(error),pass:false}; }
   results.push(record);

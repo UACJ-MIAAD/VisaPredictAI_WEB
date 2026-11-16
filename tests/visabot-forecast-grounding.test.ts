@@ -16,7 +16,7 @@ import { resetSyntheticData } from "@/lib/visabot/synthetic-context.mjs";
 import { validSyntheticShape } from "../netlify/functions/chat.mjs";
 import { buildPanel } from "@/lib/data/panel-core";
 import { parseForecastStore, backfillScored } from "@/lib/data/forecasts-core.mjs";
-import { buildForecast, chartUserNote, forecastText, priorityYearTick } from "@/lib/visabot/analytics";
+import { buildForecast, buildBulletinDiff, chartUserNote, forecastText, priorityYearTick } from "@/lib/visabot/analytics";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dataFile = (name: string) => readFileSync(join(root, "public", "data", name));
@@ -53,7 +53,7 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     throw new Error(`unexpected fetch ${u}`);
   });
 
-  const ask = async (lang: "es" | "en", direct = false, queryOverride?: string) => {
+  const ask = async (lang: "es" | "en", direct = false, queryOverride?: string, comparison = false) => {
     const { default: handler } = await import("../netlify/functions/chat.mjs");
     const res = await handler(new Request("https://visapredictai.com/.netlify/functions/chat", {
       method: "POST",
@@ -62,7 +62,9 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
         lang, query: queryOverride ?? (direct
           ? (lang === "en" ? "Show me the Mexico F4 forecast" : "Muéstrame el pronóstico de México F4")
           : (lang === "en" ? "Explain the Mexico F4 forecast" : "Explica el pronóstico de México F4")), surface: "console",
-        synthetics: [{ kind: "forecast_note", country: "mexico", category: "F4", table: "FAD", release_id: DATA_PINS.releaseId }],
+        synthetics: comparison
+          ? [{kind:"bulletin_diff",monthA:"2026-10",monthB:"2026-11",table:"FAD",release_id:DATA_PINS.releaseId}]
+          : [{ kind: "forecast_note", country: "mexico", category: "F4", table: "FAD", release_id: DATA_PINS.releaseId }],
       }),
     }));
     expect(res.status).toBe(200);
@@ -91,6 +93,19 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
   });
 
   for (const lang of ["es", "en"] as const) {
+    it(`${lang}: direct bulletin changes use the same table counts without model rewriting`, async () => {
+      const spec = buildBulletinDiff(buildPanel(String(dataFile("visa_panel_long.csv"))), "2026-10", "2026-11", "FAD", lang)!;
+      if (spec.kind !== "bulletinDiff") throw new Error("expected comparison table");
+      const answer = await ask(lang, true, lang === "es" ? "¿Qué cambió en el boletín de noviembre 2026, FAD?" : "What changed in the November 2026 bulletin, FAD?", true);
+      expect(answer).toContain(`${spec.summary.advanced} ${lang === "es" ? "avanzaron" : "advanced"}`);
+      expect(answer).toContain(`${spec.summary.unchanged} ${lang === "es" ? "sin cambio" : "unchanged"}`);
+      expect(answer).toContain("FAD");
+      expect(answer).toContain("[1]");
+      expect(answer).not.toMatch(/do NOT refuse|NO te niegues/);
+    });
+    it(`${lang}: explaining why bulletin cutoffs changed retains generation`, async () => {
+      await ask(lang, false, lang === "es" ? "¿Qué cambió y por qué en el boletín de noviembre 2026 FAD?" : "What changed and why in the November 2026 FAD bulletin?", true);
+    });
     it(`${lang}: a direct forecast request returns verified figures without an LLM copying them`, async () => {
       const answer = await ask(lang, true);
       expect(answer).toContain(`[${LO95}, ${HI95}]`);

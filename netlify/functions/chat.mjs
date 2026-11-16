@@ -727,6 +727,7 @@ const handler = async (req) => {
   // Server-side synthetic recompute: descriptors in, verified text out.
   let synthSources = [];
   let directForecast;
+  let directDiff;
   if (body?.synthetics !== undefined) {
     const v = validateDescriptors(body.synthetics);
     if (v.error) return err(v.error);
@@ -744,6 +745,7 @@ const handler = async (req) => {
       if (!slotSafe(s.title) || !validSyntheticShape(s.source, s.text)) return err(SYNTH_ERR.rebuildFailed);
     synthSources = built.sources;
     if (v.descriptors.length === 1 && v.descriptors[0].kind === "forecast_note") directForecast = built.sources[0];
+    if (v.descriptors.length === 1 && v.descriptors[0].kind === "bulletin_diff") directDiff = built.sources[0];
   }
 
   const context = [
@@ -756,11 +758,16 @@ const handler = async (req) => {
   const directRequest = surface === "console" && query.length < 300 &&
     /mu[eé]str|show|^forecast for|^pron[oó]stico de/i.test(query) &&
     !/fecha de prioridad|priority date|cu[aá]ndo|when|por qu[eé]|why|compar|explain|explica|interpret|\b\d{4}\b|[?¿]/i.test(query);
-  if (directRequest && directForecast?.display) {
-    const {n, title, source, text, display} = directForecast;
+  const directDiffRequest = surface === "console" && query.length < 300 &&
+    /^(?:¿?qu[eé] cambi[oó]|what changed|compara\b|compare\b|show\b|mu[eé]str)/i.test(query) &&
+    !/por qu[eé]|why|explain|explica|interpret|pron[oó]st|forecast|predic|model|fecha de prioridad|priority date/i.test(query);
+  const verifiedSource = directRequest && directForecast?.display ? directForecast
+    : directDiffRequest && directDiff?.display ? directDiff : null;
+  if (verifiedSource) {
+    const {n, title, source, text, display} = verifiedSource;
     console.log("[chat]", JSON.stringify({rid, lang, surface, n_synth:1, n_ctx:1,
       tokens_in:0, tokens_out:0, ttft_ms:Date.now()-t0, total_ms:Date.now()-t0,
-      guard:false, truncated:null, error:null, mode:"verified_forecast"}));
+      guard:false, truncated:null, error:null, mode:verifiedSource === directDiff ? "verified_bulletin_comparison" : "verified_forecast"}));
     return new Response(sse({t:"sources",sources:[{n,title,source,text}]}) +
       sse({t:"delta",text:`**${title}**\n\n${display} [${n}]`}) + sse({t:"done"}), {
       headers:{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache","x-request-id":rid},
