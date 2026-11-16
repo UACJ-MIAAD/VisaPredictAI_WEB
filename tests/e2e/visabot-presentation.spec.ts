@@ -67,6 +67,11 @@ for (const lang of ["es", "en"] as const) for (const theme of ["light", "dark"] 
 
 test("presentation prompt library is stable and Escape closes the inner dialog first", async ({page,context}) => {
   await blockExternal(context);
+  // CI's offline export intentionally has no generated RAG corpus. Supply the
+  // library explicitly so this interaction test never depends on that artifact.
+  await page.route("**/rag/prompts.json", route => route.fulfill({json:{es:[{
+    icon:"data",cat:"Ensayo",items:Array.from({length:8},(_,i)=>`Pregunta de ensayo ${i+1}`),
+  }]}}));
   await page.goto("/asistente/");
   await expect(page.getByRole("button",{name:"¿Qué puedes preguntar?",exact:true})).toBeVisible();
   await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
@@ -78,6 +83,7 @@ test("presentation prompt library is stable and Escape closes the inner dialog f
     return modal.locator("button.vb-suggest").allTextContents();
   };
   const first = await open();
+  expect(first).toHaveLength(6);
   await page.keyboard.press("Escape");
   await expect(stage).toBeVisible();
   const second = await open();
