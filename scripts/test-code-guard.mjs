@@ -237,7 +237,24 @@ const run = (deltas, lang = "es") => {
   assert.ok(out.includes("From Mexico the wait grows"), "prose bullet survives");
 }
 
-console.log("✓ code-guard: 29 groups passed");
+// 30) mathematical set braces may be Markdown-escaped; this is visa/model
+// prose, not code. Exercise arbitrary stream boundaries as well.
+{
+  const text = "- **FAD**: \\{naive1\\}\n- **DFF**: \\{ets, naive1\\}\n";
+  for (const deltas of [[text], [...text]]) {
+    const {out, blocked} = run(deltas);
+    assert.equal(blocked, false, "escaped MCS sets must survive");
+    assert.equal(out, text);
+  }
+}
+
+// 31) escaping braces must not make executable content inside them pass.
+{
+  const {blocked} = run(["FAD: \\{ print(x); \\}\nDFF: \\{ return x; \\}\n"]);
+  assert.equal(blocked, true, "code inside escaped braces remains blocked");
+}
+
+console.log("✓ code-guard: 31 groups passed");
 
 // ── emoji stripper (a serious RAG must never emit emojis) ───────────────────
 {

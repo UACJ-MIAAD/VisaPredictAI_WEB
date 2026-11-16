@@ -526,7 +526,7 @@ export function makeCodeGuard(lang) {
     // The exemption stays TIGHT: only prose tokens inside the braces (letters,
     // digits, commas, spaces) — anything with code punctuation like `;` or `()`
     // (e.g. `{ print(i); }`) is still code (audit r3 over-broad-exemption).
-    if (/}\s*$/.test(t) && !/\{[\w\s,–-]{1,40}\}\s*$/.test(t)) return true;
+    if (/}\s*$/.test(t) && !/\\?\{[\w\s,–-]{1,40}\\?\}\s*$/.test(t)) return true;
     // `console.`/`System.` only count as code when followed by a member (a real
     // call like `console.log`) — NOT sentence-final domain prose. This project's
     // /asistente surface is literally called "the console", so "…the console."
