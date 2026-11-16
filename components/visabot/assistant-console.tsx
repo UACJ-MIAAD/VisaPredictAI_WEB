@@ -121,7 +121,11 @@ export function AssistantConsole() {
     const chart = res?.chart;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full panel range.
-    if (res?.grounding && chart) {
+    if (res?.grounding && chart?.kind === "priorityCheck") {
+      // The exact comparison is also the entire offline fallback; unrelated
+      // retrieved bulletin cells must never overwrite its country or cutoff.
+      sources=[{n:1,title:chart.title,source:panelSource(lang),url:localePath("/datos-historicos",lang)+"#historico",text:res.grounding.text,display:res.grounding.display,synthetic:true}];
+    } else if (res?.grounding && chart) {
       sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: res.grounding.text, display: res.grounding.display, synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart?.kind === "table") {
@@ -143,7 +147,7 @@ export function AssistantConsole() {
     // Only send the descriptor when a synthetic source was actually attached
     // (a table chart always grounds; other kinds only when their note exists).
     const grounded = sources.some((s) => s.synthetic);
-    return { sources, chart: chart || undefined, synthetics: res && grounded ? [res.descriptor] : undefined };
+    return { sources, chart: chart || undefined, synthetics: res?.descriptor && grounded ? [res.descriptor] : undefined };
   }, [panel, lang, forecasts]);
 
   const {

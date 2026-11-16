@@ -33,25 +33,8 @@ export {
 export type { DriftFit, ChartTitleKind, SeriesCompareSpec } from "./synthetic-builders.mjs";
 
 // ── entity detection (visa domain vocabulary) ───────────────────────────────
-const COUNTRY_ALIASES: [RegExp, string][] = [
-  [/m[eé]xico|mexican|mexico/i, "mexico"],
-  [/\bindia\b|\bindi[oa]\b/i, "india"],
-  [/\bchina\b|\bchin[oa]\b/i, "china"],
-  [/filipin|philippin/i, "philippines"],
-  // "all chargeability" residual area. The bare word "row" is NOT here: it
-  // matched English "row" (e.g. "the first row"), a false all_chargeability
-  // detection — only the UPPERCASE abbreviation ROW is accepted, below.
-  [/all charge?ability|resto del mundo|todos los pa[ií]ses/i, "all_chargeability"],
-];
-
-// Collapse letter↔digit separators in category codes so "EB-5", "EB 5", "F2-A"
-// match the panel codes EB5/F2A (finding 7). Uppercase form (detectEntities
-// works on the uppercased query).
-// The optional [AB] suffix must NOT be followed by another letter, or it would
-// absorb the first letter of an adjacent word ("F1 backlog"→"F1BACKLOG",
-// "EB2 based"→"EB2BASED") and break detection of the most common phrasings.
-const normalizeCatsUp = (s: string) =>
-  s.replace(/\b(EB|F)[ ._-]?(\d)(?:[ ._-]?([AB])(?![A-Z]))?/g, (_m, p, d, x) => p + d + (x || ""));
+import { COUNTRY_ALIASES, queryEntities } from "./query-entities.mjs";
+import {parsePriorityDate} from "./priority-check.mjs";
 
 // Follow-up merge (adversarial audit 28-oct-2026): "¿y para India?" after
 // "¿Cuándo avanza México F3?" was appended to the previous query, and
@@ -62,6 +45,9 @@ const TABLE_WORDS = /\b(DFF|FAD)\b|dates for filing|final action(?: dates)?|acci
 const CATEGORY_WORDS = /\b(?:EB|F)[ ._-]?\d(?:[ ._-]?[AB](?![A-Z]))?(?:_[A-Z]+)*\b/gi;
 export function mergeFollowUp(prev: string, fragment: string): string {
   let base = prev;
+  if(parsePriorityDate(fragment).date) {
+    for(const date of parsePriorityDate(base).fragments) base=base.replace(date," ");
+  }
   if (COUNTRY_ALIASES.some(([re]) => re.test(fragment)) || /\bROW\b/.test(fragment)) {
     for (const [re] of COUNTRY_ALIASES) base = base.replace(new RegExp(re.source, "gi"), " ");
     base = base.replace(/\bROW\b/g, " ");
@@ -85,34 +71,12 @@ export function detectCountries(q: string): string[] {
 }
 
 export function detectEntities(q: string, panel: Panel): Entities {
-  const country =
-    COUNTRY_ALIASES.find(([re]) => re.test(q))?.[1] ?? (/\bROW\b/.test(q) ? "all_chargeability" : null);
-  const up = ` ${normalizeCatsUp(q.toUpperCase())} `;
-  // longest category code first so EB5_RURAL wins over EB5
-  const cats = [...panel.categories].sort((a, b) => b.length - a.length);
-  let category: string | null = null;
-  for (const c of cats) {
-    // Escape BEFORE widening "_" into [ _-]? — the old inverted order escaped
-    // the freshly inserted brackets, turning every underscored code (EB5_RURAL,
-    // EB4_RW…) into unmatched literal text that silently degraded to its parent.
-    const pat = c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/_/g, "[ _-]?");
-    if (new RegExp(`(?<![A-Z0-9])${pat}(?![A-Z0-9])`).test(up)) { category = c; break; }
-  }
-  const table = /\bDFF\b|DATES FOR FILING|PRESENTACI/i.test(q)
-    ? "DFF"
-    : /\bFAD\b|FINAL ACTION|ACCI[OÓ]N FINAL/i.test(q)
-      ? "FAD"
-      : null;
-  const block = /\bempleo\b|employment|\bEB\b/i.test(q) || /\bEB[1-5]/i.test(q)
-    ? "empleo"
-    : /\bfamilia\b|family|\bF[1-4]/i.test(q)
-      ? "familia"
-      : null;
-  return { country, category, table, block };
+  return queryEntities(q, panel);
 }
 
 // ── chart specs ─────────────────────────────────────────────────────────────
 export type ChartSpec =
+  | import("./priority-check.mjs").PriorityCheckSpec
   | { kind: "line"; title: string; subtitle: string; yLabel: string; data: { month: string; year: number | null; date: string | null }[] }
   | { kind: "compare"; title: string; subtitle: string; data: { country: string; label: string; years: number | null; date: string | null }[] }
   | { kind: "movement"; title: string; subtitle: string; data: { month: string; movement: number }[] }

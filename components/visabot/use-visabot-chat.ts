@@ -13,6 +13,7 @@ import * as React from "react";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { resolveConversationQuery } from "@/lib/visabot/conversation";
+import {PRIORITY_SOURCE,isPriorityQuery,priorityCheckSummary} from "@/lib/visabot/priority-check.mjs";
 import {
   retrieve,
   generate,
@@ -39,7 +40,9 @@ export function mergeServerSources(local: Source[], server: ServerSource[] | und
   const byText = new Map(local.map((s) => [s.text, s]));
   return server.map((sv) => {
     const l = byText.get(sv.text) ?? local.find((s) => s.synthetic && s.n === sv.n);
-    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? "", synthetic: l?.synthetic };
+    const priority=Object.values(PRIORITY_SOURCE).includes(sv.source);
+    const fallback=sv.source===PRIORITY_SOURCE.en?"/en/datos-historicos/#historico":"/datos-historicos/#historico";
+    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? (priority?fallback:""), synthetic: l?.synthetic ?? priority };
   });
 }
 
@@ -254,7 +257,7 @@ export function useVisabotChat({
       let tFirst = 0;
       try {
         const res = await generate(
-          q,
+          isPriorityQuery(rq) ? rq : q,
           history,
           sources,
           lang,
@@ -279,6 +282,10 @@ export function useVisabotChat({
         // extractive fallback keeps the local list: it is composed client-side
         // from those very chunks, with no server prompt involved.
         const displayed = res.extractive ? sources : mergeServerSources(sources, res.serverSources);
+        // A page kept open across releases must not render an older local card
+        // beside newer server facts. Keep the authoritative text in that case.
+        const answerChart=chart?.kind==="priorityCheck" && !res.extractive &&
+          !res.serverSources?.some(s=>s.source===PRIORITY_SOURCE[lang] && s.text===priorityCheckSummary(chart,lang)) ? undefined : chart;
         const truncated = isTruncated(res.text); // server timeout cut (note appended by chat.mjs)
         setMessages((m) => {
           if (!alive()) return m;
@@ -288,7 +295,7 @@ export function useVisabotChat({
             content: res.text,
             sources: displayed,
             extractive: res.extractive,
-            chart,
+            chart:answerChart,
             ...(truncated ? { incomplete: true } : {}),
           };
           return c;

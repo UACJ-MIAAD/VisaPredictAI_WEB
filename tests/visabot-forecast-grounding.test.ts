@@ -35,6 +35,7 @@ const [LO95, HI95] = [iso(Number(f4[7])), iso(Number(f4[8]))];
 const DECIMAL_BAND = /\[\d{4}\.\d, \d{4}\.\d\]|≈ \d{4}\.\d/;
 
 describe("forecast grounding over the released artifacts (chat handler → Anthropic body)", () => {
+  let testNow=Date.now();
   let sentBodies: string[] = [];
   const resLike = (buf: Buffer | null) => ({
     ok: !!buf,
@@ -80,6 +81,7 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
   };
 
   beforeEach(() => {
+    vi.spyOn(Date,"now").mockReturnValue(testNow+=61_000);
     process.env.ANTHROPIC_API_KEY = "test-key-never-used";
     process.env.VISABOT_DATA_BASE = "https://cdn.test";
     sentBodies = [];
@@ -87,12 +89,20 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     vi.stubGlobal("fetch", fetchStub);
   });
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     delete process.env.VISABOT_DATA_BASE;
     resetSyntheticData();
   });
 
   for (const lang of ["es", "en"] as const) {
+    it(`${lang}: priority checks return the exact country's current cutoff without generation`, async () => {
+      const answer = await ask(lang, true, lang === "es" ? "cuando me toca F2A pd sept 19 2024 mexicano" : "When is my turn, Mexican F2A priority date September 19 2024?");
+      expect(answer).toContain("2026-04-22");
+      expect(answer).toContain("2024-09-19");
+      expect(answer).not.toContain("2026-10-22");
+      expect(answer).not.toMatch(/tu turno ya pas[oó]|your turn has passed/i);
+    });
     it(`${lang}: direct bulletin changes use the same table counts without model rewriting`, async () => {
       const spec = buildBulletinDiff(buildPanel(String(dataFile("visa_panel_long.csv"))), "2026-10", "2026-11", "FAD", lang)!;
       if (spec.kind !== "bulletinDiff") throw new Error("expected comparison table");
@@ -113,8 +123,8 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
       expect(answer).toContain("F4");
       expect(answer).not.toMatch(/being shown to the user|Se está mostrando al usuario|NO digas|do NOT/);
     });
-    it(`${lang}: a priority-date question keeps the interpretive route`, async () => {
-      await ask(lang, false, lang === "en"
+    it(`${lang}: a priority-date question gets a verified comparison even when phrased as a forecast`, async () => {
+      await ask(lang, true, lang === "en"
         ? "Show the Mexico F4 forecast: when does it reach my priority date 2010-01-01?"
         : "Muéstrame México F4: ¿cuándo alcanza mi fecha de prioridad 2010-01-01?");
     });

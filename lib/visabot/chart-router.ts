@@ -2,6 +2,7 @@ import type { Panel } from "@/lib/data/visa-panel";
 import type { ForecastStore } from "@/lib/data/forecasts";
 import type { ChartPayload, SyntheticDescriptor } from "@/components/visabot/types";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
+import {buildPriorityCheck,priorityCheckSummary} from "./priority-check.mjs";
 import { MONTHS_ES, MONTHS_EN } from "./synthetic-builders.mjs";
 import {
   detectEntities, detectCountries, seriesCompareFacts, seriesCompareText, seriesCompareSummary,
@@ -16,9 +17,14 @@ const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
 // hash-verified release data with the SAME shared builders.
 // `grounding` carries a table-shaped note built here with the same shared
 // builder the server uses (the server never takes this text, only the descriptor).
-type ChartAndDescriptor = { chart: ChartPayload; descriptor: SyntheticDescriptor; grounding?: { text: string; display: string } };
+type ChartAndDescriptor = { chart: ChartPayload; descriptor?: SyntheticDescriptor; grounding?: { text: string; display: string } };
 
 export function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartAndDescriptor | null {
+  const priority=buildPriorityCheck(q,panel,forecasts,lang);
+  if(priority) {
+    const summary=priorityCheckSummary(priority,lang);
+    return {chart:priority,grounding:{text:summary,display:summary}};
+  }
   const e = detectEntities(q, panel);
   const t = e.table || "FAD";
   const rid = SITE_STATS.releaseId;

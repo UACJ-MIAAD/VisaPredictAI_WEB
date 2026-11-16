@@ -34,6 +34,7 @@ import {
   validateDescriptors, loadSyntheticData, buildSyntheticContext, SYNTH_ERR,
 } from "../../lib/visabot/synthetic-context.mjs";
 import { fold, normalizeCodes } from "../../lib/visabot/retrieval-core.mjs";
+import {isPriorityQuery,buildPriorityCheck,priorityCheckSummary,PRIORITY_SOURCE} from "../../lib/visabot/priority-check.mjs";
 
 // Validated forecast horizon (months) interpolated into the system prompt.
 const HORIZON = SITE_STATS.horizonMonths;
@@ -728,12 +729,14 @@ const handler = async (req) => {
   let synthSources = [];
   let directForecast;
   let directDiff;
+  let verifiedData;
   if (body?.synthetics !== undefined) {
     const v = validateDescriptors(body.synthetics);
     if (v.error) return err(v.error);
     let data;
     try {
       data = await loadSyntheticData({ base: dataBase(req) });
+      verifiedData=data;
     } catch {
       return err(SYNTH_ERR.unavailable); // verified artifacts unreachable — retryable
     }
@@ -746,6 +749,19 @@ const handler = async (req) => {
     synthSources = built.sources;
     if (v.descriptors.length === 1 && v.descriptors[0].kind === "forecast_note") directForecast = built.sources[0];
     if (v.descriptors.length === 1 && v.descriptors[0].kind === "bulletin_diff") directDiff = built.sources[0];
+  }
+
+  // Priority-date questions are exact comparisons, never model arithmetic.
+  // Derive the series and date from the query itself, independently of any
+  // descriptor or retrieved chunk the client supplied.
+  if(isPriorityQuery(query)) {
+    try { verifiedData ??= await loadSyntheticData({base:dataBase(req)}); }
+    catch { return err(SYNTH_ERR.unavailable); }
+    const check=buildPriorityCheck(query,verifiedData.panel,verifiedData.store,lang);
+    const display=priorityCheckSummary(check,lang);
+    console.log("[chat]",JSON.stringify({rid,lang,surface,mode:"verified_priority_check",n_synth:1,n_ctx:1,tokens_in:0,tokens_out:0,guard:false}));
+    return new Response(sse({t:"sources",sources:[{n:1,title:check.title,source:PRIORITY_SOURCE[lang],text:display}]})+
+      sse({t:"delta",text:`${display} [1]`})+sse({t:"done"}),{headers:{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache","x-request-id":rid}});
   }
 
   const context = [

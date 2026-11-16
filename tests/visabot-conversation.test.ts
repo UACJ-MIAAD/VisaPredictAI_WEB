@@ -6,6 +6,10 @@ import { PANEL_CSV } from "./fixtures";
 const panel = buildPanel(PANEL_CSV);
 
 describe("conversation retrieval follows the whole chain", () => {
+  it.each(["¿entonces ya me toca?","¿todavía no?","so am i current?"])("keeps the exact supplied priority date for %s",q=>{
+    const result=resolveConversationQuery(q,["Mexico F2A PD 2024-09-19"],mergeFollowUp);
+    expect(result).toContain("2024-09-19");expect(result).toContain("Mexico F2A");
+  });
   it.each(["Gracias", "Perfecto", "Thank you", "radar", "heatmap"])("%s starts a fresh intent instead of repeating a forecast", q => {
     expect(resolveConversationQuery(q, ["Pronóstico México F3 FAD"], mergeFollowUp)).toBe(q);
   });
