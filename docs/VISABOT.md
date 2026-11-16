@@ -119,6 +119,15 @@ a faithfulness certificate: review the saved prose, especially historical
 model-card claims about backfill and long-horizon performance. Preserve 429s
 as rate-limit evidence; rerun affected cases after the window expires.
 
+Direct console requests to show one forecast return the server-rebuilt summary
+with its exact dates, series MASE and separately labelled global track record.
+The model does not retype these figures. Questions about a priority date,
+interpretation, comparisons or an explicit future year keep the generative path.
+The sealed protocol chunk asserting that naïve-1 degrades at longer horizons is
+excluded from current answer context while it contains that superseded claim;
+the original source artifact remains preserved. A known text hash establishes
+authenticity, not the validity of every historical assertion it contains.
+
 ```bash
 npm run build:rag    # (re)build the index + download model/wasm into public/
 npm run rag:check    # Node self-check: probe queries must retrieve the right chunk

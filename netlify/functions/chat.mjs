@@ -166,6 +166,12 @@ export function sanitizeContext(raw, reserved, lang) {
     const langMeta = (lang && meta?.byLang?.[lang]) || meta;
     const title = String(langMeta?.title || "").slice(0, 160);
     const source = String(langMeta?.source || "").slice(0, 120);
+    // Authenticity is not methodological validity. This sealed protocol chunk
+    // asserts a long-horizon advantage that the corrected evaluation has not
+    // established. Preserve the source artifact, but do not feed that obsolete
+    // assertion to the answer model as current evidence.
+    if (/^Modelo de producción .*\(2\/3\)$/.test(title) &&
+        /se\s+degrada conforme las colas se mueven/.test(c.text)) continue;
     let n = Number.isInteger(c.n) && c.n > 0 && c.n <= MAX_CTX ? c.n : out.length + 1;
     while (used.has(n)) n++; // crafted duplicate/colliding n → next free slot
     used.add(n);
@@ -720,6 +726,7 @@ const handler = async (req) => {
 
   // Server-side synthetic recompute: descriptors in, verified text out.
   let synthSources = [];
+  let directForecast;
   if (body?.synthetics !== undefined) {
     const v = validateDescriptors(body.synthetics);
     if (v.error) return err(v.error);
@@ -736,12 +743,29 @@ const handler = async (req) => {
     for (const s of built.sources)
       if (!slotSafe(s.title) || !validSyntheticShape(s.source, s.text)) return err(SYNTH_ERR.rebuildFailed);
     synthSources = built.sources;
+    if (v.descriptors.length === 1 && v.descriptors[0].kind === "forecast_note") directForecast = built.sources[0];
   }
 
   const context = [
     ...synthSources,
     ...sanitizeContext(rawCtx, synthSources.map((s) => s.n), lang), // F3: solo chunks hash-verificados
   ];
+
+  // A direct chart request needs exact facts, not a model retyping numbers.
+  // Keep interpretive/priority-date/multi-question requests on the LLM path.
+  const directRequest = surface === "console" && query.length < 300 &&
+    /mu[eé]str|show|^forecast for|^pron[oó]stico de/i.test(query) &&
+    !/fecha de prioridad|priority date|cu[aá]ndo|when|por qu[eé]|why|compar|explain|explica|interpret|\b\d{4}\b|[?¿]/i.test(query);
+  if (directRequest && directForecast?.display) {
+    const {n, title, source, text, display} = directForecast;
+    console.log("[chat]", JSON.stringify({rid, lang, surface, n_synth:1, n_ctx:1,
+      tokens_in:0, tokens_out:0, ttft_ms:Date.now()-t0, total_ms:Date.now()-t0,
+      guard:false, truncated:null, error:null, mode:"verified_forecast"}));
+    return new Response(sse({t:"sources",sources:[{n,title,source,text}]}) +
+      sse({t:"delta",text:`**${title}**\n\n${display} [${n}]`}) + sse({t:"done"}), {
+      headers:{"content-type":"text/event-stream; charset=utf-8","cache-control":"no-cache","x-request-id":rid},
+    });
+  }
 
   const messages = [...normalizeHistory(body?.history), { role: "user", content: query }];
 

@@ -53,18 +53,26 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     throw new Error(`unexpected fetch ${u}`);
   });
 
-  const ask = async (lang: "es" | "en") => {
+  const ask = async (lang: "es" | "en", direct = false, queryOverride?: string) => {
     const { default: handler } = await import("../netlify/functions/chat.mjs");
     const res = await handler(new Request("https://visapredictai.com/.netlify/functions/chat", {
       method: "POST",
       headers: { origin: "http://localhost:3000", "content-type": "application/json" },
       body: JSON.stringify({
-        lang, query: lang === "en" ? "Show me the Mexico F4 forecast" : "Muéstrame el pronóstico de México F4", surface: "console",
+        lang, query: queryOverride ?? (direct
+          ? (lang === "en" ? "Show me the Mexico F4 forecast" : "Muéstrame el pronóstico de México F4")
+          : (lang === "en" ? "Explain the Mexico F4 forecast" : "Explica el pronóstico de México F4")), surface: "console",
         synthetics: [{ kind: "forecast_note", country: "mexico", category: "F4", table: "FAD", release_id: DATA_PINS.releaseId }],
       }),
     }));
     expect(res.status).toBe(200);
-    await res.text();
+    const raw = await res.text();
+    if (direct) {
+      expect(sentBodies).toHaveLength(0);
+      return raw.split("\n\n").flatMap(frame => {
+        try { const e = JSON.parse(frame.replace(/^data: /, "")); return e.t === "delta" ? [e.text] : []; } catch { return []; }
+      }).join("");
+    }
     expect(sentBodies).toHaveLength(1);
     return (JSON.parse(sentBodies[0]) as { system: string }).system;
   };
@@ -83,6 +91,18 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
   });
 
   for (const lang of ["es", "en"] as const) {
+    it(`${lang}: a direct forecast request returns verified figures without an LLM copying them`, async () => {
+      const answer = await ask(lang, true);
+      expect(answer).toContain(`[${LO95}, ${HI95}]`);
+      expect(answer).toContain("[1]");
+      expect(answer).toContain("F4");
+      expect(answer).not.toMatch(/being shown to the user|Se está mostrando al usuario|NO digas|do NOT/);
+    });
+    it(`${lang}: a priority-date question keeps the interpretive route`, async () => {
+      await ask(lang, false, lang === "en"
+        ? "Show the Mexico F4 forecast: when does it reach my priority date 2010-01-01?"
+        : "Muéstrame México F4: ¿cuándo alcanza mi fecha de prioridad 2010-01-01?");
+    });
     it(`${lang}: the 95 % band reaches the model as exact ISO dates, never decimal years`, async () => {
       const system = await ask(lang);
       expect(system).toContain(`[${LO95}, ${HI95}]`);
