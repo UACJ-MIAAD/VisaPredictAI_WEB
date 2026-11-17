@@ -5,14 +5,15 @@ import {ArrowUpRight,MoveHorizontal,Maximize2,RectangleHorizontal,X} from "lucid
 import {countryLabel,type Panel} from "@/lib/data/visa-panel";
 import {monthLabel} from "@/lib/visabot/analytics";
 import {useFocusTrap} from "@/lib/use-focus-trap";
+import {lockBodyScroll} from "@/lib/body-scroll-lock";
 
-type Props={panel:Panel|null;country:string;category:string;table:string;lang:"es"|"en";onCountry:(country:string)=>void;onCategory:(category:string)=>void;onTable:(table:string)=>void;wide:boolean;onWide:()=>void;onExpandedChange:(open:boolean)=>void;onExplore:()=>void};
+type Props={panel:Panel|null;panelError:boolean;country:string;category:string;table:string;lang:"es"|"en";onCountry:(country:string)=>void;onCategory:(category:string)=>void;onTable:(table:string)=>void;wide:boolean;onWide:()=>void;onExpandedChange:(open:boolean)=>void;onExplore:()=>void};
 const SHORT:Record<string,string>={mexico:"MX",india:"IN",china:"CN",philippines:"PH",all_chargeability:"RoW"};
 const stamp=(m:string)=>Date.parse(`${m}-01T00:00:00Z`);
 
 /** A real historical series, drawn as an instrument rather than decoration.
  * Every selectable point is an observation; C/U/missing dates break the path. */
-export function VisaObservatory({panel,country,category,table,lang,onCountry,onCategory,onTable,wide,onWide,onExpandedChange,onExplore}:Props){
+export function VisaObservatory({panel,panelError,country,category,table,lang,onCountry,onCategory,onTable,wide,onWide,onExpandedChange,onExplore}:Props){
   // The page owns one instrument. Keep paint IDs identical in the static export
   // and hydrated tree even when their surrounding React tree differs.
   const [expanded,setExpanded]=React.useState(false);
@@ -27,9 +28,8 @@ export function VisaObservatory({panel,country,category,table,lang,onCountry,onC
   React.useEffect(()=>{
     if(!expanded)return;
     dialog.current?.showModal();
-    const previous=document.body.style.overflow;
-    document.body.style.overflow="hidden";
-    return ()=>{document.body.style.overflow=previous;onExpandedChange(false);};
+    const releaseScroll=lockBodyScroll();
+    return ()=>{releaseScroll();onExpandedChange(false);};
   },[expanded,onExpandedChange,dialog]);
   const [inspected,setInspected]=React.useState<number|null>(null);
   React.useEffect(()=>setInspected(null),[country,category,table]);
@@ -53,10 +53,10 @@ export function VisaObservatory({panel,country,category,table,lang,onCountry,onC
     const chartWidth=full&&largeViewport?960:480;
     const right=chartWidth-32;
     const x=(i:number)=>32+(rows.length<2?0:(stamp(rows[i].bulletinMonth)-stamp(first!))/Math.max(1,stamp(last!)-stamp(first!)))*(chartWidth-64);
-    const segments:string[]=[];let part="";
-    values.forEach((v,i)=>{if(Number.isFinite(v))part+=`${part?" L":"M"}${x(i).toFixed(2)},${y(v).toFixed(2)}`;else if(part){segments.push(part);part="";}});
-    if(part)segments.push(part);
-    return <figure className="vb-observatory" aria-label={en?"Interactive bulletin history":"Historial interactivo del boletín"}>
+    const segments:string[]=[],isolated:number[]=[];let run:number[]=[];
+    const flush=()=>{if(run.length===1)isolated.push(run[0]);else if(run.length>1)segments.push(run.map((i,n)=>`${n?"L":"M"}${x(i).toFixed(2)},${y(values[i]).toFixed(2)}`).join(" "));run=[];};
+    values.forEach((v,i)=>{if(Number.isFinite(v))run.push(i);else flush();});flush();
+    return <figure className="vb-observatory" data-vb-full={full} aria-label={en?"Interactive bulletin history":"Historial interactivo del boletín"}>
     <div className="vb-observatory-orbits" aria-hidden="true"><i/><i/><i/><span/></div>
     <figcaption className="vb-observatory-head">
       <span className="vb-instrument-label"><span aria-hidden="true"/>{en?"THE DATE OBSERVATORY":"OBSERVATORIO DE FECHAS"}</span>
@@ -71,9 +71,9 @@ export function VisaObservatory({panel,country,category,table,lang,onCountry,onC
       </div>
     </div>
     <div className="vb-observatory-readout" aria-live="polite" aria-atomic="true">
-      <span>{countryLabel(country,lang)} <span aria-hidden="true">·</span> {selected?monthLabel(selected.bulletinMonth,lang):!panel?(en?"Loading the panel":"Cargando el panel"):(en?"No published observations":"Sin observaciones publicadas")}</span>
-      <strong data-vb-observation>{panel?display:"—"}</strong>
-      <span className="vb-readout-caption">{en?"Published cutoff · historical observation":"Corte publicado · observación histórica"}</span>
+      <span>{countryLabel(country,lang)} <span aria-hidden="true">·</span> {selected?monthLabel(selected.bulletinMonth,lang):panelError?(en?"Could not load the panel":"No se pudo cargar el panel"):!panel?(en?"Loading the panel":"Cargando el panel"):(en?"No published observations":"Sin observaciones publicadas")}</span>
+      <strong data-vb-observation>{panel?display:panelError?(en?"Load failed":"Error de carga"):"—"}</strong>
+      <span className="vb-readout-caption">{panelError?(en?"Close this view and reload to try again":"Cierra esta vista y recarga para volver a intentar"):(en?"Published cutoff · historical observation":"Corte publicado · observación histórica")}</span>
     </div>
     <div className="vb-observatory-plot">
       <svg viewBox={`0 0 ${chartWidth} 236`} role="img" aria-label={en?`Historical cutoffs for ${countryLabel(country,lang)} ${category} ${table}`:`Cortes históricos de ${countryLabel(country,lang)} ${category} ${table}`}>
@@ -88,9 +88,10 @@ export function VisaObservatory({panel,country,category,table,lang,onCountry,onC
           <path d={d} className="vb-instrument-glow" stroke={`url(#${id}-line)`} filter={`url(#${id}-glow)`}/>
           <path d={d} className="vb-instrument-line" pathLength="1" stroke={`url(#${id}-line)`}/>
         </React.Fragment>)}
+        {isolated.map(i=><circle key={`point-${i}`} cx={x(i)} cy={y(values[i])} r="3" fill="#82d0ff" stroke="#c9edff" strokeWidth="1"><title>{monthLabel(rows[i].bulletinMonth,lang)}: {rows[i].priorityDate}</title></circle>)}
         {selected&&<g className="vb-instrument-cursor"><path d={`M${x(at)} 30V198`}/>{Number.isFinite(values[at])&&<><circle cx={x(at)} cy={y(values[at])} r="13" className="vb-instrument-halo"/><circle cx={x(at)} cy={y(values[at])} r="4.5" className="vb-instrument-point"/></>}</g>}
         <g className="vb-instrument-axis"><text x="32" y="224">{first?monthLabel(first,lang):"—"}</text><text x={right} y="224" textAnchor="end">{last?monthLabel(last,lang):"—"}</text></g>
-        {rows.length===0&&<text x={chartWidth/2} y="125" textAnchor="middle" className="vb-instrument-empty">{!panel?(en?"Preparing the historical series":"Preparando la serie histórica"):(en?"No observations for this series":"Sin observaciones para esta serie")}</text>}
+        {rows.length===0&&<text x={chartWidth/2} y="125" textAnchor="middle" className="vb-instrument-empty">{panelError?(en?"Could not load the panel":"No se pudo cargar el panel"):!panel?(en?"Preparing the historical series":"Preparando la serie histórica"):(en?"No observations for this series":"Sin observaciones para esta serie")}</text>}
       </svg>
     </div>
     <div className="vb-observatory-scrubber">

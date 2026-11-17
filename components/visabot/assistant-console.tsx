@@ -26,6 +26,7 @@ import { useLang } from "@/components/lang-provider";
 import { localePath } from "@/lib/site-map";
 import { tr } from "@/lib/i18n";
 import { useFocusTrap } from "@/lib/use-focus-trap";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { track } from "@/lib/analytics";
 import { ChatThread } from "./chat-thread";
 import { AssistantSidebar, type ToolDef, type ToolKind } from "./assistant-sidebar";
@@ -196,9 +197,7 @@ export function AssistantConsole() {
 
   React.useEffect(() => {
     if (!stage) return;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = overflow; };
+    return lockBodyScroll();
   }, [stage]);
 
   const runTool = (kind: ToolKind) => {
@@ -341,9 +340,9 @@ export function AssistantConsole() {
                       <button className="vb-hero-ask" onClick={()=>inputRef.current?.focus({preventScroll:true})}>{tr(lang,"acAskNow")} <ArrowUpRight className="h-4 w-4" aria-hidden/></button>
                       <p className="vb-hero-assurance"><span aria-hidden="true"/>{tr(lang,"acObservatoryAssurance")}</p>
                     </div>
-                    <VisaObservatory panel={panel} country={country} category={category} table={table} lang={lang} onCountry={setCountry}
+                    <VisaObservatory panel={panel} panelError={panelErr} country={country} category={category} table={table} lang={lang} onCountry={setCountry}
                       onCategory={setCategory} onTable={setTable} wide={observatoryWide} onWide={()=>setObservatoryWide(v=>!v)} onExpandedChange={setObservatoryOpen}
-                      onExplore={()=>sendQ(starters[0].query)}/>
+                      onExplore={()=>{sendQ(starters[0].query);requestAnimationFrame(()=>inputRef.current?.focus({preventScroll:true}));}}/>
                   </div>
                   <div className="vb-journey-label"><span>{tr(lang,"acChoosePath")}</span><span aria-hidden="true">01 — 03</span></div>
                   <div className="vb-start-grid">

@@ -543,7 +543,7 @@ main:focus {
 @media (min-width:740px) { .vb-hero-composition[data-observatory-wide=true] > .vb-observatory { display:grid; grid-template-columns:minmax(0,0.65fr) minmax(0,1.35fr); } .vb-hero-composition[data-observatory-wide=true] > .vb-observatory > :is(.vb-observatory-head,.vb-observatory-controls,.vb-observatory-scrubber,.vb-observatory-footer) { grid-column:1/-1; } .vb-hero-composition[data-observatory-wide=true] > .vb-observatory > .vb-observatory-plot { grid-column:2; grid-row:3; } }
 .vb-observatory-readout { position: relative; display: flex; flex-direction: column; padding: 1.4rem 1.3rem 0; }
 .vb-observatory-readout > span:first-child { color: var(--vb-muted); font-size: 0.75rem; }
-.vb-observatory-readout strong { margin-top: 0.45rem; color: var(--vb-paper); font-family: var(--font-playfair),Georgia,serif; font-weight: 500; font-size: clamp(1.6rem,3.4cqi,2.5rem); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+.vb-observatory-readout strong { margin-top: 0.45rem; color: var(--vb-paper); font-family: var(--font-playfair),Georgia,serif; font-weight: 500; font-size: clamp(1.6rem,3.4cqi,2.5rem); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .vb-observatory-readout .vb-readout-caption { margin-top: 0.35rem; font-size: 0.63rem; color: var(--vb-muted); }
 .vb-observatory-plot { position: relative; margin: 0.8rem 0.45rem 0; }
 .vb-observatory-plot svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -583,9 +583,9 @@ main:focus {
   .vb-stage .vb-hero-edition { margin-top: 1rem; }
   .vb-stage .vb-home-lead { font-size: 0.88rem; margin-bottom: 0.9rem; }
   .vb-stage .vb-hero-assurance { display: none; }
-  .vb-stage .vb-observatory-readout { padding-top: 0.9rem; }
-  .vb-stage .vb-observatory-readout strong { font-size: 1.9rem; }
-  .vb-stage .vb-observatory-plot { max-width: 280px; margin-inline: auto; }
+  .vb-stage .vb-observatory[data-vb-full=false] .vb-observatory-readout { padding-top: 0.9rem; }
+  .vb-stage .vb-observatory[data-vb-full=false] .vb-observatory-readout strong { font-size: 1.9rem; }
+  .vb-stage .vb-observatory[data-vb-full=false] .vb-observatory-plot { max-width: 280px; margin-inline: auto; }
   .vb-stage .vb-journey-label { margin-top: 1.2rem; }
 }
 @media (max-width: 739px) {
