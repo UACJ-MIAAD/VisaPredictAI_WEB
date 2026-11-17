@@ -160,3 +160,25 @@ test("presentation cards keep every category and a selected From month readable"
     }
   }
 });
+
+test("compact presentation allows native select font metrics to vary",async({page,context})=>{
+  await blockExternal(context);await page.setViewportSize({width:1280,height:720});
+  for(const en of [false,true]){
+    await page.goto(en?"/en/asistente/":"/asistente/");
+    await page.evaluate(()=>document.fonts.ready);
+    await page.getByRole("button",{name:en?"Presentation mode":"Modo presentación",exact:true}).click();
+    await page.addStyleTag({content:".vb-observatory-controls select { font-size:calc(0.8rem + 1px) !important; }"});
+    const root=page.locator('figure[data-vb-full="false"]');
+    for(const c of panel.categories)for(const t of panel.tables){
+      await root.getByRole("combobox",{name:en?"Observatory category":"Categoría del observatorio",exact:true}).selectOption(c);
+      await root.getByRole("combobox",{name:en?"Observatory table":"Tabla del observatorio",exact:true}).selectOption(t);
+      const rows=panel.rows.filter(r=>r.country==="mexico"&&r.category===c&&r.table===t);
+      if(rows.length)await setHistoryStart(root,(rows.find(r=>r.bulletinMonth.endsWith("-09"))??rows[0]).bulletinMonth,en);
+      const clipped=await root.locator("select").evaluateAll(es=>es.filter(n=>n.scrollWidth>n.clientWidth).map(n=>({name:n.getAttribute("aria-label"),value:(n as HTMLSelectElement).value,client:n.clientWidth,scroll:n.scrollWidth})));
+      expect(clipped,`font metrics ${en?"en":"es"}/${c}/${t}`).toEqual([]);
+      expect(await root.locator(".vb-observatory-controls").evaluate(el=>el.scrollWidth<=el.clientWidth),`controls ${en?"en":"es"}/${c}/${t}`).toBe(true);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`document ${en?"en":"es"}/${c}/${t}`).toBe(true);
+    }
+    await expect(root).toBeInViewport({ratio:0.95});
+  }
+});
