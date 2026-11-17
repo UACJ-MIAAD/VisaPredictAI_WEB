@@ -14,6 +14,7 @@
 // section ids are consumed verbatim, so no deep link changes.
 
 import * as React from "react";
+import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -126,12 +127,11 @@ export function SiteNav() {
 
   React.useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const releaseScroll = lockBodyScroll();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
+      releaseScroll();
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
