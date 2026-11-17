@@ -12,7 +12,7 @@ const FOCUSABLE =
  * element on close. Escape handling stays with the caller (it owns the open
  * state). Attach the returned ref to the dialog's content container.
  */
-export function useFocusTrap<T extends HTMLElement>(active: boolean) {
+export function useFocusTrap<T extends HTMLElement>(active: boolean, preserveContainedFocus = false) {
   const ref = useRef<T | null>(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean) {
         (el) => el.offsetParent !== null || el === document.activeElement,
       );
 
-    (focusables()[0] ?? container).focus();
+    if (!preserveContainedFocus || !previous || !container.contains(previous)) (focusables()[0] ?? container).focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
@@ -48,7 +48,7 @@ export function useFocusTrap<T extends HTMLElement>(active: boolean) {
       document.removeEventListener("keydown", onKeyDown, true);
       previous?.focus();
     };
-  }, [active]);
+  }, [active,preserveContainedFocus]);
 
   return ref;
 }

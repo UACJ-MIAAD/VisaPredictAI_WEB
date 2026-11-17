@@ -50,8 +50,8 @@ for(const lang of ["es","en"] as const)for(const theme of ["light","dark"] as co
 test("Current remains Current, and reduced motion stops the trace reveal",async({page,context})=>{
   await blockExternal(context);await page.emulateMedia({reducedMotion:"reduce"});await page.goto("/asistente/");
   await expect(page.locator("[data-vb-observation]")).not.toHaveText("—");
-  await page.getByRole("combobox",{name:/Categoría/}).selectOption("F2A");
-  await page.getByRole("combobox",{name:/Tabla/}).selectOption("DFF");
+  await page.getByRole("combobox",{name:"Categoría del observatorio",exact:true}).selectOption("F2A");
+  await page.getByRole("combobox",{name:"Tabla del observatorio",exact:true}).selectOption("DFF");
   await expect(page.locator("[data-vb-observation]")).toHaveText("Current");
   await expect(page.locator(".vb-instrument-line").first()).toHaveCSS("animation-name","none");
 });
@@ -62,4 +62,53 @@ test("the main scene fits a 720p presentation viewport",async({page,context})=>{
   await expect(page.locator(".vb-observatory")).toBeInViewport({ratio:0.95});
   await expect(page.getByRole("button",{name:"Haz tu pregunta",exact:true})).toBeInViewport();
   await page.screenshot({path:"e2e-screenshots/observatory-stage-720.png",animations:"disabled"});
+});
+
+test("all categories and both tables are selectable in the instrument",async({page,context})=>{
+  await blockExternal(context);await page.goto("/asistente/");
+  const instrument=page.getByRole("figure",{name:"Historial interactivo del boletín"});
+  const category=instrument.getByRole("combobox",{name:"Categoría del observatorio",exact:true});
+  const table=instrument.getByRole("combobox",{name:"Tabla del observatorio",exact:true});
+  await expect(category).toBeEnabled();
+  expect(await category.locator("option").evaluateAll(es=>es.map(e=>(e as HTMLOptionElement).value))).toEqual(panel.categories);
+  for(const c of panel.categories)for(const t of panel.tables){
+    await category.selectOption(c);await table.selectOption(t);
+    const last=panel.rows.filter(r=>r.country==="mexico"&&r.category===c&&r.table===t).sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth)).at(-1);
+    await expect(instrument.locator("[data-vb-observation]")).toHaveText(!last?"Sin observación":last.status==="C"?"Current":last.status==="U"?"No disponible":last.priorityDate??"Sin observación");
+    await expect(page.locator('[data-vb-starter="forecast"]')).toContainText(`México · ${c} · ${t}`);
+  }
+});
+
+for(const [lang,width] of [["es",320],["es",1280],["en",1280]] as const)test(`expanded observatory ${lang} ${width} preserves context and keyboard focus`,async({page,context})=>{
+  await blockExternal(context);await page.setViewportSize({width,height:720});await page.goto(lang==="es"?"/asistente/":"/en/asistente/");
+  const en=lang==="en";
+  const instrument=page.getByRole("figure",{name:en?"Interactive bulletin history":"Historial interactivo del boletín"});
+  await expect(instrument.locator("[data-vb-observation]")).not.toHaveText("—");
+  const wide=instrument.getByRole("button",{name:en?"Wide view":"Vista horizontal",exact:true});
+  await wide.click();await expect(wide).toHaveAttribute("aria-pressed","true");
+  if(width>739){const box=await instrument.boundingBox();expect(box!.width).toBeGreaterThan(box!.height);}
+  await page.getByRole("button",{name:en?"Presentation mode":"Modo presentación",exact:true}).click();
+  const open=instrument.getByRole("button",{name:en?"Full screen":"Pantalla completa",exact:true});
+  await open.click();
+  const modal=page.getByRole("dialog",{name:en?"Full screen observatory":"Observatorio en pantalla completa",exact:true});
+  await expect(modal).toBeVisible();
+  await modal.getByRole("combobox",{name:en?"Observatory category":"Categoría del observatorio",exact:true}).selectOption("F2A");
+  await modal.getByRole("combobox",{name:en?"Observatory table":"Tabla del observatorio",exact:true}).selectOption("DFF");
+  await expect(modal.locator("[data-vb-observation]")).toHaveText("Current");
+  await modal.getByRole("slider").press("Home");
+  const inspected=await modal.locator("[data-vb-observation]").innerText();
+  const sliderValue=await modal.getByRole("slider").inputValue();
+  const close=modal.getByRole("button",{name:en?"Close full screen":"Cerrar pantalla completa",exact:true});
+  await close.focus();
+  for(let i=0;i<14;i++){await page.keyboard.press("Tab");expect(await modal.evaluate(d=>d.contains(document.activeElement))).toBe(true);}
+  const issues=await new AxeBuilder({page}).include(".vb-observatory-dialog").analyze();
+  expect(issues.violations.filter(v=>v.impact==="serious"||v.impact==="critical").map(v=>v.id)).toEqual([]);
+  expect(await modal.evaluate(d=>d.scrollWidth<=d.clientWidth)).toBe(true);
+  await page.screenshot({path:`e2e-screenshots/observatory-full-${lang}-${width}.png`,animations:"disabled"});
+  await page.keyboard.press("Escape");await expect(modal).not.toBeVisible();
+  await expect(open).toBeFocused();
+  await expect(page.getByRole("button",{name:en?"Exit presentation":"Salir de presentación",exact:true})).toBeVisible();
+  await expect(instrument.locator("[data-vb-observation]")).toHaveText(inspected);
+  await expect(instrument.getByRole("slider")).toHaveValue(sliderValue);
+  await open.click();await modal.getByRole("button",{name:en?"Close full screen":"Cerrar pantalla completa",exact:true}).click();await expect(open).toBeFocused();
 });

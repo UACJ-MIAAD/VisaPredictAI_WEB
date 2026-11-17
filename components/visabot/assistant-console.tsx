@@ -78,6 +78,8 @@ export function AssistantConsole() {
   const [suggestions, setSuggestions] = React.useState<string[]>([]);
   const [navOpen, setNavOpen] = React.useState(false); // mobile sidebar drawer
   const [stage, setStage] = React.useState(false);
+  const [observatoryWide,setObservatoryWide]=React.useState(false);
+  const [observatoryOpen,setObservatoryOpen]=React.useState(false);
   // J2 — ultra-wide (≥1920px): the sidebar splits into a controls-only left
   // rail + an insights right rail (KPIs, quick questions). Driven by
   // matchMedia instead of CSS-hidden duplicates so every control exists
@@ -92,7 +94,7 @@ export function AssistantConsole() {
   }, []);
   const [howOpen, setHowOpen] = React.useState(false); // "how it works" modal
   const [promptsOpen, setPromptsOpen] = React.useState(false); // prompt-library modal
-  const stageTrapRef = useFocusTrap<HTMLDivElement>(stage && !navOpen && !howOpen && !promptsOpen);
+  const stageTrapRef = useFocusTrap<HTMLDivElement>(stage && !navOpen && !howOpen && !promptsOpen && !observatoryOpen,true);
   const howTrapRef = useFocusTrap<HTMLDivElement>(howOpen);
   const promptsTrapRef = useFocusTrap<HTMLDivElement>(promptsOpen);
   const navTrapRef = useFocusTrap<HTMLElement>(navOpen); // mobile tools drawer (finding 10)
@@ -184,12 +186,13 @@ export function AssistantConsole() {
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") {
+      if(observatoryOpen)return;
       if (!navOpen && !howOpen && !promptsOpen) setStage(false);
       setNavOpen(false); setHowOpen(false); setPromptsOpen(false);
     } };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [navOpen, howOpen, promptsOpen]);
+  }, [navOpen, howOpen, promptsOpen,observatoryOpen]);
 
   React.useEffect(() => {
     if (!stage) return;
@@ -329,7 +332,7 @@ export function AssistantConsole() {
             <div className="vb-thread-inner mx-auto min-w-0 max-w-[820px] space-y-5 2xl:max-w-[900px]">
               {messages.length === 0 ? (
                 <div className="vb-home">
-                  <div className="vb-hero-composition">
+                  <div className="vb-hero-composition" data-observatory-wide={observatoryWide}>
                     <div className="vb-hero-story">
                       <div className="vb-home-eyebrow"><BookOpen className="h-3.5 w-3.5" aria-hidden /> Visa Bulletin <span aria-hidden>·</span> {monthLabel(latestMonth, lang)}</div>
                       <div className="vb-hero-edition" aria-hidden="true">VISABOT <span>/</span> {tr(lang,"acObservatoryEdition")}</div>
@@ -339,6 +342,7 @@ export function AssistantConsole() {
                       <p className="vb-hero-assurance"><span aria-hidden="true"/>{tr(lang,"acObservatoryAssurance")}</p>
                     </div>
                     <VisaObservatory panel={panel} country={country} category={category} table={table} lang={lang} onCountry={setCountry}
+                      onCategory={setCategory} onTable={setTable} wide={observatoryWide} onWide={()=>setObservatoryWide(v=>!v)} onExpandedChange={setObservatoryOpen}
                       onExplore={()=>sendQ(starters[0].query)}/>
                   </div>
                   <div className="vb-journey-label"><span>{tr(lang,"acChoosePath")}</span><span aria-hidden="true">01 — 03</span></div>
