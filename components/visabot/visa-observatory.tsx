@@ -40,6 +40,14 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
   // A series with different coverage must never display "All history" while
   // silently retaining a start month that is absent from its options.
   const validFromMonth=fromMonth&&series.some(r=>r.bulletinMonth===fromMonth)?fromMonth:"";
+  const fromYear=validFromMonth.slice(0,4);
+  const years=[...new Set(series.map(r=>r.bulletinMonth.slice(0,4)))];
+  const yearMonths=series.filter(r=>r.bulletinMonth.startsWith(`${fromYear}-`)).map(r=>r.bulletinMonth.slice(5));
+  const changeStart=(value:string)=>{setFromMonth(value);setInspected(null);};
+  const changeYear=(year:string)=>{
+    const available=series.filter(r=>r.bulletinMonth.startsWith(`${year}-`));
+    changeStart(year?(available.find(r=>r.bulletinMonth.slice(5)===validFromMonth.slice(5))??available[0])?.bulletinMonth??"":"");
+  };
   const rows=React.useMemo(()=>validFromMonth?series.filter(r=>r.bulletinMonth>=validFromMonth):series,[series,validFromMonth]);
   const at=inspected===null?rows.length-1:Math.min(inspected,rows.length-1);
   const selected=rows[at];
@@ -75,7 +83,10 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
         {!full&&<button type="button" aria-label={en?"Wide view":"Vista horizontal"} aria-pressed={wide} onClick={onWide}><RectangleHorizontal size={17} aria-hidden="true"/></button>}
         <button ref={full?undefined:expandButton} type="button" aria-label={full?(en?"Close full screen":"Cerrar pantalla completa"):(en?"Full screen":"Pantalla completa")} onClick={()=>{if(full)dialog.current?.close();else{onExpandedChange(true);setExpanded(true);}}}>{full?<X size={17} aria-hidden="true"/>:<Maximize2 size={17} aria-hidden="true"/>}</button>
       </div>
-      <label className="vb-observatory-history-start"><span>{en?"From":"Desde"}</span><select aria-label={en?"From month":"Desde el mes"} value={validFromMonth} disabled={!series.length} onChange={e=>{setFromMonth(e.target.value);setInspected(null);}}><option value="">{en?"All history":"Todo el historial"}</option>{series.map(r=><option key={r.bulletinMonth} value={r.bulletinMonth}>{monthLabel(r.bulletinMonth,lang)}</option>)}</select></label>
+      <div className="vb-observatory-history-start" role="group" aria-label={en?"History starts at":"Inicio del historial"}>
+        <label><span>{en?"From · month":"Desde · mes"}</span><select aria-label={en?"From month":"Desde el mes"} value={validFromMonth.slice(5)} disabled={!fromYear} onChange={e=>changeStart(`${fromYear}-${e.target.value}`)}><option value="" disabled>{en?"Month":"Mes"}</option>{yearMonths.map(m=><option key={m} value={m}>{new Intl.DateTimeFormat(en?"en-US":"es-MX",{month:"long",timeZone:"UTC"}).format(new Date(`${fromYear}-${m}-01T00:00:00Z`))}</option>)}</select></label>
+        <label><span>{en?"Year":"Año"}</span><select aria-label={en?"From year":"Desde el año"} value={fromYear} disabled={!series.length} onChange={e=>changeYear(e.target.value)}><option value="">{en?"All":"Todo"}</option>{years.map(year=><option key={year} value={year}>{year}</option>)}</select></label>
+      </div>
     </div>
     <div className="vb-observatory-readout" aria-live="polite" aria-atomic="true">
       <span>{countryLabel(country,lang)} <span aria-hidden="true">·</span> {selected?monthLabel(selected.bulletinMonth,lang):panelError?(en?"Could not load the panel":"No se pudo cargar el panel"):!panel?(en?"Loading the panel":"Cargando el panel"):(en?"No published observations":"Sin observaciones publicadas")}</span>
