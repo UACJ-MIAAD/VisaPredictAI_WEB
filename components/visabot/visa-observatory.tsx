@@ -10,6 +10,7 @@ import {lockBodyScroll} from "@/lib/body-scroll-lock";
 type Props={panel:Panel|null;panelError:boolean;country:string;category:string;table:string;lang:"es"|"en";onCountry:(country:string)=>void;onCategory:(category:string)=>void;onTable:(table:string)=>void;wide:boolean;onWide:()=>void;onExpandedChange:(open:boolean)=>void;onExplore:()=>void};
 const SHORT:Record<string,string>={mexico:"MX",india:"IN",china:"CN",philippines:"PH",all_chargeability:"RoW"};
 const stamp=(m:string)=>Date.parse(`${m}-01T00:00:00Z`);
+const monthNumber=(m:string)=>Number(m.slice(0,4))*12+Number(m.slice(5,7));
 
 /** A real historical series, drawn as an instrument rather than decoration.
  * Every selectable point is an observation; C/U/missing dates break the path. */
@@ -32,9 +33,14 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
     return ()=>{releaseScroll();onExpandedChange(false);};
   },[expanded,onExpandedChange,dialog]);
   const [inspected,setInspected]=React.useState<number|null>(null);
-  React.useEffect(()=>setInspected(null),[country,category,table]);
-  const rows=React.useMemo(()=>panel?.rows.filter(r=>r.country===country&&r.category===category&&r.table===table)
-    .sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth)).slice(-36)??[],[panel,country,category,table]);
+  const [fromMonth,setFromMonth]=React.useState("");
+  React.useEffect(()=>{setInspected(null);setFromMonth("");},[country,category,table]);
+  const series=React.useMemo(()=>panel?.rows.filter(r=>r.country===country&&r.category===category&&r.table===table)
+    .sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth))??[],[panel,country,category,table]);
+  // A series with different coverage must never display "All history" while
+  // silently retaining a start month that is absent from its options.
+  const validFromMonth=fromMonth&&series.some(r=>r.bulletinMonth===fromMonth)?fromMonth:"";
+  const rows=React.useMemo(()=>validFromMonth?series.filter(r=>r.bulletinMonth>=validFromMonth):series,[series,validFromMonth]);
   const at=inspected===null?rows.length-1:Math.min(inspected,rows.length-1);
   const selected=rows[at];
   const en=lang==="en";
@@ -47,7 +53,7 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
   const low=min-pad,high=max+pad;
   const first=rows[0]?.bulletinMonth,last=rows.at(-1)?.bulletinMonth;
   const y=(v:number)=>190-(v-low)/(high-low)*142;
-  const tick=(v:number)=>new Intl.DateTimeFormat(en?"en-US":"es-MX",{timeZone:"UTC",...(max-min>365*86400000?{year:"numeric" as const}:{month:"short" as const,year:"numeric" as const})}).format(new Date(v));
+  const tick=(v:number)=>new Intl.DateTimeFormat(en?"en-US":"es-MX",{timeZone:"UTC",...(max-min>3*365*86400000?{year:"numeric" as const}:{month:"short" as const,year:"numeric" as const})}).format(new Date(v));
   const instrument=(full:boolean)=>{
     const id=`vb-observatory-${full?"expanded":"inline"}-${country}-${category}-${table}`;
     const chartWidth=full&&largeViewport?960:480;
@@ -55,7 +61,7 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
     const x=(i:number)=>32+(rows.length<2?0:(stamp(rows[i].bulletinMonth)-stamp(first!))/Math.max(1,stamp(last!)-stamp(first!)))*(chartWidth-64);
     const segments:string[]=[],isolated:number[]=[];let run:number[]=[];
     const flush=()=>{if(run.length===1)isolated.push(run[0]);else if(run.length>1)segments.push(run.map((i,n)=>`${n?"L":"M"}${x(i).toFixed(2)},${y(values[i]).toFixed(2)}`).join(" "));run=[];};
-    values.forEach((v,i)=>{if(Number.isFinite(v))run.push(i);else flush();});flush();
+    values.forEach((v,i)=>{if(i&&monthNumber(rows[i].bulletinMonth)-monthNumber(rows[i-1].bulletinMonth)!==1)flush();if(Number.isFinite(v))run.push(i);else flush();});flush();
     return <figure className="vb-observatory" data-vb-full={full} aria-label={en?"Interactive bulletin history":"Historial interactivo del boletín"}>
     <div className="vb-observatory-orbits" aria-hidden="true"><i/><i/><i/><span/></div>
     <figcaption className="vb-observatory-head">
@@ -69,6 +75,7 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
         {!full&&<button type="button" aria-label={en?"Wide view":"Vista horizontal"} aria-pressed={wide} onClick={onWide}><RectangleHorizontal size={17} aria-hidden="true"/></button>}
         <button ref={full?undefined:expandButton} type="button" aria-label={full?(en?"Close full screen":"Cerrar pantalla completa"):(en?"Full screen":"Pantalla completa")} onClick={()=>{if(full)dialog.current?.close();else{onExpandedChange(true);setExpanded(true);}}}>{full?<X size={17} aria-hidden="true"/>:<Maximize2 size={17} aria-hidden="true"/>}</button>
       </div>
+      <label className="vb-observatory-history-start"><span>{en?"From":"Desde"}</span><select aria-label={en?"From month":"Desde el mes"} value={validFromMonth} disabled={!series.length} onChange={e=>{setFromMonth(e.target.value);setInspected(null);}}><option value="">{en?"All history":"Todo el historial"}</option>{series.map(r=><option key={r.bulletinMonth} value={r.bulletinMonth}>{monthLabel(r.bulletinMonth,lang)}</option>)}</select></label>
     </div>
     <div className="vb-observatory-readout" aria-live="polite" aria-atomic="true">
       <span>{countryLabel(country,lang)} <span aria-hidden="true">·</span> {selected?monthLabel(selected.bulletinMonth,lang):panelError?(en?"Could not load the panel":"No se pudo cargar el panel"):!panel?(en?"Loading the panel":"Cargando el panel"):(en?"No published observations":"Sin observaciones publicadas")}</span>

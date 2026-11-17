@@ -4,6 +4,7 @@ import {buildPanel,countryLabel} from "../../lib/data/panel-core.mjs";
 import {blockExternal,forceTheme} from "./helpers";
 
 const panel=buildPanel(readFileSync("public/data/visa_panel_long.csv","utf8"));
+const monthNumber=(m:string)=>Number(m.slice(0,4))*12+Number(m.slice(5,7));
 const cases=[
   {name:"mobile portrait",width:320,height:568,lang:"es",theme:"light"},
   {name:"mobile landscape",width:844,height:390,lang:"en",theme:"dark"},
@@ -32,7 +33,7 @@ test(`all 210 series in full screen · ${profile.name}`,async({page,context})=>{
     if(profile.name.startsWith("mobile"))await countryButton.tap();else await countryButton.click();
     for(const c of panel.categories)for(const t of panel.tables){
       await category.selectOption(c);await table.selectOption(t);
-      const rows=panel.rows.filter(r=>r.country===country&&r.category===c&&r.table===t).sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth)).slice(-36);
+      const rows=panel.rows.filter(r=>r.country===country&&r.category===c&&r.table===t).sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth));
       lastRows=rows;
       const label=(i:number)=>{const r=rows[i];return !r?(en?"No observation":"Sin observación"):r.status==="C"?"Current":r.status==="U"?(en?"Unavailable":"No disponible"):r.priorityDate??(en?"No observation":"Sin observación");};
       if(rows.length>1)await slider.press("End");
@@ -51,7 +52,7 @@ test(`all 210 series in full screen · ${profile.name}`,async({page,context})=>{
       });
       expect(problems,`${country}/${c}/${t} SVG`).toEqual([]);
       const runs:number[]=[];let size=0;
-      for(const row of rows){if(row.status==="F"&&row.priorityDate)size++;else if(size){runs.push(size);size=0;}}if(size)runs.push(size);
+      for(let i=0;i<rows.length;i++){const row=rows[i];if(i&&monthNumber(row.bulletinMonth)-monthNumber(rows[i-1].bulletinMonth)!==1&&size){runs.push(size);size=0;}if(row.status==="F"&&row.priorityDate)size++;else if(size){runs.push(size);size=0;}}if(size)runs.push(size);
       expect(await modal.locator(".vb-instrument-line").count(),`${country}/${c}/${t} dated runs`).toBe(runs.filter(n=>n>1).length);
       expect(await modal.locator('svg[role="img"] circle').evaluateAll(es=>es.filter(e=>!e.closest(".vb-instrument-cursor")).length),`${country}/${c}/${t} isolated observations`).toBe(runs.filter(n=>n===1).length);
       expect(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth),`${country}/${c}/${t} overflow`).toBe(true);
@@ -141,8 +142,9 @@ test("an isolated published F cutoff remains visible between status gaps",async(
   await instrument.getByRole("button",{name:"China (CN)",exact:true}).click();
   await instrument.getByRole("combobox",{name:"Categoría del observatorio",exact:true}).selectOption("EB5_RC");
   await instrument.getByRole("combobox",{name:"Tabla del observatorio",exact:true}).selectOption("FAD");
-  const rows=panel.rows.filter(r=>r.country==="china"&&r.category==="EB5_RC"&&r.table==="FAD").sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth)).slice(-36);
-  const singletons=rows.filter((r,i)=>r.status==="F"&&r.priorityDate&&rows[i-1]?.status!=="F"&&rows[i+1]?.status!=="F");
+  const rows=panel.rows.filter(r=>r.country==="china"&&r.category==="EB5_RC"&&r.table==="FAD").sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth));
+  const connected=(a:typeof rows[number]|undefined,b:typeof rows[number]|undefined)=>a?.status==="F"&&b?.status==="F"&&a.priorityDate&&b.priorityDate&&monthNumber(b.bulletinMonth)-monthNumber(a.bulletinMonth)===1;
+  const singletons=rows.filter((r,i)=>r.status==="F"&&r.priorityDate&&!connected(rows[i-1],r)&&!connected(r,rows[i+1]));
   expect(singletons.length).toBeGreaterThan(0);
   // These observations must be visible without first selecting their month.
   const markers=instrument.locator('svg[role="img"] circle');

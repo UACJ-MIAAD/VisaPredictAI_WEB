@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 import {buildPanel} from "../../lib/data/panel-core.mjs";
 import {blockExternal,forceTheme} from "./helpers";
 const panel=buildPanel(readFileSync("public/data/visa_panel_long.csv","utf8"));
-const series=(country:string)=>panel.rows.filter(r=>r.country===country&&r.category==="F3"&&r.table==="FAD").sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth)).slice(-36);
+const series=(country:string)=>panel.rows.filter(r=>r.country===country&&r.category==="F3"&&r.table==="FAD").sort((a,b)=>a.bulletinMonth.localeCompare(b.bulletinMonth));
 for(const lang of ["es","en"] as const)for(const theme of ["light","dark"] as const)for(const width of [320,1280]){
   test(`observatory ${lang} ${theme} ${width}`,async({page,context})=>{
     await blockExternal(context);await forceTheme(page,theme);await page.setViewportSize({width,height:1000});
