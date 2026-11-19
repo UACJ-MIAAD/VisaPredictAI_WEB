@@ -54,7 +54,7 @@ for (const lang of ["es", "en"] as const) for (const theme of ["light", "dark"] 
     else await expect(inst.locator("[data-fc-projected]")).toHaveAttribute("data-fc-none", india.none!);
 
     // a list row loads its series into the instrument
-    const row = page.locator(".fc-row-main").filter({ hasText: en ? /^Philippines · F4 · FAD/ : /^Filipinas · F4 · FAD/ });
+    const row = page.getByRole("button", { name: en ? /^Philippines · F4 · FAD\s*,/ : /^Filipinas · F4 · FAD\s*,/ });
     await row.click();
     await expect(inst.locator(".fc-title")).toContainText("F4");
     await expect(page).toHaveURL(/series=philippines%7CF4%7CFAD/);

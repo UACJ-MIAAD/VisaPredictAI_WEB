@@ -159,10 +159,15 @@ export function forecastToCsv(key: string, points: ForecastPoint[], base?: numbe
   // With the series' base epoch the file also carries the cutoffs as ISO dates
   // (the raw `days` are days since that base, meaningless on their own).
   const iso = base != null;
-  const d = (x: number) => epochToDate(Math.round((base as number) + x));
+  // a value at or past its bulletin's own month is "C" (Current), not a date
+  const d0 = (x: number) => epochToDate(Math.round((base as number) + x));
   const head = "series,date,days,lo80,hi80,lo95,hi95" + (iso ? ",cutoff,lo80_date,hi80_date,lo95_date,hi95_date" : "");
-  const rows = points.map((p) => `${key},${p.date},${p.days},${p.lo80},${p.hi80},${p.lo95},${p.hi95}` +
-    (iso ? `,${d(p.days)},${d(p.lo80)},${d(p.hi80)},${d(p.lo95)},${d(p.hi95)}` : ""));
+  const rows = points.map((p) => {
+    const cap = `${p.date.slice(0, 7)}-01`;
+    const d = (x: number) => { const v = d0(x); return v >= cap ? "C" : v; };
+    return `${key},${p.date},${p.days},${p.lo80},${p.hi80},${p.lo95},${p.hi95}` +
+      (iso ? `,${d(p.days)},${d(p.lo80)},${d(p.hi80)},${d(p.lo95)},${d(p.hi95)}` : "");
+  });
   return [head, ...rows].join("\n") + "\n";
 }
 
@@ -247,6 +252,18 @@ export function seriesReadout(rows: VisaPanelRow[], points: ForecastPoint[] | nu
   };
 }
 
+// A bulletin cannot publish a cutoff later than its own month (by then the
+// category is Current), so every projected value is capped at the start of its
+// point's month before it reaches a chart, an export or the checker.
+export function capPoints(points: ForecastPoint[] | null | undefined, base: number | null): ForecastPoint[] | null {
+  if (!points || base == null) return points ?? null;
+  return points.map((p) => {
+    const cap = isoDays(`${p.date.slice(0, 7)}-01`) - base;
+    const c = (v: number) => Math.min(v, cap);
+    return { ...p, days: c(p.days), lo80: c(p.lo80), hi80: c(p.hi80), lo95: c(p.lo95), hi95: c(p.hi95) };
+  });
+}
+
 // "Does it reach my priority date?" A priority date is reached when it is
 // EARLIER than the cutoff (State Department rule), so equal is not yet. With the
 // uncertainty spelled out: the month the central path first passes it, and the
@@ -268,10 +285,13 @@ export function reachVerdict(r: SeriesReadout, points: ForecastPoint[] | null | 
   const month = (p: ForecastPoint | undefined) => (p ? p.date.slice(0, 7) : null);
   const end = points.at(-1)!;
   const central = month(points.find((p) => at(p.days) > x));
-  const early = month(points.find((p) => at(p.hi95) > x));
-  // the pessimistic edge only counts once it stays past the date to the horizon end
-  const lateIdx = points.findIndex((p, i) => points.slice(i).every((q) => at(q.lo95) > x));
-  const late = lateIdx >= 0 ? month(points[lateIdx]) : null;
+  // each band edge only counts once it stays past the date to the horizon end
+  const from = (pick: (p: ForecastPoint) => number) => {
+    const i = points.findIndex((_, k) => points.slice(k).every((q) => at(pick(q)) > x));
+    return i >= 0 ? month(points[i]) : null;
+  };
+  const early = from((p) => p.hi95);
+  const late = from((p) => p.lo95);
   const last = month(end) as string;
   const status = central ? (at(end.days) > x ? "within" : "crossedBack") : early ? "band" : "beyond";
   return { status, central, early, late, last };

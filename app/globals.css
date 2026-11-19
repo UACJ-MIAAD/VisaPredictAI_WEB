@@ -877,6 +877,8 @@ main:focus {
 @media (max-width: 640px) {
   .fc-instrument { padding: 0; border: 0; border-radius: 0; background: transparent; }
   .fc-title { margin-top: 1rem; }
-  .fc-tables-hint { display: none; }
   .fc-toolbar { margin-top: 1rem; }
 }
+.fc-code { margin-right: 0.15rem; padding: 0 0.35rem; border-radius: 0.3rem; background: var(--color-surface-soft); color: var(--color-muted); font-size: 0.7rem; font-weight: 600; }
+.fc-mobile-only { display: none; }
+@media (max-width: 768px) { .fc-mobile-only { display: inline; } }

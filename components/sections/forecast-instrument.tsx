@@ -20,7 +20,7 @@ import { countryLabel } from "@/lib/data/visa-panel";
 import type { Panel } from "@/lib/data/panel-core";
 import { forecastFor, type ForecastStore } from "@/lib/data/forecasts";
 import { buildForecast, buildLine, buildMultiLine, monthLabel, type ChartSpec, type PanelIndex } from "@/lib/visabot/analytics";
-import { forecastToCsv, seriesReadout, reachVerdict, catRank, COUNTRY_SHORT, type GallerySeries } from "@/lib/visabot/gallery";
+import { forecastToCsv, seriesReadout, seriesBase, capPoints, reachVerdict, catRank, COUNTRY_SHORT, type GallerySeries } from "@/lib/visabot/gallery";
 import { forecastQuery } from "@/components/sections/home-observatory";
 
 const VisaChart = dynamic(() => import("@/components/visabot/visa-chart"), {
@@ -129,30 +129,41 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
   React.useEffect(() => { setPd(""); }, [selected.key]);
 
   const rows = React.useMemo(() => index?.get(selected.key) ?? panel.rows.filter((r) => r.country === country && r.category === category && r.table === table), [index, selected.key, panel, country, category, table]);
-  const points = forecastFor(forecasts, country, category, table);
-  const readout = React.useMemo(() => seriesReadout(rows, points, panel.monthRange[1]), [rows, points, panel]);
+  const rawPoints = forecastFor(forecasts, country, category, table);
+  const readout = React.useMemo(() => seriesReadout(rows, rawPoints, panel.monthRange[1]), [rows, rawPoints, panel]);
+  // capped at each point's own bulletin month: what the chart, the export and the checker use
+  const points = React.useMemo(() => capPoints(rawPoints, readout.base), [rawPoints, readout.base]);
+  const sorted = (rs: typeof rows) => [...rs].sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
   const projects = !!readout.projected;
   // Compare overlays only projections that would be shown for each country on
   // its own (no fan for a Current, Unavailable, discontinued or stale series).
   const compareStore = React.useMemo(() => {
     if (!compare) return forecasts;
-    const series = new Map([...forecasts.series].filter(([k, pts]) => {
+    const series = new Map<string, NonNullable<typeof rawPoints>>();
+    for (const [k, pts] of forecasts.series) {
       const [c, cat, t] = k.split("|");
-      if (cat !== category || t !== table) return true;
-      return !!seriesReadout(index?.get(k) ?? panel.rows.filter((r) => r.country === c && r.category === cat && r.table === t), pts, panel.monthRange[1]).projected;
-    }));
+      if (cat !== category || t !== table) { series.set(k, pts); continue; }
+      const rs = index?.get(k) ?? panel.rows.filter((r) => r.country === c && r.category === cat && r.table === t);
+      if (seriesReadout(rs, pts, panel.monthRange[1]).projected) series.set(k, capPoints(pts, seriesBase(sorted(rs)))!);
+    }
     return { ...forecasts, series };
-  }, [compare, forecasts, category, table, index, panel]);
+  }, [compare, forecasts, category, table, index, panel]); // eslint-disable-line react-hooks/exhaustive-deps
+  const chartStore = React.useMemo(() => {
+    if (!points) return forecasts;
+    const series = new Map(forecasts.series);
+    series.set(selected.key, points);
+    return { ...forecasts, series };
+  }, [forecasts, points, selected.key]);
   const spec: ChartSpec | null = React.useMemo(() => {
     if (compare) return buildMultiLine(panel, category, table, lang, compareStore);
     // Nothing to project (Current, Unavailable, discontinued, stale): history
     // only, so the chart never contradicts the readout with a fan.
     if (!projects) return buildLine(panel, country, category, table, lang);
-    const s = buildForecast(panel, country, category, table, lang, forecasts.horizonMonths || undefined, view === "full" ? 480 : 48, forecasts, index ?? undefined);
+    const s = buildForecast(panel, country, category, table, lang, forecasts.horizonMonths || undefined, view === "full" ? 480 : 48, chartStore, index ?? undefined);
     // The track record lives once, in the page summary; not repeated in a box under the chart.
     // and plain words instead of pipeline jargon above the chart.
     return s && s.kind === "forecast" ? { ...s, note: undefined, subtitle: tr(lang, "resChartLegend") } : s;
-  }, [view, compare, compareStore, projects, panel, country, category, table, lang, forecasts, index]);
+  }, [view, compare, compareStore, chartStore, projects, panel, country, category, table, lang, forecasts, index]);
   const reach = React.useMemo(() => (pd.trim() ? reachVerdict(readout, points, pd.trim()) : null), [readout, points, pd]);
 
   const cur = readout.current;
@@ -277,7 +288,7 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
             {reach && (
               <p role="status" aria-live="polite" data-fc-reach={reach.status}>
                 {pd && reach.status !== "invalid" && <strong>{new Date(`${pd}T00:00:00Z`).toLocaleDateString(localeOf(lang), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}: </strong>}
-                {reach.status === "past" && tr(lang, "resReachPast")}
+                {reach.status === "past" && tr(lang, dff ? "resReachPastDFF" : "resReachPastFAD")}
                 {(reach.status === "current" || reach.status === "unavailable" || reach.status === "discontinued" || reach.status === "noForecast") && tr(lang, "resReachNoForecast")}
                 {reach.status === "invalid" && tr(lang, "resReachBad")}
                 {reach.status === "within" && (reach.late

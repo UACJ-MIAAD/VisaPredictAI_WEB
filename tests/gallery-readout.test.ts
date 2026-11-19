@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { buildPanel } from "@/lib/data/panel-core.mjs";
 import { parseForecastStore, forecastFor } from "@/lib/data/forecasts-core.mjs";
 import { buildForecast, buildPanelIndex } from "@/lib/visabot/analytics";
-import { seriesReadout, reachVerdict, filterSeries, buildGallerySeries, forecastToCsv, maseVsNaive } from "@/lib/visabot/gallery";
+import { seriesReadout, reachVerdict, filterSeries, buildGallerySeries, forecastToCsv, maseVsNaive, capPoints } from "@/lib/visabot/gallery";
 import { isoDays } from "@/lib/visabot/synthetic-builders.mjs";
 import type { ForecastPoint } from "@/lib/data/forecasts";
 
@@ -114,5 +114,25 @@ describe("forecastToCsv / maseVsNaive", () => {
   });
   it("judges MASE against the naive forecast, not against the page", () => {
     expect([maseVsNaive(0.42), maseVsNaive(1.02), maseVsNaive(null)]).toEqual(["beats", "loses", null]);
+  });
+});
+
+describe("capPoints / band edges", () => {
+  const base = isoDays(BASE);
+  it("caps every value at its own bulletin month (a later cutoff would be Current)", () => {
+    const far = pts("2026-04-01").map((q) => ({ ...q, hi95: isoDays("2040-01-01") - base, days: isoDays("2030-01-01") - base }));
+    const capped = capPoints(far, base)!;
+    capped.forEach((q) => {
+      const cap = isoDays(`${q.date.slice(0, 7)}-01`) - base;
+      expect(q.hi95).toBe(cap);
+      expect(q.days).toBe(cap);
+    });
+    const csv = forecastToCsv("x", far, base).split("\n")[1].split(",");
+    expect(csv[7]).toBe("C");
+  });
+  it("an optimistic edge that touches the date and falls back does not count", () => {
+    const r = seriesReadout(F as never, pts("2026-04-01"));
+    const p = pts("2026-04-01").map((q, i) => (i === 1 ? { ...q, hi95: q.hi95 + 400 } : { ...q, hi95: q.days }));
+    expect(reachVerdict(r, p, "2010-10-01")).toMatchObject({ status: "beyond", early: null });
   });
 });

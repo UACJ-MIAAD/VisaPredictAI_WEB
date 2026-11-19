@@ -219,7 +219,7 @@ export function Resultados() {
                       {g.country && <h3>{countryLabel(g.country, lang)} <span>{g.series.length}</span></h3>}
                       <ul>
                         {g.series.map((s) => (
-                          <SeriesRow key={s.key} s={s} showCountry={!g.country} active={s.key === selected.key} pinned={basket.includes(s.key)} full={basket.length >= 4} sort={sort} h={h}
+                          <SeriesRow key={s.key} s={s} showCountry={!g.country} codeCountry={!fCountry} active={s.key === selected.key} pinned={basket.includes(s.key)} full={basket.length >= 4} sort={sort} h={h}
                             panel={panel} forecasts={forecasts} index={index} onOpen={openSeries} onPin={togglePin} />
                         ))}
                       </ul>
@@ -240,8 +240,8 @@ export function Resultados() {
   );
 }
 
-const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned, full, sort, h, panel, forecasts, index, onOpen, onPin }: {
-  s: GallerySeries; showCountry: boolean; active: boolean; pinned: boolean; full: boolean; sort: SortKey; h: number; panel: Panel; forecasts: ForecastStore;
+const SeriesRow = React.memo(function SeriesRow({ s, showCountry, codeCountry, active, pinned, full, sort, h, panel, forecasts, index, onOpen, onPin }: {
+  s: GallerySeries; showCountry: boolean; codeCountry: boolean; active: boolean; pinned: boolean; full: boolean; sort: SortKey; h: number; panel: Panel; forecasts: ForecastStore;
   index: PanelIndex | null; onOpen: (key: string) => void; onPin: (key: string) => void;
 }) {
   const { lang } = useLang();
@@ -255,11 +255,12 @@ const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned
   );
   const cur = r.current, p = r.projected;
   const now = !cur ? "—" : cur.status === "C" ? tr(lang, "resCurrentC") : cur.status === "U" ? tr(lang, "resCurrentU") : (cur.date ?? "—");
-  const none = r.none === "current" ? tr(lang, "resRowNoneCurrent") : r.none === "discontinued" ? tr(lang, "resRowNoneDiscontinued") : "—";
+  const none = r.none === "current" ? tr(lang, "resRowNoneCurrent") : r.none === "discontinued" ? tr(lang, "resRowNoneDiscontinued")
+    : r.none === "unavailable" ? tr(lang, "resRowNoneUnavailable") : r.none === "stale" ? tr(lang, "resRowNoneStale") : "—";
   const bound = (iso: string, isCurrent: boolean) => (isCurrent ? tr(lang, "resCurrentC") : monthOfDate(iso, lang));
   const verdict = maseVsNaive(s.mase);
   const metricName = sort === "backlog" ? tr(lang, "resColWait") : sort === "movement" ? tr(lang, "resColMove") : "MASE";
-  const metric = sort === "backlog" ? (s.backlogYears != null && cur?.status === "F" ? `${s.backlogYears.toFixed(1)} ${tr(lang, "resYears")}` : "—")
+  const metric = sort === "backlog" ? (s.backlogYears != null && cur?.status === "F" && r.none !== "discontinued" ? `${s.backlogYears.toFixed(1)} ${tr(lang, "resYears")}` : "—")
     : sort === "movement" ? (p && s.movementPerYear != null ? `${s.movementPerYear >= 0 ? "+" : "−"}${Math.abs(Math.round(s.movementPerYear))} ${tr(lang, "resDaysYear")}` : "—")
     : (s.mase != null ? s.mase.toFixed(2) : "—");
   const cat = s.category.replace(/_/g, " ");
@@ -268,6 +269,8 @@ const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned
       <button type="button" className="fc-row-main" onClick={() => onOpen(s.key)} aria-current={active || undefined}>
         <span className="fc-row-name">
           {showCountry ? <>{countryLabel(s.country, lang)} · </> : <span className="sr-only">{countryLabel(s.country, lang)} · </span>}
+          {/* grouped rows lose their country heading once scrolled: keep a quiet code */}
+          {!showCountry && codeCountry && <span className="fc-code" aria-hidden>{s.country === "all_chargeability" ? tr(lang, "resRowShort") : COUNTRY_SHORT[s.country]}</span>}
           {cat} · {s.table}<span className="sr-only">,</span>
           <CohortBadge meta={s} />
         </span>
@@ -279,11 +282,16 @@ const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned
         <span className="fc-row-num">
           {p ? (
             <>
-              <span className="sr-only">{tr(lang, "resProjected").replace("{m}", monthLabel(p.month, lang))}: </span>
-              <small>{p.months !== h ? `${monthLabel(p.month, lang)} · ` : ""}<span className="sr-only">{tr(lang, "resBand95")}: </span>{bound(p.lo95, p.lo95Current)} – {bound(p.hi95, p.hi95Current)}<span className="sr-only">; </span></small>
-              <span>{bound(p.date, p.dateCurrent)}{p.retro && <span className="fc-retro">{tr(lang, "resRetro")}</span>}</span><span className="sr-only">.</span>
+              <small>
+                <span className={p.months !== h ? undefined : "fc-mobile-only"}>{monthLabel(p.month, lang)} · </span>
+                <span className="sr-only">{tr(lang, "resBand95")}: </span>{bound(p.lo95, p.lo95Current)} – {bound(p.hi95, p.hi95Current)}<span className="sr-only">; </span>
+              </small>
+              <span>
+                <span className="sr-only">{tr(lang, "resProjected").replace("{m}", monthLabel(p.month, lang))}: </span>
+                {bound(p.date, p.dateCurrent)}{p.retro && <> <span className="fc-retro">{tr(lang, "resRetro")}</span></>}
+              </span><span className="sr-only">.</span>
             </>
-          ) : <span className="fc-row-none">{none}</span>}
+          ) : <span className="fc-row-none"><span className="sr-only">{tr(lang, "resProjectedNone")}: </span>{none}<span className="sr-only">.</span></span>}
         </span>
         <span className="fc-row-metric" data-verdict={sort === "order" || sort === "mase" ? (verdict ?? undefined) : undefined}>
           <span className="fc-metric-label">{metricName} </span>{metric}

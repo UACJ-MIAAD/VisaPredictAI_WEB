@@ -384,7 +384,8 @@ const S = {
   // card face signals
   // "reaches my priority date?" lightbox tool
   resReachTitle: { es: "¿Alcanza mi fecha de prioridad?", en: "Does it reach my priority date?" },
-  resReachPast: { es: "es anterior al corte publicado: con este boletín ya está al corriente.", en: "is earlier than the published cutoff: this bulletin already reaches it." },
+  resReachPastFAD: { es: "es anterior al corte publicado: con este boletín, la acción final ya está disponible para esa fecha.", en: "is earlier than the published cutoff: with this bulletin, final action is already available for that date." },
+  resReachPastDFF: { es: "es anterior al corte publicado: con este boletín, esa fecha ya puede presentar su solicitud (si USCIS acepta esta tabla este mes).", en: "is earlier than the published cutoff: with this bulletin, that date may already file (if USCIS accepts this chart this month)." },
   resReachBad: { es: "Fecha no válida.", en: "Invalid date." },
   // deep link
   resCopyLink: { es: "Copiar enlace", en: "Copy link" },
@@ -495,6 +496,8 @@ const S = {
   resNoneDiscontinued: { es: "Esta serie dejó de publicarse después de {m}; no se proyecta.", en: "This series stopped being published after {m}; nothing is projected." },
   resNoneStale: { es: "El pronóstico es anterior al último boletín; no se muestra.", en: "The forecast predates the latest bulletin; it is not shown." },
   resRowNoneCurrent: { es: "sin espera", en: "no queue" },
+  resRowNoneUnavailable: { es: "no disponible", en: "unavailable" },
+  resRowNoneStale: { es: "pronóstico anterior al boletín", en: "forecast predates the bulletin" },
   resRowNoneDiscontinued: { es: "ya no se publica", en: "no longer published" },
   resReachHintBand: { es: "Se compara con la trayectoria central y con el rango al 95 %.", en: "Compared with the central path and with the 95% range." },
   resReachNoForecast: { es: "no hay una proyección vigente para esta serie.", en: "there is no current projection for this series." },

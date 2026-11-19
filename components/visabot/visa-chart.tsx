@@ -283,7 +283,8 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
             <XAxis dataKey="month" tick={AXIS} tickFormatter={(m: string) => m.slice(0, 4)} minTickGap={36} />
             <YAxis tick={AXIS} domain={["auto", "auto"]} {...yearAxis(spec.data.map((d) => d.year), lang)} />
             <Tooltip content={<GlassPill lang={lang} />} />
-            <Area type="monotone" dataKey="year" stroke="var(--color-accent)" strokeWidth={2.4} fill="url(#vbLineFill)" dot={false} connectNulls />
+            {/* months without a dated cutoff (Current / Unavailable) are gaps, never a drawn line */}
+            <Area type="monotone" dataKey="year" stroke="var(--color-accent)" strokeWidth={2.4} fill="url(#vbLineFill)" dot={false} connectNulls={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}
