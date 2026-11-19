@@ -1,7 +1,6 @@
 import { LangProvider } from "@/components/lang-provider";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
-import { NextPart } from "@/components/next-part";
 import { BackToTop } from "@/components/back-to-top";
 import { ClientEnhancements } from "@/components/client-enhancements";
 import { HashRescroll } from "@/components/hash-rescroll";
@@ -26,7 +25,6 @@ export function SiteShell({
       {/* J1: the header is sticky (in-flow) now, not fixed — no pt compensation */}
       <main id="main-content" tabIndex={-1}>
         {children}
-        <NextPart />
       </main>
       <SiteFooter />
       <BackToTop />

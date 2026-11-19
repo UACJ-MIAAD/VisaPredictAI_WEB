@@ -20,8 +20,8 @@ for (const lang of ["es", "en"] as const) for (const theme of ["light", "dark"] 
         'data: {"t":"done"}\n\n'});
     });
     await page.goto(lang === "es" ? "/asistente/" : "/en/asistente/");
-    await expect(page.locator('[title="country × category × table"], [title="país × categoría × tabla"]').first()).toBeAttached();
-    await expect(page.locator(".vb-start-card")).toHaveCount(3);
+    await expect(page.locator('.vb-console[data-vb-ready="true"]')).toBeAttached();
+    await expect(page.locator(".vb-start-card")).toHaveCount(4);
     await page.getByRole("button", {name:lang === "es" ? "Modo presentación" : "Presentation mode",exact:true}).click();
     const stage = page.getByRole("dialog", {name:lang === "es" ? "VisaBot en modo presentación" : "VisaBot in presentation mode",exact:true});
     await expect(stage).toBeVisible();
@@ -73,7 +73,7 @@ test("presentation prompt library is stable and Escape closes the inner dialog f
     icon:"data",cat:"Ensayo",items:Array.from({length:8},(_,i)=>`Pregunta de ensayo ${i+1}`),
   }]}}));
   await page.goto("/asistente/");
-  await expect(page.getByRole("button",{name:"¿Qué puedes preguntar?",exact:true})).toBeVisible();
+  await expect(page.getByRole("button",{name:"Ejemplos",exact:true})).toBeVisible();
   await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
   const stage = page.getByRole("dialog",{name:"VisaBot en modo presentación",exact:true});
   const open = async () => {

@@ -45,7 +45,7 @@
   border-top: 1px solid var(--color-border);
 }
 .section--alt {
-  background: var(--color-surface-soft);
+  background: transparent; /* minimal redesign: no alternating bands */
 }
 .section--deep {
   /* Editorial deep band: white text needs a DARK blue in BOTH themes. In dark
@@ -73,18 +73,15 @@
   align-items: center;
   gap: 0.6rem;
   font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--color-accent);
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-muted);
   margin-bottom: 0.8rem;
 }
 .section-tag::before {
-  content: "";
-  width: 1.6rem;
-  height: 2px;
-  background: var(--color-accent);
+  content: none; /* minimal redesign: the kicker is plain text */
 }
 .section-inner.center .section-tag {
   justify-content: center;
@@ -99,8 +96,8 @@
 .section-title {
   font-family: var(--font-serif);
   font-size: clamp(2rem, 4vw, 3.1rem);
-  font-weight: 800;
-  letter-spacing: -0.018em;
+  font-weight: 650;
+  letter-spacing: -0.04em;
   line-height: 1.05;
   margin: 0 0 0.9rem;
   max-width: 20ch;
@@ -209,7 +206,7 @@
   background: transparent;
   color: var(--color-accent-2);
   font-family: var(--font-serif);
-  font-weight: 800;
+  font-weight: 650;
   font-size: 2.2rem;
   line-height: 1;
   margin-bottom: 0.5rem;
@@ -284,7 +281,7 @@
 .metric-num {
   font-family: var(--font-serif);
   font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: -0.02em;
   color: var(--color-accent);
   font-variant-numeric: tabular-nums;
@@ -372,7 +369,7 @@
 .step-num {
   font-family: var(--font-serif);
   font-size: 1.4rem;
-  font-weight: 800;
+  font-weight: 650;
   color: var(--color-accent-2);
 }
 .step h4 { margin: 0.2rem 0 0.4rem; font-family: var(--font-serif); font-size: 1.05rem; }
@@ -636,7 +633,7 @@
   width: 84px; height: 84px; border-radius: 50%; object-fit: cover;
   border: 1px solid var(--color-border);
 }
-.author-name { font-family: var(--font-serif); font-weight: 800; font-size: 1.2rem; }
+.author-name { font-family: var(--font-serif); font-weight: 650; font-size: 1.2rem; }
 .author-role { font-size: 0.8rem; color: var(--color-accent); margin-bottom: 0.5rem; }
 .author-bio { font-size: 0.92rem; color: var(--color-muted); line-height: 1.6; }
 .author-meta {
@@ -655,7 +652,7 @@
 }
 /* Filled CTA carrying WHITE text: use the button-fill token so dark theme
    stays AA (plain --color-accent is #74b2ff in dark = 2.19:1 on white). */
-.btn--primary { background: var(--color-accent-btn); color: #fff; }
+.btn--primary, .section-inner a.btn--primary { background: var(--color-accent-btn); color: #fff; }
 .btn--primary:hover { transform: translateY(-2px); }
 .btn--outline { border-color: var(--color-border); color: var(--color-ink); background: transparent; }
 .section--deep .btn--outline { color: #fff; border-color: rgba(255,255,255,0.6); }
@@ -752,7 +749,7 @@ html.js .reveal.visible { opacity: 1; transform: none; }
 }
 .footer-brand-row {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  font-family: var(--font-serif); font-weight: 800; font-size: 0.95rem;
+  font-family: var(--font-serif); font-weight: 650; font-size: 0.95rem;
   color: var(--color-ink); text-decoration: none;
 }
 .footer-brand-row img { width: 22px; height: 22px; }

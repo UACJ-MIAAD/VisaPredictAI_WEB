@@ -1,3 +1,4 @@
+// Stress for the history start filter of the home-page date observatory.
 import {readFileSync} from "node:fs";
 import {test,expect} from "@playwright/test";
 import {buildPanel,countryLabel} from "../../lib/data/panel-core.mjs";
@@ -10,7 +11,7 @@ const monthLabel=(m:string,en:boolean)=>new Intl.DateTimeFormat(en?"en-US":"es-M
 const profiles=[
   {name:"mobile portrait",width:320,height:568,lang:"es",theme:"light",mobile:true},
   {name:"mobile landscape",width:844,height:390,lang:"en",theme:"dark",mobile:true},
-  {name:"desktop presentation",width:1280,height:720,lang:"es",theme:"dark",mobile:false},
+  {name:"desktop 720p",width:1280,height:720,lang:"es",theme:"dark",mobile:false},
   {name:"desktop large",width:1920,height:1080,lang:"en",theme:"light",mobile:false},
 ] as const;
 
@@ -40,8 +41,8 @@ for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
     const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
     page.on("console",m=>{if(m.type()==="error"&&/unique.*key|hydration|maximum update/i.test(m.text()))errors.push(m.text());});
     const en=profile.lang==="en";
-    await page.goto(en?"/en/asistente/":"/asistente/");
-    const open=page.getByRole("button",{name:en?"Full screen":"Pantalla completa",exact:true});
+    await page.goto(en?"/en/":"/");
+    const open=page.locator('figure[data-vb-full="false"]').getByRole("button",{name:en?"Full screen":"Pantalla completa",exact:true});
     if(full){if(profile.mobile)await open.tap();else await open.click();}
     const root=full?page.getByRole("dialog",{name:en?"Full screen observatory":"Observatorio en pantalla completa",exact:true}):page.locator('figure[data-vb-full="false"]');
     const category=root.getByRole("combobox",{name:en?"Observatory category":"Categoría del observatorio",exact:true});
@@ -108,10 +109,12 @@ for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
   });
 });
 
-test("active From survives rotation and reopening; source changes reset it inside presentation",async({page,context},testInfo)=>{
-  await blockExternal(context);await page.setViewportSize({width:1280,height:720});await page.goto("/asistente/");
-  await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
-  const open=page.getByRole("button",{name:"Pantalla completa",exact:true});await open.click();
+test("active From survives rotation and reopening; source changes reset it in full screen",async({page,context},testInfo)=>{
+  await blockExternal(context);await page.setViewportSize({width:1280,height:720});await page.goto("/");
+  // The panel loads after hydration; until then the selects are disabled and
+  // cannot take the dialog's initial focus (CI is slower than local runs).
+  await expect(page.locator('figure[data-vb-full="false"] [data-vb-observation]')).not.toHaveText("—");
+  const open=page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true});await open.click();
   const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
   const category=modal.getByRole("combobox",{name:"Categoría del observatorio",exact:true});
   const from=modal.getByRole("combobox",{name:"Desde el mes",exact:true});
@@ -128,7 +131,7 @@ test("active From survives rotation and reopening; source changes reset it insid
     await testInfo.attach(`filtered-${viewport.width}x${viewport.height}`,{body:await page.screenshot(),contentType:"image/png"});
   }
   await page.keyboard.press("Escape");await expect(modal).not.toBeVisible();await expect(open).toBeFocused();
-  await expect(page.getByRole("button",{name:"Salir de presentación",exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.body.style.overflow)).not.toBe("hidden");
   await open.click();await expect(from).toHaveValue("01");
   await setHistoryStart(modal,"2026-11");await category.selectOption("EB5_RC");
   await expect(from).toHaveValue("");
@@ -141,16 +144,17 @@ test("active From survives rotation and reopening; source changes reset it insid
   await expect(from).toHaveValue("");
   await category.focus();await page.keyboard.press("Shift+Tab");
   await expect(modal.getByRole("button",{name:"Ver pronóstico de esta serie",exact:true})).toBeFocused();
-  await page.keyboard.press("Escape");
-  await page.getByRole("button",{name:"Salir de presentación",exact:true}).click();
+  await page.keyboard.press("Escape");await expect(modal).not.toBeVisible();await expect(open).toBeFocused();
+  // Closing restores the page and keeps the series that was active in full screen.
   expect(await page.evaluate(()=>document.body.style.overflow)).not.toBe("hidden");
+  await expect(page.locator('figure[data-vb-full="false"]').locator(".vb-instrument-code")).toHaveText("EB5_RC / DFF");
 });
 
-test("presentation cards keep every category and a selected From month readable",async({page,context})=>{
+test("home controls keep every category and a selected From month readable",async({page,context})=>{
+  test.setTimeout(180_000);
   await blockExternal(context);
-  for(const width of [740,844,1024,1280]){
-    await page.setViewportSize({width,height:720});await page.goto("/asistente/");
-    await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
+  for(const width of [320,740,844,1024,1280]){
+    await page.setViewportSize({width,height:720});await page.goto("/");
     const root=page.locator('figure[data-vb-full="false"]');
     for(const c of panel.categories)for(const t of panel.tables){
       await root.getByRole("combobox",{name:"Categoría del observatorio",exact:true}).selectOption(c);
@@ -158,17 +162,16 @@ test("presentation cards keep every category and a selected From month readable"
       const rows=panel.rows.filter(r=>r.country==="mexico"&&r.category===c&&r.table===t);
       if(rows.length)await setHistoryStart(root,(rows.find(r=>r.bulletinMonth.endsWith("-09"))??rows[0]).bulletinMonth);
       const clipped=await root.locator("select").evaluateAll(es=>es.filter(n=>n.scrollWidth>n.clientWidth).map(n=>({name:n.getAttribute("aria-label"),value:(n as HTMLSelectElement).value,client:n.clientWidth,scroll:n.scrollWidth})));
-      expect(clipped,`presentation ${width}/${c}/${t}`).toEqual([]);
+      expect(clipped,`home ${width}/${c}/${t}`).toEqual([]);
     }
   }
 });
 
-test("compact presentation allows native select font metrics to vary",async({page,context})=>{
+test("home controls allow native select font metrics to vary",async({page,context})=>{
   await blockExternal(context);await page.setViewportSize({width:1280,height:720});
   for(const en of [false,true]){
-    await page.goto(en?"/en/asistente/":"/asistente/");
+    await page.goto(en?"/en/":"/");
     await page.evaluate(()=>document.fonts.ready);
-    await page.getByRole("button",{name:en?"Presentation mode":"Modo presentación",exact:true}).click();
     await page.addStyleTag({content:".vb-observatory-controls select { font-size:calc(0.8rem + 1px) !important; }"});
     const root=page.locator('figure[data-vb-full="false"]');
     for(const c of panel.categories)for(const t of panel.tables){
@@ -181,6 +184,7 @@ test("compact presentation allows native select font metrics to vary",async({pag
       expect(await root.locator(".vb-observatory-controls").evaluate(el=>el.scrollWidth<=el.clientWidth),`controls ${en?"en":"es"}/${c}/${t}`).toBe(true);
       expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`document ${en?"en":"es"}/${c}/${t}`).toBe(true);
     }
-    await expect(root).toBeInViewport({ratio:0.95});
+    // Larger native metrics must not push the instrument past the viewport width.
+    const box=(await root.boundingBox())!;expect(box.x+box.width).toBeLessThanOrEqual(1280);
   }
 });

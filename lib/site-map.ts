@@ -25,10 +25,8 @@ export const ROUTES: Route[] = [
     blurb: "Visión general del proyecto y acceso a cada parte.",
     blurbEn: "Project overview and a way into each part.",
     sections: [
-      { id: "inicio", label: "Inicio", labelEn: "Top" },
-      { id: "problema", label: "El problema", labelEn: "The problem" },
-      { id: "evidencia", label: "Pronóstico y evidencia", labelEn: "Forecast & evidence" },
-      { id: "explorar", label: "Explorar", labelEn: "Explore" },
+      { id: "inicio", label: "Observatorio", labelEn: "Observatory" },
+      { id: "preguntar", label: "Pregúntale a VisaBot", labelEn: "Ask VisaBot" },
       { id: "resumen", label: "Resumen", labelEn: "Abstract" },
       { id: "autores", label: "Autores", labelEn: "Authors" },
       { id: "contacto", label: "Contacto", labelEn: "Contact" },
@@ -96,8 +94,8 @@ export const ROUTES: Route[] = [
     path: "/resultados",
     label: "Galería de pronósticos",
     labelEn: "Forecast gallery",
-    short: "Galería",
-    shortEn: "Gallery",
+    short: "Pronósticos",
+    shortEn: "Forecasts",
     blurb:
       "Todas las series de pronóstico país × categoría × tabla en una galería filtrable: hojea por país o por categoría y abre cualquiera para ver el abanico completo con sus bandas al 80 % y 95 %.",
     blurbEn:
@@ -144,12 +142,12 @@ export const ROUTES: Route[] = [
     path: "/asistente",
     label: "Asistente",
     labelEn: "Assistant",
-    short: "Asistente",
-    shortEn: "Assistant",
+    short: "VisaBot",
+    shortEn: "VisaBot",
     blurb:
-      "VisaBot: asistente conversacional con recuperación aumentada (RAG) sobre toda la documentación del proyecto, con respuestas citadas.",
+      "VisaBot: pregunta por cualquier fecha, categoría o país; responde con los datos verificados del boletín, gráficos y fuentes citadas.",
     blurbEn:
-      "VisaBot: a retrieval-augmented (RAG) conversational assistant over the whole project documentation, with cited answers.",
+      "VisaBot: ask about any date, category or country; it answers from the verified bulletin data, with charts and cited sources.",
     sections: [{ id: "asistente", label: "VisaBot", labelEn: "VisaBot" }],
   },
 ];
