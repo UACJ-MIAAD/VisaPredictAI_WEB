@@ -7,3 +7,4 @@ export function parsePriorityDate(q:string):{date:string|null;issue:string|null;
 export function isPriorityQuery(q:string):boolean;
 export function buildPriorityCheck(q:string,panel:Panel,store:ForecastStore|null,lang:"es"|"en"):PriorityCheckSpec|null;
 export function priorityCheckSummary(s:PriorityCheckSpec,lang:"es"|"en"):string;
+export function priorityCheckSpec(args:{priorityDate:string|null;country:string|null;category:string|null;table:string},panel:Panel,store:ForecastStore|null,lang:"es"|"en",issue?:string|null):PriorityCheckSpec;

@@ -12,7 +12,7 @@
 // explicit user gesture (warmUpSemantic); warmUp loads just the lightweight
 // index + BM25, so the bot is instantly usable — and stays usable — without
 // the semantic engine (AZ1: no ~150 MB download without consent).
-import type { Chunk, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
+import type { AgentChart, Chunk, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
 import { buildBM25, decodeF16, retrieveRanked } from "@/lib/visabot/retrieval-core.mjs";
 import { ORT_RUNTIME_PREFIX } from "@/lib/ort-runtime.mjs";
 
@@ -175,7 +175,11 @@ export async function retrieve(query: string, lang: Lang, k = 6): Promise<Source
 // serverSources: the server-rebuilt synthetic sources ({t:"sources"} first SSE
 // frame, US I1) — what ACTUALLY grounded the answer; the hook swaps them into
 // the message's displayed sources.
-export type GenResult = { text: string; extractive: boolean; serverSources?: ServerSource[] };
+export type GenResult = { text: string; extractive: boolean; serverSources?: ServerSource[]; serverChart?: AgentChart };
+
+// Agent progress hooks: a status line while tools run, and the chart the
+// agent chose (console only) as soon as it is known.
+export type GenHooks = { onStatus?: (text: string) => void; onChart?: (chart: AgentChart) => void };
 
 // stream Claude through the function; onDelta receives incremental text.
 export async function generate(
@@ -187,6 +191,7 @@ export async function generate(
   signal?: AbortSignal,
   surface: "widget" | "console" = "widget",
   synthetics?: SyntheticDescriptor[],
+  hooks?: GenHooks,
 ): Promise<GenResult> {
   signal?.throwIfAborted();
   let res: Response;
@@ -226,6 +231,7 @@ export async function generate(
     erred = false,
     completed = false;
   let serverSources: ServerSource[] | undefined;
+  let serverChart: AgentChart | undefined;
   try {
     for (;;) {
       const { done, value } = await reader.read();
@@ -249,6 +255,14 @@ export async function generate(
             onDelta(ev.text);
           } else if (ev.t === "sources" && Array.isArray(ev.sources)) {
             serverSources = ev.sources as ServerSource[];
+          } else if (ev.t === "source" && ev.source && typeof ev.source.n === "number") {
+            // agent tool output, announced the moment the tool returned
+            serverSources = [...(serverSources ?? []), ev.source as ServerSource];
+          } else if (ev.t === "chart" && ev.chart && typeof ev.chart.kind === "string") {
+            serverChart = ev.chart as AgentChart;
+            hooks?.onChart?.(serverChart);
+          } else if (ev.t === "status" && typeof ev.text === "string") {
+            hooks?.onStatus?.(ev.text.slice(0, 120));
           } else if (ev.t === "error") {
             erred = true;
           } else if (ev.t === "done") {
@@ -275,7 +289,7 @@ export async function generate(
     full += note;
     onDelta(note);
   }
-  return { text: full, extractive: false, serverSources };
+  return { text: full, extractive: false, serverSources, serverChart };
 }
 
 // extractive fallback: compose a grounded answer from the top chunks, cited.

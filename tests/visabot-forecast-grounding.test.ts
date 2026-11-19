@@ -14,6 +14,7 @@ import { dirname, join } from "node:path";
 import { DATA_PINS } from "../lib/content/data-pins.generated.mjs";
 import { resetSyntheticData } from "@/lib/visabot/synthetic-context.mjs";
 import { validSyntheticShape } from "../netlify/functions/chat.mjs";
+import { anthropicSSE, sseResponse, type MockTurn } from "./anthropic-sse";
 import { buildPanel } from "@/lib/data/panel-core";
 import { parseForecastStore, backfillScored } from "@/lib/data/forecasts-core.mjs";
 import { buildForecast, buildBulletinDiff, chartUserNote, forecastText, priorityYearTick } from "@/lib/visabot/analytics";
@@ -37,6 +38,7 @@ const DECIMAL_BAND = /\[\d{4}\.\d, \d{4}\.\d\]|≈ \d{4}\.\d/;
 describe("forecast grounding over the released artifacts (chat handler → Anthropic body)", () => {
   let testNow=Date.now();
   let sentBodies: string[] = [];
+  let turns: MockTurn[] = [];
   const resLike = (buf: Buffer | null) => ({
     ok: !!buf,
     arrayBuffer: async () => buf!.buffer.slice(buf!.byteOffset, buf!.byteOffset + buf!.byteLength),
@@ -45,8 +47,7 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     const u = String(url);
     if (u.startsWith("https://api.anthropic.com")) {
       sentBodies.push(String(init?.body));
-      return new Response('data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
-        { status: 200, headers: { "content-type": "text/event-stream" } });
+      return sseResponse(anthropicSSE(turns[Math.min(sentBodies.length - 1, turns.length - 1)] ?? { text: ["ok"] }));
     }
     if (u.startsWith("https://cdn.test/data/")) {
       try { return resLike(dataFile(u.replace("https://cdn.test/data/", ""))) as never; } catch { return resLike(null) as never; }
@@ -76,8 +77,10 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
         try { const e = JSON.parse(frame.replace(/^data: /, "")); return e.t === "delta" ? [e.text] : []; } catch { return []; }
       }).join("");
     }
-    expect(sentBodies).toHaveLength(1);
-    return (JSON.parse(sentBodies[0]) as { system: string }).system;
+    expect(sentBodies.length).toBeGreaterThanOrEqual(1);
+    // what the model READ: the tool results of the follow-up request (the agent
+    // gets figures only through tools), or the first request when no tool ran
+    return sentBodies.map((b) => JSON.stringify((JSON.parse(b) as { messages: unknown }).messages)).join("\n");
   };
 
   beforeEach(() => {
@@ -85,6 +88,7 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     process.env.ANTHROPIC_API_KEY = "test-key-never-used";
     process.env.VISABOT_DATA_BASE = "https://cdn.test";
     sentBodies = [];
+    turns = [];
     resetSyntheticData();
     vi.stubGlobal("fetch", fetchStub);
   });
@@ -96,12 +100,12 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
   });
 
   for (const lang of ["es", "en"] as const) {
-    it(`${lang}: priority checks return the exact country's current cutoff without generation`, async () => {
-      const answer = await ask(lang, true, lang === "es" ? "cuando me toca F2A pd sept 19 2024 mexicano" : "When is my turn, Mexican F2A priority date September 19 2024?");
-      expect(answer).toContain("2026-04-22");
-      expect(answer).toContain("2024-09-19");
-      expect(answer).not.toContain("2026-10-22");
-      expect(answer).not.toMatch(/tu turno ya pas[oó]|your turn has passed/i);
+    it(`${lang}: the priority check the agent runs reads Mexico's own F2A cutoff`, async () => {
+      turns = [{ tools: [{ id: "t1", name: "check_priority_date", input: { country: "mexico", category: "F2A", table: "FAD", priority_date: "2024-09-19" } }] }, { text: ["ok"] }];
+      const read = await ask(lang, false, lang === "es" ? "cuando me toca F2A pd sept 19 2024 mexicano" : "When is my turn, Mexican F2A priority date September 19 2024?");
+      expect(read).toContain("2026-04-22");
+      expect(read).toContain("2024-09-19");
+      expect(read).not.toContain("2026-10-22");
     });
     it(`${lang}: direct bulletin changes use the same table counts without model rewriting`, async () => {
       const spec = buildBulletinDiff(buildPanel(String(dataFile("visa_panel_long.csv"))), "2026-10", "2026-11", "FAD", lang)!;
@@ -123,21 +127,22 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
       expect(answer).toContain("F4");
       expect(answer).not.toMatch(/being shown to the user|Se está mostrando al usuario|NO digas|do NOT/);
     });
-    it(`${lang}: a priority-date question gets a verified comparison even when phrased as a forecast`, async () => {
-      await ask(lang, true, lang === "en"
+    it(`${lang}: a priority-date question phrased as a forecast goes to the agent, not the canned forecast`, async () => {
+      await ask(lang, false, lang === "en"
         ? "Show the Mexico F4 forecast: when does it reach my priority date 2010-01-01?"
         : "Muéstrame México F4: ¿cuándo alcanza mi fecha de prioridad 2010-01-01?");
     });
     it(`${lang}: the 95 % band reaches the model as exact ISO dates, never decimal years`, async () => {
+      turns = [{ tools: [{ id: "t1", name: "get_forecast", input: { country: "mexico", category: "F4", table: "FAD" } }] }, { text: ["ok"] }];
       const system = await ask(lang);
       expect(system).toContain(`[${LO95}, ${HI95}]`);
       expect(system).not.toMatch(DECIMAL_BAND);
     });
 
     it(`${lang}: the forecast count is the backfill n that the coverage describes`, async () => {
+      turns = [{ tools: [{ id: "t1", name: "get_forecast", input: { country: "mexico", category: "F4", table: "FAD" } }] }, { text: ["ok"] }];
       const system = await ask(lang);
-      const n = scorecard.overall.n.toLocaleString(lang === "en" ? "en-US" : "es-MX");
-      expect(system).toContain(`${n} ${lang === "en" ? "forecasts scored" : "pronósticos evaluados"}`);
+      expect(system).toContain(`${scorecard.overall.n} backfilled forecasts scored`);
       expect(system).not.toMatch(new RegExp(`\\b${scorecard.n_scored}\\b|${scorecard.n_scored.toLocaleString("en-US")}`));
     });
   }

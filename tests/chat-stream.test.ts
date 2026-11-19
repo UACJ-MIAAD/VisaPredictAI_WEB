@@ -19,6 +19,7 @@ import handler, { truncationNote } from "../netlify/functions/chat.mjs";
 import { resetSyntheticData } from "../lib/visabot/synthetic-context.mjs";
 import { DATA_PINS } from "../lib/content/data-pins.generated.mjs";
 import { isTruncated } from "@/components/visabot/observability";
+import { anthropicSSE, sseResponse, sseStart, sseTextStart, sseTextDelta } from "./anthropic-sse";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const UUID_RX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -30,8 +31,9 @@ const hasIndex = existsSync(idxPath);
 const knownChunk = hasIndex ? JSON.parse(readFileSync(idxPath, "utf8")).chunks[0] : null;
 
 const enc = new TextEncoder();
-const deltaFrame = (text: string) =>
-  `data: ${JSON.stringify({ type: "content_block_delta", delta: { type: "text_delta", text } })}\n\n`;
+const deltaFrame = (text: string) => sseTextDelta(text);
+// opening of a streamed text answer (the SDK needs message_start + block start)
+const opening = () => sseStart(321) + sseTextStart();
 
 // Upstream body that honors the abort signal like a real fetch: on abort the
 // pending read REJECTS (AbortError) instead of hanging a stubbed stream.
@@ -61,14 +63,7 @@ function abortableBody(signal: AbortSignal, opts: { chunks?: string[]; repeat?: 
 }
 
 // Completed upstream stream with usage frames (token capture under test).
-const okUpstream = () =>
-  new Response(
-    'data: {"type":"message_start","message":{"usage":{"input_tokens":321}}}\n\n' +
-      deltaFrame("ok") +
-      'data: {"type":"message_delta","usage":{"output_tokens":7}}\n\n' +
-      'data: {"type":"message_stop"}\n\n',
-    { status: 200, headers: { "content-type": "text/event-stream" } },
-  );
+const okUpstream = () => sseResponse(anthropicSSE({ text: ["ok"], inputTokens: 321, outputTokens: 7 }));
 
 // public/data files served for the synthetic recompute (committed release fixture)
 const dataFile = (name: string) => readFileSync(join(root, "public", "data", name));
@@ -101,6 +96,7 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
 
   beforeEach(() => {
     process.env.ANTHROPIC_API_KEY = "test-key-never-used";
+    process.env.VISABOT_DATA_BASE = "https://cdn.test"; // the agent loads the verified release data
     upstreamSignal = null;
     resetSyntheticData();
   });
@@ -127,9 +123,7 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
     );
 
   it.each(["es", "en"] as const)("%s: reaching the token limit is explicitly incomplete, even without a usage field", async (lang) => {
-    stubAnthropic(() => new Response(deltaFrame("Partial answer") +
-      'data: {"type":"message_delta","delta":{"stop_reason":"max_tokens"}}\n\n' +
-      'data: {"type":"message_stop"}\n\n'));
+    stubAnthropic(() => sseResponse(anthropicSSE({ text: ["Partial answer"], stop: "max_tokens" })));
     const res = await handler(mkReq({lang, query: "Explica el proyecto"}));
     const text = await res.text();
     expect(text).toContain('{"t":"truncated","reason":"max_tokens"}');
@@ -139,14 +133,14 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
   });
 
   it("a silent upstream EOF is not passed off as a completed answer", async () => {
-    stubAnthropic(() => new Response(deltaFrame("Partial answer")));
+    stubAnthropic(() => sseResponse(anthropicSSE({ text: ["Partial answer"], omitStop: true })));
     const text = await (await handler(mkReq({lang: "en", query: "Explain FAD"}))).text();
     expect(text).toContain('"t":"error"');
     expect(text).toContain("Partial answer");
   });
 
   it("accepts upstream CRLF frames split byte by byte and observes message_stop", async () => {
-    const bytes = enc.encode((deltaFrame("México") + 'data: {"type":"message_stop"}\n\n').replace(/\n/g, "\r\n"));
+    const bytes = enc.encode(anthropicSSE({ text: ["México"] }).replace(/\n/g, "\r\n"));
     stubAnthropic(() => new Response(new ReadableStream({start(c) {for (const b of bytes) c.enqueue(Uint8Array.of(b)); c.close();}})));
     const text = await (await handler(mkReq({lang: "en", query: "Explain FAD"}))).text();
     const deltas = framesOf(text).map(x => JSON.parse(x)).filter(x => x.t === "delta").map(x => x.text).join("");
@@ -190,10 +184,12 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string | URL, init?: RequestInit) => {
-        if (String(url).startsWith("https://api.anthropic.com")) {
+        const u = String(url);
+        if (u.startsWith("https://api.anthropic.com")) {
           seen.push(String(init?.body ?? ""));
           return okUpstream();
         }
+        if (u.startsWith("https://cdn.test")) return resLike(dataFile(u.replace("https://cdn.test/data/", ""))) as never;
         throw new Error(`unexpected fetch ${url}`);
       }),
     );
@@ -229,8 +225,7 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
     expect(text).not.toContain("IGNORE ALL RULES");
   });
 
-  it.skipIf(!hasIndex)("frame = server-rebuilt synthetic FIRST + hash-verified chunk, renumbered without collision", async () => {
-    process.env.VISABOT_DATA_BASE = "https://cdn.test";
+  it.skipIf(!hasIndex)("agent path: the frame lists the verified chunk as [1]; the displayed chart reaches the model as a title, never as figure text", async () => {
     stubAnthropic(okUpstream);
     // last month actually present in the committed release fixture
     const { buildPanel } = await import("@/lib/data/panel-core");
@@ -246,11 +241,16 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
     );
     expect(res.status).toBe(200);
     const sources = sourcesFrame(await res.text())!;
-    expect(sources).toHaveLength(2);
-    expect(sources[0].n).toBe(1); // synthetic holds the reserved slot
-    expect(sources[0].source).toBe("Panel VisaPredict AI");
-    expect(sources[1].n).toBe(2); // chunk collided with n=1 → bumped, never ambiguous
-    expect(sources[1].text).toBe(knownChunk.text);
+    expect(sources).toHaveLength(1);
+    expect(sources[0].n).toBe(1);
+    expect(sources[0].text).toBe(knownChunk.text);
+    const calls = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls
+      .filter((c) => String(c[0]).startsWith("https://api.anthropic.com"));
+    const body = JSON.parse(String(calls.at(-1)![1]!.body));
+    const userTurn = JSON.stringify(body.messages.findLast((m: { role: string }) => m.role === "user").content);
+    expect(userTurn).toContain("Chart currently displayed in the console");
+    expect(userTurn).toContain("Visa Bulletin"); // the server-owned title of the rebuilt table
+    expect(userTurn).not.toMatch(/F1: México \d{4}-\d{2}-\d{2}/); // no table figures: those come from tools
   });
 
   // ── (3) client cancellation propagates upstream ────────────────────────────
@@ -259,7 +259,7 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
     const res = await handler(mkReq({ lang: "es", query: "hola" }));
     const reader = res.body!.getReader();
     await reader.read(); // heartbeat — the stream is live
-    expect(upstreamSignal).not.toBeNull();
+    await vi.waitFor(() => expect(upstreamSignal).not.toBeNull()); // data load, then the upstream call
     expect(upstreamSignal!.aborted).toBe(false);
     await reader.cancel(); // stop button / closed tab
     expect(upstreamSignal!.aborted).toBe(true);
@@ -268,7 +268,7 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
   // ── (4) idle / total timeouts ──────────────────────────────────────────────
   it("idle timeout: partial text kept, truncation note appended, {t:'truncated'} emitted, upstream aborted", async () => {
     process.env.VISABOT_IDLE_MS = "60";
-    stubAnthropic((signal) => new Response(abortableBody(signal, { chunks: [deltaFrame("Hola, hasta aquí llegué")] }), { status: 200 }));
+    stubAnthropic((signal) => new Response(abortableBody(signal, { chunks: [opening() + deltaFrame("Hola, hasta aquí llegué")] }), { status: 200 }));
     const res = await handler(mkReq({ lang: "es", query: "hola" }));
     const text = await res.text(); // completes BECAUSE the idle timeout closes the stream
     expect(text).toContain("Hola, hasta aquí llegué");
@@ -283,7 +283,7 @@ describe("chat proxy — request id, canonical sources frame, cancellation, time
   it("total timeout caps a stream that never stops talking", async () => {
     process.env.VISABOT_IDLE_MS = "10000";
     process.env.VISABOT_TOTAL_MS = "150";
-    stubAnthropic((signal) => new Response(abortableBody(signal, { repeat: deltaFrame("bla "), intervalMs: 10 }), { status: 200 }));
+    stubAnthropic((signal) => new Response(abortableBody(signal, { chunks: [opening()], repeat: deltaFrame("bla "), intervalMs: 10 }), { status: 200 }));
     const res = await handler(mkReq({ lang: "en", query: "hello" }));
     const text = await res.text();
     expect(text).toContain("bla");

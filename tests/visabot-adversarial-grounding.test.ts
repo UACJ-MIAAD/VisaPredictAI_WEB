@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { pinGrounding } from "@/lib/visabot/retrieval-core.mjs";
 import { mergeFollowUp, detectEntities } from "@/lib/visabot/analytics";
-import { systemPrompt, topicReminders } from "../netlify/functions/chat.mjs";
+import { topicReminders } from "../netlify/functions/chat.mjs";
+import { agentSystem } from "../lib/visabot/agent.mjs";
+// The agent's system prompt (static rules + per-release catalog) as one string.
+const agentPrompt = (lang: "es" | "en", horizon = 12) =>
+  agentSystem({ lang, surface: "console", catalog: { firstMonth: "2001-12", latestMonth: "2026-11", categories: ["F1", "F2A"], horizon } })
+    .map((b: { text: string }) => b.text).join("\n");
+
 
 // Adversarial audit of the live VisaBot (28-oct-2026): each case below is a
 // wrong answer production gave, reduced to the grounding gap that caused it.
@@ -79,21 +85,21 @@ describe("mergeFollowUp (console follow-ups)", () => {
   });
 });
 
-describe("system prompt grounding rules", () => {
+describe("agent prompt grounding rules", () => {
   for (const lang of ["es", "en"] as const) {
-    const p = systemPrompt(lang, [], "console");
+    const p = agentPrompt(lang);
     it(`${lang}: separates F1 from the F-1 student visa and rejects nonexistent categories`, () => {
-      expect(p).toMatch(lang === "es" ? /F1 NO es la visa de estudiante F-1/ : /F1 is NOT the F-1 student visa/);
-      expect(p).toMatch(/F6/);
+      expect(p).toMatch(/F1 is not the F-1 student visa; there is no F5 or F6/);
     });
     it(`${lang}: defines the MCS against the best model, not the deployed champion`, () => {
-      expect(p).toMatch(lang === "es" ? /MEJOR modelo del hold-out/ : /BEST model in the hold-out/);
+      expect(p).toMatch(/statistically indistinguishable from the best hold-out model, not "models equivalent to the deployed champion"/);
     });
-    it(`${lang}: checks a priority date against the latest real cutoff first`, () => {
-      expect(p).toMatch(lang === "es" ? /ya está al corriente/ : /already current/);
+    it(`${lang}: a priority date is current only when strictly earlier than the cutoff`, () => {
+      expect(p).toMatch(/current when it is strictly EARLIER than the published cutoff\. Equal is not yet current/);
     });
-    it(`${lang}: forbids describing a forecast chart that is not there`, () => {
-      expect(p).toMatch(lang === "es" ? /SIN GRÁFICO NO HAY PRONÓSTICO/ : /NO CHART, NO FORECAST/);
+    it(`${lang}: forbids describing a chart that is not there and figures not looked up`, () => {
+      expect(p).toMatch(/never describe a chart you did not display/);
+      expect(p).toMatch(/must come from a tool result or a numbered source/);
     });
   }
 });
@@ -130,38 +136,43 @@ describe("topic reminders restated after the sources", () => {
 
   it("unrelated questions get no reminder block", () => {
     expect(topicReminders("es", "¿Qué es la retrogresión?")).toBe("");
-    expect(systemPrompt("es", [], "console", "¿Qué es la retrogresión?")).not.toMatch(/RECORDATORIOS/);
   });
 
-  it("the block closes the system prompt, after the sources", () => {
-    const ctx = [{ n: 1, source: "Repo · Model card", title: "5. Evaluación", text: "MCS" }];
-    const p = systemPrompt("es", ctx, "console", "¿Qué modelo gana en DFF?");
-    expect(p.indexOf("RECORDATORIOS PARA ESTA PREGUNTA")).toBeGreaterThan(p.indexOf("FUENTES:"));
-    // more reminders may follow (demo rehearsal 15-nov); the MCS one must sit in the block after the sources
-    expect(p.slice(p.indexOf("RECORDATORIOS PARA ESTA PREGUNTA")).includes("ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.")).toBe(true);
+  it("the DFF-winner block carries the full MCS reminder", () => {
+    const p = topicReminders("es", "¿Qué modelo gana en DFF?");
+    expect(p.startsWith("RECORDATORIOS PARA ESTA PREGUNTA")).toBe(true);
+    expect(p.includes("ni que «son equivalentes al campeón»: el campeón desplegado sale del gate campeón-retador y el MCS no lo compara con él. Como receta desplegada de cada tabla nombra sólo la que las fuentes llamen campeón desplegado; que el gate retrospectivo declare «apta» otra receta no la vuelve la desplegada.")).toBe(true);
   });
 });
 
 describe("the handler sends the reminders for the user's question", () => {
-  afterEach(() => { vi.unstubAllGlobals(); });
-  it("the Anthropic body carries the MCS reminder for the DFF-winner question", async () => {
+  afterEach(() => { vi.unstubAllGlobals(); delete process.env.VISABOT_DATA_BASE; });
+  it("the Anthropic request carries the MCS reminder for the DFF-winner question", async () => {
     process.env.ANTHROPIC_API_KEY = "test-key-never-used";
+    process.env.VISABOT_DATA_BASE = "https://cdn.test";
+    const { readFileSync } = await import("node:fs");
+    const { anthropicSSE, sseResponse } = await import("./anthropic-sse");
     const bodies: string[] = [];
     vi.stubGlobal("fetch", vi.fn(async (url: string | URL, init?: RequestInit) => {
-      if (!String(url).startsWith("https://api.anthropic.com")) throw new Error(`unexpected fetch ${String(url)}`);
+      const u = String(url);
+      if (u.startsWith("https://cdn.test/data/")) {
+        const buf = readFileSync(new URL(`../public/data/${u.replace("https://cdn.test/data/", "")}`, import.meta.url));
+        return { ok: true, arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) } as never;
+      }
+      if (!u.startsWith("https://api.anthropic.com")) throw new Error(`unexpected fetch ${u}`);
       bodies.push(String(init?.body));
-      return new Response('data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
-        { status: 200, headers: { "content-type": "text/event-stream" } });
+      return sseResponse(anthropicSSE({ text: ["ok"] }));
     }));
     const { default: handler } = await import("../netlify/functions/chat.mjs");
     const res = await handler(new Request("https://visapredictai.com/.netlify/functions/chat", {
       method: "POST",
-      headers: { origin: "http://localhost:3000", "content-type": "application/json" },
+      headers: { origin: "http://localhost:3000", "content-type": "application/json", "x-nf-client-connection-ip": "10.66.0.1" },
       body: JSON.stringify({ lang: "es", query: "¿Qué modelo gana en la tabla DFF y con qué MASE?", surface: "console" }),
     }));
     expect(res.status).toBe(200);
     await res.text();
-    const { system } = JSON.parse(bodies[0]) as { system: string };
-    expect(system).toMatch(/RECORDATORIOS PARA ESTA PREGUNTA[\s\S]*MEJOR modelo del hold-out/);
+    const { messages } = JSON.parse(bodies[0]) as { messages: { role: string; content: string }[] };
+    const sys = messages.find((m) => m.role === "system")!;
+    expect(sys.content).toMatch(/RECORDATORIOS PARA ESTA PREGUNTA[\s\S]*MEJOR modelo del hold-out/);
   });
 });

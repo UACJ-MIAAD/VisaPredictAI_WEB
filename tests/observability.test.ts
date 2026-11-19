@@ -175,3 +175,14 @@ describe("(3) mergeServerSources — the displayed list IS the server frame", ()
     expect(mergeServerSources(local, undefined)).toEqual([]);
   });
 });
+describe("agent tool sources never pair with local synthetics by number", () => {
+  const local: Source[] = [{ n: 1, title: "", source: "Gráfica", text: "local chart grounding", url: "", synthetic: true }];
+  it("keeps the server path and is not marked synthetic", () => {
+    const [s] = mergeServerSources(local, [{ n: 1, title: "Historia", source: "Panel verificado VisaPredict AI", text: "tool output", url: "/datos-historicos/#historico" } as ServerSource]);
+    expect(s).toMatchObject({ url: "/datos-historicos/#historico", synthetic: false });
+  });
+  it("legacy synthetic frames without a path still pair by number", () => {
+    const [s] = mergeServerSources(local, [{ n: 1, title: "", source: "Gráfica", text: "rebuilt server-side" } as ServerSource]);
+    expect(s.synthetic).toBe(true);
+  });
+});

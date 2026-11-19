@@ -1,8 +1,8 @@
 import type { Panel } from "@/lib/data/visa-panel";
 import type { ForecastStore } from "@/lib/data/forecasts";
-import type { ChartPayload, SyntheticDescriptor } from "@/components/visabot/types";
+import type { AgentChart, ChartPayload, SyntheticDescriptor } from "@/components/visabot/types";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
-import {buildPriorityCheck,priorityCheckSummary} from "./priority-check.mjs";
+import { priorityCheckSpec } from "./priority-check.mjs";
 import { MONTHS_ES, MONTHS_EN } from "./synthetic-builders.mjs";
 import {
   detectEntities, detectCountries, seriesCompareFacts, seriesCompareText, seriesCompareSummary,
@@ -20,11 +20,6 @@ const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
 type ChartAndDescriptor = { chart: ChartPayload; descriptor?: SyntheticDescriptor; grounding?: { text: string; display: string } };
 
 export function chartForQuery(q: string, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartAndDescriptor | null {
-  const priority=buildPriorityCheck(q,panel,forecasts,lang);
-  if(priority) {
-    const summary=priorityCheckSummary(priority,lang);
-    return {chart:priority,grounding:{text:summary,display:summary}};
-  }
   const e = detectEntities(q, panel);
   const t = e.table || "FAD";
   const rid = SITE_STATS.releaseId;
@@ -114,3 +109,33 @@ export function chartForQuery(q: string, panel: Panel, lang: "es" | "en", foreca
 }
 
 
+
+// The chart the agent asked for (server show_chart / check_priority_date),
+// rebuilt here from the same release data with the shared builders. Returns
+// null when the descriptor does not resolve to a drawable chart.
+export function chartFromAgent(d: AgentChart, panel: Panel, lang: "es" | "en", forecasts: ForecastStore | null): ChartPayload | null {
+  const t = d.table === "DFF" ? "DFF" : "FAD";
+  const { country, category } = d;
+  switch (d.kind) {
+    case "forecast":
+      return country && category ? buildForecast(panel, country, category, t, lang, forecasts?.horizonMonths || undefined, 48, forecasts) : null;
+    case "history":
+      return country && category ? buildLine(panel, country, category, t, lang) : null;
+    case "movement":
+      return country && category ? buildMovement(panel, country, category, t, lang) : null;
+    case "compare_countries":
+      return category && d.countries?.length ? buildMultiLine(panel, category, t, lang, forecasts, d.countries) : null;
+    case "bulletin_table":
+      return d.month ? buildMonthTable(panel, d.month, t, lang) : null;
+    case "bulletin_diff":
+      return d.month && d.month_b ? buildBulletinDiff(panel, d.month, d.month_b, t, lang) : null;
+    case "priority_check": {
+      const spec = priorityCheckSpec({ priorityDate: d.priority_date ?? null, country: country ?? null, category: category ?? null, table: t }, panel, forecasts, lang);
+      // A stale local panel must never contradict the server's verified comparison.
+      if (d.result !== undefined && (spec.result !== d.result || (spec.cutoff ?? null) !== (d.cutoff ?? null))) return null;
+      return spec;
+    }
+    default:
+      return null;
+  }
+}

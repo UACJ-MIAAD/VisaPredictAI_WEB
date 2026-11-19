@@ -5,29 +5,44 @@ is **generated automatically** from the data repo + the site's own academic
 content — **no hand-written facts**. See `docs/VISABOT_PLAN.md` for the full
 user-story plan. This file is the short operator's manual.
 
-## How it works
+## How it works (agent, 19-nov-2026)
 
 ```
 BUILD (npm run prebuild → build-rag-index.mjs, no API keys)
-  • reads content/source.html (ES) + content/en/*.html (EN)  → academic + glossary + references chunks
-  • fetches from github.com/UACJ-MIAAD/VisaPredictAI (raw)    → data dictionary, schema, README, queries, roadmap
-  • fetches data/processed/bulletins.json                     → live "what changed this month" facts
-  • embeds every chunk locally (Transformers.js, multilingual-e5-small q8)
-  → public/rag/index.json   (chunks + base64 Float32 vectors)
-  → public/rag/suggestions.json (data-derived starter prompts)
-  → public/models/…  (self-hosted q8 model, ~129 MB)   ← gitignored, rebuilt each deploy
-  → public/ort/…     (self-hosted onnxruntime-web wasm) ← gitignored
+  • academic content + data-repo docs → public/rag/{index,chunks}.json + rag-hashes.json
+  • self-hosted e5 model for optional in-browser semantic retrieval
 
-RUNTIME (browser, components/visabot/)
-  open → load index + (lazy) model → retrieve:
-    dense cosine (e5) + sparse BM25  → RRF fusion → MMR diversity → top-6
+RUNTIME
+  browser: BM25 (+ e5 after consent) → top-6 hash-verifiable chunks
+           console also guesses a first chart from the wording (chart-router)
   → POST {query, history, context, synthetics?} to /.netlify/functions/chat
-  → Claude streams a grounded, cited answer ([n] → deep-link to the source section)
-  no key / offline → extractive fallback (composes a cited answer from top chunks)
+  server : loads the hash-pinned release data (panel + forecasts) and runs a
+           Claude tool loop (lib/visabot/agent.mjs):
+             get_series · get_forecast · check_priority_date · get_bulletin ·
+             compare_bulletins · compare_countries · search_docs · show_chart*
+           every number the model states comes from a tool result over those
+           verified artifacts; tool outputs are plain facts (ISO dates), no orders
+  → SSE: sources, status, source, chart*, delta, done   (*console only)
+  no key / offline → extractive fallback (cited chunks)
 ```
 
-BM25 answers instantly; the 129 MB embedding model loads in the background and
-upgrades retrieval to hybrid once ready (status pill in the header).
+Why: the previous pipeline handed a small model prose templates chosen by a
+regex router. In production (18-nov-2026) it quoted China/All Chargeability's
+F4 cutoff (2012-10-22) as Mexico's (2001-04-22), repeated internal orders to
+the user ("Enmárcalo como…"), and answered "marzo 2010" with a demand for an
+ISO date although that F2B date was already current. The agent reads the
+user's own words, asks for exactly the series it needs and cites the tool
+output; a full calendar date it writes that no tool, source or user message
+contains is flagged in the answer (`auditDates`).
+
+Budget: Netlify caps a streamed response at **60 s**. Total 55 s, no new tool
+round after 35 s (the last turn runs with `tool_choice: none`), idle 20 s
+(`VISABOT_TOTAL_MS`, `VISABOT_TOOL_BUDGET_MS`, `VISABOT_IDLE_MS`).
+
+Prompt: static rules + tool list are byte-identical across requests (prompt
+cache); the per-release catalog (panel range, categories, verified horizon)
+is a second cached system block; per-question domain reminders
+(`topicReminders`) travel as a mid-conversation system message.
 
 ## Canonical sources, cancellation & observability (US I5)
 
@@ -80,7 +95,7 @@ data: {"t":"error","code":"…"}               typed errors (see the module head
 
 1. **Set env var** `ANTHROPIC_API_KEY` (Site settings → Environment variables).
    Without it the bot still works in **extractive mode** (cited, no generation).
-2. Optional `VISABOT_MODEL` (default `claude-haiku-4-5`) to pick another Claude model.
+2. Optional `VISABOT_MODEL` (default `claude-opus-5-5`, see `lib/visabot/agent.mjs`) and `VISABOT_EFFORT` (default `low`).
 3. Optional `VISABOT_ALLOWED_ORIGINS` (comma-separated hosts; default
    `visapredictai.com,www.visapredictai.com`). The `chat` function rejects
    requests whose `Origin`/`Referer` isn't allowed (curbs off-site abuse of your
@@ -151,6 +166,7 @@ fallback. Live generation only runs once `ANTHROPIC_API_KEY` is set on Netlify.
 |---|---|
 | `scripts/build-rag-index.mjs` | knowledge-engine builder (zero hardcoded facts) |
 | `scripts/rag-selfcheck.mjs` · `scripts/visabot-smoke.mjs` | tests |
-| `netlify/functions/chat.mjs` | streaming Claude proxy (only secret: `ANTHROPIC_API_KEY`) |
+| `netlify/functions/chat.mjs` | streaming agent endpoint (only secret: `ANTHROPIC_API_KEY`) |
+| `lib/visabot/agent.mjs` · `lib/visabot/agent-tools.mjs` | tool loop, system prompt · tools over verified data, date audit |
 | `components/visabot/{visabot,engine,markdown,types}.{tsx,ts}` | UI + retrieval + render |
 | `lib/i18n.ts` (vb* keys) · `components/site-shell.tsx` · `netlify.toml` | wiring |
