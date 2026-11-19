@@ -120,7 +120,7 @@ describe("the hook duplicates no data and disturbs nothing", () => {
   });
 
   it("the row keeps its deep link, its pin and its accuracy tier", () => {
-    for (const invariante of ["onOpen", "onPin", "aria-pressed", "maseTier"]) {
+    for (const invariante of ["onOpen", "onPin", "aria-pressed", "maseVsNaive"]) {
       expect(CARD).toContain(invariante);
     }
   });

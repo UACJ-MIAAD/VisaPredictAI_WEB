@@ -2,7 +2,8 @@
 
 // Floating shortcut to VisaBot. The chat lives in one place, /asistente, where
 // answers can carry charts; this is just a link to it, hidden there and on the
-// home page (which has its own question box).
+// home page (which has its own question box) and on /resultados (whose
+// instrument links to VisaBot with the open series).
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles } from "lucide-react";
@@ -14,7 +15,7 @@ import { track } from "@/lib/analytics";
 export function VisaBotLauncher() {
   const { lang } = useLang();
   const base = basePath(usePathname() || "/");
-  if (base === "/asistente" || base === "/") return null;
+  if (base === "/asistente" || base === "/" || base === "/resultados") return null;
   return (
     <Link
       href={localePath("/asistente", lang)}
