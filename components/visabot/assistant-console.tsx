@@ -65,6 +65,7 @@ export function AssistantConsole() {
   const [panel, setPanel] = React.useState<Panel | null>(null);
   const [forecasts, setForecasts] = React.useState<ForecastStore | null>(null);
   const [panelErr, setPanelErr] = React.useState(false);
+  const [forecastsSettled, setForecastsSettled] = React.useState(false);
   const [stage, setStage] = React.useState(false);
   const [promptsOpen, setPromptsOpen] = React.useState(false);
   const stageTrapRef = useFocusTrap<HTMLDivElement>(stage && !promptsOpen, true);
@@ -118,21 +119,23 @@ export function AssistantConsole() {
   React.useEffect(() => {
     warm();
     loadPanel().then(setPanel).catch(() => setPanelErr(true));
-    loadForecasts().then(setForecasts).catch(() => {});
+    loadForecasts().then(setForecasts).catch(() => {}).finally(() => setForecastsSettled(true));
     fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts((d[lang]?.length ? d[lang] : d.es || d.en) || [])).catch(() => {});
   }, [lang, warm]);
 
   // A question handed over from the home page (?q=) is sent once the data it
-  // may need is ready, then removed from the URL so a reload doesn't resend it.
+  // may need is ready (the panel AND the production forecasts — a forecast
+  // chart built before they arrive falls back to the browser baseline), then
+  // removed from the URL so a reload doesn't resend it.
   const handed = React.useRef(false);
   React.useEffect(() => {
-    if (handed.current || (!panel && !panelErr)) return;
+    if (handed.current || (!panel && !panelErr) || !forecastsSettled) return;
     const q = new URLSearchParams(window.location.search).get("q")?.trim();
     if (!q) return;
     handed.current = true;
     window.history.replaceState(null, "", window.location.pathname + window.location.hash);
     sendQ(q.slice(0, 500));
-  }, [panel, panelErr, sendQ]);
+  }, [panel, panelErr, forecastsSettled, sendQ]);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -160,7 +163,7 @@ export function AssistantConsole() {
 
   return (
     <div id="asistente" ref={stageTrapRef} role={stage ? "dialog" : undefined} aria-modal={stage || undefined} aria-label={stage ? tr(lang, "acPresentationLabel") : undefined}
-      data-vb-ready={panel || panelErr ? "true" : undefined}
+      data-vb-ready={(panel || panelErr) && forecastsSettled ? "true" : undefined}
       className={`vb-console ${stage ? "vb-stage" : ""} flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden bg-[var(--color-bg)]`}>
       <header className="vb-console-topbar mx-auto flex w-full max-w-[860px] items-center gap-2 px-4 py-3 sm:px-6">
         <h1 className="text-base font-semibold tracking-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</h1>
