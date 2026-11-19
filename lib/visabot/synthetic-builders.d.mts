@@ -67,3 +67,4 @@ export declare function seriesCompareFacts(
 ): SeriesCompareSpec | null;
 export declare function seriesCompareText(spec: SeriesCompareSpec, lang: Lang): string;
 export declare function seriesCompareSummary(spec: SeriesCompareSpec, lang: Lang): string;
+export declare function bulletinDiffFacts(spec: unknown, lang: Lang): string;

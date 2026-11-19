@@ -75,7 +75,7 @@ retrieval (`retrieval-core.mjs`, the same module `engine.ts` imports):
   | `context` | `sanitizeContext` | unpublished instruction chunk is **dropped** (unknown hash, not a valid synthetic) |
   | `synthetic` | `validSyntheticShape` / `sanitizeContext` | forged synthetic is rejected by shape, or its instructional title/source is server-overwritten |
   | `stream` | `makeCodeGuard` / `makeEmojiStripper` | fenced code is cut; emojis stripped (arrows/▲▼ preserved) |
-  | `query` | `systemPrompt` | the defending rule is present in the prompt (behavior itself is tested with `--live`) |
+  | `query` | `agentSystem` (`lib/visabot/agent.mjs`) | the defending rule is present in the prompt (behavior itself is tested with `--live`) |
 
 - **(e) Citation-capability** — same as (a): the sources the client would render.
 
@@ -142,6 +142,6 @@ on model calls.
 - Query-vector poisoning is gated statically by rule-presence in the prompt; the
   actual refusal behavior is only observed under `--live`.
 - The gate imports the live guards from `netlify/functions/chat.mjs`
-  (`sanitizeContext`, `validSyntheticShape`, `makeCodeGuard`, `makeEmojiStripper`,
-  `systemPrompt`) on purpose (single source). If those exports are renamed, the
+  (`sanitizeContext`, `validSyntheticShape`, `makeCodeGuard`, `makeEmojiStripper`)
+  and the agent prompt from `lib/visabot/agent.mjs` (`agentSystem`) on purpose (single source). If those exports are renamed, the
   gate's imports must be updated in lock-step.

@@ -16,7 +16,13 @@ import { describe, it, expect, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { sanitizeContext, systemPrompt, validSyntheticShape } from "../netlify/functions/chat.mjs";
+import { sanitizeContext, validSyntheticShape } from "../netlify/functions/chat.mjs";
+import { agentSystem } from "../lib/visabot/agent.mjs";
+// The agent's system prompt (static rules + per-release catalog) as one string.
+const agentPrompt = (lang: "es" | "en", horizon = 12) =>
+  agentSystem({ lang, surface: "console", catalog: { firstMonth: "2001-12", latestMonth: "2026-11", categories: ["F1", "F2A"], horizon } })
+    .map((b: { text: string }) => b.text).join("\n");
+
 import { SITE_STATS } from "../lib/content/site-stats.generated";
 import { buildPanel } from "@/lib/data/panel-core";
 import { buildForecast, forecastText, type ChartSpec } from "@/lib/visabot/analytics";
@@ -44,28 +50,21 @@ const fspec = (lang: "es" | "en", over: Partial<FSpec> = {}): FSpec =>
     ...over,
   }) as FSpec;
 
-describe("(a)+(d) system prompt: derived horizon + abstention order", () => {
-  it("ES prompt interpolates SITE_STATS.horizonMonths and orders abstention", () => {
-    const p = systemPrompt("es", [], "console");
-    expect(p).toContain(`proyección a ${H} meses`);
-    expect(p).toContain(`MÁS ALLÁ de los ${H} meses publicados`);
-    expect(p).toContain("remite al boletín oficial en travel.state.gov");
-    expect(p).toContain("NO des ninguna fecha ni estimación fuera del horizonte publicado");
-    expect(p).not.toMatch(/estimaci[oó]n aproximada/); // the extrapolation order is dead
-  });
-
-  it("EN prompt interpolates SITE_STATS.horizonMonths and orders abstention", () => {
-    const p = systemPrompt("en", [], "console");
-    expect(p).toContain(`${H}-month projection`);
-    expect(p).toContain(`BEYOND the published ${H} months`);
+describe("(a)+(d) agent prompt: derived horizon + abstention order", () => {
+  it.each(["es", "en"] as const)("%s prompt states the verified horizon and orders abstention past it", (lang) => {
+    const p = agentPrompt(lang, H);
+    expect(p).toContain(`Production forecast horizon: ${H} months`);
+    expect(p).toContain("Never give or imply a date, month or year beyond the horizon");
+    expect(p).toContain("never extrapolate a pace into a future date");
     expect(p).toContain("official Visa Bulletin at travel.state.gov");
-    expect(p).toContain("do NOT give any date or estimate past the published horizon");
-    expect(p).not.toMatch(/pace-based estimate/);
+    expect(p).not.toMatch(/pace-based estimate|estimaci[oó]n aproximada/);
   });
 
-  it("chat.mjs source carries NO hand-typed horizon (regla #0)", () => {
-    const src = readFileSync(join(root, "netlify", "functions", "chat.mjs"), "utf8");
-    expect(src).not.toMatch(/12 (meses|months)|12-month/);
+  it("no hand-typed horizon in the proxy or the agent (regla #0)", () => {
+    for (const f of [["netlify", "functions", "chat.mjs"], ["lib", "visabot", "agent.mjs"], ["lib", "visabot", "agent-tools.mjs"]]) {
+      const src = readFileSync(join(root, ...f), "utf8");
+      expect(src).not.toMatch(/12 (meses|months)|12-month/);
+    }
   });
 });
 

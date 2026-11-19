@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { makeBandWording, systemPrompt } from "../netlify/functions/chat.mjs";
+import { makeBandWording } from "../netlify/functions/chat.mjs";
+import { agentSystem } from "../lib/visabot/agent.mjs";
+// The agent's system prompt (static rules + per-release catalog) as one string.
+const agentPrompt = (lang: "es" | "en", horizon = 12) =>
+  agentSystem({ lang, surface: "console", catalog: { firstMonth: "2001-12", latestMonth: "2026-11", categories: ["F1", "F2A"], horizon } })
+    .map((b: { text: string }) => b.text).join("\n");
+
 
 // Thesis figure audit (29-oct-2026): a production answer called the 95 % forecast
 // band a «banda de confianza». The bands are prediction intervals.
@@ -30,11 +36,10 @@ describe("forecast band wording (makeBandWording)", () => {
   });
 });
 
-describe("system prompt interval rule", () => {
+describe("agent prompt interval rule", () => {
   for (const lang of ["es", "en"] as const) {
     it(`${lang}: names the bands prediction intervals, never confidence`, () => {
-      const p = systemPrompt(lang, [], "console");
-      expect(p).toMatch(lang === "es" ? /INTERVALOS: .*intervalos de PREDICCIÓN.*NUNCA «de confianza»/ : /INTERVALS: .*PREDICTION intervals.*NEVER "confidence"/);
+      expect(agentPrompt(lang)).toMatch(/80% and 95% prediction intervals: they bound the future cutoff\. Never call them confidence intervals\./);
     });
   }
 });

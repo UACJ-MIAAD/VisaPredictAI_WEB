@@ -33,8 +33,8 @@ import { AssistantSidebar, type ToolDef, type ToolKind } from "./assistant-sideb
 import { SemanticConsent } from "./semantic-consent";
 import {VisaObservatory} from "./visa-observatory";
 import { useVisabotChat } from "./use-visabot-chat";
-import { chartForQuery } from "@/lib/visabot/chart-router";
-import type { ChartPayload, Source, SyntheticDescriptor } from "./types";
+import { chartForQuery, chartFromAgent } from "@/lib/visabot/chart-router";
+import type { AgentChart, ChartPayload, Source, SyntheticDescriptor } from "./types";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
@@ -120,16 +120,17 @@ export function AssistantConsole() {
   // context) — the server rebuilds the same text itself from the returned
   // descriptor over hash-verified release data, and echoes what it actually
   // used in the {t:"sources"} frame.
+  const buildAgentChart = React.useCallback(
+    (d: AgentChart) => (panel ? chartFromAgent(d, panel, lang, forecasts) ?? undefined : undefined),
+    [panel, lang, forecasts],
+  );
+
   const prepare = React.useCallback((rq: string, sources: Source[]): { sources: Source[]; chart?: ChartPayload; synthetics?: SyntheticDescriptor[] } => {
     const res = panel ? chartForQuery(rq, panel, lang, forecasts) : null;
     const chart = res?.chart;
     // Ground the LLM in the real month data so it answers any cell and never
     // looks "limited to recent years" — the table covers the full panel range.
-    if (res?.grounding && chart?.kind === "priorityCheck") {
-      // The exact comparison is also the entire offline fallback; unrelated
-      // retrieved bulletin cells must never overwrite its country or cutoff.
-      sources=[{n:1,title:chart.title,source:panelSource(lang),url:localePath("/datos-historicos",lang)+"#historico",text:res.grounding.text,display:res.grounding.display,synthetic:true}];
-    } else if (res?.grounding && chart) {
+    if (res?.grounding && chart) {
       sources = [{ n: 1, title: chart.title, source: panelSource(lang), url: localePath("/datos-historicos", lang) + "#historico", text: res.grounding.text, display: res.grounding.display, synthetic: true },
         ...sources.map((s) => ({ ...s, n: s.n + 1 }))];
     } else if (chart?.kind === "table") {
@@ -158,7 +159,7 @@ export function AssistantConsole() {
     messages, setMessages, input, setInput, busy, send, stop, newChat, copy, copiedId,
     atBottom, setAtBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
     semantic, modelReady, dlProgress, constrained, enableSemantic, liveStatus,
-  } = useVisabotChat({ lang, surface: "console", prepare, mergeFollowUp });
+  } = useVisabotChat({ lang, surface: "console", prepare, mergeFollowUp, buildAgentChart });
 
   // sending from anywhere in the console also closes the mobile drawer
   const sendQ = React.useCallback((t: string) => {

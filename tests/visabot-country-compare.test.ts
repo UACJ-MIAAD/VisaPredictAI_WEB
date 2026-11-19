@@ -3,6 +3,7 @@
 // the model told the user India F2A had no validated data. Both series are in
 // the panel and in forecasts.csv. These tests run the real path: released
 // artifacts → chat handler → the request body that would reach Anthropic.
+import { anthropicSSE, sseResponse } from "./anthropic-sse";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -32,8 +33,10 @@ describe("country comparison over the released artifacts (chat handler → Anthr
     const u = String(url);
     if (u.startsWith("https://api.anthropic.com")) {
       sentBodies.push(String(init?.body));
-      return new Response('data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
-        { status: 200, headers: { "content-type": "text/event-stream" } });
+      const turn = sentBodies.length === 1
+        ? { tools: [{ id: "t1", name: "compare_countries", input: { countries: ["mexico", "india"], category: "F2A", table: "FAD" } }] }
+        : { text: ["ok"] };
+      return sseResponse(anthropicSSE(turn));
     }
     if (u.startsWith("https://cdn.test/data/")) {
       try { return resLike(dataFile(u.replace("https://cdn.test/data/", ""))) as never; } catch { return resLike(null) as never; }
@@ -69,8 +72,9 @@ describe("country comparison over the released artifacts (chat handler → Anthr
       const res = await post(lang, [compare(["mexico", "india"])]);
       expect(res.status).toBe(200);
       await res.text();
-      const system = (JSON.parse(sentBodies[0]) as { system: string }).system;
-      expect(system).toMatch(lang === "en" ? /COUNTRY COMPARISON/ : /COMPARACIÓN DE PAÍSES/);
+      expect(sentBodies).toHaveLength(2); // compare_countries tool round, then the answer
+      const system = JSON.stringify((JSON.parse(sentBodies[1]) as { messages: unknown }).messages);
+      expect(system).toMatch(/production forecast 12 months ahead|production forecast \d+ months ahead/);
       for (const c of ["mexico", "india"]) expect(system).toContain(cellOf(latest(c)));
       expect(system).toMatch(/India \d{4}-\d{2}-\d{2}/);
       expect(system).not.toMatch(/India —; |India —$/m);

@@ -51,7 +51,16 @@ export type SyntheticDescriptor =
     };
 
 // Server-rebuilt synthetic source returned in the first SSE frame ({t:"sources"}).
-export type ServerSource = { n: number; title: string; source: string; text: string };
+export type ServerSource = { n: number; title: string; source: string; text: string; url?: string };
+
+// Chart the agent asked the console to display (show_chart / check_priority_date
+// on the server). Identifiers only; the console builds the chart itself from
+// the same release data with the shared builders.
+export type AgentChart = {
+  kind: "forecast" | "history" | "movement" | "compare_countries" | "bulletin_table" | "bulletin_diff" | "priority_check";
+  country?: string; category?: string; table?: string; countries?: string[];
+  month?: string; month_b?: string; priority_date?: string;
+};
 
 // chart payload attached to a bot message (rendered below the text)
 export type ChartPayload = import("@/lib/visabot/analytics").ChartSpec;
@@ -65,4 +74,6 @@ export type ChatMessage = {
   // US I5: the answer was cut before completion — by the user's stop button
   // (client abort) or by a server timeout (chat.mjs idle/total truncation).
   incomplete?: boolean;
+  // progress line while the agent is consulting data ("Leyendo el pronóstico…")
+  status?: string;
 };

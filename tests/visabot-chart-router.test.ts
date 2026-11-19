@@ -1,15 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { chartForQuery } from "@/lib/visabot/chart-router";
+import { chartForQuery, chartFromAgent } from "@/lib/visabot/chart-router";
 import { buildPanel } from "@/lib/data/panel-core";
 const panel = buildPanel(readFileSync(new URL("../public/data/visa_panel_long.csv", import.meta.url), "utf8"));
 const months = [...new Set(panel.rows.map(r => r.bulletinMonth))].sort();
 describe("rehearsal routing (Opus findings, executed)", () => {
-  it("checks an already-reached priority date instead of drawing a future wait", () => {
-    expect(chartForQuery("cuando me toca F2A pd sept 19 2024 mexicano", panel, "es", null)?.chart).toMatchObject({kind:"priorityCheck",result:"before",cutoff:"2026-04-22",priorityDate:"2024-09-19"});
+  // Priority dates are read by the agent (check_priority_date); the console
+  // draws the card from the descriptor it emits, never from a regex parse.
+  it("the agent's priority card for an already-reached date says so", () => {
+    expect(chartFromAgent({kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2024-09-19"}, panel, "es", null)).toMatchObject({kind:"priorityCheck",result:"before",cutoff:"2026-04-22",priorityDate:"2024-09-19"});
   });
-  it("states clearly when a priority date is not yet before the cutoff", () => {
-    expect(chartForQuery("México F2A mi fecha de prioridad es 2027-09-19, ¿cuándo me toca?", panel, "es", null)?.chart).toMatchObject({kind:"priorityCheck",result:"after",cutoff:"2026-04-22"});
+  it("the agent's priority card states clearly when a date is not yet before the cutoff", () => {
+    expect(chartFromAgent({kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2027-09-19"}, panel, "es", null)).toMatchObject({kind:"priorityCheck",result:"after",cutoff:"2026-04-22"});
+  });
+  it("the wording router no longer turns a priority-date question into a rigid card", () => {
+    expect(chartForQuery("Soy de México, F2B, mi fecha de prioridad es marzo 2010. ¿Cuándo me toca?", panel, "es", null)?.chart.kind).not.toBe("priorityCheck");
+  });
+  it.each([
+    [{kind:"forecast",country:"mexico",category:"F4",table:"FAD"}, "forecast"],
+    [{kind:"history",country:"india",category:"EB2",table:"FAD"}, "line"],
+    [{kind:"bulletin_table",month:months.at(-1),table:"DFF"}, "table"],
+    [{kind:"bulletin_diff",month:months.at(-2),month_b:months.at(-1),table:"FAD"}, "bulletinDiff"],
+  ] as const)("chartFromAgent draws %j", (d, kind) => {
+    expect(chartFromAgent(d as never, panel, "es", null)?.kind).toBe(kind);
   });
   it.each(["¿Qué cambió en el último boletín?", "What changed in the latest bulletin?", "Compara dos boletines", "Compare two bulletins"])("%s compares actual consecutive bulletins", q => {
     const result = chartForQuery(q, panel, "es", null);

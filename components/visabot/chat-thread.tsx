@@ -54,11 +54,11 @@ export function ChatThread({
             <div className={`vb-bubble vb-bot ${wide ? "min-w-0 max-w-full overflow-hidden" : ""}`}>
               {m.chart && renderChart ? <div id={`vb-chart-${i}`} tabIndex={-1} className="vb-answer-chart">{renderChart(m.chart)}</div> : null}
               {m.content ? (
-                m.chart?.kind === "priorityCheck" ? null : <Markdown text={m.content} sources={m.chart ? m.sources?.map(s => s.synthetic ? {...s, url: `#vb-chart-${i}`} : s) : m.sources} />
+                <Markdown text={m.content} sources={m.chart ? m.sources?.map(s => s.synthetic ? {...s, url: `#vb-chart-${i}`} : s) : m.sources} />
               ) : (
                 <span className="flex items-center gap-2 text-[var(--color-muted)]">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  {tr(lang, "vbThinking")}
+                  {m.status || tr(lang, "vbThinking")}
                 </span>
               )}
               {m.extractive && m.content && (

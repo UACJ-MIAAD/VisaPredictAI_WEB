@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { pinGrounding } from "@/lib/visabot/retrieval-core.mjs";
-import { systemPrompt, topicReminders } from "../netlify/functions/chat.mjs";
+import { topicReminders } from "../netlify/functions/chat.mjs";
+import { agentSystem } from "../lib/visabot/agent.mjs";
+// The agent's system prompt (static rules + per-release catalog) as one string.
+const agentPrompt = (lang: "es" | "en", horizon = 12) =>
+  agentSystem({ lang, surface: "console", catalog: { firstMonth: "2001-12", latestMonth: "2026-11", categories: ["F1", "F2A"], horizon } })
+    .map((b: { text: string }) => b.text).join("\n");
+
 
 // Rehearsal of the conference demo questions (15-nov-2026), graded by an
 // independent agent against the served artifacts. Each case is a question
@@ -16,18 +22,17 @@ const titles = (idx: number[]) => idx.map((i) => CHUNKS[i].title);
 
 describe("cutoff rule: only a priority date EARLIER than the cutoff is current", () => {
   for (const lang of ["es", "en"] as const) {
-    const p = systemPrompt(lang, [], "console", "");
+    const p = agentPrompt(lang);
     it(`${lang}: the prompt never treats an equal date as current`, () => {
-      expect(p).not.toMatch(lang === "es" ? /ANTERIOR o igual/ : /EARLIER than or equal/);
-      expect(p).toMatch(lang === "es" ? /estrictamente ANTERIOR/ : /strictly EARLIER/);
+      expect(p).not.toMatch(/EARLIER than or equal|ANTERIOR o igual/);
+      expect(p).toMatch(/strictly EARLIER/);
     });
   }
 });
 
 describe("demo reminders", () => {
   it.each(["es", "en"] as const)("%s: acronyms are defined even for a question about error metrics", (lang) => {
-    const p = systemPrompt(lang, [], "console", "What error metrics does the project use?");
-    expect(p).toContain("FAD = Final Action Dates; DFF = Dates for Filing");
+    expect(agentPrompt(lang)).toContain("FAD = Final Action Dates, DFF = Dates for Filing");
   });
   it("explicitly supersedes historical leakage-free wording for metric questions", () => {
     expect(topicReminders("en", "What error metrics does the project use?")).toMatch(/current gap-fill caveat supersedes that label/);
@@ -98,8 +103,8 @@ describe("demo reminders", () => {
   });
 
   it("the base prompt no longer calls the horizon 'validated months'", () => {
-    expect(systemPrompt("es", [], "console", "")).not.toMatch(/meses validados/);
-    expect(systemPrompt("en", [], "console", "")).not.toMatch(/validated \d+ months/);
+    expect(agentPrompt("es")).not.toMatch(/meses validados|validated \d+ months/);
+    expect(agentPrompt("en")).not.toMatch(/meses validados|validated \d+ months/);
   });
 
   it("preview run: database counts come from the fact sheet and are never swapped", () => {

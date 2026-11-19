@@ -13,7 +13,7 @@ import * as React from "react";
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { resolveConversationQuery } from "@/lib/visabot/conversation";
-import {PRIORITY_SOURCE,isPriorityQuery,priorityCheckSummary} from "@/lib/visabot/priority-check.mjs";
+import { PRIORITY_SOURCE } from "@/lib/visabot/priority-check.mjs";
 import {
   retrieve,
   generate,
@@ -24,7 +24,7 @@ import {
   downloadProgress,
 } from "./engine";
 import { answerEventProps, isGuardRefusal, isTruncated } from "./observability";
-import type { ChatMessage, ChartPayload, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
+import type { AgentChart, ChatMessage, ChartPayload, Lang, ServerSource, Source, SyntheticDescriptor } from "./types";
 
 export type Surface = "widget" | "console";
 
@@ -42,7 +42,9 @@ export function mergeServerSources(local: Source[], server: ServerSource[] | und
     const l = byText.get(sv.text) ?? local.find((s) => s.synthetic && s.n === sv.n);
     const priority=Object.values(PRIORITY_SOURCE).includes(sv.source);
     const fallback=sv.source===PRIORITY_SOURCE.en?"/en/datos-historicos/#historico":"/datos-historicos/#historico";
-    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? (priority?fallback:""), synthetic: l?.synthetic ?? priority };
+    // Agent tool sources carry a server-owned site path; only same-site paths are honoured.
+    const serverUrl = typeof sv.url === "string" && /^\/(?!\/)/.test(sv.url) ? sv.url : "";
+    return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? (serverUrl || (priority?fallback:"")), synthetic: l?.synthetic ?? priority };
   });
 }
 
@@ -66,6 +68,7 @@ export function useVisabotChat({
   surface,
   prepare,
   mergeFollowUp,
+  buildAgentChart,
 }: {
   lang: Lang;
   surface: Surface;
@@ -78,6 +81,9 @@ export function useVisabotChat({
    *  entities the fragment names (country, table) replace the earlier ones.
    *  Without it the two are simply concatenated. */
   mergeFollowUp?: (prev: string, fragment: string) => string;
+  /** console-only: draws the chart the agent chose (show_chart). When it
+   *  returns a chart, it replaces the one `prepare` guessed from the wording. */
+  buildAgentChart?: (chart: AgentChart) => ChartPayload | undefined;
 }) {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState("");
@@ -255,9 +261,21 @@ export function useVisabotChat({
       // US I5: private latency metrics (aggregate buckets — never the query).
       const tStart = Date.now();
       let tFirst = 0;
+      // Patch the live assistant placeholder (status line, agent chart).
+      const patchLast = (patch: Partial<ChatMessage>) =>
+        setMessages((m) => {
+          if (!alive()) return m;
+          const c = [...m];
+          const last = c[c.length - 1];
+          if (!last || last.role !== "assistant") return m;
+          c[c.length - 1] = { ...last, ...patch };
+          return c;
+        });
+      let agentChart: ChartPayload | undefined;
+      if (chart) patchLast({ chart });
       try {
         const res = await generate(
-          isPriorityQuery(rq) ? rq : q,
+          q,
           history,
           sources,
           lang,
@@ -275,6 +293,13 @@ export function useVisabotChat({
           ctrl.signal,
           surface,
           synthetics,
+          {
+            onStatus: (status) => patchLast({ status }),
+            onChart: (d) => {
+              const built = buildAgentChart?.(d);
+              if (built) { agentChart = built; patchLast({ chart: built }); }
+            },
+          },
         );
         // US I5: for LLM answers the displayed sources are EXACTLY the server's
         // {t:"sources"} frame (everything that entered the grounded prompt —
@@ -282,10 +307,8 @@ export function useVisabotChat({
         // extractive fallback keeps the local list: it is composed client-side
         // from those very chunks, with no server prompt involved.
         const displayed = res.extractive ? sources : mergeServerSources(sources, res.serverSources);
-        // A page kept open across releases must not render an older local card
-        // beside newer server facts. Keep the authoritative text in that case.
-        const answerChart=chart?.kind==="priorityCheck" && !res.extractive &&
-          !res.serverSources?.some(s=>s.source===PRIORITY_SOURCE[lang] && s.text===priorityCheckSummary(chart,lang)) ? undefined : chart;
+        // The agent's chart wins over the one guessed from the wording.
+        const answerChart = agentChart ?? chart;
         const truncated = isTruncated(res.text); // server timeout cut (note appended by chat.mjs)
         setMessages((m) => {
           if (!alive()) return m;
@@ -325,7 +348,7 @@ export function useVisabotChat({
           const c = [...m];
           const last = c[c.length - 1];
           if (!last) return m;
-          c[c.length - 1] = { ...last, content: last.content || tr(lang, "vbError"), chart };
+          c[c.length - 1] = { ...last, content: last.content || tr(lang, "vbError"), chart: agentChart ?? chart, status: undefined };
           return c;
         });
         if (alive()) setLiveStatus(tr(lang, "vbError")); // don't leave SR announcing "thinking…"
@@ -336,7 +359,7 @@ export function useVisabotChat({
         }
       }
     },
-    [busy, lang, messages, surface, prepare, mergeFollowUp, modelReady],
+    [busy, lang, messages, surface, prepare, mergeFollowUp, modelReady, buildAgentChart],
   );
 
   const stop = React.useCallback(() => {

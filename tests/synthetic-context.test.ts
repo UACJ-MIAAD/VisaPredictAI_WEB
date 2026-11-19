@@ -8,6 +8,7 @@
 //       typed and fail-closed; the parsed data is cached per instance;
 //   (4) handler end-to-end: descriptors → verified rebuild → {t:"sources"} frame; the
 //       legacy free-text synthetic channel answers 400 synthetic_descriptor_required.
+import { anthropicSSE, sseResponse } from "./anthropic-sse";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -219,15 +220,14 @@ describe("chat handler — server recompute + legacy free-text 400", () => {
   const realPanel = buildPanel(String(dataFile("visa_panel_long.csv")));
   const lastMonth = realPanel.monthRange[1];
   let anthropicCalls = 0;
+  let lastBody = "";
 
-  const globalFetchStub = vi.fn(async (url: string | URL) => {
+  const globalFetchStub = vi.fn(async (url: string | URL, init?: RequestInit) => {
     const u = String(url);
     if (u.startsWith("https://api.anthropic.com")) {
       anthropicCalls++;
-      return new Response(
-        'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"ok"}}\n\n',
-        { status: 200, headers: { "content-type": "text/event-stream" } },
-      );
+      lastBody = String(init?.body ?? "");
+      return sseResponse(anthropicSSE({ text: ["ok"] }));
     }
     if (u.startsWith("https://cdn.test")) return cdnFetch()(u) as never;
     throw new Error(`unexpected fetch ${u}`);
@@ -257,7 +257,7 @@ describe("chat handler — server recompute + legacy free-text 400", () => {
     resetSyntheticData();
   });
 
-  it("rebuilds a month table server-side, cell-identical to the client's, and returns it in the sources frame", async () => {
+  it("validates and rebuilds the month table server-side; the model is told its server-owned title, never its figures", async () => {
     const res = await post({
       lang: "es", query: "tabla del último boletín", surface: "console",
       synthetics: [{ kind: "month_table", month: lastMonth, table: "FAD", release_id: RID }],
@@ -267,9 +267,11 @@ describe("chat handler — server recompute + legacy free-text 400", () => {
     const frame = text.split("\n\n").map((e) => e.replace(/^data: /, "")).find((p) => p.startsWith('{"t":"sources"'));
     expect(frame).toBeTruthy();
     const { sources } = JSON.parse(frame!);
-    const expected = monthTableText(buildMonthTable(realPanel, lastMonth, "FAD", "es") as never, "es");
-    expect(sources[0].text).toBe(expected); // celda por celda sobre el corte REAL servido
-    expect(sources[0].n).toBe(1);
+    expect(sources).toEqual([]); // figures reach the model only through tool calls
+    const spec = buildMonthTable(realPanel, lastMonth, "FAD", "es") as { title: string };
+    expect(lastBody).toContain(`Chart currently displayed in the console`);
+    expect(lastBody).toContain(spec.title);
+    expect(lastBody).not.toContain(monthTableText(spec as never, "es").split("\n")[1]);
     expect(anthropicCalls).toBe(1);
   });
 
