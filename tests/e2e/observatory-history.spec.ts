@@ -1,3 +1,4 @@
+// History start filter of the date observatory, which lives on the home page.
 import {readFileSync} from "node:fs";
 import {test,expect} from "@playwright/test";
 import {buildPanel} from "../../lib/data/panel-core.mjs";
@@ -9,7 +10,7 @@ const series=(country="mexico",category="F2A",table="FAD")=>panel.rows.filter(r=
 const cutoff=(r:ReturnType<typeof series>[number],en=false)=>r.status==="C"?"Current":r.status==="U"?(en?"Unavailable":"No disponible"):r.priorityDate??(en?"No observation":"Sin observación");
 
 test("month and year handle partial years and restore all history",async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize({width:320,height:740});await page.goto("/asistente/");
+  await blockExternal(context);await page.setViewportSize({width:320,height:740});await page.goto("/");
   const root=page.locator('figure[data-vb-full="false"]');
   await root.getByRole("combobox",{name:"Categoría del observatorio",exact:true}).selectOption("F2A");
   const month=root.getByRole("combobox",{name:"Desde el mes",exact:true});
@@ -27,7 +28,7 @@ test("month and year handle partial years and restore all history",async({page,c
 });
 
 test("Home reaches the earliest published month instead of an arbitrary recent window",async({page,context})=>{
-  await blockExternal(context);await page.goto("/asistente/");
+  await blockExternal(context);await page.goto("/");
   const instrument=page.getByRole("figure",{name:"Historial interactivo del boletín"});
   await expect(instrument.locator("[data-vb-observation]")).not.toHaveText("—");
   await instrument.getByRole("combobox",{name:"Categoría del observatorio",exact:true}).selectOption("F2A");
@@ -38,7 +39,7 @@ test("Home reaches the earliest published month instead of an arbitrary recent w
 });
 
 test("full history does not join F cutoffs across missing bulletin months",async({page,context})=>{
-  await blockExternal(context);await page.goto("/asistente/");
+  await blockExternal(context);await page.goto("/");
   const instrument=page.getByRole("figure",{name:"Historial interactivo del boletín"});
   await expect(instrument.locator("[data-vb-observation]")).not.toHaveText("—");
   await instrument.getByRole("button",{name:"All Chargeability (RoW)",exact:true}).click();
@@ -54,7 +55,7 @@ test("full history does not join F cutoffs across missing bulletin months",async
 });
 
 test("short date ranges have distinct vertical tick labels",async({page,context})=>{
-  await blockExternal(context);await page.goto("/asistente/");
+  await blockExternal(context);await page.goto("/");
   const instrument=page.getByRole("figure",{name:"Historial interactivo del boletín"});
   await expect(instrument.locator("[data-vb-observation]")).not.toHaveText("—");
   await instrument.getByRole("combobox",{name:"Categoría del observatorio",exact:true}).selectOption("EB1");
@@ -65,7 +66,7 @@ test("short date ranges have distinct vertical tick labels",async({page,context}
 });
 
 for(const [lang,width] of [["es",320],["es",1280],["en",1280]] as const)test(`history start filter ${lang} ${width} shares state with full screen`,async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize({width,height:720});await page.goto(lang==="es"?"/asistente/":"/en/asistente/");
+  await blockExternal(context);await page.setViewportSize({width,height:720});await page.goto(lang==="es"?"/":"/en/");
   const en=lang==="en";
   const instrument=page.getByRole("figure",{name:en?"Interactive bulletin history":"Historial interactivo del boletín"});
   await expect(instrument.locator("[data-vb-observation]")).not.toHaveText("—");

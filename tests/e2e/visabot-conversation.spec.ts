@@ -13,7 +13,7 @@ for (const lang of ["es", "en"] as const) {
     // The console loads the verified panel asynchronously; wait for its chart
     // tools to be ready before asking for a forecast.
     await expect(page.locator("textarea")).toBeVisible();
-    await expect(page.locator('[title="country × category × table"], [title="país × categoría × tabla"]').first()).toBeAttached();
+    await expect(page.locator('.vb-console[data-vb-ready="true"]')).toBeAttached();
     const turns = lang === "es"
       ? ["Pronóstico México F2A FAD", "¿y India?", "¿y DFF?", "¿y F1?"]
       : ["Mexico F2A FAD forecast", "and India?", "and DFF?", "and F1?"];

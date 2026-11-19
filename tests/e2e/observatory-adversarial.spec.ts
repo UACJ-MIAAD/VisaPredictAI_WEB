@@ -1,3 +1,4 @@
+// Adversarial checks for the date observatory, which lives on the home page.
 import {readFileSync} from "node:fs";
 import {test,expect} from "@playwright/test";
 import {buildPanel,countryLabel} from "../../lib/data/panel-core.mjs";
@@ -8,7 +9,7 @@ const monthNumber=(m:string)=>Number(m.slice(0,4))*12+Number(m.slice(5,7));
 const cases=[
   {name:"mobile portrait",width:320,height:568,lang:"es",theme:"light"},
   {name:"mobile landscape",width:844,height:390,lang:"en",theme:"dark"},
-  {name:"desktop presentation",width:1280,height:720,lang:"es",theme:"dark"},
+  {name:"desktop 720p",width:1280,height:720,lang:"es",theme:"dark"},
   {name:"desktop large",width:1920,height:1080,lang:"en",theme:"light"},
 ] as const;
 for(const profile of cases)test.describe(profile.name,()=>{
@@ -17,9 +18,9 @@ test(`all 210 series in full screen · ${profile.name}`,async({page,context})=>{
   test.setTimeout(180_000);
   await blockExternal(context);await forceTheme(page,profile.theme);
   await page.setViewportSize({width:profile.width,height:profile.height});
-  await page.goto(profile.lang==="es"?"/asistente/":"/en/asistente/");
+  await page.goto(profile.lang==="es"?"/":"/en/");
   const en=profile.lang==="en";
-  const open=page.getByRole("button",{name:en?"Full screen":"Pantalla completa",exact:true});
+  const open=page.locator('figure[data-vb-full="false"]').getByRole("button",{name:en?"Full screen":"Pantalla completa",exact:true});
   if(profile.name.startsWith("mobile"))await open.tap();else await open.click();
   const modal=page.getByRole("dialog",{name:en?"Full screen observatory":"Observatorio en pantalla completa",exact:true});
   const category=modal.getByRole("combobox",{name:en?"Observatory category":"Categoría del observatorio",exact:true});
@@ -72,9 +73,9 @@ test(`all 210 series in full screen · ${profile.name}`,async({page,context})=>{
 });
 
 test("rotation, zoom, reverse tab, repeated close and restored scrolling",async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize({width:390,height:844});await page.goto("/asistente/");
+  await blockExternal(context);await page.setViewportSize({width:390,height:844});await page.goto("/");
   const initial=await page.evaluate(()=>document.body.style.overflow);
-  const open=page.getByRole("button",{name:"Pantalla completa",exact:true});
+  const open=page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true});
   for(let cycle=0;cycle<4;cycle++){
     await open.click();
     const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
@@ -92,9 +93,9 @@ test("rotation, zoom, reverse tab, repeated close and restored scrolling",async(
 });
 
 test("full-screen remains operable with enlarged text and a short viewport",async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize({width:568,height:320});await page.goto("/asistente/");
+  await blockExternal(context);await page.setViewportSize({width:568,height:320});await page.goto("/");
   await page.addStyleTag({content:"html { font-size: 200% !important; }"});
-  await page.getByRole("button",{name:"Pantalla completa",exact:true}).click();
+  await page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true}).click();
   const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
   await expect(modal.getByRole("combobox",{name:"Categoría del observatorio",exact:true})).toBeEnabled();
   expect(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
@@ -102,33 +103,34 @@ test("full-screen remains operable with enlarged text and a short viewport",asyn
   await expect(modal).not.toBeVisible();
 });
 
-test("back navigation with nested presentation restores body scrolling",async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize({width:1280,height:720});await page.goto("/");
-  await page.getByRole("banner").getByRole("link",{name:"Asistente",exact:true}).click();
-  await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
-  await page.getByRole("button",{name:"Pantalla completa",exact:true}).click();
+test("back navigation with the full-screen dialog open restores body scrolling",async({page,context})=>{
+  await blockExternal(context);await page.setViewportSize({width:1280,height:720});await page.goto("/asistente/");
+  // Client-side navigation to the home page, so history.back() stays in the app.
+  await page.getByRole("banner").getByRole("link",{name:/VisaPredict/}).first().click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true}).click();
   await expect(page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true})).toBeVisible();
-  await page.goBack();await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(()=>document.body.style.overflow)).toBe("hidden");
+  await page.goBack();await expect(page).toHaveURL(/\/asistente\/$/);
   await expect(page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true})).toHaveCount(0);
   expect(await page.evaluate(()=>document.body.style.overflow)).not.toBe("hidden");
 });
 
-for(const viewport of [{width:1280,height:720},{width:1366,height:768},{width:844,height:390},{width:1280,height:1000}])test(`presentation full-screen plot fills ${viewport.width}x${viewport.height}`,async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize(viewport);await page.goto("/asistente/");
+for(const viewport of [{width:1280,height:720},{width:1366,height:768},{width:844,height:390},{width:1280,height:1000}])test(`full-screen plot fills ${viewport.width}x${viewport.height}`,async({page,context})=>{
+  await blockExternal(context);await page.setViewportSize(viewport);await page.goto("/");
   await expect(page.locator("[data-vb-observation]")).not.toHaveText("—");
-  await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
-  await page.getByRole("button",{name:"Pantalla completa",exact:true}).click();
+  await page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true}).click();
   const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
   const plot=modal.locator(".vb-observatory-plot");
   expect((await plot.boundingBox())!.width).toBeGreaterThanOrEqual(viewport.width*0.8);
   await expect(modal.getByRole("combobox",{name:"Categoría del observatorio",exact:true})).toBeFocused();
-  await page.screenshot({path:`e2e-screenshots/observatory-stage-full-${viewport.width}-${viewport.height}.png`,animations:"disabled"});
+  await page.screenshot({path:`e2e-screenshots/observatory-full-plot-${viewport.width}-${viewport.height}.png`,animations:"disabled"});
 });
 
 test("the full-screen instrument reports a failed data load and remains closable",async({page,context})=>{
   await blockExternal(context);
   await context.route("**/data/visa_panel_long.csv*",async route=>{await new Promise(r=>setTimeout(r,300));await route.abort();});
-  await page.goto("/asistente/");await page.getByRole("button",{name:"Pantalla completa",exact:true}).click();
+  await page.goto("/");await page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true}).click();
   const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
   await expect(modal).toContainText(/No se pudo cargar|No fue posible cargar|No se pudieron cargar/);
   await modal.getByRole("button",{name:"Cerrar pantalla completa",exact:true}).click();
@@ -136,7 +138,7 @@ test("the full-screen instrument reports a failed data load and remains closable
 });
 
 test("an isolated published F cutoff remains visible between status gaps",async({page,context})=>{
-  await blockExternal(context);await page.goto("/asistente/");
+  await blockExternal(context);await page.goto("/");
   const instrument=page.getByRole("figure",{name:"Historial interactivo del boletín"});
   await expect(instrument.locator("[data-vb-observation]")).not.toHaveText("—");
   await instrument.getByRole("button",{name:"China (CN)",exact:true}).click();
@@ -152,25 +154,29 @@ test("an isolated published F cutoff remains visible between status gaps",async(
   expect(count).toBe(singletons.length);
 });
 
-test("exploring from full screen unmounts the instrument without stealing chat focus",async({page,context})=>{
-  await blockExternal(context);
-  await context.route("**/.netlify/functions/chat",route=>route.fulfill({status:200,contentType:"text/event-stream",body:'data: {"t":"delta","text":"Respuesta de prueba local."}\n\ndata: {"t":"done"}\n\n'}));
-  await page.goto("/asistente/");await expect(page.locator("[data-vb-observation]")).not.toHaveText("—");
-  await page.getByRole("button",{name:"Modo presentación",exact:true}).click();
-  await page.getByRole("button",{name:"Pantalla completa",exact:true}).click();
-  await page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true}).getByRole("button",{name:"Ver pronóstico de esta serie",exact:true}).click();
+for(const lang of ["es","en"] as const)test(`view forecast from full screen ${lang} closes the dialog and hands the series to VisaBot`,async({page,context})=>{
+  await blockExternal(context);const en=lang==="en";
+  const queries:unknown[]=[];
+  await context.route("**/.netlify/functions/chat",route=>{queries.push(route.request().postDataJSON().query);return route.fulfill({status:200,contentType:"text/event-stream",body:'data: {"t":"delta","text":"Respuesta de prueba local."}\n\ndata: {"t":"done"}\n\n'});});
+  await page.goto(en?"/en/":"/");await expect(page.locator("[data-vb-observation]")).not.toHaveText("—");
+  await page.locator('figure[data-vb-full="false"]').getByRole("button",{name:en?"Full screen":"Pantalla completa",exact:true}).click();
+  const modal=page.getByRole("dialog",{name:en?"Full screen observatory":"Observatorio en pantalla completa",exact:true});
+  await modal.getByRole("button",{name:"China (CN)",exact:true}).click();
+  await modal.getByRole("combobox",{name:en?"Observatory category":"Categoría del observatorio",exact:true}).selectOption("EB5_RC");
+  await modal.getByRole("combobox",{name:en?"Observatory table":"Tabla del observatorio",exact:true}).selectOption("DFF");
+  await modal.getByRole("button",{name:en?"View forecast for this series":"Ver pronóstico de esta serie",exact:true}).click();
+  await expect(page).toHaveURL(new RegExp(`${en?"/en":""}/asistente/$`));
   await expect(page.locator(".vb-observatory")).toHaveCount(0);
+  await expect(page.getByRole("dialog",{name:en?"Full screen observatory":"Observatorio en pantalla completa",exact:true})).toHaveCount(0);
+  await expect.poll(()=>queries).toEqual([en?`Show the ${countryLabel("china","en")} EB5_RC DFF forecast`:`Muéstrame el pronóstico de ${countryLabel("china","es")} EB5_RC DFF`]);
   await expect(page.locator(".vb-console textarea"),JSON.stringify(await page.evaluate(()=>({activeTag:document.activeElement?.tagName,activeLabel:document.activeElement?.getAttribute("aria-label")})))).toBeFocused();
-  await expect(page.getByRole("button",{name:"Salir de presentación",exact:true})).toBeVisible();
-  expect(await page.evaluate(()=>document.body.style.overflow)).toBe("hidden");
-  await page.keyboard.press("Escape");
   expect(await page.evaluate(()=>document.body.style.overflow)).not.toBe("hidden");
 });
 
 test("mobile enlarged text does not clip missing-series readouts",async({page,context})=>{
-  await blockExternal(context);await page.setViewportSize({width:320,height:568});await page.goto("/asistente/");
+  await blockExternal(context);await page.setViewportSize({width:320,height:568});await page.goto("/");
   await page.addStyleTag({content:"html { font-size: 200% !important; }"});
-  await page.getByRole("button",{name:"Pantalla completa",exact:true}).click();
+  await page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true}).click();
   const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
   const missing=panel.categories.flatMap(c=>panel.tables.map(t=>({c,t}))).find(({c,t})=>!panel.rows.some(r=>r.country==="mexico"&&r.category===c&&r.table===t))!;
   await expect(modal.getByRole("combobox",{name:"Categoría del observatorio",exact:true})).toBeEnabled();

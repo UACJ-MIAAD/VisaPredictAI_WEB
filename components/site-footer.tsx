@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { localePath } from "@/lib/site-map";
+import { localePath, basePath } from "@/lib/site-map";
+import { mastheadItems, secondaryItems } from "@/lib/nav-model";
 import { useLang } from "@/components/lang-provider";
 import { tr } from "@/lib/i18n";
 import { SITE_STATS } from "@/lib/content/site-stats.generated";
@@ -36,6 +37,13 @@ export function SiteFooter() {
             VisaPredict<span>AI</span>
           </b>
         </Link>
+        <nav className="footer-int" aria-label={tr(lang, "navPrimary")}>
+          {[...mastheadItems(basePath(pathname || "/"), lang), ...secondaryItems(basePath(pathname || "/"), lang)].map((it) => (
+            <Link key={it.path} href={it.href} aria-current={it.active ? "page" : undefined}>
+              {it.label}
+            </Link>
+          ))}
+        </nav>
         <nav className="footer-ext" aria-label={tr(lang, "footerExternal")}>
           {EXTERNAL.map((e) => (
             <a key={e.href} href={e.href} target="_blank" rel="noopener">

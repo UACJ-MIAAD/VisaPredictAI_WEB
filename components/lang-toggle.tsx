@@ -27,7 +27,7 @@ export function LangToggle() {
 
   return (
     <div
-      className="inline-flex items-center rounded-lg border border-border text-xs font-medium"
+      className="inline-flex items-center text-xs font-semibold"
       role="group"
       aria-label="Idioma / Language"
     >
@@ -48,9 +48,9 @@ export function LangToggle() {
           }}
           aria-current={lang === it.code ? "true" : undefined}
           className={cn(
-            "flex h-11 w-11 items-center justify-center rounded-[7px] uppercase transition-colors",
+            "flex h-11 w-11 items-center justify-center uppercase tracking-wide transition-colors",
             lang === it.code
-              ? "bg-primary text-primary-foreground"
+              ? "text-foreground underline decoration-2 underline-offset-[6px] decoration-[var(--color-accent)]"
               : "text-muted-foreground hover:text-foreground",
           )}
         >

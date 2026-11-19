@@ -37,7 +37,6 @@ const S = {
   },
 
   // route header
-  rhBack: { es: "← VisaPredict AI", en: "← VisaPredict AI" },
 
   // boletines (live feed)
   blnTag: { es: "Datos en vivo · U.S. Visa Bulletin", en: "Live data · U.S. Visa Bulletin" },
@@ -464,13 +463,45 @@ const S = {
   probFullSize: { es: "Ver a tamaño completo", en: "View full size" },
 
   // ── next-part footer nav (AW7)
-  nextLabel: { es: "Siguiente", en: "Next" },
 
   // ── /anteproyecto temporal-context banner (AU4)
   anteBannerPre: {
     es: "Documento propuesto en mayo de 2026. Los resultados en ejecución viven en",
     en: "Document as proposed in May 2026. The results now in execution live in",
   },
+  // minimal home (redesign 19-nov-2026)
+  homeTitle: { es: "¿Cuándo avanza tu fecha?", en: "When does your date move?" },
+  homeTitleAccent: { es: "El Visa Bulletin, con datos.", en: "The Visa Bulletin, in data." },
+  homeLead: {
+    es: "Recorre cada corte publicado desde {year} y pregunta a VisaBot por el pronóstico de tu país, categoría y tabla.",
+    en: "Scrub through every published cutoff since {year} and ask VisaBot for the forecast of your country, category and table.",
+  },
+  homeAskTitle: { es: "Pregúntale a VisaBot", en: "Ask VisaBot" },
+  homeAskLead: {
+    es: "Responde con los datos verificados del boletín y, cuando ayuda, con un gráfico.",
+    en: "It answers from the verified bulletin data and, when it helps, with a chart.",
+  },
+  homeAskPlaceholder: { es: "Ej. Soy de México, F2B, mi fecha es marzo 2010", en: "e.g. I'm from India, EB-2, my date is June 2013" },
+  homeAskChip1: { es: "¿Qué cambió en el último boletín?", en: "What changed in the latest bulletin?" },
+  homeAskChip2: { es: "Compara F4 entre México y Filipinas", en: "Compare F4 across India and China" },
+  homeAskChip3: { es: "¿Qué tan preciso es el modelo?", en: "How accurate is the model?" },
+  homeGoLabel: { es: "Explorar el proyecto", en: "Explore the project" },
+  homeGoForecastsT: { es: "Pronósticos", en: "Forecasts" },
+  homeGoForecastsB: { es: "Todas las series con sus bandas al 80 % y 95 %.", en: "Every series with its 80% and 95% bands." },
+  homeGoDataT: { es: "Datos históricos", en: "Historical data" },
+  homeGoDataB: { es: "El boletín en vivo, el panel completo y el marcador del modelo.", en: "The live bulletin, the full panel and the model's scorecard." },
+  homeGoProjectT: { es: "El proyecto", en: "The project" },
+  homeGoProjectB: { es: "El anteproyecto académico, su metodología y referencias.", en: "The academic proposal, its methodology and references." },
+  // minimal assistant
+  acEmptyTitle: { es: "¿Qué quieres saber del Visa Bulletin?", en: "What do you want to know about the Visa Bulletin?" },
+  acEmptyLead: {
+    es: "Pregunta por cualquier fecha, categoría o país. VisaBot consulta el panel verificado y dibuja el gráfico cuando ayuda.",
+    en: "Ask about any date, category or country. VisaBot reads the verified panel and draws the chart when it helps.",
+  },
+  acChip1: { es: "Pronóstico de México F2B", en: "Forecast for India EB-2" },
+  acChip2: { es: "Soy de México, F4, mi fecha es enero 2002. ¿Cuándo me toca?", en: "I'm from China, EB-3, my date is March 2021. When is it my turn?" },
+  acChip3: { es: "Compara F2A entre los cinco países", en: "Compare F2A across the five countries" },
+  acChip4: { es: "¿Qué cambió en el último boletín?", en: "What changed in the latest bulletin?" },
 } satisfies Dict;
 
 export type I18nKey = keyof typeof S;

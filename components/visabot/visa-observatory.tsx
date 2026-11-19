@@ -7,7 +7,7 @@ import {monthLabel} from "@/lib/visabot/analytics";
 import {useFocusTrap} from "@/lib/use-focus-trap";
 import {lockBodyScroll} from "@/lib/body-scroll-lock";
 
-type Props={panel:Panel|null;panelError:boolean;country:string;category:string;table:string;lang:"es"|"en";onCountry:(country:string)=>void;onCategory:(category:string)=>void;onTable:(table:string)=>void;wide:boolean;onWide:()=>void;onExpandedChange:(open:boolean)=>void;onExplore:()=>void};
+type Props={panel:Panel|null;panelError:boolean;country:string;category:string;table:string;lang:"es"|"en";onCountry:(country:string)=>void;onCategory:(category:string)=>void;onTable:(table:string)=>void;wide?:boolean;onWide?:()=>void;onExpandedChange:(open:boolean)=>void;onExplore:()=>void};
 const SHORT:Record<string,string>={mexico:"MX",india:"IN",china:"CN",philippines:"PH",all_chargeability:"RoW"};
 const stamp=(m:string)=>Date.parse(`${m}-01T00:00:00Z`);
 const monthNumber=(m:string)=>Number(m.slice(0,4))*12+Number(m.slice(5,7));
@@ -80,7 +80,7 @@ export function VisaObservatory({panel,panelError,country,category,table,lang,on
       <label><span>{en?"Category":"Categoría"}</span><select aria-label={en?"Observatory category":"Categoría del observatorio"} value={category} disabled={!panel} onChange={e=>onCategory(e.target.value)}>{(panel?.categories??[category]).map(c=><option key={c} value={c}>{c}</option>)}</select></label>
       <label><span>{en?"Table":"Tabla"}</span><select aria-label={en?"Observatory table":"Tabla del observatorio"} value={table} disabled={!panel} onChange={e=>onTable(e.target.value)}>{(panel?.tables??[table]).map(t=><option key={t} value={t}>{t}</option>)}</select></label>
       <div className="vb-observatory-view-controls">
-        {!full&&<button type="button" aria-label={en?"Wide view":"Vista horizontal"} aria-pressed={wide} onClick={onWide}><RectangleHorizontal size={17} aria-hidden="true"/></button>}
+        {!full&&onWide&&<button type="button" aria-label={en?"Wide view":"Vista horizontal"} aria-pressed={!!wide} onClick={onWide}><RectangleHorizontal size={17} aria-hidden="true"/></button>}
         <button ref={full?undefined:expandButton} type="button" aria-label={full?(en?"Close full screen":"Cerrar pantalla completa"):(en?"Full screen":"Pantalla completa")} onClick={()=>{if(full)dialog.current?.close();else{onExpandedChange(true);setExpanded(true);}}}>{full?<X size={17} aria-hidden="true"/>:<Maximize2 size={17} aria-hidden="true"/>}</button>
       </div>
       <div className="vb-observatory-history-start" role="group" aria-label={en?"History starts at":"Inicio del historial"}>

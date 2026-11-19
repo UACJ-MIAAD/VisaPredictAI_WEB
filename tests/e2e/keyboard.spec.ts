@@ -1,10 +1,9 @@
-// US E3 — keyboard operability of the new navigation (J1: masthead + subnav +
-// drawer + "on this page" disclosure) and the VisaBot console:
+// US E3 — keyboard operability of the navigation (minimal header + mobile
+// drawer since the 19-nov-2026 redesign; the in-page subnav was removed) and
+// the VisaBot console:
 //   • skip-link becomes visible on focus and moves focus to #main-content;
 //   • mobile drawer: opens from the hamburger, traps focus, Escape closes and
 //     returns focus to the trigger;
-//   • "En esta página" disclosure: toggles, items reachable, Escape returns
-//     focus to the trigger;
 //   • /asistente: chat textarea and the semantic-consent button are reachable
 //     by Tab — WITHOUT activating the ~150 MB model download (belt: we only
 //     focus, never Enter; suspenders: external hosts are blocked and any
@@ -96,7 +95,7 @@ test.describe("keyboard", () => {
       .toBe(true);
 
     // Focus trap: a full lap of Tab presses never leaves the drawer. The
-    // drawer holds the close button + one link per global route (8 routes),
+    // drawer holds the close button + one link per non-home route (7 routes),
     // so 12 presses wraps at least once.
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press("Tab");
@@ -111,36 +110,6 @@ test.describe("keyboard", () => {
     await page.keyboard.press("Escape");
     await expect(openBtn).toHaveAttribute("aria-expanded", "false");
     await expect(openBtn).toBeFocused();
-  });
-
-  test('"En esta página" disclosure: toggle, items, Escape restores focus', async ({ page }) => {
-    await page.setViewportSize(viewportFor(375));
-    await gotoSettled(page, "/datos-historicos/");
-
-    const trigger = page.locator('button[aria-controls="onpage-panel"]');
-    await expect(trigger).toBeVisible();
-    await trigger.focus();
-    await page.keyboard.press("Enter");
-    await expect(trigger).toHaveAttribute("aria-expanded", "true");
-
-    const panel = page.locator("#onpage-panel");
-    await expect(panel).toBeVisible();
-    // The panel lists the route's section anchors (site-map: 4 sections on
-    // /datos-historicos) and they are keyboard-reachable (non-modal
-    // disclosure: Tab flows into the list naturally).
-    const links = panel.locator("a");
-    expect(await links.count()).toBeGreaterThanOrEqual(2);
-    await page.keyboard.press("Tab");
-    const inPanel = await page.evaluate(() => {
-      const p = document.getElementById("onpage-panel");
-      return !!p && p.contains(document.activeElement);
-    });
-    expect(inPanel, "Tab after opening the disclosure should enter the panel").toBe(true);
-
-    // Escape closes and returns focus to the trigger.
-    await page.keyboard.press("Escape");
-    await expect(trigger).toHaveAttribute("aria-expanded", "false");
-    await expect(trigger).toBeFocused();
   });
 
   test("asistente: chat + semantic consent reachable by keyboard, download never triggered", async ({ page }) => {

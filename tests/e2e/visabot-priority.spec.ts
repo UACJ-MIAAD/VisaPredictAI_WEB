@@ -38,7 +38,7 @@ for(const lang of ["es","en"] as const) for(const theme of ["light","dark"] as c
       await route.fulfill({contentType:"text/event-stream",body:serverReply(INTENT[body.query],panel,lang)});
     });
     await page.goto(lang==="es"?"/asistente/":"/en/asistente/");
-    await expect(page.locator('[title="country × category × table"], [title="país × categoría × tabla"]').first()).toBeAttached();
+    await expect(page.locator('.vb-console[data-vb-ready="true"]')).toBeAttached();
     const input=page.locator(".vb-console textarea");
     const ask=async(q:string,result:string)=>{
       await input.fill(q);await input.press("Enter");
@@ -77,7 +77,7 @@ test("a stale local card cannot contradict the verified server comparison",async
     await route.fulfill({contentType:"text/event-stream",body:serverReply(INTENT[route.request().postDataJSON().query],{...panel,rows},"es")});
   });
   await page.goto("/asistente/");
-  await expect(page.locator('[title="país × categoría × tabla"]').first()).toBeAttached();
+  await expect(page.locator('.vb-console[data-vb-ready="true"]')).toBeAttached();
   const input=page.locator(".vb-console textarea");await input.fill("Mexico F2A PD 2024-09-19");await input.press("Enter");
   await expect(page.locator(".vb-console .vb-bot")).toContainText("2020-04-22");
   await expect(page.locator("[data-vb-priority-result]")).toHaveCount(0);

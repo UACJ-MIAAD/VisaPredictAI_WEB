@@ -18,7 +18,7 @@ export function ThemeToggle() {
     <button
       type="button"
       aria-label={tr(lang, !mounted ? "toggleTheme" : isDark ? "toLight" : "toDark")}
-      className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-foreground transition-colors hover:bg-secondary"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
       onClick={() => {
         const next = isDark ? "light" : "dark";
         track("Theme Toggle", { theme: next });

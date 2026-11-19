@@ -200,7 +200,6 @@ export async function overflowReport(page: Page): Promise<OverflowReport> {
 export const T = {
   openMenu: { es: "Abrir menú", en: "Open menu" },
   closeMenu: { es: "Cerrar menú", en: "Close menu" },
-  onPage: { es: "En esta página", en: "On this page" },
   skip: { es: "Saltar al contenido", en: "Skip to content" },
   semanticEnable: { es: "Activar búsqueda semántica", en: "Enable semantic search" },
 } as const;
