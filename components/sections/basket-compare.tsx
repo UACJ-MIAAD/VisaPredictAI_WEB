@@ -42,7 +42,7 @@ export function BasketCompare({ items, panel, panelIndex, onClose }: {
       <div ref={trapRef} className="relative flex max-h-[92vh] w-full max-w-[920px] flex-col overflow-hidden rounded-2xl border border-border bg-[var(--color-bg)] shadow-2xl">
         <header className="flex items-center gap-2 border-b border-border px-4 py-3 sm:px-5">
           <div className="min-w-0 flex-1">
-            <div className="font-serif text-base font-bold text-[var(--color-ink)]">{tr(lang, "resBasket")}</div>
+            <div className="text-base font-semibold text-[var(--color-ink)]">{tr(lang, "resBasket")}</div>
             <div className="mt-0.5 truncate text-[0.66rem] text-[var(--color-muted)]">
               {items.map((s) => `${countryLabel(s.country, lang)} · ${s.category} · ${s.table}`).join("   ·   ")}
             </div>

@@ -3,8 +3,10 @@
 // Pure data helpers (no React) so they're unit-testable. Every count is derived
 // from the loaded store — never hand-typed (regla #0).
 import { type ForecastStore, type SeriesMeta, type ForecastPoint, forecastFor } from "@/lib/data/forecasts";
-import { PILOT } from "@/lib/data/visa-panel";
+import { PILOT, countryLabel } from "@/lib/data/visa-panel";
 import { seriesSignals, type PanelIndex } from "@/lib/visabot/analytics";
+import type { VisaPanelRow } from "@/lib/data/panel-core";
+import { isoDays, epochToDate } from "./synthetic-builders.mjs";
 
 export type GallerySeries = {
   key: string; // "country|category|table"
@@ -153,20 +155,144 @@ export function gallerySummary(series: GallerySeries[]): GallerySummary {
 
 // Export the pre-generated forecast of one series as CSV (traceable to the
 // pipeline) — a data flex a static image gallery can't offer.
-export function forecastToCsv(key: string, points: ForecastPoint[]): string {
-  const head = "series,date,days,lo80,hi80,lo95,hi95";
-  const rows = points.map((p) => `${key},${p.date},${p.days},${p.lo80},${p.hi80},${p.lo95},${p.hi95}`);
+export function forecastToCsv(key: string, points: ForecastPoint[], base?: number | null): string {
+  // With the series' base epoch the file also carries the cutoffs as ISO dates
+  // (the raw `days` are days since that base, meaningless on their own).
+  const iso = base != null;
+  // a value at or past its bulletin's own month is "C" (Current), not a date
+  const d0 = (x: number) => epochToDate(Math.round((base as number) + x));
+  const head = "series,date,days,lo80,hi80,lo95,hi95" + (iso ? ",cutoff,lo80_date,hi80_date,lo95_date,hi95_date" : "");
+  const rows = points.map((p) => {
+    const cap = `${p.date.slice(0, 7)}-01`;
+    const d = (x: number) => { const v = d0(x); return v >= cap ? "C" : v; };
+    return `${key},${p.date},${p.days},${p.lo80},${p.hi80},${p.lo95},${p.hi95}` +
+      (iso ? `,${d(p.days)},${d(p.lo80)},${d(p.hi80)},${d(p.lo95)},${d(p.hi95)}` : "");
+  });
   return [head, ...rows].join("\n") + "\n";
 }
 
 export type GalleryFilter = { country?: string; table?: string; block?: string; query?: string };
+// Accent-, case- and punctuation-insensitive; every word must match, in any
+// order, against the code AND both labels ("México", "Filipinas", "RoW", "EB-2").
+const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[-_.·]/g, "");
+export const COUNTRY_SHORT: Record<string, string> = { mexico: "MX", india: "IN", china: "CN", philippines: "PH", all_chargeability: "RoW" };
 export function filterSeries(series: GallerySeries[], f: GalleryFilter): GallerySeries[] {
-  const q = (f.query ?? "").trim().toLowerCase();
+  const words = fold(f.query ?? "").split(/\s+/).filter(Boolean);
   return series.filter((s) => {
     if (f.country && s.country !== f.country) return false;
     if (f.table && s.table !== f.table) return false;
     if (f.block && s.block !== f.block) return false;
-    if (q && !`${s.country} ${s.category} ${s.table}`.toLowerCase().includes(q)) return false;
+    if (words.length) {
+      const hay = fold(`${s.country} ${countryLabel(s.country, "es")} ${countryLabel(s.country, "en")} ${COUNTRY_SHORT[s.country] ?? ""} ${s.category} ${s.table}`);
+      if (!words.every((w) => hay.includes(w))) return false;
+    }
     return true;
   });
+}
+
+/** MASE against the naive forecast it is scaled by: < 1 beats it. Absolute, not a page-relative tercile. */
+export const maseVsNaive = (mase: number | null | undefined): "beats" | "loses" | null =>
+  mase == null || !Number.isFinite(mase) ? null : mase < 1 ? "beats" : "loses";
+
+// ── Instrument readout (redesign 19-nov-2026) ──────────────────────────────
+// What the forecast instrument prints, derived from the panel rows of one
+// series and its production forecast points:
+//   • current: the latest published bulletin cell (F date, C = Current, U = Unavailable);
+//   • projected: the last horizon month, its central cutoff and 95 % band, as
+//     ISO dates (base anchored on the latest dated F observation, exactly like
+//     buildForecast). Only when the latest cell is a date AND the forecast
+//     starts after it, and the series is still in the latest bulletin; otherwise
+//     `none` says why (a Current category is not waiting for any date; a
+//     discontinued series or a forecast fit before its latest bulletin is history).
+export type SeriesReadout = {
+  current: { month: string; status: string; date: string | null } | null;
+  // Dates are ISO; `current: true` on a bound means it reaches the bulletin's own
+  // month, i.e. the category would be Current (no bulletin publishes a cutoff
+  // later than its own month). `retro` = central projection behind today's cutoff.
+  projected: {
+    month: string; date: string; lo95: string; hi95: string; months: number;
+    dateCurrent: boolean; hi95Current: boolean; lo95Current: boolean; retro: boolean;
+  } | null;
+  none: "current" | "unavailable" | "discontinued" | "stale" | "noForecast" | null;
+  base: number | null;
+};
+export function seriesBase(sorted: VisaPanelRow[]): number | null {
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const r = sorted[i];
+    if (r.status === "F" && r.priorityDate && r.daysSinceBase != null) return isoDays(r.priorityDate) - r.daysSinceBase;
+  }
+  return null;
+}
+export function seriesReadout(rows: VisaPanelRow[], points: ForecastPoint[] | null | undefined, latestMonth?: string | null): SeriesReadout {
+  const sorted = [...rows].sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+  const last = sorted.at(-1);
+  const current = last
+    ? { month: last.bulletinMonth, status: last.status, date: last.status === "F" ? (last.priorityDate ?? null) : null }
+    : null;
+  const base = seriesBase(sorted);
+  const out = (none: SeriesReadout["none"]): SeriesReadout => ({ current, projected: null, none, base });
+  // A series absent from the latest bulletin is no longer published: its last
+  // cell is history, and nothing should be projected from it.
+  if (current && latestMonth && current.month < latestMonth) return out("discontinued");
+  if (current?.status === "C") return out("current");
+  if (current?.status === "U") return out("unavailable");
+  const first = points?.[0], end = points?.at(-1);
+  if (!current || current.status !== "F" || base == null || !first || !end) return out("noForecast");
+  if (first.date.slice(0, 7) <= current.month) return out("stale");
+  const cap = `${end.date.slice(0, 7)}-01`;
+  const d = (x: number) => epochToDate(Math.round(base + x));
+  const date = d(end.days), lo95 = d(end.lo95), hi95 = d(end.hi95);
+  return {
+    current, base, none: null,
+    projected: {
+      month: end.date.slice(0, 7), date, lo95, hi95, months: points!.length,
+      dateCurrent: date >= cap, hi95Current: hi95 >= cap, lo95Current: lo95 >= cap,
+      retro: !!current.date && date < current.date,
+    },
+  };
+}
+
+// A bulletin cannot publish a cutoff later than its own month (by then the
+// category is Current), so every projected value is capped at the start of its
+// point's month before it reaches a chart, an export or the checker.
+export function capPoints(points: ForecastPoint[] | null | undefined, base: number | null): ForecastPoint[] | null {
+  if (!points || base == null) return points ?? null;
+  return points.map((p) => {
+    const cap = isoDays(`${p.date.slice(0, 7)}-01`) - base;
+    const c = (v: number) => Math.min(v, cap);
+    return { ...p, days: c(p.days), lo80: c(p.lo80), hi80: c(p.hi80), lo95: c(p.lo95), hi95: c(p.hi95) };
+  });
+}
+
+// "Does it reach my priority date?" A priority date is reached when it is
+// EARLIER than the cutoff (State Department rule), so equal is not yet. With the
+// uncertainty spelled out: the month the central path first passes it, and the
+// 95 % range of months (optimistic edge first, pessimistic edge last). A path
+// that passes the date and is behind it again by the horizon end is reported as
+// such, never as "reached".
+export type ReachVerdict =
+  | { status: "invalid" | "current" | "unavailable" | "discontinued" | "noForecast" | "past" }
+  | { status: "within" | "crossedBack" | "band" | "beyond"; central: string | null; early: string | null; late: string | null; last: string };
+export function reachVerdict(r: SeriesReadout, points: ForecastPoint[] | null | undefined, pd: string): ReachVerdict {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(pd) || epochToDate(isoDays(pd)) !== pd) return { status: "invalid" };
+  if (r.none === "current") return { status: "current" };
+  if (r.none === "unavailable") return { status: "unavailable" };
+  if (r.none === "discontinued") return { status: "discontinued" };
+  if (r.current?.date && pd < r.current.date) return { status: "past" };
+  if (!r.projected || r.base == null || !points?.length) return { status: "noForecast" };
+  const x = isoDays(pd);
+  const at = (v: number) => Math.round((r.base as number) + v);
+  const month = (p: ForecastPoint | undefined) => (p ? p.date.slice(0, 7) : null);
+  const end = points.at(-1)!;
+  const central = month(points.find((p) => at(p.days) > x));
+  // each band edge only counts once it stays past the date to the horizon end
+  const from = (pick: (p: ForecastPoint) => number) => {
+    const i = points.findIndex((_, k) => points.slice(k).every((q) => at(pick(q)) > x));
+    return i >= 0 ? month(points[i]) : null;
+  };
+  const early = from((p) => p.hi95);
+  const late = from((p) => p.lo95);
+  const last = month(end) as string;
+  const status = central ? (at(end.days) > x ? "within" : "crossedBack") : early ? "band" : "beyond";
+  return { status, central, early, late, last };
 }
