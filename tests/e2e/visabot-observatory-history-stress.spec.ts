@@ -31,7 +31,9 @@ test("historical source has unique months, safe identifiers and valid dated cuto
 
 for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
   test.use({isMobile:profile.mobile,hasTouch:profile.mobile});
-  for(const full of [false,true])test(`${full?"full screen":"inline"}: all categories and From boundaries`,async({page,context},testInfo)=>{
+  // One test per area: the whole 5-area sweep exceeded one 300 s budget on CI
+  // runners. Coverage is unchanged (every area × category × table × window).
+  for(const full of [false,true])for(const country of panel.countries)test(`${full?"full screen":"inline"} · ${country}: all categories and From boundaries`,async({page,context},testInfo)=>{
     test.setTimeout(300_000);
     await blockExternal(context);await forceTheme(page,profile.theme);
     await page.setViewportSize({width:profile.width,height:profile.height});
@@ -49,7 +51,7 @@ for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
     const slider=root.getByRole("slider");
     await expect(category).toBeEnabled();
     let combinations=0,windows=0;
-    for(const country of panel.countries){
+    {
       const code=country==="all_chargeability"?"RoW":country==="china"?"CN":country==="india"?"IN":country==="mexico"?"MX":"PH";
       const button=root.getByRole("group").getByRole("button",{name:`${countryLabel(country,profile.lang)} (${code})`,exact:true});
       if(profile.mobile)await button.tap();else await button.click();
@@ -100,8 +102,8 @@ for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
         await expect(slider).toHaveValue(String(rows.length-1));
       }
     }
-    expect(combinations).toBe(210);expect(errors).toEqual([]);
-    await testInfo.attach("history-filter-coverage",{body:JSON.stringify({profile,full,combinations,windows}),contentType:"application/json"});
+    expect(combinations).toBe(panel.categories.length*panel.tables.length);expect(errors).toEqual([]);
+    await testInfo.attach("history-filter-coverage",{body:JSON.stringify({profile,full,country,combinations,windows}),contentType:"application/json"});
     if(full){await page.keyboard.press("Escape");await expect(root).not.toBeVisible();await expect(open).toBeFocused();}
   });
 });
