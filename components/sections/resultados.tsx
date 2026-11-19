@@ -1,378 +1,201 @@
 "use client";
 
-// /resultados — the forecast gallery: a browsable, filterable, hierarchical view
-// of every pre-generated production forecast (country × category × table). A
-// meta-bar of derived counts + filters + three tiers (Featured grid / By country
-// / By category accordions) of cheap sparkline cards; opening any card mounts the
-// full fan chart in the lightbox (the only place Recharts loads). Data: the real
-// panel + the pre-generated forecasts. Every count is derived (regla #0); nothing
-// references anything outside the visa domain.
+// /resultados — forecasts (redesign 19-nov-2026). Two parts:
+//   1. the instrument: one series, its readout and fan chart (forecast-instrument.tsx);
+//   2. every series in ONE list grouped by country (no featured / by-country /
+//      by-category triplication): sparkline, current cutoff and projected cutoff;
+//      a row loads its series into the instrument. Pin 2–4 rows to overlay them.
+// Data: the real panel + the pre-generated production forecasts. Every count is
+// derived (regla #0). State is deep-linkable: ?series=, ?table=, ?block=, ?q=,
+// ?sort=, ?pin=.
 import * as React from "react";
-import { Rows2, Rows3, Layers } from "lucide-react";
+import { Layers, Pin, ArrowUpRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
-import { tr } from "@/lib/i18n";
-import { localeOf } from "@/lib/i18n";
-import { SITE_STATS } from "@/lib/content/site-stats.generated";
-import { loadPanel, countryLabel, blockLabel, type Panel } from "@/lib/data/visa-panel";
-import { loadForecasts, type ForecastStore } from "@/lib/data/forecasts";
-import { monthLabel, buildPanelIndex, type PanelIndex } from "@/lib/visabot/analytics";
+import { tr, localeOf } from "@/lib/i18n";
+import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
+import { loadForecasts, forecastFor, type ForecastStore } from "@/lib/data/forecasts";
+import { monthLabel, buildPanelIndex, buildForecast } from "@/lib/visabot/analytics";
 import {
-  buildGallerySeries, buildGalleryTree, gallerySummary, filterSeries,
-  attachSignals, sortSeries, maseTerciles, type GallerySeries, type SortKey,
+  buildGallerySeries, gallerySummary, filterSeries, attachSignals, sortSeries,
+  maseTerciles, maseTier, seriesReadout, type GallerySeries, type SortKey,
 } from "@/lib/visabot/gallery";
-import { ForecastCard } from "./forecast-card";
-import { ForecastLightbox } from "./forecast-lightbox";
+import { Sparkline } from "./sparkline";
+import { ForecastInstrument } from "./forecast-instrument";
 import { BasketCompare } from "./basket-compare";
+import { CohortBadge } from "@/components/ui/cohort-badge";
 
-function Select({ label, value, onChange, options }: {
-  label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[];
-}) {
-  return (
-    <label className="flex flex-col text-xs text-muted-foreground">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)}
-        className="mt-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground">
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </label>
-  );
-}
-
-// One collapsible tier group (a country or a category) → grid of cards, mounted
-// only while open so sparklines don't compute for collapsed groups.
-function TierGroup({ id, title, count, open, onToggle, series, panel, forecasts, index, terciles, dense, pinnedSet, onPin, onOpen }: {
-  id: string; title: React.ReactNode; count: number; open: boolean; onToggle: (open: boolean) => void;
-  series: GallerySeries[]; panel: Panel; forecasts: ForecastStore | null; index: PanelIndex | null;
-  terciles: { t1: number; t2: number } | null; dense: boolean; pinnedSet: Set<string>;
-  onPin: (key: string) => void; onOpen: (s: GallerySeries) => void;
-}) {
-  const { lang } = useLang();
-  return (
-    <details open={open} onToggle={(e) => onToggle(e.currentTarget.open)} className="overflow-hidden rounded-xl border border-border bg-[var(--color-surface)]">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 marker:content-none">
-        <span className="font-serif text-sm font-bold text-[var(--color-ink)]">{title}</span>
-        <span className="text-[0.66rem] text-[var(--color-muted)]">{count} {tr(lang, "resSeriesCount")}</span>
-        <span className="flex-1" />
-        <svg className={`h-3 w-3 text-[var(--color-muted)] transition ${open ? "rotate-180" : ""}`} viewBox="0 0 10 6" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M1 1l4 4 4-4" /></svg>
-      </summary>
-      {open && (
-        <div className="grid grid-cols-1 gap-2 border-t border-border p-3 sm:grid-cols-2" id={id}>
-          {series.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinned={pinnedSet.has(s.key)} onPin={() => onPin(s.key)} onOpen={() => onOpen(s)} />)}
-        </div>
-      )}
-    </details>
-  );
-}
+const DEFAULT_KEY = "mexico|F3|FAD";
+const SORTS: SortKey[] = ["order", "mase", "backlog", "movement"];
 
 export function Resultados() {
   const { lang } = useLang();
+  const en = lang === "en";
   const [panel, setPanel] = React.useState<Panel | null>(null);
   const [forecasts, setForecasts] = React.useState<ForecastStore | null>(null);
   const [error, setError] = React.useState(false);
-
   React.useEffect(() => {
-    Promise.all([loadPanel(), loadForecasts()])
-      .then(([p, f]) => { setPanel(p); setForecasts(f); })
-      .catch(() => setError(true));
+    Promise.all([loadPanel(), loadForecasts()]).then(([p, f]) => { setPanel(p); setForecasts(f); }).catch(() => setError(true));
   }, []);
 
-  const [fCountry, setFCountry] = React.useState("");
+  const [selectedKey, setSelectedKey] = React.useState(DEFAULT_KEY);
   const [fTable, setFTable] = React.useState("");
   const [fBlock, setFBlock] = React.useState("");
   const [query, setQuery] = React.useState("");
   const [sort, setSort] = React.useState<SortKey>("order");
-  const [lightbox, setLightbox] = React.useState<number | null>(null);
-  const [openCountry, setOpenCountry] = React.useState<Set<string>>(new Set());
-  const [openCat, setOpenCat] = React.useState<Set<string>>(new Set());
-  const [basket, setBasket] = React.useState<string[]>([]); // pinned series keys (max 4)
+  const [basket, setBasket] = React.useState<string[]>([]);
   const [basketOpen, setBasketOpen] = React.useState(false);
-  const [dense, setDense] = React.useState(false);
-  // a series key parsed from the URL on first load, opened once data is ready
-  const pendingSeries = React.useRef<string | null>(null);
   const hydrated = React.useRef(false);
+  const instrumentRef = React.useRef<HTMLDivElement>(null);
 
-  const pinnedSet = React.useMemo(() => new Set(basket), [basket]);
-  const togglePin = React.useCallback((key: string) => {
-    setBasket((b) => (b.includes(key) ? b.filter((k) => k !== key) : b.length >= 4 ? b : [...b, key]));
-  }, []);
-
-  // density persists across visits (filters/sort live in the URL instead)
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.localStorage.getItem("vp-gallery-dense") === "1") setDense(true);
-  }, []);
-  React.useEffect(() => {
-    if (typeof window === "undefined" || !hydrated.current) return;
-    window.localStorage.setItem("vp-gallery-dense", dense ? "1" : "0");
-  }, [dense]);
-
-  // Panel index (built once) — feeds buildForecast per card and the derived
-  // signals, so no card re-scans the whole panel (perf).
   const index = React.useMemo(() => (panel ? buildPanelIndex(panel) : null), [panel]);
   const allSeries = React.useMemo(() => {
     if (!forecasts) return [];
     const base = buildGallerySeries(forecasts);
     return index ? attachSignals(base, forecasts, index) : base;
   }, [forecasts, index]);
+  const byKey = React.useMemo(() => new Map(allSeries.map((s) => [s.key, s])), [allSeries]);
   const summary = React.useMemo(() => gallerySummary(allSeries), [allSeries]);
   const terciles = React.useMemo(() => maseTerciles(allSeries), [allSeries]);
   const filtered = React.useMemo(
-    () => sortSeries(filterSeries(allSeries, { country: fCountry, table: fTable, block: fBlock, query }), sort),
-    [allSeries, fCountry, fTable, fBlock, query, sort],
+    () => sortSeries(filterSeries(allSeries, { table: fTable, block: fBlock, query }), sort),
+    [allSeries, fTable, fBlock, query, sort],
   );
-  const tree = React.useMemo(() => buildGalleryTree(filtered), [filtered]);
-  const idx = React.useMemo(() => { const m = new Map<string, number>(); filtered.forEach((s, i) => m.set(s.key, i)); return m; }, [filtered]);
-  const openLightbox = (s: GallerySeries) => setLightbox(idx.get(s.key) ?? 0);
-  // resolve pinned keys → series (in pin order), dropping any no longer present
-  const byKey = React.useMemo(() => new Map(allSeries.map((s) => [s.key, s])), [allSeries]);
+  // One list: grouped by country while in bulletin order, a single flat ranking otherwise.
+  const groups = React.useMemo(() => {
+    if (sort !== "order") return [{ country: "", series: filtered }];
+    const m = new Map<string, GallerySeries[]>();
+    for (const s of filtered) (m.get(s.country) ?? m.set(s.country, []).get(s.country)!).push(s);
+    return [...m].map(([country, series]) => ({ country, series }));
+  }, [filtered, sort]);
+  const selected = byKey.get(selectedKey) ?? byKey.get(DEFAULT_KEY) ?? allSeries[0];
   const basketItems = React.useMemo(() => basket.map((k) => byKey.get(k)).filter(Boolean) as GallerySeries[], [basket, byKey]);
-  // once the store is loaded, drop any pinned keys (e.g. from a stale ?pin= link)
-  // that no longer exist — so phantom keys can't wedge the max-4 cap or the bar.
+
   React.useEffect(() => {
     if (!allSeries.length) return;
     setBasket((b) => { const keep = b.filter((k) => byKey.has(k)); return keep.length === b.length ? b : keep; });
   }, [allSeries, byKey]);
 
-  // ── deep-link: hydrate filters/sort + pending series from the URL on mount
+  // deep-link in
   React.useEffect(() => {
-    if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
-    if (p.get("country")) setFCountry(p.get("country") as string);
+    if (p.get("series")) setSelectedKey(p.get("series") as string);
     if (p.get("table")) setFTable(p.get("table") as string);
     if (p.get("block")) setFBlock(p.get("block") as string);
     if (p.get("q")) setQuery(p.get("q") as string);
     const s = p.get("sort");
-    if (s && ["order", "mase", "backlog", "movement"].includes(s)) setSort(s as SortKey);
-    const pin = p.get("pin");
-    if (pin) setBasket(pin.split(",").filter(Boolean).slice(0, 4));
-    const series = p.get("series");
-    if (series) pendingSeries.current = series;
+    if (s && (SORTS as string[]).includes(s)) setSort(s as SortKey);
+    if (p.get("pin")) setBasket((p.get("pin") as string).split(",").filter(Boolean).slice(0, 4));
     hydrated.current = true;
   }, []);
-
-  // open the pending (deep-linked) series once the filtered set is ready. Consume
-  // the ref on the first materialized render — hit OR miss — so a stale key can't
-  // pop the lightbox open later when the user changes filters.
+  // deep-link out
   React.useEffect(() => {
-    const k = pendingSeries.current;
-    if (!k || !filtered.length) return;
-    const i = idx.get(k);
-    if (i != null) setLightbox(i);
-    pendingSeries.current = null;
-  }, [filtered, idx]);
-
-  // ── deep-link: reflect filters/sort + open series in the URL (shareable)
-  React.useEffect(() => {
-    if (typeof window === "undefined" || !hydrated.current) return;
+    if (!hydrated.current) return;
     const p = new URLSearchParams();
-    if (fCountry) p.set("country", fCountry);
+    if (selected && selected.key !== DEFAULT_KEY) p.set("series", selected.key);
     if (fTable) p.set("table", fTable);
     if (fBlock) p.set("block", fBlock);
     if (query) p.set("q", query);
     if (sort !== "order") p.set("sort", sort);
     if (basket.length) p.set("pin", basket.join(","));
-    if (lightbox != null && filtered[lightbox]) p.set("series", filtered[lightbox].key);
     const qs = p.toString();
-    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
-  }, [fCountry, fTable, fBlock, query, sort, basket, lightbox, filtered]);
+    window.history.replaceState(null, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
+  }, [selected, fTable, fBlock, query, sort, basket]);
 
+  const togglePin = (key: string) => setBasket((b) => (b.includes(key) ? b.filter((k) => k !== key) : b.length >= 4 ? b : [...b, key]));
+  const openSeries = (key: string) => {
+    setSelectedKey(key);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    instrumentRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  };
   const nf = (n: number) => n.toLocaleString(localeOf(lang));
-  const countries = React.useMemo(() => [...new Set(allSeries.map((s) => s.country))], [allSeries]);
-  const tables = React.useMemo(() => [...new Set(allSeries.map((s) => s.table))], [allSeries]);
-
-  const chip = (label: string, value: React.ReactNode) => (
-    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-[var(--color-surface)] px-2.5 py-1 text-[0.72rem] text-[var(--color-muted)]">
-      {label} <strong className="font-semibold text-[var(--color-ink)]">{value}</strong>
-    </span>
+  const sc = forecasts?.scorecard;
+  const seg = <T extends string>(label: string, value: T, set: (v: T) => void, opts: [T, string][]) => (
+    <div className="fc-seg fc-seg--quiet" role="group" aria-label={label}>
+      {opts.map(([v, l]) => <button key={v || "all"} type="button" aria-pressed={value === v} onClick={() => set(v)}>{l}</button>)}
+    </div>
   );
 
   return (
-    <section id="resultados" className="section">
+    <section id="resultados" className="section fc-page">
       <div className="section-inner">
-        <span className="section-tag">{tr(lang, "resTag")}</span>
-        <h2 className="section-title">{tr(lang, "resTitle")}</h2>
-        <p className="section-sub">{tr(lang, "resSub").replace("{n}", String(SITE_STATS.horizonMonths))}</p>
-
         {error ? (
           <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">{tr(lang, "histError")}</div>
-        ) : !forecasts || !panel ? (
-          <div className="space-y-3">
-            <Skeleton className="h-[56px] w-full" />
-            <Skeleton className="h-[64px] w-full" />
-            <Skeleton className="h-[220px] w-full" />
-          </div>
+        ) : !forecasts || !panel || !selected ? (
+          <div className="space-y-3"><Skeleton className="h-[48px] w-full" /><Skeleton className="h-[120px] w-full" /><Skeleton className="h-[340px] w-full" /></div>
         ) : (
           <>
-            {/* meta-bar — every count derived (regla #0) */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-[var(--color-surface)] px-2.5 py-1 text-[0.72rem] text-[var(--color-muted)]">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" aria-hidden />
-                {tr(lang, "resMetaThrough")} <strong className="font-semibold text-[var(--color-ink)]">{summary.lastMonth ? monthLabel(summary.lastMonth, lang) : "—"}</strong>
-              </span>
-              {/* freshness: forecasts vs the panel's latest bulletin (derived) */}
-              {(() => {
-                const panelMax = panel.monthRange?.[1] ?? null;
-                const stale = summary.lastMonth && panelMax && summary.lastMonth < panelMax;
-                return stale ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-accent-2)]/50 bg-[var(--color-accent-2)]/10 px-2.5 py-1 text-[0.72rem] text-[var(--color-muted)]">
-                    {tr(lang, "resStale").replace("{f}", monthLabel(summary.lastMonth as string, lang)).replace("{p}", monthLabel(panelMax as string, lang))}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-2.5 py-1 text-[0.72rem] text-[var(--color-success)]">✓ {tr(lang, "resFresh")}</span>
-                );
-              })()}
-              {chip(tr(lang, "resMetaHorizon"), tr(lang, "resHorizonVal").replace("{n}", String(forecasts.horizonMonths)))}
-              {forecasts.scorecard && Number.isFinite(forecasts.scorecard.overall?.mae_days) && (
-                <span title={tr(lang, "resScoreTip")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-2.5 py-1 text-[0.72rem] text-[var(--color-muted)]">
-                  {tr(lang, "resScoreLabel")}{" "}
-                  <strong className="font-semibold text-[var(--color-ink)] tabular-nums">
-                    ±{Math.round(forecasts.scorecard.overall.mae_days)} d
-                    {Number.isFinite(forecasts.scorecard.overall?.cov95) ? ` · 95 % ${Math.round(forecasts.scorecard.overall.cov95 * 100)} %` : ""}
-                  </strong>
-                </span>
-              )}
-              {chip("", `${nf(summary.nSeries)} ${tr(lang, "resSeriesLabel")}`)}
-              {chip("", `${summary.nAreas} ${tr(lang, "resAreasLabel")}`)}
-              {chip(tr(lang, "blockFamily"), summary.nFamily)}
-              {chip(tr(lang, "blockEmployment"), summary.nEmployment)}
-              {chip("FAD", summary.nFAD)}
-              {chip("DFF", summary.nDFF)}
+
+            <div ref={instrumentRef} className="fc-anchor">
+              <ForecastInstrument all={allSeries} selected={selected} onSelect={setSelectedKey} panel={panel} forecasts={forecasts} index={index} />
             </div>
 
-            {/* controls */}
-            <div className="mb-4 flex flex-wrap items-end gap-4 rounded-xl border border-border bg-card p-4">
-              <Select label={tr(lang, "selCountry")} value={fCountry} onChange={setFCountry}
-                options={[{ value: "", label: tr(lang, "optAll") }, ...countries.map((c) => ({ value: c, label: countryLabel(c, lang) }))]} />
-              <Select label={tr(lang, "selTableL")} value={fTable} onChange={setFTable}
-                options={[{ value: "", label: tr(lang, "optAllF") }, ...tables.map((t) => ({ value: t, label: t }))]} />
-              <Select label={tr(lang, "resFilterBlock")} value={fBlock} onChange={setFBlock}
-                options={[{ value: "", label: tr(lang, "optAll") }, { value: "familia", label: tr(lang, "blockFamily") }, { value: "empleo", label: tr(lang, "blockEmployment") }]} />
-              <label className="flex flex-col text-xs text-muted-foreground">
-                {tr(lang, "resSearch")}
-                <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr(lang, "resSearchPh")}
-                  className="mt-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground" />
-              </label>
-              {/* sort — turns the wall into an analytic instrument */}
-              <div className="flex flex-col text-xs text-muted-foreground">
-                {tr(lang, "resSort")}
-                <div className="mt-1 flex rounded-lg border border-border p-0.5">
-                  {([["order", "resSortOrder"], ["mase", "resSortMase"], ["backlog", "resSortBacklog"], ["movement", "resSortMovement"]] as const).map(([k, key]) => (
-                    <button key={k} onClick={() => setSort(k)} aria-pressed={sort === k}
-                      className={`rounded-md px-2 py-1 text-xs transition ${sort === k ? "bg-[var(--color-accent-btn)] text-white" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"}`}>
-                      {tr(lang, key)}
+            <p className="fc-summary">
+              {tr(lang, "resSummary")
+                .replace("{n}", nf(summary.nSeries))
+                .replace("{a}", String(summary.nAreas))
+                .replace("{h}", String(forecasts.horizonMonths))
+                .replace("{m}", summary.lastMonth ? monthLabel(summary.lastMonth, lang) : "—")}
+              {sc && Number.isFinite(sc.overall?.mae_days) && (
+                <> {tr(lang, "resSummaryScore").replace("{e}", String(Math.round(sc.overall.mae_days))).replace("{c}", String(Math.round(sc.overall.cov95 * 100)))}{" "}
+                  <a href={`${en ? "/en" : ""}/datos-historicos/#scorecard`} title={tr(lang, "resScoreTip")}>{tr(lang, "resSummaryScoreLink")}</a></>
+              )}
+            </p>
+
+            <div id="res-all" className="fc-all">
+              <div className="fc-all-head">
+                <h2>{tr(lang, "resAllTitle")}</h2>
+                <p>{tr(lang, "resAllSub")}</p>
+              </div>
+              <div className="fc-filters">
+                {seg(tr(lang, "selTableL"), fTable, setFTable, [["", tr(lang, "optAllF")], ["FAD", "FAD"], ["DFF", "DFF"]])}
+                {seg(tr(lang, "resFilterBlock"), fBlock, setFBlock, [["", tr(lang, "optAll")], ["familia", tr(lang, "blockFamily")], ["empleo", tr(lang, "blockEmployment")]])}
+                <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr(lang, "resSearchPh")} aria-label={tr(lang, "resSearch")} className="fc-search" />
+                <label className="fc-sort">
+                  <span>{tr(lang, "resSort")}</span>
+                  <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+                    <option value="order">{tr(lang, "resSortOrder")}</option>
+                    <option value="mase">{tr(lang, "resSortMase")}</option>
+                    <option value="backlog">{tr(lang, "resSortBacklog")}</option>
+                    <option value="movement">{tr(lang, "resSortMovement")}</option>
+                  </select>
+                </label>
+                <span className="fc-count" aria-live="polite">{nf(filtered.length)} {tr(lang, "resSeriesLabel")}</span>
+              </div>
+
+              {basket.length > 0 && (
+                <div className="fc-basket">
+                  <span>{tr(lang, "resBasket")}</span>
+                  {basketItems.map((s) => (
+                    <button key={s.key} type="button" onClick={() => togglePin(s.key)} title={tr(lang, "resUnpin")}>
+                      {countryLabel(s.country, lang)} · {s.category} · {s.table} <span aria-hidden>✕</span>
                     </button>
                   ))}
-                </div>
-              </div>
-              <div className="ml-auto flex items-center gap-2">
-                <button onClick={() => setDense((d) => !d)} aria-pressed={dense}
-                  title={tr(lang, dense ? "resDensityComfy" : "resDensityCompact")} aria-label={tr(lang, "resDensity")}
-                  className="rounded-lg border border-border p-1.5 text-[var(--color-muted)] transition hover:text-[var(--color-ink)]">
-                  {dense ? <Rows3 className="h-4 w-4" aria-hidden /> : <Rows2 className="h-4 w-4" aria-hidden />}
-                </button>
-                <span className="inline-flex items-center rounded-full bg-[var(--color-accent-btn)] px-2.5 py-1 text-xs font-bold text-white tabular-nums">{nf(filtered.length)}</span>
-              </div>
-            </div>
-
-            {/* tier-nav */}
-            <div className="mb-5 flex flex-wrap gap-2 text-xs">
-              <a href="#res-featured" className="rounded-full border border-border px-3 py-1.5 text-muted-foreground transition hover:border-[var(--color-accent)] hover:text-foreground">★ {tr(lang, "resTierFeatured")} <span className="tabular-nums">{tree.featured.length}</span></a>
-              <a href="#res-country" className="rounded-full border border-border px-3 py-1.5 text-muted-foreground transition hover:border-[var(--color-accent)] hover:text-foreground">⊞ {tr(lang, "resTierByCountry")} <span className="tabular-nums">{tree.byCountry.length}</span></a>
-              <a href="#res-category" className="rounded-full border border-border px-3 py-1.5 text-muted-foreground transition hover:border-[var(--color-accent)] hover:text-foreground">◈ {tr(lang, "resTierByCategory")} <span className="tabular-nums">{tree.byCategory.length}</span></a>
-            </div>
-
-            {/* compare basket — pin 2–4 series (📌 on any card) and overlay them */}
-            {basket.length > 0 && (
-              <div className="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/[0.06] p-3">
-                <span className="text-xs font-semibold text-[var(--color-ink)]">{tr(lang, "resBasket")}</span>
-                {basketItems.map((s) => (
-                  <button key={s.key} onClick={() => togglePin(s.key)} title={tr(lang, "resUnpin")}
-                    className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[0.7rem] text-[var(--color-ink)] hover:border-[var(--color-accent)]">
-                    {countryLabel(s.country, lang)} · {s.category} · {s.table} <span className="text-[var(--color-muted)]">✕</span>
-                  </button>
-                ))}
-                <span className="text-[0.66rem] text-[var(--color-muted)]">{basket.length >= 4 ? tr(lang, "resBasketFull") : tr(lang, "resBasketHint")}</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <button onClick={() => setBasket([])} className="rounded-lg border border-border px-2.5 py-1 text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)]">{tr(lang, "resClearBasket")}</button>
-                  <button onClick={() => setBasketOpen(true)} disabled={basket.length < 2}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-accent-btn)] px-3 py-1 text-xs font-bold text-white transition disabled:opacity-40">
+                  <span className="fc-basket-hint">{basket.length >= 4 ? tr(lang, "resBasketFull") : tr(lang, "resBasketHint")}</span>
+                  <button type="button" className="fc-basket-clear" onClick={() => setBasket([])}>{tr(lang, "resClearBasket")}</button>
+                  <button type="button" className="fc-basket-go" disabled={basket.length < 2} onClick={() => setBasketOpen(true)}>
                     <Layers className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "resCompareN")} ({basket.length})
                   </button>
                 </div>
-              </div>
-            )}
+              )}
 
-            {filtered.length === 0 ? (
-              <div className="flex h-[160px] items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">{tr(lang, "resEmpty")}</div>
-            ) : (
-              <div className="space-y-10">
-                {/* Tier 1 · Featured */}
-                <div id="res-featured">
-                  <div className="mb-3">
-                    <span className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">★ {tr(lang, "resTierFeatured")}</span>
-                    <h3 className="font-serif text-lg font-bold text-[var(--color-ink)]">{tr(lang, "resTierFeatured")}</h3>
-                    <p className="text-[0.8rem] text-[var(--color-muted)]">{tr(lang, "resTierFeaturedSub")}</p>
+              {filtered.length === 0 ? (
+                <p className="fc-empty">{tr(lang, "resEmpty")}</p>
+              ) : (
+                groups.map((g) => (
+                  <div key={g.country || "all"} className="fc-group">
+                    {g.country && <h3>{countryLabel(g.country, lang)} <span>{g.series.length}</span></h3>}
+                    <ul>
+                      {g.series.map((s) => (
+                        <SeriesRow key={s.key} s={s} showCountry={!g.country} active={s.key === selected.key} pinned={basket.includes(s.key)}
+                          panel={panel} forecasts={forecasts} index={index} terciles={terciles} onOpen={() => openSeries(s.key)} onPin={() => togglePin(s.key)} />
+                      ))}
+                    </ul>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {tree.featured.map((s) => <ForecastCard key={s.key} series={s} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinned={pinnedSet.has(s.key)} onPin={() => togglePin(s.key)} onOpen={() => openLightbox(s)} />)}
-                  </div>
-                </div>
-
-                {/* Tier 2 · By country */}
-                <div id="res-country">
-                  <div className="mb-3 flex flex-wrap items-end gap-3">
-                    <div>
-                      <span className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">⊞ {tr(lang, "resTierByCountry")}</span>
-                      <h3 className="font-serif text-lg font-bold text-[var(--color-ink)]">{tr(lang, "resTierByCountry")}</h3>
-                      <p className="text-[0.8rem] text-[var(--color-muted)]">{tr(lang, "resByCountrySub")}</p>
-                    </div>
-                    <div className="ml-auto flex gap-2 text-xs">
-                      <button className="rounded-lg border border-border px-2.5 py-1 text-muted-foreground hover:text-foreground" onClick={() => setOpenCountry(new Set(tree.byCountry.map((g) => g.country)))}>{tr(lang, "resExpandAll")}</button>
-                      <button className="rounded-lg border border-border px-2.5 py-1 text-muted-foreground hover:text-foreground" onClick={() => setOpenCountry(new Set())}>{tr(lang, "resCollapseAll")}</button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {tree.byCountry.map((g) => (
-                      <TierGroup key={g.country} id={`res-c-${g.country}`} title={countryLabel(g.country, lang)} count={g.series.length}
-                        open={openCountry.has(g.country)} onToggle={(o) => setOpenCountry((s) => { const n = new Set(s); if (o) n.add(g.country); else n.delete(g.country); return n; })}
-                        series={g.series} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinnedSet={pinnedSet} onPin={togglePin} onOpen={openLightbox} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tier 3 · By category */}
-                <div id="res-category">
-                  <div className="mb-3 flex flex-wrap items-end gap-3">
-                    <div>
-                      <span className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent)]">◈ {tr(lang, "resTierByCategory")}</span>
-                      <h3 className="font-serif text-lg font-bold text-[var(--color-ink)]">{tr(lang, "resTierByCategory")}</h3>
-                      <p className="text-[0.8rem] text-[var(--color-muted)]">{tr(lang, "resByCategorySub")}</p>
-                    </div>
-                    <div className="ml-auto flex gap-2 text-xs">
-                      <button className="rounded-lg border border-border px-2.5 py-1 text-muted-foreground hover:text-foreground" onClick={() => setOpenCat(new Set(tree.byCategory.map((g) => g.category)))}>{tr(lang, "resExpandAll")}</button>
-                      <button className="rounded-lg border border-border px-2.5 py-1 text-muted-foreground hover:text-foreground" onClick={() => setOpenCat(new Set())}>{tr(lang, "resCollapseAll")}</button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {tree.byCategory.map((g) => (
-                      <TierGroup key={g.category} id={`res-cat-${g.category}`} title={<>{g.category} <span className="text-[0.66rem] font-normal text-[var(--color-muted)]">· {blockLabel(g.block, lang)}</span></>} count={g.series.length}
-                        open={openCat.has(g.category)} onToggle={(o) => setOpenCat((s) => { const n = new Set(s); if (o) n.add(g.category); else n.delete(g.category); return n; })}
-                        series={g.series} panel={panel} forecasts={forecasts} index={index} terciles={terciles} dense={dense} pinnedSet={pinnedSet} onPin={togglePin} onOpen={openLightbox} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <p className="mt-5 text-xs text-[var(--color-muted)]">{tr(lang, "resOpenHint")}</p>
+                ))
+              )}
+            </div>
           </>
-        )}
-
-        {lightbox != null && panel && filtered[lightbox] && (
-          <ForecastLightbox series={filtered} index={lightbox} panel={panel} forecasts={forecasts} panelIndex={index}
-            onIndex={setLightbox} onClose={() => setLightbox(null)} />
         )}
 
         {basketOpen && panel && basketItems.length >= 2 && (
@@ -380,5 +203,44 @@ export function Resultados() {
         )}
       </div>
     </section>
+  );
+}
+
+function SeriesRow({ s, showCountry, active, pinned, panel, forecasts, index, terciles, onOpen, onPin }: {
+  s: GallerySeries; showCountry: boolean; active: boolean; pinned: boolean; panel: Panel; forecasts: ForecastStore;
+  index: ReturnType<typeof buildPanelIndex> | null; terciles: { t1: number; t2: number } | null; onOpen: () => void; onPin: () => void;
+}) {
+  const { lang } = useLang();
+  const en = lang === "en";
+  const r = React.useMemo(
+    () => seriesReadout(index?.get(s.key) ?? [], forecastFor(forecasts, s.country, s.category, s.table)),
+    [index, s, forecasts],
+  );
+  const spark = React.useMemo(
+    () => buildForecast(panel, s.country, s.category, s.table, lang, forecasts.horizonMonths || undefined, 24, forecasts, index ?? undefined),
+    [panel, s, lang, forecasts, index],
+  );
+  const tier = maseTier(s.mase, terciles);
+  const cur = r.current;
+  const now = !cur ? "—" : cur.status === "C" ? (en ? "Current" : "Al corriente") : cur.status === "U" ? (en ? "Unavailable" : "No disponible") : (cur.date ?? "—");
+  const name = `${showCountry ? `${countryLabel(s.country, lang)} · ` : ""}${s.category} · ${s.table}`;
+  return (
+    <li className="fc-row" data-active={active || undefined}>
+      <button type="button" className="fc-row-main" onClick={onOpen} aria-current={active || undefined} aria-label={`${countryLabel(s.country, lang)} · ${s.category} · ${s.table}`}>
+        <span className="fc-row-name">
+          <span className="fc-dot" data-block={s.block} aria-hidden />
+          {name}
+          <CohortBadge meta={s} />
+        </span>
+        <span className="fc-row-spark">{spark && spark.kind === "forecast" ? <Sparkline data={spark.data} w={120} h={30} /> : null}</span>
+        <span className="fc-row-num"><small>{tr(lang, "resNowShort")}</small>{now}</span>
+        <span className="fc-row-num"><small>{r.projected ? monthLabel(r.projected.month, lang) : tr(lang, "resProjectedShort")}</small>{r.projected?.date ?? "—"}</span>
+        <span className="fc-row-mase" data-tier={tier ?? undefined}>{s.mase != null ? s.mase.toFixed(3) : "—"}</span>
+        <ArrowUpRight className="fc-row-go h-4 w-4" aria-hidden />
+      </button>
+      <button type="button" className="fc-row-pin" onClick={onPin} aria-pressed={pinned} aria-label={tr(lang, pinned ? "resUnpin" : "resPin")} title={tr(lang, pinned ? "resUnpin" : "resPin")}>
+        <Pin className="h-3.5 w-3.5" fill={pinned ? "currentColor" : "none"} aria-hidden />
+      </button>
+    </li>
   );
 }

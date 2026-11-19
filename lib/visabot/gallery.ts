@@ -5,6 +5,8 @@
 import { type ForecastStore, type SeriesMeta, type ForecastPoint, forecastFor } from "@/lib/data/forecasts";
 import { PILOT } from "@/lib/data/visa-panel";
 import { seriesSignals, type PanelIndex } from "@/lib/visabot/analytics";
+import type { VisaPanelRow } from "@/lib/data/panel-core";
+import { isoDays, epochToDate } from "./synthetic-builders.mjs";
 
 export type GallerySeries = {
   key: string; // "country|category|table"
@@ -169,4 +171,35 @@ export function filterSeries(series: GallerySeries[], f: GalleryFilter): Gallery
     if (q && !`${s.country} ${s.category} ${s.table}`.toLowerCase().includes(q)) return false;
     return true;
   });
+}
+
+// ── Instrument readout (redesign 19-nov-2026) ──────────────────────────────
+// What the forecast instrument prints above the chart, derived from the panel
+// rows of one series and its production forecast points:
+//   • current: the latest published bulletin cell (F date, C = Current, U = Unavailable);
+//   • projected: the forecast's last horizon month, its central cutoff and the
+//     95 % band, converted from days-since-base to ISO dates exactly like
+//     buildForecast does (base anchored on the latest dated F observation);
+//     null when the forecast horizon ends at or before the latest bulletin.
+export type SeriesReadout = {
+  current: { month: string; status: string; date: string | null } | null;
+  projected: { month: string; date: string; lo95: string; hi95: string; months: number } | null;
+};
+export function seriesReadout(rows: VisaPanelRow[], points: ForecastPoint[] | null | undefined): SeriesReadout {
+  const sorted = [...rows].sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
+  const last = sorted.at(-1);
+  const current = last
+    ? { month: last.bulletinMonth, status: last.status, date: last.status === "F" ? (last.priorityDate ?? null) : null }
+    : null;
+  const anchor = [...sorted].reverse().find((r) => r.status === "F" && r.priorityDate && r.daysSinceBase != null);
+  const end = points?.at(-1);
+  // A forecast whose horizon already lies behind the latest bulletin is not a
+  // projection any more (the series moved on, e.g. to Current): show none.
+  if (!anchor || !end || (current && end.date.slice(0, 7) <= current.month)) return { current, projected: null };
+  const base = isoDays(anchor.priorityDate as string) - (anchor.daysSinceBase as number);
+  const d = (x: number) => epochToDate(Math.round(base + x));
+  return {
+    current,
+    projected: { month: end.date.slice(0, 7), date: d(end.days), lo95: d(end.lo95), hi95: d(end.hi95), months: points!.length },
+  };
 }

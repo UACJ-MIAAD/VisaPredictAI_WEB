@@ -20,7 +20,8 @@ import { COHORT_MAX_LEN, cohortLabel, cohortOrNull, readCohort } from "../lib/da
 const ROOT = resolve(__dirname, "..");
 const META = JSON.parse(readFileSync(resolve(ROOT, "public/data/forecasts_meta.json"), "utf8"));
 const BADGE = readFileSync(resolve(ROOT, "components/ui/cohort-badge.tsx"), "utf8");
-const CARD = readFileSync(resolve(ROOT, "components/sections/forecast-card.tsx"), "utf8");
+// The series row of /resultados (redesign 19-nov-2026) replaced the old card.
+const CARD = readFileSync(resolve(ROOT, "components/sections/resultados.tsx"), "utf8");
 
 describe("the published cut declares no cohort", () => {
   it("no series carries the field", () => {
@@ -115,11 +116,11 @@ describe("anything malformed fails closed", () => {
 describe("the hook duplicates no data and disturbs nothing", () => {
   it("the badge reads the metadata the card already has", () => {
     expect(BADGE).not.toMatch(/fetch\(|await import\(|"\/data\//);
-    expect(CARD).toMatch(/<CohortBadge meta=\{series\} \/>/);
+    expect(CARD).toMatch(/<CohortBadge meta=\{s\} \/>/);
   });
 
-  it("the card keeps its deep link, its ordering handles and its dense mode", () => {
-    for (const invariante of ["onOpen", "onPin", "aria-pressed", "dense", "maseTier"]) {
+  it("the row keeps its deep link, its pin and its accuracy tier", () => {
+    for (const invariante of ["onOpen", "onPin", "aria-pressed", "maseTier"]) {
       expect(CARD).toContain(invariante);
     }
   });

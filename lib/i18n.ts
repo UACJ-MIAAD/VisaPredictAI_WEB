@@ -364,42 +364,15 @@ const S = {
     en: "This combination does not have enough published dates (F status) to anchor a reliable forecast.",
   },
 
-  // ── /resultados · galería de pronósticos (patrón: galería filtrable + tiers + lightbox)
-  resTag: { es: "Galería de pronósticos · modelo de producción", en: "Forecast gallery · production model" },
-  resTitle: { es: "Todas las series, un vistazo", en: "Every series, at a glance" },
-  // {n} interpolated from SITE_STATS.horizonMonths (derived from forecasts_meta.json) — never hand-typed (regla #0)
-  resSub: {
-    es: "Explora el pronóstico a {n} meses de cada serie país × categoría × tabla. Filtra, hojea por país o por categoría, y abre cualquiera para ver el abanico completo con sus bandas al 80 % y 95 %.",
-    en: "Browse the {n}-month forecast of every country × category × table series. Filter, skim by country or category, and open any one to see the full fan chart with its 80% and 95% bands.",
-  },
-  resMetaUpdated: { es: "Actualizado", en: "Updated" },
-  resMetaThrough: { es: "Datos reales hasta", en: "Real data through" },
-  resMetaHorizon: { es: "Horizonte", en: "Horizon" },
-  // {n} is interpolated from the pipeline (forecasts.horizonMonths) — never hand-typed (regla #0)
-  resHorizonVal: { es: "próximos {n} meses", en: "next {n} months" },
+  // ── /resultados · pronósticos (instrumento + lista única; rediseño 19-nov-2026)
   resSeriesLabel: { es: "series", en: "series" },
-  resAreasLabel: { es: "áreas", en: "areas" },
   resFilterBlock: { es: "Bloque", en: "Block" },
   resSearch: { es: "Buscar", en: "Search" },
   resSearchPh: { es: "Ej: India EB2, F4…", en: "e.g. India EB2, F4…" },
-  resProdOnly: { es: "Solo modelo de producción", en: "Production model only" },
-  resTierFeatured: { es: "Destacados", en: "Featured" },
-  resTierFeaturedSub: { es: "Una serie insignia por país o área", en: "A headline series per country or area" },
-  resTierByCountry: { es: "Por país o área", en: "By country or area" },
-  resByCountrySub: { es: "Desagregado por país o área de cargabilidad", en: "Broken down by country or chargeability area" },
-  resTierByCategory: { es: "Por categoría", en: "By category" },
-  resByCategorySub: { es: "Vista transversal: cada categoría entre países", en: "Cross-cut: each category across countries" },
-  resExpandAll: { es: "Expandir todo", en: "Expand all" },
-  resCollapseAll: { es: "Colapsar todo", en: "Collapse all" },
-  resSeriesCount: { es: "series", en: "series" },
   resEmpty: { es: "Ninguna serie coincide con los filtros.", en: "No series match the filters." },
   resViewFull: { es: "Histórico", en: "Full history" },
   resViewZoom: { es: "Zoom", en: "Zoom" },
   resViewCompare: { es: "Comparar países", en: "Compare countries" },
-  resPrev: { es: "Anterior", en: "Previous" },
-  resNext: { es: "Siguiente", en: "Next" },
-  resClose: { es: "Cerrar", en: "Close" },
-  resOpenHint: { es: "Abre cualquier tarjeta para el abanico completo, navegación y vistas.", en: "Open any card for the full fan chart, navigation and views." },
   // sort control
   resSort: { es: "Ordenar", en: "Sort" },
   resSortOrder: { es: "Boletín", en: "Bulletin" },
@@ -407,17 +380,8 @@ const S = {
   resSortBacklog: { es: "Espera", en: "Wait" },
   resSortMovement: { es: "Avance", en: "Movement" },
   // scorecard chip (out-of-sample accuracy; backfill frozen before the causal gap fill — A1, errata 7-nov-2026)
-  resScoreLabel: { es: "Precisión verificada", en: "Verified accuracy" },
   resScoreTip: { es: "Pronósticos calificados contra boletines ya publicados (backfill congelado en jun-2026, antes del relleno causal de huecos; orientativo hasta regenerarlo).", en: "Forecasts graded against already-published bulletins (backfill frozen in Jun 2026, before the causal gap fill; indicative until regenerated)." },
   // card face signals
-  resWait: { es: "espera", en: "wait" },
-  resYr: { es: "a", en: "yr" }, // años / years — compact unit
-  resAdvancing: { es: "avanza", en: "advancing" },
-  resRetrogressing: { es: "retrocede", en: "retrogressing" },
-  resPerYear: { es: "d/año", en: "d/yr" },
-  resTierGood: { es: "nítido", en: "sharp" },
-  resTierMid: { es: "medio", en: "mid" },
-  resTierWeak: { es: "flojo", en: "weak" },
   // "reaches my priority date?" lightbox tool
   resReachTitle: { es: "¿Alcanza mi fecha de prioridad?", en: "Does it reach my priority date?" },
   resReachHint: { es: "Escribe tu fecha de prioridad (AAAA-MM-DD).", en: "Enter your priority date (YYYY-MM-DD)." },
@@ -437,15 +401,8 @@ const S = {
   resBasketHint: { es: "Fija 2 a 4 series (📌) y compáralas superpuestas.", en: "Pin 2 to 4 series (📌) and compare them overlaid." },
   resBasketFull: { es: "Máximo 4 series.", en: "Up to 4 series." },
   // density toggle
-  resDensity: { es: "Densidad", en: "Density" },
-  resDensityComfy: { es: "Cómodo", en: "Comfortable" },
-  resDensityCompact: { es: "Compacto", en: "Compact" },
   // freshness
-  resFresh: { es: "al día", en: "up to date" },
-  resStale: { es: "pronósticos al mes de {f} · panel al {p}", en: "forecasts as of {f} · panel to {p}" },
   // export
-  resExportCsv: { es: "CSV", en: "CSV" },
-  resExportPng: { es: "PNG", en: "PNG" },
   resExportCsvTip: { es: "Descargar los puntos del pronóstico (CSV)", en: "Download the forecast points (CSV)" },
   resExportPngTip: { es: "Descargar la gráfica (PNG)", en: "Download the chart (PNG)" },
 
@@ -502,6 +459,35 @@ const S = {
   acChip2: { es: "Soy de México, F4, mi fecha es enero 2002. ¿Cuándo me toca?", en: "I'm from China, EB-3, my date is March 2021. When is it my turn?" },
   acChip3: { es: "Compara F2A entre los cinco países", en: "Compare F2A across the five countries" },
   acChip4: { es: "¿Qué cambió en el último boletín?", en: "What changed in the latest bulletin?" },
+  // forecasts redesign (19-nov-2026)
+  resCategory: { es: "Categoría", en: "Category" },
+  resClose: { es: "Cerrar", en: "Close" },
+  resNow: { es: "Corte publicado", en: "Published cutoff" },
+  resNowShort: { es: "hoy", en: "now" },
+  resProjected: { es: "Proyección a {m}", en: "Projected for {m}" },
+  resProjectedNone: { es: "Sin proyección vigente", en: "No current projection" },
+  resProjectedShort: { es: "proyección", en: "projected" },
+  resBand95: { es: "Banda al 95 %", en: "95% band" },
+  resMaseTip: {
+    es: "Error del modelo en la prueba retenida, escalado contra un pronóstico ingenuo (menor es mejor; <1 le gana).",
+    en: "Model error on the held-out test, scaled against a naive forecast (lower is better; <1 beats it).",
+  },
+  resViewLabel: { es: "Vista de la gráfica", en: "Chart view" },
+  resAskBot: { es: "Pregúntale a VisaBot por esta serie", en: "Ask VisaBot about this series" },
+  resAllTitle: { es: "Todas las series", en: "Every series" },
+  resAllSub: {
+    es: "Corte publicado hoy y proyección al final del horizonte. Elige una para verla arriba; fija hasta 4 para compararlas.",
+    en: "Today's published cutoff and the projection at the end of the horizon. Pick one to see it above; pin up to 4 to compare them.",
+  },
+  resSummary: {
+    es: "{n} series en {a} países o áreas, pronosticadas a {h} meses con el modelo de producción y datos reales hasta {m}.",
+    en: "{n} series across {a} countries or areas, forecast {h} months ahead by the production model, with real data through {m}.",
+  },
+  resSummaryScore: {
+    es: "Contra boletines ya publicados, el error típico es de ±{e} días y la banda al 95 % acertó en el {c} % de los casos.",
+    en: "Against bulletins already published, the typical error is ±{e} days and the 95% band held in {c}% of cases.",
+  },
+  resSummaryScoreLink: { es: "Ver el marcador", en: "See the scorecard" },
 } satisfies Dict;
 
 export type I18nKey = keyof typeof S;

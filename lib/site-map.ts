@@ -92,18 +92,17 @@ export const ROUTES: Route[] = [
   },
   {
     path: "/resultados",
-    label: "Galería de pronósticos",
-    labelEn: "Forecast gallery",
+    label: "Pronósticos",
+    labelEn: "Forecasts",
     short: "Pronósticos",
     shortEn: "Forecasts",
     blurb:
-      "Todas las series de pronóstico país × categoría × tabla en una galería filtrable: hojea por país o por categoría y abre cualquiera para ver el abanico completo con sus bandas al 80 % y 95 %.",
+      "Elige país, categoría y tabla: el corte publicado hoy, dónde lo ubica el modelo de producción al final del horizonte y su abanico con bandas al 80 % y 95 %.",
     blurbEn:
-      "Every country × category × table forecast series in a filterable gallery: skim by country or by category and open any one for the full fan chart with its 80% and 95% bands.",
+      "Pick a country, category and table: today's published cutoff, where the production model places it at the end of the horizon, and its fan chart with 80% and 95% bands.",
     sections: [
-      { id: "res-featured", label: "Destacados", labelEn: "Featured" },
-      { id: "res-country", label: "Por país", labelEn: "By country" },
-      { id: "res-category", label: "Por categoría", labelEn: "By category" },
+      { id: "res-forecast", label: "Tu pronóstico", labelEn: "Your forecast" },
+      { id: "res-all", label: "Todas las series", labelEn: "Every series" },
     ],
   },
   {
