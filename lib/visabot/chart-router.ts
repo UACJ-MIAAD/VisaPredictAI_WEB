@@ -129,8 +129,12 @@ export function chartFromAgent(d: AgentChart, panel: Panel, lang: "es" | "en", f
       return d.month ? buildMonthTable(panel, d.month, t, lang) : null;
     case "bulletin_diff":
       return d.month && d.month_b ? buildBulletinDiff(panel, d.month, d.month_b, t, lang) : null;
-    case "priority_check":
-      return priorityCheckSpec({ priorityDate: d.priority_date ?? null, country: country ?? null, category: category ?? null, table: t }, panel, forecasts, lang);
+    case "priority_check": {
+      const spec = priorityCheckSpec({ priorityDate: d.priority_date ?? null, country: country ?? null, category: category ?? null, table: t }, panel, forecasts, lang);
+      // A stale local panel must never contradict the server's verified comparison.
+      if (d.result !== undefined && (spec.result !== d.result || (spec.cutoff ?? null) !== (d.cutoff ?? null))) return null;
+      return spec;
+    }
     default:
       return null;
   }

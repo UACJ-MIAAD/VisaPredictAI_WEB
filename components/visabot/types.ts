@@ -60,6 +60,8 @@ export type AgentChart = {
   kind: "forecast" | "history" | "movement" | "compare_countries" | "bulletin_table" | "bulletin_diff" | "priority_check";
   country?: string; category?: string; table?: string; countries?: string[];
   month?: string; month_b?: string; priority_date?: string;
+  /** priority_check: the server's verified outcome; the console drops its card when its own data disagrees */
+  result?: string; cutoff?: string | null;
 };
 
 // chart payload attached to a bot message (rendered below the text)

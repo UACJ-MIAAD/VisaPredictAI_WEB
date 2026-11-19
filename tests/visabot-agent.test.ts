@@ -62,7 +62,7 @@ describe("agent tools over the release fixture", () => {
 
   it("check_priority_date returns the priority card descriptor and rejects impossible dates", async () => {
     const ok = await runTool("check_priority_date", { country: "mexico", category: "F2B", table: "FAD", priority_date: "2010-03-01" }, ctx());
-    expect(ok.chart).toEqual({ kind: "priority_check", country: "mexico", category: "F2B", table: "FAD", priority_date: "2010-03-01" });
+    expect(ok.chart).toEqual({ kind: "priority_check", country: "mexico", category: "F2B", table: "FAD", priority_date: "2010-03-01", result: "before", cutoff: "2010-05-15" });
     const bad = await runTool("check_priority_date", { country: "mexico", category: "F2B", table: "FAD", priority_date: "2010-02-30" }, ctx());
     expect(bad.error).toBe(true);
   });

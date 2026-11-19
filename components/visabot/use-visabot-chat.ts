@@ -39,11 +39,13 @@ export function mergeServerSources(local: Source[], server: ServerSource[] | und
   if (!server) return []; // no frame → nothing verifiably grounded the answer
   const byText = new Map(local.map((s) => [s.text, s]));
   return server.map((sv) => {
-    const l = byText.get(sv.text) ?? local.find((s) => s.synthetic && s.n === sv.n);
-    const priority=Object.values(PRIORITY_SOURCE).includes(sv.source);
-    const fallback=sv.source===PRIORITY_SOURCE.en?"/en/datos-historicos/#historico":"/datos-historicos/#historico";
     // Agent tool sources carry a server-owned site path; only same-site paths are honoured.
     const serverUrl = typeof sv.url === "string" && /^\/(?!\/)/.test(sv.url) ? sv.url : "";
+    // A tool source is never one of the local synthetics: pair those by number
+    // only for legacy frames without a server path (same text still pairs).
+    const l = byText.get(sv.text) ?? (serverUrl ? undefined : local.find((s) => s.synthetic && s.n === sv.n));
+    const priority=Object.values(PRIORITY_SOURCE).includes(sv.source);
+    const fallback=sv.source===PRIORITY_SOURCE.en?"/en/datos-historicos/#historico":"/datos-historicos/#historico";
     return { n: sv.n, title: sv.title, source: sv.source, text: sv.text, url: l?.url ?? (serverUrl || (priority?fallback:"")), synthetic: l?.synthetic ?? priority };
   });
 }
@@ -272,6 +274,7 @@ export function useVisabotChat({
           return c;
         });
       let agentChart: ChartPayload | undefined;
+      let agentChartRejected = false; // the server compared a date the local data cannot confirm
       if (chart) patchLast({ chart });
       try {
         const res = await generate(
@@ -297,7 +300,10 @@ export function useVisabotChat({
             onStatus: (status) => patchLast({ status }),
             onChart: (d) => {
               const built = buildAgentChart?.(d);
-              if (built) { agentChart = built; patchLast({ chart: built }); }
+              if (built) { agentChart = built; agentChartRejected = false; patchLast({ chart: built }); }
+              // A rejected date comparison also removes the guessed chart, so the
+              // comparison's source never points at a different picture.
+              else if (d.kind === "priority_check" && !agentChart) { agentChartRejected = true; patchLast({ chart: undefined }); }
             },
           },
         );
@@ -308,7 +314,7 @@ export function useVisabotChat({
         // from those very chunks, with no server prompt involved.
         const displayed = res.extractive ? sources : mergeServerSources(sources, res.serverSources);
         // The agent's chart wins over the one guessed from the wording.
-        const answerChart = agentChart ?? chart;
+        const answerChart = agentChart ?? (agentChartRejected ? undefined : chart);
         const truncated = isTruncated(res.text); // server timeout cut (note appended by chat.mjs)
         setMessages((m) => {
           if (!alive()) return m;

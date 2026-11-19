@@ -44,3 +44,12 @@ describe("rehearsal routing (Opus findings, executed)", () => {
     expect(chartForQuery("Muéstrame el pronóstico de México F4", panel, "es", null)?.chart.kind).toBe("forecast");
   });
 });
+describe("agent date comparison vs stale local data", () => {
+  const d = {kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2024-09-19"} as const;
+  it("draws the card when the server's verified outcome matches the local data", () => {
+    expect(chartFromAgent({...d,result:"before",cutoff:"2026-04-22"}, panel, "es", null)?.kind).toBe("priorityCheck");
+  });
+  it.each([[{result:"after",cutoff:"2020-04-22"}],[{result:"before",cutoff:"2025-01-01"}]])("drops the card when the server saw %j", (srv) => {
+    expect(chartFromAgent({...d,...srv}, panel, "es", null)).toBeNull();
+  });
+});
