@@ -111,6 +111,9 @@ for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
 
 test("active From survives rotation and reopening; source changes reset it in full screen",async({page,context},testInfo)=>{
   await blockExternal(context);await page.setViewportSize({width:1280,height:720});await page.goto("/");
+  // The panel loads after hydration; until then the selects are disabled and
+  // cannot take the dialog's initial focus (CI is slower than local runs).
+  await expect(page.locator('figure[data-vb-full="false"] [data-vb-observation]')).not.toHaveText("—");
   const open=page.locator('figure[data-vb-full="false"]').getByRole("button",{name:"Pantalla completa",exact:true});await open.click();
   const modal=page.getByRole("dialog",{name:"Observatorio en pantalla completa",exact:true});
   const category=modal.getByRole("combobox",{name:"Categoría del observatorio",exact:true});
