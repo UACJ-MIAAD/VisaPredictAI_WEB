@@ -97,9 +97,9 @@ export const ROUTES: Route[] = [
     short: "Pronósticos",
     shortEn: "Forecasts",
     blurb:
-      "Elige país, categoría y tabla: el corte publicado hoy, dónde lo ubica el modelo de producción al final del horizonte y su abanico con bandas al 80 % y 95 %.",
+      "Elige país, categoría y tabla: el corte del último boletín, dónde lo ubica el modelo de producción al final del horizonte y su abanico con bandas al 80 % y 95 %.",
     blurbEn:
-      "Pick a country, category and table: today's published cutoff, where the production model places it at the end of the horizon, and its fan chart with 80% and 95% bands.",
+      "Pick a country, category and table: the latest bulletin's cutoff, where the production model places it at the end of the horizon, and its fan chart with 80% and 95% bands.",
     sections: [
       { id: "res-forecast", label: "Tu pronóstico", labelEn: "Your forecast" },
       { id: "res-all", label: "Todas las series", labelEn: "Every series" },

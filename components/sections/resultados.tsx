@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLang } from "@/components/lang-provider";
 import { tr, localeOf } from "@/lib/i18n";
 import { localePath } from "@/lib/site-map";
+import { track } from "@/lib/analytics";
 import { loadPanel, countryLabel, type Panel } from "@/lib/data/visa-panel";
 import { loadForecasts, forecastFor, type ForecastStore } from "@/lib/data/forecasts";
 import { monthLabel, buildPanelIndex, buildForecast, type PanelIndex } from "@/lib/visabot/analytics";
@@ -53,6 +54,8 @@ export function Resultados() {
   const [basketOpen, setBasketOpen] = React.useState(false);
   const [capMsg, setCapMsg] = React.useState("");
   const instrumentRef = React.useRef<HTMLDivElement>(null);
+  const searchRef = React.useRef<HTMLInputElement>(null);
+  const changeView = React.useCallback((v: InstrumentView) => { setView(v); track("Forecast View", { view: v }); }, []);
 
   const index = React.useMemo(() => (panel ? buildPanelIndex(panel) : null), [panel]);
   const allSeries = React.useMemo(() => {
@@ -116,11 +119,15 @@ export function Resultados() {
     setBasket((b) => {
       if (!b.includes(key) && b.length >= 4) { setCapMsg(tr(lang, "resBasketFull")); return b; }
       setCapMsg("");
-      return b.includes(key) ? b.filter((k) => k !== key) : [...b, key];
+      const next = b.includes(key) ? b.filter((k) => k !== key) : [...b, key];
+      if (!next.length) requestAnimationFrame(() => searchRef.current?.focus());
+      return next;
     });
   }, [lang]);
   const openSeries = React.useCallback((key: string) => {
     setSelectedKey(key);
+    const [country, category, table] = key.split("|");
+    track("Forecast Gallery Open", { country, category, table, from: "list" });
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     instrumentRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
     document.getElementById("fc-title")?.focus({ preventScroll: true });
@@ -132,7 +139,7 @@ export function Resultados() {
   const countries = [...new Set(allSeries.map((s) => s.country))];
   const seg = <T extends string>(label: string, value: T, set: (v: T) => void, opts: [T, string, string?][]) => (
     <div className="fc-seg fc-seg--quiet" role="group" aria-label={label}>
-      {opts.map(([v, l, full]) => <button key={v || "all"} type="button" aria-pressed={value === v} title={full} aria-label={full} onClick={() => set(v)}>{l}</button>)}
+      {opts.map(([v, l, full]) => <button key={v || "all"} type="button" aria-pressed={value === v} title={full} onClick={() => set(v)}>{l}{full && <span className="sr-only"> ({full})</span>}</button>)}
     </div>
   );
 
@@ -146,7 +153,7 @@ export function Resultados() {
         ) : (
           <>
             <div ref={instrumentRef} className="fc-anchor">
-              <ForecastInstrument all={allSeries} selected={selected} onSelect={setSelectedKey} view={view} onView={setView} panel={panel} forecasts={forecasts} index={index} />
+              <ForecastInstrument all={allSeries} selected={selected} onSelect={setSelectedKey} view={view} onView={changeView} panel={panel} forecasts={forecasts} index={index} />
             </div>
 
             <div id="res-all" className="fc-all">
@@ -161,11 +168,14 @@ export function Resultados() {
                   )}
                 </p>
               </div>
+              {summary.lastMonth && panel.monthRange[1] && summary.lastMonth < panel.monthRange[1] && (
+                <p className="fc-stale" role="note">{tr(lang, "resStaleNotice").replace("{f}", monthLabel(summary.lastMonth, lang)).replace("{p}", monthLabel(panel.monthRange[1], lang))}</p>
+              )}
               <div className="fc-filters">
-                {seg(tr(lang, "resFilterCountry"), fCountry, setFCountry, [["", tr(lang, "optAll")], ...countries.map((c) => [c, COUNTRY_SHORT[c] ?? c, countryLabel(c, lang)] as [string, string, string])])}
+                {seg(tr(lang, "resFilterCountry"), fCountry, setFCountry, [["", tr(lang, "optAll")], ...countries.map((c) => [c, c === "all_chargeability" ? tr(lang, "resRowShort") : COUNTRY_SHORT[c] ?? c, countryLabel(c, lang)] as [string, string, string])])}
                 {seg(tr(lang, "resFilterTable"), fTable, setFTable, [["", tr(lang, "optAllF")], ["FAD", "FAD", `${tr(lang, "resTableFAD")} (FAD)`], ["DFF", "DFF", `${tr(lang, "resTableDFF")} (DFF)`]])}
                 {seg(tr(lang, "resFilterBlock"), fBlock, setFBlock, [["", tr(lang, "optAll")], ["familia", tr(lang, "blockFamily")], ["empleo", tr(lang, "blockEmployment")]])}
-                <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr(lang, "resSearchPh")} aria-label={tr(lang, "resSearch")} className="fc-search" />
+                <input ref={searchRef} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={tr(lang, "resSearchPh")} aria-label={tr(lang, "resSearch")} className="fc-search" />
                 <label className="fc-sort">
                   <span>{tr(lang, "resSort")}</span>
                   <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
@@ -187,7 +197,7 @@ export function Resultados() {
                     </button>
                   ))}
                   <span className="fc-basket-hint" aria-live="polite">{capMsg || (basket.length < 2 ? tr(lang, "resBasketHint") : "")}</span>
-                  <button type="button" className="fc-basket-clear" onClick={() => { setBasket([]); setCapMsg(""); }}>{tr(lang, "resClearBasket")}</button>
+                  <button type="button" className="fc-basket-clear" onClick={() => { setBasket([]); setCapMsg(""); requestAnimationFrame(() => searchRef.current?.focus()); }}>{tr(lang, "resClearBasket")}</button>
                   <button type="button" className="fc-basket-go" disabled={basket.length < 2} onClick={() => setBasketOpen(true)}>
                     <Layers className="h-3.5 w-3.5" aria-hidden /> {tr(lang, "resCompareN")} ({basket.length})
                   </button>
@@ -209,13 +219,13 @@ export function Resultados() {
                       {g.country && <h3>{countryLabel(g.country, lang)} <span>{g.series.length}</span></h3>}
                       <ul>
                         {g.series.map((s) => (
-                          <SeriesRow key={s.key} s={s} showCountry={!g.country} active={s.key === selected.key} pinned={basket.includes(s.key)} sort={sort}
+                          <SeriesRow key={s.key} s={s} showCountry={!g.country} active={s.key === selected.key} pinned={basket.includes(s.key)} full={basket.length >= 4} sort={sort} h={h}
                             panel={panel} forecasts={forecasts} index={index} onOpen={openSeries} onPin={togglePin} />
                         ))}
                       </ul>
                     </div>
                   ))}
-                  <p className="fc-footnote">{tr(lang, "resMaseTip")}</p>
+                  {(sort === "order" || sort === "mase") && <p className="fc-footnote">{tr(lang, "resMaseTip")}</p>}
                 </>
               )}
             </div>
@@ -230,8 +240,8 @@ export function Resultados() {
   );
 }
 
-const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned, sort, panel, forecasts, index, onOpen, onPin }: {
-  s: GallerySeries; showCountry: boolean; active: boolean; pinned: boolean; sort: SortKey; panel: Panel; forecasts: ForecastStore;
+const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned, full, sort, h, panel, forecasts, index, onOpen, onPin }: {
+  s: GallerySeries; showCountry: boolean; active: boolean; pinned: boolean; full: boolean; sort: SortKey; h: number; panel: Panel; forecasts: ForecastStore;
   index: PanelIndex | null; onOpen: (key: string) => void; onPin: (key: string) => void;
 }) {
   const { lang } = useLang();
@@ -243,34 +253,45 @@ const SeriesRow = React.memo(function SeriesRow({ s, showCountry, active, pinned
     () => (r.projected ? buildForecast(panel, s.country, s.category, s.table, lang, forecasts.horizonMonths || undefined, 24, forecasts, index ?? undefined) : null),
     [r.projected, panel, s, lang, forecasts, index],
   );
-  const cur = r.current;
+  const cur = r.current, p = r.projected;
   const now = !cur ? "—" : cur.status === "C" ? tr(lang, "resCurrentC") : cur.status === "U" ? tr(lang, "resCurrentU") : (cur.date ?? "—");
   const none = r.none === "current" ? tr(lang, "resRowNoneCurrent") : r.none === "discontinued" ? tr(lang, "resRowNoneDiscontinued") : "—";
+  const bound = (iso: string, isCurrent: boolean) => (isCurrent ? tr(lang, "resCurrentC") : monthOfDate(iso, lang));
   const verdict = maseVsNaive(s.mase);
-  const metric = sort === "backlog" ? (s.backlogYears != null ? `${s.backlogYears.toFixed(1)} ${tr(lang, "resYears")}` : "—")
-    : sort === "movement" ? (s.movementPerYear != null ? `${s.movementPerYear >= 0 ? "+" : "−"}${Math.abs(Math.round(s.movementPerYear))} ${tr(lang, "resDaysYear")}` : "—")
+  const metricName = sort === "backlog" ? tr(lang, "resColWait") : sort === "movement" ? tr(lang, "resColMove") : "MASE";
+  const metric = sort === "backlog" ? (s.backlogYears != null && cur?.status === "F" ? `${s.backlogYears.toFixed(1)} ${tr(lang, "resYears")}` : "—")
+    : sort === "movement" ? (p && s.movementPerYear != null ? `${s.movementPerYear >= 0 ? "+" : "−"}${Math.abs(Math.round(s.movementPerYear))} ${tr(lang, "resDaysYear")}` : "—")
     : (s.mase != null ? s.mase.toFixed(2) : "—");
+  const cat = s.category.replace(/_/g, " ");
   return (
     <li className="fc-row" data-active={active || undefined}>
       <button type="button" className="fc-row-main" onClick={() => onOpen(s.key)} aria-current={active || undefined}>
         <span className="fc-row-name">
           {showCountry ? <>{countryLabel(s.country, lang)} · </> : <span className="sr-only">{countryLabel(s.country, lang)} · </span>}
-          {s.category} · {s.table}
+          {cat} · {s.table}<span className="sr-only">,</span>
           <CohortBadge meta={s} />
         </span>
         <span className="fc-row-spark" aria-hidden>{spark && spark.kind === "forecast" ? <Sparkline data={spark.data} w={112} h={28} /> : null}</span>
-        <span className="fc-row-num"><small>{cur ? monthLabel(cur.month, lang) : ""}</small>{now}</span>
         <span className="fc-row-num">
-          {r.projected
-            ? <><small>{monthOfDate(r.projected.lo95, lang)} – {monthOfDate(r.projected.hi95, lang)}</small>{monthOfDate(r.projected.date, lang)}</>
-            : <span className="fc-row-none">{none}</span>}
+          <span className="sr-only">{tr(lang, "resNow")}, </span>
+          <small>{cur ? monthLabel(cur.month, lang) : ""}</small><span className="sr-only">: </span>{now}<span className="sr-only">.</span>
+        </span>
+        <span className="fc-row-num">
+          {p ? (
+            <>
+              <span className="sr-only">{tr(lang, "resProjected").replace("{m}", monthLabel(p.month, lang))}: </span>
+              <small>{p.months !== h ? `${monthLabel(p.month, lang)} · ` : ""}<span className="sr-only">{tr(lang, "resBand95")}: </span>{bound(p.lo95, p.lo95Current)} – {bound(p.hi95, p.hi95Current)}<span className="sr-only">; </span></small>
+              <span>{bound(p.date, p.dateCurrent)}{p.retro && <span className="fc-retro">{tr(lang, "resRetro")}</span>}</span><span className="sr-only">.</span>
+            </>
+          ) : <span className="fc-row-none">{none}</span>}
         </span>
         <span className="fc-row-metric" data-verdict={sort === "order" || sort === "mase" ? (verdict ?? undefined) : undefined}>
-          <span className="sr-only">{sort === "backlog" ? tr(lang, "resColWait") : sort === "movement" ? tr(lang, "resColMove") : "MASE"} </span>{metric}
+          <span className="fc-metric-label">{metricName} </span>{metric}
+          {(sort === "order" || sort === "mase") && verdict && <span className="sr-only"> ({tr(lang, verdict === "beats" ? "resMaseBeats" : "resMaseLoses")})</span>}
         </span>
       </button>
-      <button type="button" className="fc-row-pin" onClick={() => onPin(s.key)} aria-pressed={pinned}
-        aria-label={`${tr(lang, pinned ? "resUnpin" : "resPin")}: ${countryLabel(s.country, lang)} · ${s.category} · ${s.table}`} title={tr(lang, pinned ? "resUnpin" : "resPin")}>
+      <button type="button" className="fc-row-pin" onClick={() => onPin(s.key)} aria-pressed={pinned} disabled={!pinned && full}
+        aria-label={`${tr(lang, pinned ? "resUnpin" : "resPin")}: ${countryLabel(s.country, lang)} · ${cat} · ${s.table}`} title={tr(lang, pinned ? "resUnpin" : full ? "resBasketFull" : "resPin")}>
         <Pin className="h-3.5 w-3.5" fill={pinned ? "currentColor" : "none"} aria-hidden />
       </button>
     </li>

@@ -201,14 +201,22 @@ export const maseVsNaive = (mase: number | null | undefined): "beats" | "loses" 
 //     discontinued series or a forecast fit before its latest bulletin is history).
 export type SeriesReadout = {
   current: { month: string; status: string; date: string | null } | null;
-  projected: { month: string; date: string; lo95: string; hi95: string; months: number } | null;
+  // Dates are ISO; `current: true` on a bound means it reaches the bulletin's own
+  // month, i.e. the category would be Current (no bulletin publishes a cutoff
+  // later than its own month). `retro` = central projection behind today's cutoff.
+  projected: {
+    month: string; date: string; lo95: string; hi95: string; months: number;
+    dateCurrent: boolean; hi95Current: boolean; lo95Current: boolean; retro: boolean;
+  } | null;
   none: "current" | "unavailable" | "discontinued" | "stale" | "noForecast" | null;
   base: number | null;
 };
-export function seriesBase(rows: VisaPanelRow[]): number | null {
-  const anchor = [...rows].sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth)).reverse()
-    .find((r) => r.status === "F" && r.priorityDate && r.daysSinceBase != null);
-  return anchor ? isoDays(anchor.priorityDate as string) - (anchor.daysSinceBase as number) : null;
+export function seriesBase(sorted: VisaPanelRow[]): number | null {
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const r = sorted[i];
+    if (r.status === "F" && r.priorityDate && r.daysSinceBase != null) return isoDays(r.priorityDate) - r.daysSinceBase;
+  }
+  return null;
 }
 export function seriesReadout(rows: VisaPanelRow[], points: ForecastPoint[] | null | undefined, latestMonth?: string | null): SeriesReadout {
   const sorted = [...rows].sort((a, b) => a.bulletinMonth.localeCompare(b.bulletinMonth));
@@ -226,31 +234,45 @@ export function seriesReadout(rows: VisaPanelRow[], points: ForecastPoint[] | nu
   const first = points?.[0], end = points?.at(-1);
   if (!current || current.status !== "F" || base == null || !first || !end) return out("noForecast");
   if (first.date.slice(0, 7) <= current.month) return out("stale");
+  const cap = `${end.date.slice(0, 7)}-01`;
   const d = (x: number) => epochToDate(Math.round(base + x));
+  const date = d(end.days), lo95 = d(end.lo95), hi95 = d(end.hi95);
   return {
     current, base, none: null,
-    projected: { month: end.date.slice(0, 7), date: d(end.days), lo95: d(end.lo95), hi95: d(end.hi95), months: points!.length },
+    projected: {
+      month: end.date.slice(0, 7), date, lo95, hi95, months: points!.length,
+      dateCurrent: date >= cap, hi95Current: hi95 >= cap, lo95Current: lo95 >= cap,
+      retro: !!current.date && date < current.date,
+    },
   };
 }
 
-// "Does it reach my priority date?" with the uncertainty spelled out: the month
-// the central path passes the date, and the 95 % range of months (the
-// optimistic edge passes it first, the pessimistic edge last).
+// "Does it reach my priority date?" A priority date is reached when it is
+// EARLIER than the cutoff (State Department rule), so equal is not yet. With the
+// uncertainty spelled out: the month the central path first passes it, and the
+// 95 % range of months (optimistic edge first, pessimistic edge last). A path
+// that passes the date and is behind it again by the horizon end is reported as
+// such, never as "reached".
 export type ReachVerdict =
   | { status: "invalid" | "current" | "unavailable" | "discontinued" | "noForecast" | "past" }
-  | { status: "within" | "band" | "beyond"; central: string | null; early: string | null; late: string | null; last: string };
+  | { status: "within" | "crossedBack" | "band" | "beyond"; central: string | null; early: string | null; late: string | null; last: string };
 export function reachVerdict(r: SeriesReadout, points: ForecastPoint[] | null | undefined, pd: string): ReachVerdict {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(pd) || epochToDate(isoDays(pd)) !== pd) return { status: "invalid" };
   if (r.none === "current") return { status: "current" };
   if (r.none === "unavailable") return { status: "unavailable" };
   if (r.none === "discontinued") return { status: "discontinued" };
-  if (r.current?.date && pd <= r.current.date) return { status: "past" };
+  if (r.current?.date && pd < r.current.date) return { status: "past" };
   if (!r.projected || r.base == null || !points?.length) return { status: "noForecast" };
-  const x = isoDays(pd) - r.base;
+  const x = isoDays(pd);
+  const at = (v: number) => Math.round((r.base as number) + v);
   const month = (p: ForecastPoint | undefined) => (p ? p.date.slice(0, 7) : null);
-  const central = month(points.find((p) => p.days > x));
-  const early = month(points.find((p) => p.hi95 > x));
-  const late = month(points.find((p) => p.lo95 > x));
-  const last = points.at(-1)!.date.slice(0, 7);
-  return { status: central ? "within" : early ? "band" : "beyond", central, early, late, last };
+  const end = points.at(-1)!;
+  const central = month(points.find((p) => at(p.days) > x));
+  const early = month(points.find((p) => at(p.hi95) > x));
+  // the pessimistic edge only counts once it stays past the date to the horizon end
+  const lateIdx = points.findIndex((p, i) => points.slice(i).every((q) => at(q.lo95) > x));
+  const late = lateIdx >= 0 ? month(points[lateIdx]) : null;
+  const last = month(end) as string;
+  const status = central ? (at(end.days) > x ? "within" : "crossedBack") : early ? "band" : "beyond";
+  return { status, central, early, late, last };
 }

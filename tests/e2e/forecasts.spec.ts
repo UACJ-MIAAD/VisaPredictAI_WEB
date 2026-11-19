@@ -60,9 +60,14 @@ for (const lang of ["es", "en"] as const) for (const theme of ["light", "dark"] 
     await expect(page).toHaveURL(/series=philippines%7CF4%7CFAD/);
     await expect(inst.locator("[data-fc-current]")).toHaveText(shown(readout("philippines|F4|FAD"), en));
 
-    // priority date far in the past → already passed
-    await inst.locator("#fc-pd").fill("1990-01-01");
-    await expect(inst.locator("[data-fc-reach]")).toHaveAttribute("data-fc-reach", "past");
+    // priority date earlier than the cutoff → reached; equal to it → not yet
+    const ph = readout("philippines|F4|FAD");
+    if (ph.projected && ph.current?.date) {
+      await inst.locator("#fc-pd").fill("1990-01-01");
+      await expect(inst.locator("[data-fc-reach]")).toHaveAttribute("data-fc-reach", "past");
+      await inst.locator("#fc-pd").fill(ph.current.date);
+      await expect(inst.locator("[data-fc-reach]")).not.toHaveAttribute("data-fc-reach", "past");
+    }
 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const issues = await new AxeBuilder({ page }).include("#resultados").analyze();
@@ -80,8 +85,9 @@ for (const why of ["current", "discontinued"] as const) test(`a deep link to a $
   await expect(inst.locator(".fc-title")).toContainText(cat);
   await expect(inst.locator(".fc-title")).toContainText(t);
   await expect(inst.locator("[data-fc-projected]")).toHaveAttribute("data-fc-none", why);
-  await inst.locator("#fc-pd").fill("2030-01-01");
-  await expect(inst.locator("[data-fc-reach]")).toHaveAttribute("data-fc-reach", why);
+  // nothing to project → no priority-date check and no forecast fan
+  await expect(inst.locator("#fc-pd")).toHaveCount(0);
+  await expect(inst.locator(".fc-chart")).toBeVisible();
 });
 
 test("foreign query parameters and the chart view survive in the URL", async ({ page, context }) => {

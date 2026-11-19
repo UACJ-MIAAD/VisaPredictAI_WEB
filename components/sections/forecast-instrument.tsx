@@ -48,18 +48,19 @@ function download(name: string, data: Blob | string, type = "text/csv;charset=ut
 // Rasterize the mounted chart SVG with its title. Styles come from the live
 // computed values of every node (Recharts relies on CSS classes and var()
 // tokens that a standalone SVG would lose: black serif labels on dark mode).
-const STYLE_PROPS = ["fill", "stroke", "stroke-width", "stroke-dasharray", "opacity", "fill-opacity", "stroke-opacity", "font-family", "font-size", "font-weight"];
-async function chartPng(svg: SVGSVGElement, title: string, bg: string, ink: string): Promise<Blob | null> {
+const STYLE_PROPS = ["display", "visibility", "fill", "stroke", "stroke-width", "stroke-dasharray", "opacity", "fill-opacity", "stroke-opacity", "font-family", "font-size", "font-weight"];
+async function chartPng(svg: SVGSVGElement, title: string, subtitle: string, bg: string, ink: string): Promise<Blob | null> {
   const rect = svg.getBoundingClientRect();
   const w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
   const clone = svg.cloneNode(true) as SVGSVGElement;
   const src = [svg, ...svg.querySelectorAll("*")], dst = [clone, ...clone.querySelectorAll("*")];
   src.forEach((el, i) => {
     const cs = getComputedStyle(el);
-    const style = STYLE_PROPS.map((p) => `${p}:${cs.getPropertyValue(p)}`).join(";");
+    // computed url() paints are absolute ("http://…#id"); a standalone SVG needs "url(#id)"
+    const style = STYLE_PROPS.map((p) => `${p}:${cs.getPropertyValue(p)}`).join(";").replace(/url\("?[^)#"]*#([^)"]+)"?\)/g, "url(#$1)");
     (dst[i] as SVGElement).setAttribute("style", style);
   });
-  const head = 34;
+  const head = subtitle ? 54 : 34;
   const ns = "http://www.w3.org/2000/svg";
   const outer = document.createElementNS(ns, "svg");
   outer.setAttribute("xmlns", ns); outer.setAttribute("width", String(w)); outer.setAttribute("height", String(h + head));
@@ -67,10 +68,14 @@ async function chartPng(svg: SVGSVGElement, title: string, bg: string, ink: stri
   t.setAttribute("x", "8"); t.setAttribute("y", "22");
   t.setAttribute("style", `fill:${ink};font-family:${getComputedStyle(document.body).fontFamily};font-size:15px;font-weight:600`);
   t.textContent = title;
+  const st = document.createElementNS(ns, "text");
+  st.setAttribute("x", "8"); st.setAttribute("y", "42");
+  st.setAttribute("style", `fill:${ink};opacity:0.7;font-family:${getComputedStyle(document.body).fontFamily};font-size:12px`);
+  st.textContent = subtitle;
   const g = document.createElementNS(ns, "g");
   g.setAttribute("transform", `translate(0,${head})`);
   clone.setAttribute("width", String(w)); clone.setAttribute("height", String(h));
-  g.appendChild(clone); outer.appendChild(t); outer.appendChild(g);
+  g.appendChild(clone); outer.appendChild(t); if (subtitle) outer.appendChild(st); outer.appendChild(g);
   const str = new XMLSerializer().serializeToString(outer);
   const img = new Image();
   await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(str); });
@@ -102,6 +107,7 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
   const tableName = (t: string) => `${tr(lang, t === "DFF" ? "resTableDFF" : "resTableFAD")} (${t})`;
 
   const countries = React.useMemo(() => [...new Set(all.map((s) => s.country))], [all]);
+  const compare = view === "compare";
   const tables = React.useMemo(
     () => [...new Set(all.filter((s) => s.country === country).map((s) => s.table))].sort((a, b) => TABLE_ORDER.indexOf(a) - TABLE_ORDER.indexOf(b)),
     [all, country],
@@ -126,32 +132,48 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
   const points = forecastFor(forecasts, country, category, table);
   const readout = React.useMemo(() => seriesReadout(rows, points, panel.monthRange[1]), [rows, points, panel]);
   const projects = !!readout.projected;
+  // Compare overlays only projections that would be shown for each country on
+  // its own (no fan for a Current, Unavailable, discontinued or stale series).
+  const compareStore = React.useMemo(() => {
+    if (!compare) return forecasts;
+    const series = new Map([...forecasts.series].filter(([k, pts]) => {
+      const [c, cat, t] = k.split("|");
+      if (cat !== category || t !== table) return true;
+      return !!seriesReadout(index?.get(k) ?? panel.rows.filter((r) => r.country === c && r.category === cat && r.table === t), pts, panel.monthRange[1]).projected;
+    }));
+    return { ...forecasts, series };
+  }, [compare, forecasts, category, table, index, panel]);
   const spec: ChartSpec | null = React.useMemo(() => {
-    if (view === "compare") return buildMultiLine(panel, category, table, lang, forecasts);
+    if (compare) return buildMultiLine(panel, category, table, lang, compareStore);
     // Nothing to project (Current, Unavailable, discontinued, stale): history
     // only, so the chart never contradicts the readout with a fan.
     if (!projects) return buildLine(panel, country, category, table, lang);
     const s = buildForecast(panel, country, category, table, lang, forecasts.horizonMonths || undefined, view === "full" ? 480 : 48, forecasts, index ?? undefined);
     // The track record lives once, in the page summary; not repeated in a box under the chart.
-    return s && s.kind === "forecast" ? { ...s, note: undefined } : s;
-  }, [view, projects, panel, country, category, table, lang, forecasts, index]);
+    // and plain words instead of pipeline jargon above the chart.
+    return s && s.kind === "forecast" ? { ...s, note: undefined, subtitle: tr(lang, "resChartLegend") } : s;
+  }, [view, compare, compareStore, projects, panel, country, category, table, lang, forecasts, index]);
   const reach = React.useMemo(() => (pd.trim() ? reachVerdict(readout, points, pd.trim()) : null), [readout, points, pd]);
 
   const cur = readout.current;
   const currentText = !cur ? "—" : cur.status === "C" ? tr(lang, "resCurrentC") : cur.status === "U" ? tr(lang, "resCurrentU") : (cur.date ?? "—");
-  const noneText = readout.none === "current" ? tr(lang, "resNoneCurrent")
-    : readout.none === "unavailable" ? tr(lang, "resNoneUnavailable")
+  const dff = table === "DFF";
+  const noneText = readout.none === "current" ? tr(lang, dff ? "resNoneCurrentDFF" : "resNoneCurrentFAD")
+    : readout.none === "unavailable" ? tr(lang, dff ? "resNoneUnavailableDFF" : "resNoneUnavailableFAD")
     : readout.none === "discontinued" ? tr(lang, "resNoneDiscontinued").replace("{m}", cur ? monthLabel(cur.month, lang) : "—")
     : readout.none ? tr(lang, "resNoneStale") : null;
   const fileBase = `${country}_${category}_${table}`;
   const canExport = view !== "compare" && !!readout.projected && !!points?.length;
-  const title = `${countryLabel(country, lang)} · ${category} · ${tableName(table)}`;
+  const title = compare ? `${category} · ${tableName(table)}` : `${countryLabel(country, lang)} · ${category} · ${tableName(table)}`;
+  const bound = (iso: string, isCurrent: boolean) => (isCurrent ? tr(lang, "resCurrentC") : monthOfDate(iso, lang));
   const exportPng = async () => {
     const svg = chartRef.current?.querySelector("svg.recharts-surface");
     if (!svg) return;
     try {
       const cs = getComputedStyle(document.documentElement);
-      const blob = await chartPng(svg as SVGSVGElement, title, cs.getPropertyValue("--color-bg").trim() || "#fff", cs.getPropertyValue("--color-ink").trim() || "#000");
+      const p = readout.projected;
+      const sub = p ? `${tr(lang, "resNow")}: ${currentText} · ${tr(lang, "resProjected").replace("{m}", monthLabel(p.month, lang))}: ${bound(p.date, p.dateCurrent)} · ${tr(lang, "resBand95")}: ${bound(p.lo95, p.lo95Current)} – ${bound(p.hi95, p.hi95Current)}` : "";
+      const blob = await chartPng(svg as SVGSVGElement, title, sub, cs.getPropertyValue("--color-bg").trim() || "#fff", cs.getPropertyValue("--color-ink").trim() || "#000");
       if (blob) download(`${fileBase}.png`, blob, "image/png");
       track("Forecast Export", { format: "png" });
     } catch { /* rasterization unsupported: CSV export still available */ }
@@ -160,16 +182,17 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
     navigator.clipboard?.writeText(window.location.href).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1600); }).catch(() => {});
   };
   const m = (iso: string | null) => (iso ? monthLabel(iso, lang) : "");
+  const short = (c: string) => (c === "all_chargeability" ? tr(lang, "resRowShort") : COUNTRY_SHORT[c] ?? countryLabel(c, lang));
 
   return (
     <section id="res-forecast" className="fc-instrument" aria-labelledby="fc-title">
       <div className="fc-controls">
-        <div className="fc-seg" role="group" aria-label={tr(lang, "resPickCountry")}>
+        {!compare && <div className="fc-seg" role="group" aria-label={tr(lang, "resPickCountry")}>
           {countries.map((c) => (
-            <button key={c} type="button" aria-pressed={c === country} aria-label={countryLabel(c, lang)} title={countryLabel(c, lang)}
-              onClick={() => pick(c, table, category)}>{COUNTRY_SHORT[c] ?? countryLabel(c, lang)}</button>
+            <button key={c} type="button" aria-pressed={c === country} title={countryLabel(c, lang)}
+              onClick={() => pick(c, table, category)}>{short(c)}<span className="sr-only"> ({countryLabel(c, lang)})</span></button>
           ))}
-        </div>
+        </div>}
         <div className="fc-seg" role="group" aria-label={tr(lang, "resPickTable")}>
           {tables.map((t) => (
             <button key={t} type="button" aria-pressed={t === table} onClick={() => pick(country, t, category)}>{tableName(t)}</button>
@@ -178,10 +201,11 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
         <label className="fc-select">
           <span className="sr-only">{tr(lang, "resCategory")}</span>
           <select value={category} onChange={(e) => pick(country, table, e.target.value)}>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            {categories.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
           </select>
         </label>
       </div>
+      <p className="fc-hint fc-tables-hint">{tr(lang, "resTablesHint")}</p>
 
       <h2 id="fc-title" tabIndex={-1} className="fc-title">{title}</h2>
 
@@ -197,11 +221,14 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
             <>
               <div>
                 <dt>{tr(lang, "resProjected").replace("{m}", monthLabel(readout.projected.month, lang))}</dt>
-                <dd data-fc-projected data-date={readout.projected.date}>{monthOfDate(readout.projected.date, lang)}</dd>
+                <dd data-fc-projected data-date={readout.projected.date}>
+                  {bound(readout.projected.date, readout.projected.dateCurrent)}
+                  {readout.projected.retro && <span className="fc-retro">{tr(lang, "resRetro")}</span>}
+                </dd>
               </div>
               <div>
                 <dt>{tr(lang, "resBand95")}</dt>
-                <dd data-fc-band>{monthOfDate(readout.projected.lo95, lang)} – {monthOfDate(readout.projected.hi95, lang)}</dd>
+                <dd data-fc-band>{bound(readout.projected.lo95, readout.projected.lo95Current)} – {bound(readout.projected.hi95, readout.projected.hi95Current)}</dd>
               </div>
             </>
           ) : (
@@ -242,25 +269,27 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
       </div>
 
       <div className="fc-bottom">
-        <div className="fc-reach">
-          <label htmlFor="fc-pd">{tr(lang, "resReachTitle")}</label>
-          <input id="fc-pd" type="date" value={pd} onChange={(e) => setPd(e.target.value)} aria-describedby="fc-pd-hint" />
-          <span id="fc-pd-hint" className="fc-hint">{tr(lang, "resReachHintBand")}</span>
-          {reach && (
-            <p role="status" aria-live="polite" data-fc-reach={reach.status}>
-              {pd && reach.status !== "invalid" && <strong>{new Date(`${pd}T00:00:00Z`).toLocaleDateString(localeOf(lang), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}: </strong>}
-              {reach.status === "past" && tr(lang, "resReachPast")}
-              {reach.status === "current" && tr(lang, "resReachCurrent")}
-              {reach.status === "unavailable" && tr(lang, "resNoneUnavailable")}
-              {reach.status === "discontinued" && noneText}
-              {reach.status === "noForecast" && tr(lang, "resReachNoForecast")}
-              {reach.status === "invalid" && tr(lang, "resReachBad")}
-              {reach.status === "within" && tr(lang, "resReachCentral").replace("{c}", m(reach.central)).replace("{e}", m(reach.early)).replace("{l}", reach.late ? m(reach.late) : tr(lang, "resReachAfter").replace("{m}", m(reach.last)))}
-              {reach.status === "band" && tr(lang, "resReachBandOnly").replace("{e}", m(reach.early)).replace("{m}", m(reach.last))}
-              {reach.status === "beyond" && tr(lang, "resReachBeyond").replace("{m}", m(reach.last))}
-            </p>
-          )}
-        </div>
+        {projects && !compare && (
+          <div className="fc-reach">
+            <label htmlFor="fc-pd">{tr(lang, "resReachTitle")}</label>
+            <input id="fc-pd" type="date" value={pd} onChange={(e) => setPd(e.target.value)} aria-describedby="fc-pd-hint" />
+            <span id="fc-pd-hint" className="fc-hint">{tr(lang, "resReachHintBand")}</span>
+            {reach && (
+              <p role="status" aria-live="polite" data-fc-reach={reach.status}>
+                {pd && reach.status !== "invalid" && <strong>{new Date(`${pd}T00:00:00Z`).toLocaleDateString(localeOf(lang), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}: </strong>}
+                {reach.status === "past" && tr(lang, "resReachPast")}
+                {(reach.status === "current" || reach.status === "unavailable" || reach.status === "discontinued" || reach.status === "noForecast") && tr(lang, "resReachNoForecast")}
+                {reach.status === "invalid" && tr(lang, "resReachBad")}
+                {reach.status === "within" && (reach.late
+                  ? tr(lang, "resReachCentral").replace("{c}", m(reach.central)).replace("{e}", m(reach.early)).replace("{l}", m(reach.late))
+                  : tr(lang, "resReachCentralOpen").replace("{c}", m(reach.central)).replace("{e}", m(reach.early)).replace("{m}", m(reach.last)))}
+                {reach.status === "crossedBack" && tr(lang, "resReachCrossedBack").replace("{c}", m(reach.central)).replace("{m}", m(reach.last))}
+                {reach.status === "band" && tr(lang, "resReachBandOnly").replace("{e}", m(reach.early)).replace("{m}", m(reach.last))}
+                {reach.status === "beyond" && tr(lang, "resReachBeyond").replace("{m}", m(reach.last))}
+              </p>
+            )}
+          </div>
+        )}
         <Link className="fc-ask" href={`${localePath("/asistente", lang)}/?q=${encodeURIComponent(forecastQuery(country, category, table, lang))}`}
           onClick={() => track("Forecast CTA", { from: "gallery" })}>
           {tr(lang, "resAskBot")} <ArrowUpRight className="h-4 w-4" aria-hidden />

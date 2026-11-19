@@ -384,7 +384,7 @@ const S = {
   // card face signals
   // "reaches my priority date?" lightbox tool
   resReachTitle: { es: "¿Alcanza mi fecha de prioridad?", en: "Does it reach my priority date?" },
-  resReachPast: { es: "Tu fecha ya está por detrás del corte actual: la categoría ya la pasó.", en: "Your date is already behind the current cutoff: the category has passed it." },
+  resReachPast: { es: "es anterior al corte publicado: con este boletín ya está al corriente.", en: "is earlier than the published cutoff: this bulletin already reaches it." },
   resReachBad: { es: "Fecha no válida.", en: "Invalid date." },
   // deep link
   resCopyLink: { es: "Copiar enlace", en: "Copy link" },
@@ -458,6 +458,31 @@ const S = {
   acChip4: { es: "¿Qué cambió en el último boletín?", en: "What changed in the latest bulletin?" },
   // forecasts redesign (19-nov-2026)
   resCategory: { es: "Categoría", en: "Category" },
+  resNoneCurrentFAD: { es: "Al corriente: hay visa disponible para cualquier fecha de prioridad este mes; no hay corte que proyectar.", en: "Current: a visa is available for any priority date this month; there is no cutoff to project." },
+  resNoneCurrentDFF: { es: "Al corriente: cualquier fecha de prioridad puede presentar su solicitud este mes; no hay corte que proyectar.", en: "Current: any priority date may file this month; there is no cutoff to project." },
+  resNoneUnavailableFAD: { es: "No disponible: este mes no hay visas para esta categoría; no se proyecta una fecha.", en: "Unavailable: no visas for this category this month; no date is projected." },
+  resNoneUnavailableDFF: { es: "No disponible: este mes no se aceptan solicitudes por esta tabla; no se proyecta una fecha.", en: "Unavailable: no filings accepted under this table this month; no date is projected." },
+  resTablesHint: {
+    es: "Acción final (FAD): cuándo se puede otorgar la visa. Presentación (DFF): cuándo se puede presentar la solicitud, a menudo años antes.",
+    en: "Final action (FAD): when the visa can be granted. Filing (DFF): when the application can be submitted, often years earlier.",
+  },
+  resRetro: { es: "retrocede", en: "retrogresses" },
+  resRowShort: { es: "Resto", en: "RoW" },
+  resChartLegend: {
+    es: "Eje vertical: fecha de corte. Línea continua: cortes publicados; discontinua: trayectoria central; sombras: rangos al 80 % y 95 %.",
+    en: "Vertical axis: cutoff date. Solid line: published cutoffs; dashed: central path; shading: 80% and 95% ranges.",
+  },
+  resReachCentralOpen: {
+    es: "la trayectoria central la alcanza hacia {c}; el extremo optimista del rango al 95 % desde {e}, y el pesimista no la alcanza antes de {m}.",
+    en: "the central path reaches it around {c}; the optimistic edge of the 95% range from {e}, and the pessimistic edge does not reach it before {m}.",
+  },
+  resReachCrossedBack: {
+    es: "la trayectoria central la pasa hacia {c}, pero retrocede y vuelve a quedar por detrás antes de {m}.",
+    en: "the central path passes it around {c}, but retrogresses and is behind it again before {m}.",
+  },
+  resStaleNotice: { es: "Los pronósticos se generaron con datos hasta {f}; el panel ya llega a {p}. Las proyecciones se muestran solo donde siguen vigentes.", en: "Forecasts were generated with data through {f}; the panel now reaches {p}. Projections are shown only where still current." },
+  resMaseBeats: { es: "le gana al pronóstico ingenuo", en: "beats the naive forecast" },
+  resMaseLoses: { es: "no le gana al pronóstico ingenuo", en: "does not beat the naive forecast" },
   resTableFAD: { es: "Acción final", en: "Final action" },
   resTableDFF: { es: "Presentación", en: "Filing" },
   resPickCountry: { es: "País o área del pronóstico", en: "Forecast country or area" },
@@ -467,17 +492,13 @@ const S = {
   resCompareNote: { es: "Comparando {c} · {t} entre todos los países y áreas.", en: "Comparing {c} · {t} across every country and area." },
   resCurrentC: { es: "Al corriente", en: "Current" },
   resCurrentU: { es: "No disponible", en: "Unavailable" },
-  resNoneCurrent: { es: "Sin fila de espera: cualquier fecha de prioridad puede avanzar este mes.", en: "No queue: any priority date can move ahead this month." },
-  resNoneUnavailable: { es: "Sin números de visa disponibles este mes; no se proyecta una fecha.", en: "No visa numbers available this month; no date is projected." },
   resNoneDiscontinued: { es: "Esta serie dejó de publicarse después de {m}; no se proyecta.", en: "This series stopped being published after {m}; nothing is projected." },
   resNoneStale: { es: "El pronóstico es anterior al último boletín; no se muestra.", en: "The forecast predates the latest bulletin; it is not shown." },
   resRowNoneCurrent: { es: "sin espera", en: "no queue" },
   resRowNoneDiscontinued: { es: "ya no se publica", en: "no longer published" },
   resReachHintBand: { es: "Se compara con la trayectoria central y con el rango al 95 %.", en: "Compared with the central path and with the 95% range." },
-  resReachCurrent: { es: "la categoría está al corriente: tu fecha ya puede avanzar.", en: "the category is current: your date can already move ahead." },
-  resReachNoForecast: { es: "no hay un pronóstico vigente para esta serie.", en: "there is no current forecast for this series." },
+  resReachNoForecast: { es: "no hay una proyección vigente para esta serie.", en: "there is no current projection for this series." },
   resReachCentral: { es: "la trayectoria central la alcanza hacia {c}; con el rango al 95 %, entre {e} y {l}.", en: "the central path reaches it around {c}; within the 95% range, between {e} and {l}." },
-  resReachAfter: { es: "después de {m}", en: "after {m}" },
   resReachBandOnly: { es: "la trayectoria central no la alcanza antes de {m}; solo el extremo optimista del rango al 95 % la toca, desde {e}.", en: "the central path does not reach it before {m}; only the optimistic edge of the 95% range touches it, from {e}." },
   resReachBeyond: { es: "ni el extremo optimista del rango al 95 % la alcanza antes de {m}.", en: "not even the optimistic edge of the 95% range reaches it before {m}." },
   resColSeries: { es: "Serie", en: "Series" },
@@ -499,10 +520,6 @@ const S = {
   resViewLabel: { es: "Vista de la gráfica", en: "Chart view" },
   resAskBot: { es: "Preguntar a VisaBot por esta serie", en: "Ask VisaBot about this series" },
   resAllTitle: { es: "Todas las series", en: "Every series" },
-  resAllSub: {
-    es: "Corte publicado hoy y proyección al final del horizonte. Elige una para verla arriba; fija hasta 4 para compararlas.",
-    en: "Today's published cutoff and the projection at the end of the horizon. Pick one to see it above; pin up to 4 to compare them.",
-  },
   resSummary: {
     es: "{n} series en {a} países o áreas, pronosticadas a {h} meses por el modelo de producción; el panel llega al boletín de {m}.",
     en: "{n} series across {a} countries or areas, forecast {h} months ahead by the production model; the panel runs to the {m} bulletin.",

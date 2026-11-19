@@ -71,6 +71,20 @@ describe("reachVerdict", () => {
     expect(reachVerdict(r, p, "2010-09-15")).toMatchObject({ status: "band", central: null, early: "2026-06" });
     expect(reachVerdict(r, p, "2015-01-01")).toMatchObject({ status: "beyond", early: null, last: "2026-06" });
   });
+  it("a date equal to the published cutoff is not yet reached (only earlier dates are)", () => {
+    expect(reachVerdict(r, p, "2010-03-01").status).not.toBe("past");
+    expect(reachVerdict(r, p, "2010-02-28").status).toBe("past");
+  });
+  it("a central path that passes the date and is behind it again by the end is not 'within'", () => {
+    const back = pts("2026-04-01").map((q, i) => (i === 2 ? { ...q, days: q.days - 200 } : q));
+    const rb = seriesReadout(F as never, back);
+    expect(reachVerdict(rb, back, "2010-05-15")).toMatchObject({ status: "crossedBack", central: "2026-05" });
+    expect(rb.projected?.retro).toBe(true);
+  });
+  it("marks bounds that reach the bulletin's own month as Current", () => {
+    const wide = pts("2026-04-01").map((q) => ({ ...q, hi95: isoDays("2027-01-01") - isoDays(BASE) }));
+    expect(seriesReadout(F as never, wide).projected).toMatchObject({ hi95Current: true, dateCurrent: false });
+  });
   it("handles past dates, Current, Unavailable, stale forecasts and bad input", () => {
     expect(reachVerdict(r, p, "2009-01-01").status).toBe("past");
     expect(reachVerdict(seriesReadout([...F, row("2026-04", "C", null)] as never, p), p, "2030-01-01").status).toBe("current");
