@@ -7,6 +7,15 @@ import { buildPanel } from "../../lib/data/panel-core.mjs";
 import { parseForecastStore, forecastFor } from "../../lib/data/forecasts-core.mjs";
 import { isoDays, epochToDate } from "../../lib/visabot/synthetic-builders.mjs";
 import { blockExternal, forceTheme } from "./helpers";
+import type { Locator } from "@playwright/test";
+
+// The priority date is three selects (year → month → day), never a native date input.
+async function pickDate(root: Locator, iso: string) {
+  const [y, m, d] = await root.locator("#fc-pd select").all();
+  await y.selectOption(iso.slice(0, 4));
+  await m.selectOption(iso.slice(5, 7));
+  await d.selectOption(iso.slice(8, 10));
+}
 
 const file = (n: string) => readFileSync(`public/data/${n}`, "utf8");
 const panel = buildPanel(file("visa_panel_long.csv"));
@@ -63,9 +72,10 @@ for (const lang of ["es", "en"] as const) for (const theme of ["light", "dark"] 
     // priority date earlier than the cutoff → reached; equal to it → not yet
     const ph = readout("philippines|F4|FAD");
     if (ph.projected && ph.current?.date) {
-      await inst.locator("#fc-pd").fill("1990-01-01");
+      await expect(inst.locator('input[type="date"]')).toHaveCount(0);
+      await pickDate(inst, "1990-01-01");
       await expect(inst.locator("[data-fc-reach]")).toHaveAttribute("data-fc-reach", "past");
-      await inst.locator("#fc-pd").fill(ph.current.date);
+      await pickDate(inst, ph.current.date);
       await expect(inst.locator("[data-fc-reach]")).not.toHaveAttribute("data-fc-reach", "past");
     }
 
@@ -82,7 +92,7 @@ for (const why of ["current", "discontinued"] as const) test(`a deep link to a $
   await page.goto(`/resultados/?series=${encodeURIComponent(key!)}`);
   const inst = page.locator("#res-forecast");
   const [, cat, t] = key!.split("|");
-  await expect(inst.locator(".fc-title")).toContainText(cat);
+  await expect(inst.locator(".fc-title")).toContainText(cat.replace(/_/g, " "));
   await expect(inst.locator(".fc-title")).toContainText(t);
   await expect(inst.locator("[data-fc-projected]")).toHaveAttribute("data-fc-none", why);
   // nothing to project → no priority-date check and no forecast fan
@@ -107,4 +117,25 @@ test("pinning two series opens the comparison", async ({ page, context }) => {
   await expect(page).toHaveURL(/pin=/);
   await page.getByRole("button", { name: /Comparar \(2\)/ }).click();
   await expect(page.getByRole("dialog", { name: "Comparación" })).toBeVisible();
+});
+
+test("categories carry readable names, searchable in Spanish and English", async ({ page, context }) => {
+  await blockExternal(context);
+  await page.goto("/resultados/");
+  const inst = page.locator("#res-forecast");
+  await expect(inst.locator(".fc-catname")).toHaveText("Hijos casados de ciudadanos"); // F3
+  await page.getByRole("searchbox").fill("hermanos méxico");
+  await expect(page.locator(".fc-row")).not.toHaveCount(0);
+  for (const name of await page.locator(".fc-row-cat").allTextContents()) expect(name.replace(/,$/, "")).toBe("Hermanos de ciudadanos");
+});
+
+test("the column headers stay visible while scrolling the list (desktop)", async ({ page, context }) => {
+  await blockExternal(context);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/resultados/");
+  await expect(page.locator(".fc-row").first()).toBeVisible();
+  await page.locator(".fc-row").nth(40).scrollIntoViewIfNeeded();
+  const head = await page.locator(".fc-colhead").boundingBox();
+  expect(head!.y).toBeGreaterThanOrEqual(0);
+  expect(head!.y).toBeLessThan(300);
 });

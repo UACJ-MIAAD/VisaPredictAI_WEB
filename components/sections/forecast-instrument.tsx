@@ -20,7 +20,7 @@ import { countryLabel } from "@/lib/data/visa-panel";
 import type { Panel } from "@/lib/data/panel-core";
 import { forecastFor, type ForecastStore } from "@/lib/data/forecasts";
 import { buildForecast, buildLine, buildMultiLine, monthLabel, type ChartSpec, type PanelIndex } from "@/lib/visabot/analytics";
-import { forecastToCsv, seriesReadout, seriesBase, capPoints, reachVerdict, catRank, COUNTRY_SHORT, type GallerySeries } from "@/lib/visabot/gallery";
+import { forecastToCsv, seriesReadout, seriesBase, capPoints, reachVerdict, catRank, COUNTRY_SHORT, categoryCode, categoryName, type GallerySeries } from "@/lib/visabot/gallery";
 import { forecastQuery } from "@/components/sections/home-observatory";
 
 const VisaChart = dynamic(() => import("@/components/visabot/visa-chart"), {
@@ -89,6 +89,44 @@ async function chartPng(svg: SVGSVGElement, title: string, subtitle: string, bg:
   return new Promise((res) => canvas.toBlob(res, "image/png"));
 }
 
+// Priority date as three selects in the page's language (year → month → day).
+// A native <input type="date"> follows the BROWSER locale (mm/dd/yyyy on an
+// English-configured browser over the Spanish page), which invites day/month
+// swaps; selects make the order explicit. Emits ISO YYYY-MM-DD, or "" while incomplete.
+function DateParts({ value, onChange, lang, fromYear, toYear, describedBy }: {
+  value: string; onChange: (iso: string) => void; lang: "es" | "en"; fromYear: number; toYear: number; describedBy?: string;
+}) {
+  const [y, setY] = React.useState(value.slice(0, 4));
+  const [m, setM] = React.useState(value.slice(5, 7));
+  const [d, setD] = React.useState(value.slice(8, 10));
+  React.useEffect(() => { if (!value) { setY(""); setM(""); setD(""); } }, [value]);
+  const days = y && m ? new Date(Date.UTC(Number(y), Number(m), 0)).getUTCDate() : 31;
+  const emit = (ny: string, nm: string, nd: string) => {
+    const dd = nd && Number(nd) > (ny && nm ? new Date(Date.UTC(Number(ny), Number(nm), 0)).getUTCDate() : 31) ? "" : nd;
+    if (dd !== nd) setD("");
+    onChange(ny && nm && dd ? `${ny}-${nm}-${dd}` : "");
+  };
+  const years = Array.from({ length: toYear - fromYear + 1 }, (_, i) => String(toYear - i));
+  const monthName = (i: number) => new Intl.DateTimeFormat(localeOf(lang), { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2001, i, 1)));
+  const en = lang === "en";
+  return (
+    <div id="fc-pd" className="fc-date" role="group" aria-label={tr(lang, "resReachTitle")} aria-describedby={describedBy}>
+      <select aria-label={en ? "Year" : "Año"} value={y} onChange={(e) => { setY(e.target.value); emit(e.target.value, m, d); }}>
+        <option value="">{en ? "Year" : "Año"}</option>
+        {years.map((v) => <option key={v} value={v}>{v}</option>)}
+      </select>
+      <select aria-label={en ? "Month" : "Mes"} value={m} onChange={(e) => { setM(e.target.value); emit(y, e.target.value, d); }}>
+        <option value="">{en ? "Month" : "Mes"}</option>
+        {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map((v, i) => <option key={v} value={v}>{monthName(i)}</option>)}
+      </select>
+      <select aria-label={en ? "Day" : "Día"} value={d} onChange={(e) => { setD(e.target.value); emit(y, m, e.target.value); }}>
+        <option value="">{en ? "Day" : "Día"}</option>
+        {Array.from({ length: days }, (_, i) => String(i + 1).padStart(2, "0")).map((v) => <option key={v} value={v}>{Number(v)}</option>)}
+      </select>
+    </div>
+  );
+}
+
 export function ForecastInstrument({ all, selected, onSelect, view, onView, panel, forecasts, index }: {
   all: GallerySeries[];
   selected: GallerySeries;
@@ -127,6 +165,12 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
   };
 
   React.useEffect(() => { setPd(""); }, [selected.key]);
+  // priority-date years offered: from the earliest published cutoff to the latest bulletin
+  const pdYears = React.useMemo((): [number, number] => {
+    let min = "9999";
+    for (const r of panel.rows) if (r.priorityDate && r.priorityDate < min) min = r.priorityDate;
+    return [Number(min.slice(0, 4)), Number((panel.monthRange[1] || min).slice(0, 4))];
+  }, [panel]);
 
   const rows = React.useMemo(() => index?.get(selected.key) ?? panel.rows.filter((r) => r.country === country && r.category === category && r.table === table), [index, selected.key, panel, country, category, table]);
   const rawPoints = forecastFor(forecasts, country, category, table);
@@ -175,7 +219,7 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
     : readout.none ? tr(lang, "resNoneStale") : null;
   const fileBase = `${country}_${category}_${table}`;
   const canExport = view !== "compare" && !!readout.projected && !!points?.length;
-  const title = compare ? `${category} · ${tableName(table)}` : `${countryLabel(country, lang)} · ${category} · ${tableName(table)}`;
+  const title = compare ? `${categoryCode(category)} · ${tableName(table)}` : `${countryLabel(country, lang)} · ${categoryCode(category)} · ${tableName(table)}`;
   const bound = (iso: string, isCurrent: boolean) => (isCurrent ? tr(lang, "resCurrentC") : monthOfDate(iso, lang));
   const exportPng = async () => {
     const svg = chartRef.current?.querySelector("svg.recharts-surface");
@@ -212,16 +256,17 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
         <label className="fc-select">
           <span className="sr-only">{tr(lang, "resCategory")}</span>
           <select value={category} onChange={(e) => pick(country, table, e.target.value)}>
-            {categories.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+            {categories.map((c) => <option key={c} value={c}>{categoryCode(c)} · {categoryName(c, lang)}</option>)}
           </select>
         </label>
       </div>
       <p className="fc-hint fc-tables-hint">{tr(lang, "resTablesHint")}</p>
 
       <h2 id="fc-title" tabIndex={-1} className="fc-title">{title}</h2>
+      <p className="fc-catname">{categoryName(category, lang)}</p>
 
       {view === "compare" ? (
-        <p className="fc-compare-note">{tr(lang, "resCompareNote").replace("{c}", category).replace("{t}", tableName(table))}</p>
+        <p className="fc-compare-note">{tr(lang, "resCompareNote").replace("{c}", categoryCode(category)).replace("{t}", tableName(table))}</p>
       ) : (
         <dl className="fc-readout">
           <div>
@@ -282,8 +327,9 @@ export function ForecastInstrument({ all, selected, onSelect, view, onView, pane
       <div className="fc-bottom">
         {projects && !compare && (
           <div className="fc-reach">
-            <label htmlFor="fc-pd">{tr(lang, "resReachTitle")}</label>
-            <input id="fc-pd" type="date" value={pd} onChange={(e) => setPd(e.target.value)} aria-describedby="fc-pd-hint" />
+            <span className="fc-reach-label" aria-hidden>{tr(lang, "resReachTitle")}</span>
+            <DateParts value={pd} onChange={setPd} lang={lang} describedBy="fc-pd-hint"
+              fromYear={pdYears[0]} toYear={pdYears[1]} />
             <span id="fc-pd-hint" className="fc-hint">{tr(lang, "resReachHintBand")}</span>
             {reach && (
               <p role="status" aria-live="polite" data-fc-reach={reach.status}>
