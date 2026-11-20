@@ -13,6 +13,7 @@ import { Check, Copy, Loader2, Volume2, Sparkles, LineChart } from "lucide-react
 import { tr } from "@/lib/i18n";
 import { track } from "@/lib/analytics";
 import { Markdown } from "./markdown";
+import { renumberCitations } from "./citations";
 import { isTruncated } from "./observability";
 import type { ChatMessage, ChartPayload, Lang } from "./types";
 
@@ -41,8 +42,10 @@ export function ChatThread({
   const wide = variant === "console";
   return (
     <>
-      {messages.map((m, i) =>
-        m.role === "user" ? (
+      {messages.map((raw, i) => {
+        // assistant answers show their cited sources as [1], [2], … in reading order
+        const m = raw.role === "user" ? raw : { ...raw, ...renumberCitations(raw.content, raw.sources) };
+        return m.role === "user" ? (
           <div key={i} className="flex justify-end">
             <div className="vb-bubble vb-user">{m.content}</div>
           </div>
@@ -127,8 +130,8 @@ export function ChatThread({
               </div>
             )}
           </div>
-        ),
-      )}
+        );
+      })}
 
       {/* contextual follow-up chips under the latest answer */}
       {followUps && followUps.length > 0 && onFollowUp && (
