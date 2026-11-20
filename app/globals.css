@@ -811,7 +811,10 @@ main:focus {
 .fc-chart .vb-chart-card figcaption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .fc-bottom { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-top: 1.2rem; padding-top: 1.1rem; border-top: 1px solid var(--color-border); }
 .fc-reach { display: flex; flex: 1 1 24rem; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.75rem; }
-.fc-reach label { font-size: 0.9rem; font-weight: 600; }
+.fc-reach-label { font-size: 0.9rem; font-weight: 600; }
+.fc-date { display: inline-flex; flex-wrap: wrap; gap: 0.4rem; }
+.fc-date select { min-height: 2.75rem; padding: 0 2rem 0 0.8rem; border: 1px solid var(--color-border); border-radius: 0.7rem; background: var(--color-bg); color: var(--color-ink); font-size: 0.9rem; }
+.fc-date select:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .fc-reach input { min-height: 2.75rem; padding: 0 0.8rem; border: 1px solid var(--color-border); border-radius: 0.7rem; background: var(--color-bg); color: var(--color-ink); }
 .fc-hint { flex-basis: 100%; font-size: 0.78rem; color: var(--color-muted); }
 .fc-reach p { flex-basis: 100%; max-width: 62ch; font-size: 0.92rem; line-height: 1.55; color: var(--color-ink); }
@@ -822,7 +825,8 @@ main:focus {
 .fc-all-head p { margin-top: 0.6rem; max-width: 72ch; font-size: 0.95rem; line-height: 1.65; color: var(--color-muted); }
 .fc-all-head a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; }
 .fc-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 1.4rem 0 0.5rem; padding: 0.6rem 0; background: var(--color-bg); }
-@media (min-width: 769px) { .fc-filters { position: sticky; top: 4rem; z-index: 5; } }
+.fc-sticky { background: var(--color-bg); }
+@media (min-width: 769px) { .fc-sticky { position: sticky; top: 4rem; z-index: 5; border-bottom: 1px solid var(--color-border); } }
 .fc-search { flex: 1 1 12rem; min-width: 0; min-height: 2.75rem; padding: 0 1rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg); color: var(--color-ink); font-size: 0.9rem; }
 .fc-sort { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--color-muted); }
 .fc-sort select { min-height: 2.75rem; padding: 0 0.8rem; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-bg); color: var(--color-ink); font-size: 0.85rem; }
@@ -836,7 +840,7 @@ main:focus {
 .fc-basket-go:disabled { opacity: 0.4; }
 .fc-empty { padding: 3rem 0; text-align: center; color: var(--color-muted); }
 .fc-row-main, .fc-colhead { display: grid; grid-template-columns: minmax(9rem, 1.3fr) 112px minmax(6.5rem, 1fr) minmax(8rem, 1.2fr) 4.5rem; align-items: center; gap: 1rem; }
-.fc-colhead { margin-top: 1rem; padding: 0 3.25rem 0 0.5rem; font-size: 0.75rem; color: var(--color-muted); }
+.fc-colhead { margin-top: 0.25rem; padding: 0 3.25rem 0.6rem 0.5rem; font-size: 0.75rem; color: var(--color-muted); }
 .fc-colhead > span:last-child { text-align: right; }
 .fc-group { margin-top: 1.4rem; }
 .fc-group h3 { display: flex; align-items: baseline; gap: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-ink); font-size: 1.05rem; letter-spacing: -0.02em; }
@@ -888,3 +892,10 @@ main:focus {
 .vb-controls-rail { background: var(--color-bg); }
 @media (max-width: 480px) { .vb-console .vb-panel-toggle { min-height: 2.75rem; } }
 @media (min-width: 1024px) { .vb-console:not(.vb-stage) .vb-panel-toggle { display: none; } }
+.fc-catname { margin-top: 0.3rem; font-size: 0.95rem; color: var(--color-muted); }
+.fc-row-title { position: relative; display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; overflow: hidden; }
+.fc-row-cat { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; font-weight: 400; color: var(--color-muted); }
+.fc-select { min-width: 0; max-width: 100%; }
+.fc-select select { width: 100%; max-width: min(100%, 26rem); text-overflow: ellipsis; }
+.fc-all .fc-group > ul { margin: 0; padding: 0; list-style: none; }
+.fc-all .fc-group > ul > li.fc-row { margin: 0; padding: 0; }

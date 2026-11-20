@@ -172,6 +172,37 @@ export function forecastToCsv(key: string, points: ForecastPoint[], base?: numbe
 }
 
 export type GalleryFilter = { country?: string; table?: string; block?: string; query?: string };
+// ── Category names (19-nov-2026) ─────────────────────────────────────────────
+// Bulletin codes (EB3_OW, EB5_HIGHUNEMP…) are not words. Short human names, ES/EN,
+// per the INA preference definitions; an unknown code falls back to itself.
+const CATEGORY_NAMES: Record<string, [string, string]> = {
+  F1: ["Hijos solteros de ciudadanos", "Unmarried sons and daughters of citizens"],
+  F2A: ["Cónyuges e hijos menores de residentes", "Spouses and children of permanent residents"],
+  F2B: ["Hijos solteros (21+) de residentes", "Unmarried sons and daughters (21+) of permanent residents"],
+  F3: ["Hijos casados de ciudadanos", "Married sons and daughters of citizens"],
+  F4: ["Hermanos de ciudadanos", "Brothers and sisters of adult citizens"],
+  EB1: ["Trabajadores prioritarios", "Priority workers"],
+  EB2: ["Posgrado o habilidad excepcional", "Advanced degree or exceptional ability"],
+  EB3: ["Profesionales y trabajadores calificados", "Skilled workers and professionals"],
+  EB3_OW: ["Otros trabajadores", "Other workers"],
+  EB4: ["Inmigrantes especiales", "Certain special immigrants"],
+  EB4_RW: ["Trabajadores religiosos", "Certain religious workers"],
+  EB4_TRANS: ["Traductores iraquíes y afganos", "Iraqi and Afghan translators"],
+  EB5: ["Inversionistas", "Investors"],
+  EB5_UNRESERVED: ["Inversionistas · no reservado", "Investors · unreserved"],
+  EB5_RURAL: ["Inversionistas · rural (reservado)", "Investors · rural (set-aside)"],
+  EB5_HIGHUNEMP: ["Inversionistas · alto desempleo (reservado)", "Investors · high unemployment (set-aside)"],
+  EB5_INFRA: ["Inversionistas · infraestructura (reservado)", "Investors · infrastructure (set-aside)"],
+  EB5_RC: ["Inversionistas · centro regional", "Investors · regional center"],
+  EB5_NONRC: ["Inversionistas · fuera de centro regional", "Investors · non-regional center"],
+  EB5_TEA: ["Inversionistas · zona de empleo objetivo", "Investors · targeted employment area"],
+  EB5_PILOT: ["Inversionistas · programa piloto", "Investors · pilot program"],
+};
+/** "EB3_OW" → "EB3 OW": the code as printed (no underscores). */
+export const categoryCode = (c: string) => c.replace(/_/g, " ");
+/** Human name of a category in the page language; the code itself when unknown. */
+export const categoryName = (c: string, lang: "es" | "en") => CATEGORY_NAMES[c]?.[lang === "en" ? 1 : 0] ?? categoryCode(c);
+
 // Accent-, case- and punctuation-insensitive; every word must match, in any
 // order, against the code AND both labels ("México", "Filipinas", "RoW", "EB-2").
 const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[-_.·]/g, "");
@@ -183,7 +214,7 @@ export function filterSeries(series: GallerySeries[], f: GalleryFilter): Gallery
     if (f.table && s.table !== f.table) return false;
     if (f.block && s.block !== f.block) return false;
     if (words.length) {
-      const hay = fold(`${s.country} ${countryLabel(s.country, "es")} ${countryLabel(s.country, "en")} ${COUNTRY_SHORT[s.country] ?? ""} ${s.category} ${s.table}`);
+      const hay = fold(`${s.country} ${countryLabel(s.country, "es")} ${countryLabel(s.country, "en")} ${COUNTRY_SHORT[s.country] ?? ""} ${s.category} ${categoryName(s.category, "es")} ${categoryName(s.category, "en")} ${s.table}`);
       if (!words.every((w) => hay.includes(w))) return false;
     }
     return true;

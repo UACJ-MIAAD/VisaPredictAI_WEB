@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { buildPanel } from "@/lib/data/panel-core.mjs";
 import { parseForecastStore, forecastFor } from "@/lib/data/forecasts-core.mjs";
 import { buildForecast, buildPanelIndex } from "@/lib/visabot/analytics";
-import { seriesReadout, reachVerdict, filterSeries, buildGallerySeries, forecastToCsv, maseVsNaive, capPoints } from "@/lib/visabot/gallery";
+import { seriesReadout, reachVerdict, filterSeries, buildGallerySeries, forecastToCsv, maseVsNaive, capPoints, categoryName, categoryCode } from "@/lib/visabot/gallery";
 import { isoDays } from "@/lib/visabot/synthetic-builders.mjs";
 import type { ForecastPoint } from "@/lib/data/forecasts";
 
@@ -134,5 +134,22 @@ describe("capPoints / band edges", () => {
     const r = seriesReadout(F as never, pts("2026-04-01"));
     const p = pts("2026-04-01").map((q, i) => (i === 1 ? { ...q, hi95: q.hi95 + 400 } : { ...q, hi95: q.days }));
     expect(reachVerdict(r, p, "2010-10-01")).toMatchObject({ status: "beyond", early: null });
+  });
+});
+
+describe("category names", () => {
+  it("names every category shipped in the panel (no bare codes) in both languages", () => {
+    for (const c of panel.categories) {
+      expect(categoryName(c, "es")).not.toBe(categoryCode(c));
+      expect(categoryName(c, "en")).not.toBe(categoryCode(c));
+    }
+    expect(categoryCode("EB5_HIGHUNEMP")).toBe("EB5 HIGHUNEMP");
+    expect(categoryName("ZZ_NEW", "es")).toBe("ZZ NEW");
+  });
+  it("search matches the names in either language", () => {
+    const all = buildGallerySeries(store);
+    const keys = (q: string) => filterSeries(all, { query: q }).map((s) => s.key);
+    expect(keys("otros trabajadores").every((k) => k.includes("|EB3_OW|"))).toBe(true);
+    expect(keys("other workers")).toEqual(keys("otros trabajadores"));
   });
 });

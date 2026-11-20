@@ -22,7 +22,7 @@ import { loadForecasts, forecastFor, type ForecastStore } from "@/lib/data/forec
 import { monthLabel, buildPanelIndex, buildForecast, type PanelIndex } from "@/lib/visabot/analytics";
 import {
   buildGallerySeries, gallerySummary, filterSeries, attachSignals, sortSeries,
-  maseVsNaive, seriesReadout, COUNTRY_SHORT, type GallerySeries, type SortKey,
+  maseVsNaive, seriesReadout, COUNTRY_SHORT, categoryCode, categoryName, type GallerySeries, type SortKey,
 } from "@/lib/visabot/gallery";
 import { Sparkline } from "./sparkline";
 import { ForecastInstrument, monthOfDate, type InstrumentView } from "./forecast-instrument";
@@ -171,6 +171,8 @@ export function Resultados() {
               {summary.lastMonth && panel.monthRange[1] && summary.lastMonth < panel.monthRange[1] && (
                 <p className="fc-stale" role="note">{tr(lang, "resStaleNotice").replace("{f}", monthLabel(summary.lastMonth, lang)).replace("{p}", monthLabel(panel.monthRange[1], lang))}</p>
               )}
+              {/* filters + column headers stay together under the site header on desktop */}
+              <div className="fc-sticky">
               <div className="fc-filters">
                 {seg(tr(lang, "resFilterCountry"), fCountry, setFCountry, [["", tr(lang, "optAll")], ...countries.map((c) => [c, c === "all_chargeability" ? tr(lang, "resRowShort") : COUNTRY_SHORT[c] ?? c, countryLabel(c, lang)] as [string, string, string])])}
                 {seg(tr(lang, "resFilterTable"), fTable, setFTable, [["", tr(lang, "optAllF")], ["FAD", "FAD", `${tr(lang, "resTableFAD")} (FAD)`], ["DFF", "DFF", `${tr(lang, "resTableDFF")} (DFF)`]])}
@@ -187,13 +189,22 @@ export function Resultados() {
                 </label>
                 <span className="fc-count" aria-live="polite">{nf(filtered.length)} {tr(lang, "resSeriesLabel")}</span>
               </div>
+              {filtered.length > 0 && (
+                <div className="fc-colhead" aria-hidden>
+                  <span>{tr(lang, "resColSeries")}</span><span />
+                  <span>{tr(lang, "resColNow")}</span>
+                  <span>{tr(lang, "resColProj").replace("{h}", String(h))}</span>
+                  <span>{sort === "backlog" ? tr(lang, "resColWait") : sort === "movement" ? tr(lang, "resColMove") : "MASE"}</span>
+                </div>
+              )}
+              </div>
 
               {basket.length > 0 && (
                 <div className="fc-basket">
                   <span>{tr(lang, "resBasket")}</span>
                   {basketItems.map((s) => (
                     <button key={s.key} type="button" onClick={() => togglePin(s.key)} aria-label={`${tr(lang, "resUnpin")}: ${countryLabel(s.country, lang)} · ${s.category} · ${s.table}`}>
-                      {countryLabel(s.country, lang)} · {s.category} · {s.table} <span aria-hidden>✕</span>
+                      {countryLabel(s.country, lang)} · {categoryCode(s.category)} · {s.table} <span aria-hidden>✕</span>
                     </button>
                   ))}
                   <span className="fc-basket-hint" aria-live="polite">{capMsg || (basket.length < 2 ? tr(lang, "resBasketHint") : "")}</span>
@@ -208,12 +219,6 @@ export function Resultados() {
                 <p className="fc-empty">{tr(lang, "resEmpty")}</p>
               ) : (
                 <>
-                  <div className="fc-colhead" aria-hidden>
-                    <span>{tr(lang, "resColSeries")}</span><span />
-                    <span>{tr(lang, "resColNow")}</span>
-                    <span>{tr(lang, "resColProj").replace("{h}", String(h))}</span>
-                    <span>{sort === "backlog" ? tr(lang, "resColWait") : sort === "movement" ? tr(lang, "resColMove") : "MASE"}</span>
-                  </div>
                   {groups.map((g) => (
                     <div key={g.country || "all"} className="fc-group">
                       {g.country && <h3>{countryLabel(g.country, lang)} <span>{g.series.length}</span></h3>}
@@ -263,7 +268,7 @@ const SeriesRow = React.memo(function SeriesRow({ s, showCountry, codeCountry, a
   const metric = sort === "backlog" ? (s.backlogYears != null && cur?.status === "F" && r.none !== "discontinued" ? `${s.backlogYears.toFixed(1)} ${tr(lang, "resYears")}` : "—")
     : sort === "movement" ? (p && s.movementPerYear != null ? `${s.movementPerYear >= 0 ? "+" : "−"}${Math.abs(Math.round(s.movementPerYear))} ${tr(lang, "resDaysYear")}` : "—")
     : (s.mase != null ? s.mase.toFixed(2) : "—");
-  const cat = s.category.replace(/_/g, " ");
+  const cat = categoryCode(s.category);
   return (
     <li className="fc-row" data-active={active || undefined}>
       <button type="button" className="fc-row-main" onClick={() => onOpen(s.key)} aria-current={active || undefined}>
@@ -271,7 +276,10 @@ const SeriesRow = React.memo(function SeriesRow({ s, showCountry, codeCountry, a
           {showCountry ? <>{countryLabel(s.country, lang)} · </> : <span className="sr-only">{countryLabel(s.country, lang)} · </span>}
           {/* grouped rows lose their country heading once scrolled: keep a quiet code */}
           {!showCountry && codeCountry && <span className="fc-code" aria-hidden>{s.country === "all_chargeability" ? tr(lang, "resRowShort") : COUNTRY_SHORT[s.country]}</span>}
-          {cat} · {s.table}<span className="sr-only">,</span>
+          <span className="fc-row-title">
+            <span>{cat} · {s.table}<span className="sr-only">,</span></span>
+            <small className="fc-row-cat">{categoryName(s.category, lang)}<span className="sr-only">,</span></small>
+          </span>
           <CohortBadge meta={s} />
         </span>
         <span className="fc-row-spark" aria-hidden>{spark && spark.kind === "forecast" ? <Sparkline data={spark.data} w={112} h={28} /> : null}</span>
