@@ -138,6 +138,25 @@ export const ROUTES: Route[] = [
     ],
   },
   {
+    path: "/publicacion",
+    label: "Publicación",
+    labelEn: "Publication",
+    short: "Publicación",
+    shortEn: "Publication",
+    blurb:
+      "Plan para llevar el proyecto a una revista indexada: tres revistas objetivo, mesa redonda de expertos, fecha de turno a 10–30 años y ruta semanal.",
+    blurbEn:
+      "Plan to take the project to an indexed journal: three target journals, expert round table, 10–30 year turn date and weekly route.",
+    sections: [
+      { id: "tablero", label: "Tablero", labelEn: "Dashboard" },
+      { id: "revistas", label: "Revistas", labelEn: "Journals" },
+      { id: "mesa", label: "Mesa redonda", labelEn: "Round table" },
+      { id: "turno", label: "Fecha de turno", labelEn: "Turn date" },
+      { id: "ruta", label: "Ruta", labelEn: "Route" },
+      { id: "riesgos", label: "Riesgos", labelEn: "Risks" },
+    ],
+  },
+  {
     path: "/asistente",
     label: "Asistente",
     labelEn: "Assistant",
