@@ -274,6 +274,7 @@ export function useVisabotChat({
           return c;
         });
       let agentChart: ChartPayload | undefined;
+      let extraChart: ChartPayload | undefined; // the series chart kept under a priority-date card
       let agentChartRejected = false; // the server compared a date the local data cannot confirm
       if (chart) patchLast({ chart });
       try {
@@ -300,7 +301,18 @@ export function useVisabotChat({
             onStatus: (status) => patchLast({ status }),
             onChart: (d) => {
               const built = buildAgentChart?.(d);
-              if (built) { agentChart = built; agentChartRejected = false; patchLast({ chart: built }); }
+              if (built && d.kind === "priority_check") {
+                // The card answers "is my date current?"; the chart the user was
+                // already looking at (or the forecast of that series) stays below
+                // it instead of disappearing.
+                const keep = chart && chart.kind !== "priorityCheck" ? chart
+                  : buildAgentChart?.({ kind: "forecast", country: d.country, category: d.category, table: d.table });
+                agentChart = built; extraChart = keep; agentChartRejected = false;
+                patchLast({ chart: built, extraChart: keep });
+              } else if (built && agentChart?.kind === "priorityCheck") {
+                // a later chart never replaces the card: it becomes the chart below
+                extraChart = built; patchLast({ extraChart: built });
+              } else if (built) { agentChart = built; agentChartRejected = false; patchLast({ chart: built }); }
               // A rejected date comparison also removes the guessed chart, so the
               // comparison's source never points at a different picture.
               else if (d.kind === "priority_check" && !agentChart) { agentChartRejected = true; patchLast({ chart: undefined }); }
@@ -325,6 +337,7 @@ export function useVisabotChat({
             sources: displayed,
             extractive: res.extractive,
             chart:answerChart,
+            ...(answerChart && extraChart ? { extraChart } : {}),
             ...(truncated ? { incomplete: true } : {}),
           };
           return c;
@@ -354,7 +367,7 @@ export function useVisabotChat({
           const c = [...m];
           const last = c[c.length - 1];
           if (!last) return m;
-          c[c.length - 1] = { ...last, content: last.content || tr(lang, "vbError"), chart: agentChart ?? chart, status: undefined };
+          c[c.length - 1] = { ...last, content: last.content || tr(lang, "vbError"), chart: agentChart ?? chart, extraChart, status: undefined };
           return c;
         });
         if (alive()) setLiveStatus(tr(lang, "vbError")); // don't leave SR announcing "thinking…"
