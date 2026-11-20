@@ -185,8 +185,8 @@ export function PublicationPage({ lang }: { lang: Lang }) {
             title={es ? "¿Cuándo será current mi fecha de prioridad?" : "When will my priority date become current?"}
             lead={
               es
-                ? "Tiempo de primer paso: se simulan miles de trayectorias del corte con bloques de su propia historia y se registra el mes en que alcanzan la fecha. Evaluación preliminar sobre 75 series y orígenes 2003–2025, sólo con desenlaces ya observados; menor Brier es mejor."
-                : "First-passage time: thousands of cutoff paths are simulated from blocks of the series' own history and the month they reach the date is recorded. Preliminary evaluation on 75 series and origins 2003–2025, using only outcomes already observed; lower Brier is better."
+                ? "Tiempo de primer paso: se simulan miles de trayectorias del corte con bloques de su propia historia y se registra el mes en que alcanzan la fecha. Evaluación sobre 73 series, orígenes evaluados desde 2008, sólo con desenlaces ya observados e información disponible en cada origen; menor Brier es mejor."
+                : "First-passage time: thousands of cutoff paths are simulated from blocks of the series' own history and the month they reach the date is recorded. Evaluation on 73 series, origins scored from 2008, using only outcomes already observed and information available at each origin; lower Brier is better."
             }
           />
           <div className="overflow-x-auto">
@@ -223,8 +223,8 @@ export function PublicationPage({ lang }: { lang: Lang }) {
           </div>
           <p className="mt-5 max-w-[75ch] text-sm leading-relaxed">
             {es
-              ? "Lectura honesta: la referencia difícil no es la velocidad lineal (que siempre pierde) sino la clase de referencia, es decir, cuánto tardaron en el pasado brechas iguales en todas las series. Simular sólo la historia propia de la serie no le gana; la mezcla de ambas sí, por poco (significativo a 1 año). A 10 y 15 años no hay historia suficiente para construir esa referencia sin fuga: ahí la simulación sólo se compara con la velocidad lineal y se publica como escenario, junto con la probabilidad de esperar más de 30 años."
-              : "Honest reading: the hard reference is not linear velocity (which always loses) but the reference class, i.e. how long equal gaps took in the past across all series. Simulating only the series' own history does not beat it; blending both does, narrowly (significant at 1 year). At 10 and 15 years there is not enough history to build that reference without leakage: there the simulation is only compared with linear velocity and published as a scenario, with the probability of waiting more than 30 years."}
+              ? "Lectura honesta: la referencia difícil no es la velocidad lineal (que siempre pierde) sino la clase de referencia, es decir, cuánto tardaron en el pasado brechas iguales dentro del mismo tipo de categoría. Simular sólo la historia propia de la serie no le gana; la mezcla de ambas sí: mejora el Brier un 5 % a 3 años y un 7 % a 5 años, con intervalos que excluyen el cero; a 1 año la ganancia no es significativa. A 10 y 15 años no hay historia suficiente para construir esa referencia sin fuga: ahí la simulación sólo se compara con la velocidad lineal y se publica como escenario, junto con la probabilidad de esperar más de 30 años."
+              : "Honest reading: the hard reference is not linear velocity (which always loses) but the reference class, i.e. how long equal gaps took in the past within the same category type. Simulating only the series' own history does not beat it; blending both does: it improves the Brier score by 5 % at 3 years and 7 % at 5 years, with intervals that exclude zero; at 1 year the gain is not significant. At 10 and 15 years there is not enough history to build that reference without leakage: there the simulation is only compared with linear velocity and published as a scenario, with the probability of waiting more than 30 years."}
           </p>
         </div>
       </section>
