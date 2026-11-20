@@ -185,8 +185,8 @@ export function PublicationPage({ lang }: { lang: Lang }) {
             title={es ? "¿Cuándo será current mi fecha de prioridad?" : "When will my priority date become current?"}
             lead={
               es
-                ? "Tiempo de primer paso: se simulan miles de trayectorias del corte con bloques de su propia historia y se registra el mes en que alcanzan la fecha. Prototipo preliminar sobre 90 series, orígenes 2006–2024; menor Brier es mejor."
-                : "First-passage time: thousands of cutoff paths are simulated from blocks of the series' own history and the month they reach the date is recorded. Preliminary prototype on 90 series, origins 2006–2024; lower Brier is better."
+                ? "Tiempo de primer paso: se simulan miles de trayectorias del corte con bloques de su propia historia y se registra el mes en que alcanzan la fecha. Evaluación preliminar sobre 75 series y orígenes 2003–2025, sólo con desenlaces ya observados; menor Brier es mejor."
+                : "First-passage time: thousands of cutoff paths are simulated from blocks of the series' own history and the month they reach the date is recorded. Preliminary evaluation on 75 series and origins 2003–2025, using only outcomes already observed; lower Brier is better."
             }
           />
           <div className="overflow-x-auto">
@@ -195,21 +195,26 @@ export function PublicationPage({ lang }: { lang: Lang }) {
                 <tr>
                   <th className="py-2 pr-4">{es ? "Horizonte" : "Horizon"}</th>
                   <th className="py-2 pr-4">{es ? "Casos" : "Cases"}</th>
-                  <th className="py-2 pr-4">{es ? "Primer paso" : "First passage"}</th>
+                  <th className="py-2 pr-4">{es ? "Simulación por serie" : "Series simulation"}</th>
+                  <th className="py-2 pr-4">{es ? "Mezcla" : "Blend"}</th>
                   <th className="py-2 pr-4">{es ? "Velocidad lineal" : "Linear velocity"}</th>
-                  <th className="py-2">{es ? "Climatología" : "Climatology"}</th>
+                  <th className="py-2">{es ? "Clase de referencia" : "Reference class"}</th>
                 </tr>
               </thead>
               <tbody>
                 {FPT_BRIER.map((r) => {
-                  const wins = r.fpt < r.climatology;
+                  const best = Math.min(r.fpt, r.blend ?? Infinity, r.velocity, r.reference ?? Infinity);
+                  const cell = (v: number | null) =>
+                    v === null ? "—" : v.toFixed(3);
+                  const cls = (v: number | null) => (v !== null && v === best ? "font-semibold text-emerald-700 dark:text-emerald-400" : "");
                   return (
                     <tr key={r.months} className="border-b border-border/60">
                       <td className="py-2 pr-4">{r.months / 12} {es ? (r.months === 12 ? "año" : "años") : r.months === 12 ? "year" : "years"}</td>
                       <td className="py-2 pr-4">{r.n.toLocaleString("en-US")}</td>
-                      <td className={`py-2 pr-4 font-semibold ${wins ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>{r.fpt.toFixed(3)}</td>
-                      <td className="py-2 pr-4">{r.velocity.toFixed(3)}</td>
-                      <td className="py-2">{r.climatology.toFixed(3)}</td>
+                      <td className={`py-2 pr-4 ${cls(r.fpt)}`}>{cell(r.fpt)}</td>
+                      <td className={`py-2 pr-4 ${cls(r.blend)}`}>{cell(r.blend)}</td>
+                      <td className={`py-2 pr-4 ${cls(r.velocity)}`}>{cell(r.velocity)}</td>
+                      <td className={`py-2 ${cls(r.reference)}`}>{cell(r.reference)}</td>
                     </tr>
                   );
                 })}
@@ -218,8 +223,8 @@ export function PublicationPage({ lang }: { lang: Lang }) {
           </div>
           <p className="mt-5 max-w-[75ch] text-sm leading-relaxed">
             {es
-              ? "Lectura honesta: el primer paso gana a la velocidad lineal en todos los horizontes y a la climatología hasta 5 años; a 10–15 años pierde contra la climatología por exceso de confianza en los extremos. El artículo convierte ese cruce en su hallazgo central (el horizonte de predictibilidad) y la versión final añade calibración rodante y ponderada por censura. A 20–30 años el resultado se publica como escenario, con la probabilidad de superar 30 años."
-              : "Honest reading: first passage beats linear velocity at every horizon and climatology up to 5 years; at 10–15 years it loses to climatology through overconfidence at the extremes. The paper turns that crossover into its central finding (the predictability horizon), and the final version adds rolling, censoring-weighted calibration. At 20–30 years the result is published as a scenario, with the probability of exceeding 30 years."}
+              ? "Lectura honesta: la referencia difícil no es la velocidad lineal (que siempre pierde) sino la clase de referencia, es decir, cuánto tardaron en el pasado brechas iguales en todas las series. Simular sólo la historia propia de la serie no le gana; la mezcla de ambas sí, por poco (significativo a 1 año). A 10 y 15 años no hay historia suficiente para construir esa referencia sin fuga: ahí la simulación sólo se compara con la velocidad lineal y se publica como escenario, junto con la probabilidad de esperar más de 30 años."
+              : "Honest reading: the hard reference is not linear velocity (which always loses) but the reference class, i.e. how long equal gaps took in the past across all series. Simulating only the series' own history does not beat it; blending both does, narrowly (significant at 1 year). At 10 and 15 years there is not enough history to build that reference without leakage: there the simulation is only compared with linear velocity and published as a scenario, with the probability of waiting more than 30 years."}
           </p>
         </div>
       </section>

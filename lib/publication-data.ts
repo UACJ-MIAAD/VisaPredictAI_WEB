@@ -19,7 +19,7 @@ export const PUB_META = {
   // (manuscrito sometido con número); APC pagable sólo si es menor de USD 1,001.
   apcCapUsd: 1000,
   manuscriptTitle:
-    "When will a priority date become current? Calibrated first-passage forecasts and the predictability horizon of U.S. Visa Bulletin cutoffs",
+    "When will a priority date become current? Reference-class and series-specific first-passage forecasts of U.S. Visa Bulletin cutoffs",
 };
 
 export type Journal = {
@@ -196,11 +196,11 @@ export const PHASES: Phase[] = [
     weeks: "Sem 2–5 · dic",
     title: c("Estimador de primer paso calibrado", "Calibrated first-passage estimator"),
     tasks: [
-      { id: "P2.1", text: c("Bootstrap por bloques alineado al año fiscal; meses C y U como estados", "Fiscal-year-aligned block bootstrap; C and U months as states"), status: "active" },
-      { id: "P2.2", text: c("Conformal rodante con desenlaces disponibles en cada origen (sin fuga temporal)", "Rolling conformal using only outcomes available at each origin (no temporal leakage)"), status: "planned" },
-      { id: "P2.3", text: c("Shrinkage hacia la climatología por horizonte y Brier/IBS ponderado por censura (IPCW)", "Shrinkage toward climatology by horizon and censoring-weighted Brier/IBS (IPCW)"), status: "planned" },
-      { id: "P2.4", text: c("Baselines: velocidad determinista, paseo aleatorio con deriva, climatología; IC por bootstrap de clúster", "Baselines: deterministic velocity, random walk with drift, climatology; cluster-bootstrap CIs"), status: "planned" },
-      { id: "P2.5", text: c("Go/no-go semana 6: semi-Markov de tres regímenes sólo si mejora fuera de muestra", "Week-6 go/no-go: three-regime semi-Markov only if it improves out of sample"), status: "planned" },
+      { id: "P2.1", text: c("Bootstrap por bloques alineado al año fiscal; meses C y U como estados", "Fiscal-year-aligned block bootstrap; C and U months as states"), status: "done" },
+      { id: "P2.2", text: c("Conformal rodante con desenlaces disponibles en cada origen (sin fuga temporal)", "Rolling conformal using only outcomes available at each origin (no temporal leakage)"), status: "done" },
+      { id: "P2.3", text: c("Shrinkage hacia la climatología por horizonte y Brier/IBS ponderado por censura (IPCW)", "Shrinkage toward climatology by horizon and censoring-weighted Brier/IBS (IPCW)"), status: "active" },
+      { id: "P2.4", text: c("Baselines: velocidad determinista, paseo aleatorio con deriva, climatología; IC por bootstrap de clúster", "Baselines: deterministic velocity, random walk with drift, climatology; cluster-bootstrap CIs"), status: "done" },
+      { id: "P2.5", text: c("Semi-Markov y contabilidad de cupo fuera de esta versión (trabajo futuro), según el acta", "Semi-Markov and quota accounting left out of this version (future work), per the record"), status: "done" },
     ],
   },
   {
@@ -218,7 +218,7 @@ export const PHASES: Phase[] = [
     weeks: "Sem 6–9 · ene",
     title: c("Manuscrito", "Manuscript"),
     tasks: [
-      { id: "P4.1", text: c("Esqueleto en inglés con abstract, contribuciones y estructura IMRaD", "English skeleton with abstract, contributions and IMRaD structure"), status: "active" },
+      { id: "P4.1", text: c("Esqueleto en inglés con abstract, contribuciones y estructura IMRaD", "English skeleton with abstract, contributions and IMRaD structure"), status: "done" },
       { id: "P4.2", text: c("Plantilla de la revista elegida, carta de presentación y revisores sugeridos", "Chosen journal's template, cover letter and suggested reviewers"), status: "planned" },
       { id: "P4.3", text: c("Similitud < 15 % frente a los borradores MICAI y COMIA; congresos congelados", "Similarity < 15 % against the MICAI and COMIA drafts; conferences frozen"), status: "planned" },
       { id: "P4.4", text: c("Revisión del director y reproducción independiente desde el repositorio", "Advisor review and independent reproduction from the repository"), status: "planned" },
@@ -245,14 +245,17 @@ export const PHASES: Phase[] = [
   },
 ];
 
-// Resultados del prototipo (REVISTA2027/analysis/out/fpt_brier.json, 20-nov-2026).
-// Brier de P(current ≤ K) en orígenes con K observable: menor es mejor.
-export const FPT_BRIER = [
-  { months: 12, n: 3910, fpt: 0.071, velocity: 0.102, climatology: 0.094 },
-  { months: 36, n: 3535, fpt: 0.125, velocity: 0.175, climatology: 0.202 },
-  { months: 60, n: 2815, fpt: 0.155, velocity: 0.227, climatology: 0.249 },
-  { months: 120, n: 1715, fpt: 0.212, velocity: 0.336, climatology: 0.176 },
-  { months: 180, n: 790, fpt: 0.268, velocity: 0.384, climatology: 0.086 },
+// Evaluación v2 (REVISTA2027/analysis/out/v2/results.json, 20-nov-2026): 75 series, orígenes
+// 2003–2025, sólo orígenes con desenlace observado. «reference» = climatología RODANTE por brecha
+// (frecuencia histórica, en todas las series, de que una brecha igual se cubriera en K meses, con
+// desenlaces conocidos en el origen). «blend» = mezcla rodante serie + referencia. A 10–15 años no
+// hay historia suficiente para una referencia rodante sin fuga: null. Brier, menor es mejor.
+export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
+  { months: 12, n: 4125, fpt: 0.068, blend: 0.064, velocity: 0.097, reference: 0.066 },
+  { months: 36, n: 3100, fpt: 0.124, blend: 0.106, velocity: 0.175, reference: 0.107 },
+  { months: 60, n: 2025, fpt: 0.14, blend: 0.112, velocity: 0.212, reference: 0.114 },
+  { months: 120, n: 1715, fpt: 0.212, blend: null, velocity: 0.336, reference: null },
+  { months: 180, n: 790, fpt: 0.267, blend: null, velocity: 0.384, reference: null },
 ];
 
 export const RISKS: { title: Copy; fix: Copy }[] = [
