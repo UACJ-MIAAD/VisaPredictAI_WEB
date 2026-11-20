@@ -57,14 +57,14 @@ export function PublicationPage({ lang }: { lang: Lang }) {
           />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <article className="rounded-md border border-border p-5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{es ? "Envío límite" : "Submission deadline"}</p>
-              <p className="mt-2 font-serif text-3xl font-bold"><DaysLeft iso={PUB_META.submitBy} unit={es ? "días" : "days"} /></p>
-              <p className="mt-1 text-sm text-muted-foreground">{fmt(PUB_META.submitBy)}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{es ? "Envío objetivo" : "Target submission"}</p>
+              <p className="mt-2 font-serif text-3xl font-bold"><DaysLeft iso={PUB_META.targetSubmit} unit={es ? "días" : "days"} /></p>
+              <p className="mt-1 text-sm text-muted-foreground">{fmt(PUB_META.targetSubmit)}</p>
             </article>
             <article className="rounded-md border border-border p-5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{es ? "Meta de aceptación" : "Acceptance target"}</p>
-              <p className="mt-2 font-serif text-3xl font-bold"><DaysLeft iso={PUB_META.acceptanceTarget} unit={es ? "días" : "days"} /></p>
-              <p className="mt-1 text-sm text-muted-foreground">{fmt(PUB_META.acceptanceTarget)}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{es ? "Tope de envío" : "Submission cap"}</p>
+              <p className="mt-2 font-serif text-3xl font-bold"><DaysLeft iso={PUB_META.submitBy} unit={es ? "días" : "days"} /></p>
+              <p className="mt-1 text-sm text-muted-foreground">{fmt(PUB_META.submitBy)}</p>
             </article>
             <article className="rounded-md border border-border p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{es ? "Avance del plan" : "Plan progress"}</p>
@@ -74,7 +74,7 @@ export function PublicationPage({ lang }: { lang: Lang }) {
             <article className="rounded-md border border-border p-5">
               <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{es ? "Bloqueos humanos" : "Human blockers"}</p>
               <p className="mt-2 font-serif text-3xl font-bold">{tasks.filter((x) => x.status === "blocked").length}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{es ? "correo a coordinación · sinodales" : "coordination email · examiners"}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{es ? "recomendaciones de los sinodales" : "examiners’ recommendations"}</p>
             </article>
           </div>
           <p className="mt-6 max-w-[75ch] text-sm leading-relaxed text-muted-foreground">
@@ -91,8 +91,8 @@ export function PublicationPage({ lang }: { lang: Lang }) {
             title={es ? "Dónde es más probable que nos acepten" : "Where acceptance is most likely"}
             lead={
               es
-                ? "Una cascada, nunca envíos simultáneos. AJSE va primero si no hay APC o si basta «sometido»; Forecasting si hay fondos y se exige aceptación rápida; Computación y Sistemas es la red de seguridad nacional."
-                : "One cascade, never simultaneous submissions. AJSE goes first without APC funding or if “submitted” suffices; Forecasting if funded and fast acceptance is required; Computación y Sistemas is the national safety net."
+                ? `Basta con que la revista acepte el envío y sólo se paga un APC de hasta USD ${PUB_META.apcCapUsd.toLocaleString("en-US")}. Una cascada, nunca envíos simultáneos: AJSE, luego Computación y Sistemas, luego Inteligencia Artificial, las tres sin costo.`
+                : `The journal accepting the submission is enough, and only an APC of up to USD ${PUB_META.apcCapUsd.toLocaleString("en-US")} is paid. One cascade, never simultaneous submissions: AJSE, then Computación y Sistemas, then Inteligencia Artificial, all three at no cost.`
             }
           />
           <div className="grid gap-5 lg:grid-cols-3">

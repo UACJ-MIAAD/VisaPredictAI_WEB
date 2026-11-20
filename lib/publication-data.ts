@@ -14,7 +14,10 @@ export type TaskStatus = "done" | "active" | "planned" | "blocked";
 export const PUB_META = {
   updated: "2026-11-20",
   submitBy: "2027-01-31",
-  acceptanceTarget: "2027-05-31",
+  targetSubmit: "2027-01-15",
+  // Regla confirmada por Javier el 20-nov-2026: basta con que la revista acepte el envío
+  // (manuscrito sometido con número); APC pagable sólo si es menor de USD 1,001.
+  apcCapUsd: 1000,
   manuscriptTitle:
     "When will a priority date become current? Calibrated first-passage forecasts and the predictability horizon of U.S. Visa Bulletin cutoffs",
 };
@@ -32,7 +35,7 @@ export type Journal = {
   url: string;
 };
 
-// Orden de la cascada acordado en la ronda 2 (6 de 6 votos de acuerdo con matices).
+// Cascada revisada el 20-nov-2026 tras la regla de Javier (basta envío aceptado; APC < USD 1,001).
 // Nunca se envía el mismo manuscrito a dos revistas a la vez.
 export const JOURNALS: Journal[] = [
   {
@@ -42,7 +45,7 @@ export const JOURNALS: Journal[] = [
     index: c("Scopus + WoS SCIE · JCR Q2 Multidisciplinaria", "Scopus + WoS SCIE · JCR Q2 Multidisciplinary"),
     cost: c("$0 por la ruta de suscripción", "$0 via the subscription route"),
     speed: c("~53 % publicado en ≤ 6 meses (Editage, 2022)", "~53 % published within 6 months (Editage, 2022)"),
-    when: c("Primera opción si no hay fondos para APC.", "First choice if no APC funding is available."),
+    when: c("Primera opción: sin costo y el programa ya aceptó un envío aquí.", "First choice: no cost, and the programme already accepted a submission here."),
     why: c(
       "Precedente directo en UACJ: un compañero cumplió el requisito con un manuscrito sometido aquí (sep-2026), también un comparativo donde el modelo simple gana al profundo.",
       "Direct UACJ precedent: a classmate met the requirement with a manuscript submitted here (Sep 2026), also a comparison where the simple model beats deep learning.",
@@ -55,30 +58,12 @@ export const JOURNALS: Journal[] = [
   },
   {
     rank: 2,
-    name: "Forecasting",
-    publisher: "MDPI",
-    index: c("Scopus + WoS ESCI · JCR Q1 · IF 4.2", "Scopus + WoS ESCI · JCR Q1 · IF 4.2"),
-    cost: c("APC CHF 1,800 + impuestos", "APC CHF 1,800 + taxes"),
-    speed: c("~24 días a primera decisión (mediana)", "~24 days to first decision (median)"),
-    when: c("Primera opción si hay APC y el programa acepta MDPI.", "First choice if APC is funded and the programme accepts MDPI."),
-    why: c(
-      "Encaje temático exacto y la revista más rápida verificada: el primer paso probabilístico con backtest censurado es pronóstico puro.",
-      "Exact topical fit and the fastest verified journal: probabilistic first passage with a censored backtest is pure forecasting.",
-    ),
-    deskRisk: c(
-      "«Estudio de caso sin aporte generalizable»: declarar tres aportes (protocolo sin sesgo de censura, horizonte de predictibilidad frente a la climatología, panel abierto con DOI).",
-      "“Single case study without generalisable contribution”: state three contributions (censoring-free protocol, predictability horizon versus climatology, open panel with DOI).",
-    ),
-    url: "https://www.mdpi.com/journal/forecasting",
-  },
-  {
-    rank: 3,
     name: "Computación y Sistemas",
     publisher: "IPN · CIC (México)",
     index: c("Scopus + JCR (IF 0.8) · SciELO · SECIHTI SNPCyH 2026", "Scopus + JCR (IF 0.8) · SciELO · SECIHTI SNPCyH 2026"),
     cost: c("$0 · acceso abierto diamante", "$0 · diamond open access"),
     speed: c("Tiempos no publicados: auditar fechas de recepción y aceptación", "No published times: audit received/accepted dates"),
-    when: c("Red de seguridad nacional, en español o inglés.", "National safety net, in Spanish or English."),
+    when: c("Segunda opción si AJSE rechaza en escritorio; español o inglés.", "Second choice after an AJSE desk rejection; Spanish or English."),
     why: c(
       "Cumple cualquier definición plausible de «indexada» (Scopus, JCR y el padrón nacional) sin costo, y conoce a la comunidad MICAI.",
       "Meets any plausible definition of “indexed” (Scopus, JCR and the national registry) at no cost, and knows the MICAI community.",
@@ -89,16 +74,35 @@ export const JOURNALS: Journal[] = [
     ),
     url: "https://www.cys.cic.ipn.mx/ojs/index.php/CyS",
   },
+  {
+    rank: 3,
+    name: "Inteligencia Artificial",
+    publisher: "IBERAMIA",
+    index: c("Scopus + WoS ESCI · JIF 2025 0.9", "Scopus + WoS ESCI · JIF 2025 0.9"),
+    cost: c("$0 · acceso abierto diamante", "$0 · diamond open access"),
+    speed: c("Tiempos no publicados: auditar números recientes", "No published times: audit recent issues"),
+    when: c("Tercera opción; acepta español, inglés y portugués.", "Third choice; accepts Spanish, English and Portuguese."),
+    why: c(
+      "Revista iberoamericana de IA aplicada, indexada en Scopus y Web of Science, sin costo.",
+      "Ibero-American applied-AI journal indexed in Scopus and Web of Science, at no cost.",
+    ),
+    deskRisk: c(
+      "«Poca novedad en IA»: destacar la evaluación probabilística bajo censura y el horizonte de predictibilidad.",
+      "“Little AI novelty”: highlight the probabilistic evaluation under censoring and the predictability horizon.",
+    ),
+    url: "https://journal.iberamia.org/index.php/intartif",
+  },
 ];
 
 export const BACKUPS: { name: string; note: Copy }[] = [
   { name: "Applied Intelligence (Springer)", note: c("SCIE Q2 · $0 suscripción", "SCIE Q2 · $0 subscription") },
-  { name: "IEEE Access", note: c("SCIE · USD 2,160 · 4–6 semanas", "SCIE · USD 2,160 · 4–6 weeks") },
-  { name: "Inteligencia Artificial (IBERAMIA)", note: c("Scopus + ESCI · $0 · JIF 0.9", "Scopus + ESCI · $0 · JIF 0.9") },
+  { name: "Papeles de Población (UAEMéx)", note: c("SNPCyH · $0 · traducción humana al inglés si se acepta", "SNPCyH · $0 · human English translation if accepted") },
   { name: "Migraciones Internacionales (El Colef)", note: c("Scopus + SNPCyH · $0 · sólo con reencuadre migratorio", "Scopus + SNPCyH · $0 · only with a migration framing") },
 ];
 
 export const RULED_OUT: Copy[] = [
+  c("Forecasting (MDPI): APC CHF 1,800, por encima del tope de USD 1,000.", "Forecasting (MDPI): APC CHF 1,800, above the USD 1,000 cap."),
+  c("IEEE Access y Data in Brief: APC por encima de USD 1,000.", "IEEE Access and Data in Brief: APC above USD 1,000."),
   c("International Journal of Forecasting: ~15 % de aceptación y plazos cercanos a un año.", "International Journal of Forecasting: ~15 % acceptance and close to a year of review."),
   c("Estudios Fronterizos: cerrada a envíos al 20-nov-2026.", "Estudios Fronterizos: closed to submissions as of 20 Nov 2026."),
   c("Research in Computing Science: fuera de Scopus y del padrón SNPCyH.", "Research in Computing Science: outside Scopus and the SNPCyH registry."),
@@ -182,9 +186,9 @@ export const PHASES: Phase[] = [
     weeks: "Sem 1 · 23–29 nov",
     title: c("Gates humanos (bloquean todo lo demás)", "Human gates (block everything else)"),
     tasks: [
-      { id: "P1.1", text: c("Correo a la coordinación MIAAD y al Dr. Vicente: índice válido, ¿basta «sometido»?, ¿cuenta MDPI?, ¿hay fondos para APC?", "Email the MIAAD coordination and Dr. Vicente: valid index, is “submitted” enough, does MDPI count, is APC funded?"), status: "blocked" },
+      { id: "P1.1", text: c("Regla confirmada por Javier: basta que la revista acepte el envío; APC sólo si es menor de USD 1,001", "Rule confirmed by Javier: the journal accepting the submission is enough; APC only if under USD 1,001"), status: "done" },
       { id: "P1.2", text: c("Transcribir las recomendaciones de los sinodales de la Cumbre y mapearlas a cambios", "Transcribe the Summit examiners' recommendations and map them to changes"), status: "blocked" },
-      { id: "P1.3", text: c("Fijar orden de autores y revista #1 con el director", "Agree author order and journal #1 with the advisor"), status: "planned" },
+      { id: "P1.3", text: c("Autores: Javier Rebull (primer autor) y Dr. Vicente García Jiménez (correspondencia); revista #1 AJSE", "Authors: Javier Rebull (first author) and Dr. Vicente García Jiménez (corresponding); journal #1 AJSE"), status: "done" },
     ],
   },
   {
@@ -236,7 +240,7 @@ export const PHASES: Phase[] = [
     tasks: [
       { id: "P6.1", text: c("Respuesta punto por punto en ≤ 10 días por ronda", "Point-by-point response within 10 days per round"), status: "planned" },
       { id: "P6.2", text: c("Integrar el estimador al sitio y a VisaBot (sólo tras su sello)", "Integrate the estimator into the site and VisaBot (only once sealed)"), status: "planned" },
-      { id: "P6.3", text: c("Carta de aceptación o constancia de envío al expediente de titulación", "Acceptance letter or submission record into the graduation file"), status: "planned" },
+      { id: "P6.3", text: c("Constancia de envío con número de manuscrito al expediente de titulación", "Submission record with manuscript number into the graduation file"), status: "planned" },
     ],
   },
 ];
@@ -253,8 +257,8 @@ export const FPT_BRIER = [
 
 export const RISKS: { title: Copy; fix: Copy }[] = [
   {
-    title: c("Que la revista o el tipo de artículo no cuenten", "The journal or article type does not count"),
-    fix: c("Respuesta escrita de la coordinación en la semana 1, con el precedente AJSE como ejemplo.", "Written answer from the coordination in week 1, with the AJSE precedent as example."),
+    title: c("Rechazo de escritorio (el envío no se acepta)", "Desk rejection (the submission is not accepted)"),
+    fix: c("Sección de cómputo de AJSE, carta que abre con el método, plantilla oficial y checklist de la revista; respaldo listo para reenviar en ≤ 7 días.", "AJSE computing section, a cover letter that leads with the method, official template and journal checklist; backup ready to resubmit within 7 days."),
   },
   {
     title: c("Sobreprometer la fecha a 20–30 años", "Overpromising the 20–30 year date"),
