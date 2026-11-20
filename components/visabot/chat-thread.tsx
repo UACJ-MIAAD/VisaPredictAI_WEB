@@ -53,6 +53,7 @@ export function ChatThread({
             </div>}
             <div className={`vb-bubble vb-bot ${wide ? "min-w-0 max-w-full overflow-hidden" : ""}`}>
               {m.chart && renderChart ? <div id={`vb-chart-${i}`} tabIndex={-1} className="vb-answer-chart">{renderChart(m.chart)}</div> : null}
+              {m.chart && m.extraChart && renderChart ? <div id={`vb-chart-${i}-b`} className="vb-answer-chart">{renderChart(m.extraChart)}</div> : null}
               {m.content ? (
                 <Markdown text={m.content} sources={m.chart ? m.sources?.map(s => s.synthetic ? {...s, url: `#vb-chart-${i}`} : s) : m.sources} />
               ) : (

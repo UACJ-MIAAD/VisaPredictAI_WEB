@@ -50,7 +50,11 @@ for(const lang of ["es","en"] as const) for(const theme of ["light","dark"] as c
     const before=await ask(lang==="es"?"cuando me toca F2A pd sept 19 2024 mexicano":"When is my turn, Mexican F2A priority date September 19 2024?","before");
     await expect(before).toContainText("2026-04-22");await expect(before).toContainText("2024-09-19");
     await expect(before).not.toContainText("2026-10-22");
-    expect(await page.locator(".vb-console .recharts-surface").count()).toBe(0);
+    // the card answers the question; the series chart stays below it (it used to vanish)
+    const turn = page.locator(".vb-console .vb-assistant-turn").last();
+    await expect(turn.locator("[data-vb-priority-result]")).toHaveCount(1);
+    await expect(turn.locator(".vb-answer-chart")).toHaveCount(2);
+    await expect(turn.locator(".recharts-surface")).toHaveCount(1);
     mkdirSync("e2e-screenshots",{recursive:true});
     await page.screenshot({path:`e2e-screenshots/visabot-priority-before-${lang}-${theme}-${width}.png`});
     const after=await ask(lang==="es"?"¿y mi PD 2099-09-19?":"and my PD 2099-09-19?","after");

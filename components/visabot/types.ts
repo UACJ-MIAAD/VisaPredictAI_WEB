@@ -73,6 +73,9 @@ export type ChatMessage = {
   sources?: Source[];
   extractive?: boolean; // answered without the LLM (no key / offline)
   chart?: ChartPayload; // data visualization generated from the panel
+  // second visual under the first: when the agent's priority-date card takes
+  // `chart`, the series chart (guessed from the wording or the forecast) stays here
+  extraChart?: ChartPayload;
   // US I5: the answer was cut before completion — by the user's stop button
   // (client abort) or by a server timeout (chat.mjs idle/total truncation).
   incomplete?: boolean;
