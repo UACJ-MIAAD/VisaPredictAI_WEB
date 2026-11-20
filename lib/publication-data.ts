@@ -198,7 +198,7 @@ export const PHASES: Phase[] = [
     tasks: [
       { id: "P2.1", text: c("Bootstrap por bloques alineado al año fiscal; meses C y U como estados", "Fiscal-year-aligned block bootstrap; C and U months as states"), status: "done" },
       { id: "P2.2", text: c("Conformal rodante con desenlaces disponibles en cada origen (sin fuga temporal)", "Rolling conformal using only outcomes available at each origin (no temporal leakage)"), status: "done" },
-      { id: "P2.3", text: c("Shrinkage hacia la climatología por horizonte y Brier/IBS ponderado por censura (IPCW)", "Shrinkage toward climatology by horizon and censoring-weighted Brier/IBS (IPCW)"), status: "active" },
+      { id: "P2.3", text: c("Referencia estratificada (tipo de categoría × brecha), mezcla rodante y bootstrap bidimensional cola × año", "Stratified reference (category type × gap), rolling blend and two-way queue × year bootstrap"), status: "done" },
       { id: "P2.4", text: c("Baselines: velocidad determinista, paseo aleatorio con deriva, climatología; IC por bootstrap de clúster", "Baselines: deterministic velocity, random walk with drift, climatology; cluster-bootstrap CIs"), status: "done" },
       { id: "P2.5", text: c("Semi-Markov y contabilidad de cupo fuera de esta versión (trabajo futuro), según el acta", "Semi-Markov and quota accounting left out of this version (future work), per the record"), status: "done" },
     ],
@@ -208,8 +208,8 @@ export const PHASES: Phase[] = [
     weeks: "Sem 6–8 · ene",
     title: c("Datos abiertos y figuras", "Open data and figures"),
     tasks: [
-      { id: "P3.1", text: c("Panel y código congelados en Zenodo con DOI, diccionario F/C/U y licencia", "Panel and code frozen on Zenodo with DOI, F/C/U dictionary and licence"), status: "planned" },
-      { id: "P3.2", text: c("Figura principal: Brier skill score vs climatología por horizonte; fiabilidad por K; curvas de supervivencia por serie", "Headline figure: Brier skill score vs climatology by horizon; reliability by K; survival curves per series"), status: "planned" },
+      { id: "P3.1", text: c("Panel y código en un repositorio público con DOI (lo deposita Javier)", "Panel and code in a public repository with DOI (deposited by Javier)"), status: "blocked" },
+      { id: "P3.2", text: c("Figura principal: Brier skill score vs climatología por horizonte; fiabilidad por K; curvas de supervivencia por serie", "Headline figure: Brier skill score vs climatology by horizon; reliability by K; survival curves per series"), status: "done" },
       { id: "P3.3", text: c("Go/no-go semana 8: si la cobertura a 10 años no se recalibra, recortar el claim", "Week-8 go/no-go: if 10-year coverage cannot be recalibrated, trim the claim"), status: "planned" },
     ],
   },
@@ -219,9 +219,9 @@ export const PHASES: Phase[] = [
     title: c("Manuscrito", "Manuscript"),
     tasks: [
       { id: "P4.1", text: c("Esqueleto en inglés con abstract, contribuciones y estructura IMRaD", "English skeleton with abstract, contributions and IMRaD structure"), status: "done" },
-      { id: "P4.2", text: c("Plantilla de la revista elegida, carta de presentación y revisores sugeridos", "Chosen journal's template, cover letter and suggested reviewers"), status: "planned" },
-      { id: "P4.3", text: c("Similitud < 15 % frente a los borradores MICAI y COMIA; congresos congelados", "Similarity < 15 % against the MICAI and COMIA drafts; conferences frozen"), status: "planned" },
-      { id: "P4.4", text: c("Revisión del director y reproducción independiente desde el repositorio", "Advisor review and independent reproduction from the repository"), status: "planned" },
+      { id: "P4.2", text: c("Plantilla de la revista elegida, carta de presentación y revisores sugeridos", "Chosen journal's template, cover letter and suggested reviewers"), status: "done" },
+      { id: "P4.3", text: c("Similitud < 15 % frente a los borradores MICAI y COMIA; congresos congelados", "Similarity < 15 % against the MICAI and COMIA drafts; conferences frozen"), status: "done" },
+      { id: "P4.4", text: c("Revisión del Dr. Vicente y confirmación de revisores sin conflicto", "Review by Dr. Vicente and confirmation of conflict-free reviewers"), status: "blocked" },
     ],
   },
   {
@@ -245,17 +245,18 @@ export const PHASES: Phase[] = [
   },
 ];
 
-// Evaluación v2 (REVISTA2027/analysis/out/v2/results.json, 20-nov-2026): 75 series, orígenes
-// 2003–2025, sólo orígenes con desenlace observado. «reference» = climatología RODANTE por brecha
-// (frecuencia histórica, en todas las series, de que una brecha igual se cubriera en K meses, con
-// desenlaces conocidos en el origen). «blend» = mezcla rodante serie + referencia. A 10–15 años no
-// hay historia suficiente para una referencia rodante sin fuga: null. Brier, menor es mejor.
+// Evaluación v3 (REVISTA2027/analysis/out/v3/bulletin_w120/results.json, 20-nov-2026): elegibilidad por
+// origen (sin selección retrospectiva), desigualdad estricta del boletín, 73 series, orígenes evaluados
+// desde 2008. «reference» = clase de referencia RODANTE estratificada (tipo de categoría × brecha);
+// «blend» = mezcla rodante simulación + referencia. A 10–15 años no hay referencia sin fuga: null.
+// Brier, menor es mejor. Habilidad de la mezcla (IC 95 % bootstrap cola × año): 1 a +0.022 (n.s.),
+// 3 a +0.054 [0.001, 0.122], 5 a +0.072 [0.009, 0.135].
 export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
-  { months: 12, n: 4125, fpt: 0.068, blend: 0.064, velocity: 0.097, reference: 0.066 },
-  { months: 36, n: 3100, fpt: 0.124, blend: 0.106, velocity: 0.175, reference: 0.107 },
-  { months: 60, n: 2025, fpt: 0.14, blend: 0.112, velocity: 0.212, reference: 0.114 },
-  { months: 120, n: 1715, fpt: 0.212, blend: null, velocity: 0.336, reference: null },
-  { months: 180, n: 790, fpt: 0.267, blend: null, velocity: 0.384, reference: null },
+  { months: 12, n: 3875, fpt: 0.138, blend: 0.132, velocity: 0.172, reference: 0.135 },
+  { months: 36, n: 2960, fpt: 0.186, blend: 0.175, velocity: 0.251, reference: 0.185 },
+  { months: 60, n: 1995, fpt: 0.17, blend: 0.158, velocity: 0.268, reference: 0.17 },
+  { months: 120, n: 1470, fpt: 0.156, blend: null, velocity: 0.26, reference: null },
+  { months: 180, n: 565, fpt: 0.153, blend: null, velocity: 0.218, reference: null },
 ];
 
 export const RISKS: { title: Copy; fix: Copy }[] = [
