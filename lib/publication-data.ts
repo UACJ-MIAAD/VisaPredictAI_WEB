@@ -249,14 +249,15 @@ export const PHASES: Phase[] = [
 // origen (sin selección retrospectiva), desigualdad estricta del boletín, 73 series, orígenes evaluados
 // desde 2008. «reference» = clase de referencia RODANTE estratificada (tipo de categoría × brecha);
 // «blend» = mezcla rodante simulación + referencia. A 10–15 años no hay referencia sin fuga: null.
-// Brier, menor es mejor. Habilidad de la mezcla (IC 95 % bootstrap cola × año): 1 a +0.022 (n.s.),
-// 3 a +0.054 [0.001, 0.122], 5 a +0.072 [0.009, 0.135].
+// Brier, menor es mejor. Habilidad de la mezcla frente a la referencia estratificada (IC 95 % bootstrap
+// cola × año), regla corregida el 20-nov-2026 (una fecha de prioridad futura no puede volverse vigente
+// antes de existir): 1 a +0.060 [0.012, 0.109], 3 a +0.124 [0.052, 0.204], 5 a +0.073 [−0.014, 0.184].
 export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
-  { months: 12, n: 3875, fpt: 0.138, blend: 0.132, velocity: 0.172, reference: 0.135 },
-  { months: 36, n: 2960, fpt: 0.186, blend: 0.175, velocity: 0.251, reference: 0.185 },
-  { months: 60, n: 1995, fpt: 0.17, blend: 0.158, velocity: 0.268, reference: 0.17 },
-  { months: 120, n: 1470, fpt: 0.156, blend: null, velocity: 0.26, reference: null },
-  { months: 180, n: 565, fpt: 0.153, blend: null, velocity: 0.218, reference: null },
+  { months: 12, n: 3875, fpt: 0.064, blend: 0.062, velocity: 0.094, reference: 0.066 },
+  { months: 36, n: 2960, fpt: 0.107, blend: 0.099, velocity: 0.152, reference: 0.113 },
+  { months: 60, n: 1995, fpt: 0.127, blend: 0.11, velocity: 0.2, reference: 0.118 },
+  { months: 120, n: 1470, fpt: 0.155, blend: null, velocity: 0.254, reference: null },
+  { months: 180, n: 565, fpt: 0.154, blend: null, velocity: 0.218, reference: null },
 ];
 
 export const RISKS: { title: Copy; fix: Copy }[] = [
