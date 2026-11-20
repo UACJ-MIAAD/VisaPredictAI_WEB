@@ -89,7 +89,8 @@ for(const profile of profiles)test.describe(`From stress ${profile.name}`,()=>{
           }if(size)runs.push(size);
           const actual=await root.evaluate(el=>{
             const selects=el.querySelectorAll<HTMLSelectElement>('.vb-observatory-history-start select');
-            const value=selects[1].value?`${selects[1].value}-${selects[0].value}`:"";
+            // year first, then month
+            const value=selects[0].value?`${selects[0].value}-${selects[1].value}`:"";
             const svg=el.querySelector('svg[role="img"]')!;
             return {from:value,max:el.querySelector('input[type="range"]')!.getAttribute("max"),axis:[...el.querySelectorAll(".vb-instrument-axis text")].map(n=>n.textContent),lines:el.querySelectorAll(".vb-instrument-line").length,points:[...svg.querySelectorAll("circle")].filter(n=>!n.closest(".vb-instrument-cursor")).length,ticks:[...el.querySelectorAll(".vb-instrument-grid text")].map(n=>n.textContent),invalid:[...svg.querySelectorAll("path,circle")].some(n=>["d","cx","cy"].some(a=>/NaN|Infinity/.test(n.getAttribute(a)??""))),overflow:el.scrollWidth>el.clientWidth||document.documentElement.scrollWidth>innerWidth||[...el.querySelectorAll(".vb-observatory-controls select,.vb-observatory-readout strong")].some(n=>n.scrollWidth>n.clientWidth)};
           });
