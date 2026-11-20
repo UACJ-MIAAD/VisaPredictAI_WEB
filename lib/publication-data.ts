@@ -198,7 +198,7 @@ export const PHASES: Phase[] = [
     tasks: [
       { id: "P2.1", text: c("Bootstrap por bloques alineado al año fiscal; meses C y U como estados", "Fiscal-year-aligned block bootstrap; C and U months as states"), status: "done" },
       { id: "P2.2", text: c("Conformal rodante con desenlaces disponibles en cada origen (sin fuga temporal)", "Rolling conformal using only outcomes available at each origin (no temporal leakage)"), status: "done" },
-      { id: "P2.3", text: c("Referencia estratificada (tipo de categoría × brecha), mezcla rodante y bootstrap bidimensional cola × año", "Stratified reference (category type × gap), rolling blend and two-way queue × year bootstrap"), status: "done" },
+      { id: "P2.3", text: c("Referencia por brecha agrupada sobre todas las series (la estratificada por tipo de categoría, como secundaria), mezcla rodante y bootstrap bidimensional cola × año", "Reference by gap pooled over all series (stratified by category type as secondary), rolling blend and two-way queue × year bootstrap"), status: "done" },
       { id: "P2.4", text: c("Baselines: velocidad determinista, paseo aleatorio con deriva, climatología; IC por bootstrap de clúster", "Baselines: deterministic velocity, random walk with drift, climatology; cluster-bootstrap CIs"), status: "done" },
       { id: "P2.5", text: c("Semi-Markov y contabilidad de cupo fuera de esta versión (trabajo futuro), según el acta", "Semi-Markov and quota accounting left out of this version (future work), per the record"), status: "done" },
     ],
@@ -247,15 +247,16 @@ export const PHASES: Phase[] = [
 
 // Evaluación v3 (REVISTA2027/analysis/out/v3/bulletin_w120/results.json, 20-nov-2026): elegibilidad por
 // origen (sin selección retrospectiva), desigualdad estricta del boletín, 73 series, orígenes evaluados
-// desde 2008. «reference» = clase de referencia RODANTE estratificada (tipo de categoría × brecha);
-// «blend» = mezcla rodante simulación + referencia. A 10–15 años no hay referencia sin fuga: null.
-// Brier, menor es mejor. Habilidad de la mezcla frente a la referencia estratificada (IC 95 % bootstrap
-// cola × año), regla corregida el 20-nov-2026 (una fecha de prioridad futura no puede volverse vigente
-// antes de existir): 1 a +0.060 [0.012, 0.109], 3 a +0.124 [0.052, 0.204], 5 a +0.073 [−0.014, 0.184].
+// desde 2008. «reference» = clase de referencia RODANTE por brecha, agrupada sobre todas las series (la
+// mejor referencia; la estratificada por tipo de categoría es peor en todo horizonte); «blend» = mezcla
+// rodante simulación + referencia. Todo pronóstico vale 0 si la fecha de prioridad no existe aún en o+K.
+// A 10–15 años no hay referencia sin fuga: null. Brier, menor es mejor. Habilidad de la mezcla frente a
+// la referencia (IC 95 % bootstrap cola × año, ronda 7 del 20-nov-2026): 1 a +0.049 [−0.004, 0.106],
+// 3 a +0.039 [−0.043, 0.134], 5 a +0.035 [−0.060, 0.155]; ningún intervalo excluye el cero.
 export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
-  { months: 12, n: 3875, fpt: 0.064, blend: 0.062, velocity: 0.094, reference: 0.066 },
-  { months: 36, n: 2960, fpt: 0.107, blend: 0.099, velocity: 0.152, reference: 0.113 },
-  { months: 60, n: 1995, fpt: 0.127, blend: 0.11, velocity: 0.2, reference: 0.118 },
+  { months: 12, n: 3875, fpt: 0.064, blend: 0.062, velocity: 0.094, reference: 0.065 },
+  { months: 36, n: 2960, fpt: 0.107, blend: 0.1, velocity: 0.152, reference: 0.104 },
+  { months: 60, n: 1995, fpt: 0.127, blend: 0.108, velocity: 0.2, reference: 0.112 },
   { months: 120, n: 1470, fpt: 0.155, blend: null, velocity: 0.254, reference: null },
   { months: 180, n: 565, fpt: 0.154, blend: null, velocity: 0.218, reference: null },
 ];
