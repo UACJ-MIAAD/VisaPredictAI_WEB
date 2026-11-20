@@ -2,7 +2,7 @@ import {describe,it,expect} from "vitest";
 import {readFileSync} from "node:fs";
 import {buildPanel} from "@/lib/data/panel-core";
 import {parseForecastStore} from "@/lib/data/forecasts-core.mjs";
-import {buildPriorityCheck,parsePriorityDate,isPriorityQuery,priorityCheckSummary} from "@/lib/visabot/priority-check.mjs";
+import {buildPriorityCheck,parsePriorityDate,isPriorityQuery,priorityCheckSummary,priorityCheckSpec} from "@/lib/visabot/priority-check.mjs";
 import {mergeFollowUp} from "@/lib/visabot/analytics";
 const file=(n:string)=>readFileSync(new URL(`../public/data/${n}`,import.meta.url),"utf8");
 const panel=buildPanel(file("visa_panel_long.csv"));
@@ -59,5 +59,35 @@ describe("exact current series, no personal appointment inference",()=>{
   it("changes country and table while retaining the supplied date",()=>{
     const q=mergeFollowUp("Mexico F2A FAD PD 2024-09-19","and India DFF?");
     expect(buildPriorityCheck(q,panel,store,"en")).toMatchObject({result:"current",country:"india",table:"DFF",priorityDate:"2024-09-19"});
+  });
+});
+
+describe("the forecast leads the answer", () => {
+  // a date just after the published cutoff of a series the model projects to move
+  const series = (["mexico","china","india","philippines","all_chargeability"] as const).flatMap(c => ["F2A","F2B","F4"].map(cat => ({c, cat})));
+  it("headlines the month the central path reaches the date, with the 95% range, and keeps today's status", () => {
+    let checked = 0;
+    for (const {c, cat} of series) {
+      const row = panel.rows.find(r => r.country===c && r.category===cat && r.table==="FAD" && r.bulletinMonth===panel.monthRange[1]);
+      if (row?.status !== "F" || !row.priorityDate) continue;
+      const d = new Date(Date.parse(row.priorityDate+"T00:00:00Z") + 20*86400000).toISOString().slice(0,10);
+      const s = priorityCheckSpec({priorityDate:d,country:c,category:cat,table:"FAD"},panel,store,"es");
+      expect(s.result).toBe("after");
+      expect(s.statement).toContain("TODAVÍA NO");
+      if (!s.forecast) continue;
+      expect(s.headline).toMatch(/^PRONÓSTICO: /);
+      if (s.forecast.status === "within") {
+        expect(s.headline).toContain(s.forecast.central!.slice(0,4));
+        expect(s.forecastNote).toContain("rango al 95 %");
+      }
+      expect(priorityCheckSummary(s,"es").startsWith(`**${s.headline}**`)).toBe(true);
+      checked++;
+    }
+    expect(checked).toBeGreaterThan(3);
+  });
+  it("a date far beyond the horizon is headlined as not reached, never with a month", () => {
+    const s = priorityCheckSpec({priorityDate:"2099-01-01",country:"mexico",category:"F2A",table:"FAD"},panel,store,"es");
+    expect(s.forecast?.status).toBe("beyond");
+    expect(s.headline).toContain("NO SE ALCANZA DENTRO DEL HORIZONTE");
   });
 });

@@ -8,7 +8,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ComposedChart, ReferenceLine,
   XAxis, YAxis, CartesianGrid, Tooltip, LabelList, Legend,
 } from "recharts";
-import { type ChartSpec, priorityYearTick } from "@/lib/visabot/analytics";
+import { type ChartSpec, priorityYearTick, monthLabel } from "@/lib/visabot/analytics";
 
 // Y-axis props over the values a priority-year chart actually plots: month +
 // year ticks (wider axis) when the span is short, plain years otherwise.
@@ -260,11 +260,17 @@ export default function VisaChart({ spec }: { spec: ChartSpec }) {
     >
       <figcaption className="mb-0.5 font-serif text-sm font-bold text-[var(--color-ink)]">{spec.title}</figcaption>
       <p className="mb-2 text-[0.72rem] text-[var(--color-muted)]">{spec.subtitle}</p>
-      {spec.kind === "priorityCheck" && <div data-vb-priority-result={spec.result} className="space-y-4 py-2">
-        <p className="border-l-4 border-[var(--color-accent)] pl-3 text-base font-semibold leading-relaxed text-[var(--color-ink)]">{spec.statement}</p>
+      {spec.kind === "priorityCheck" && <div data-vb-priority-result={spec.result} data-vb-forecast={spec.forecast?.status} className="space-y-4 py-2">
+        {/* the forecast is the answer to "when"; today's status follows it */}
+        {spec.headline && <p data-vb-priority-headline className="border-l-4 border-[var(--color-accent)] pl-3 text-lg font-semibold leading-snug text-[var(--color-accent)]">{spec.headline}</p>}
+        <p className={spec.headline ? "pl-4 text-sm font-medium text-[var(--color-ink)]" : "border-l-4 border-[var(--color-accent)] pl-3 text-base font-semibold leading-relaxed text-[var(--color-ink)]"}>
+          {spec.headline && <span className="text-[var(--color-muted)]">{lang === "es" ? "Hoy: " : "Today: "}</span>}{spec.statement}
+        </p>
         <dl className="grid grid-cols-1 gap-3 rounded-xl bg-[var(--color-surface-soft)] p-4 text-sm sm:grid-cols-2">
           {spec.priorityDate && <div><dt className="text-xs text-[var(--color-muted)]">{lang === "es" ? "Tu fecha de prioridad" : "Your priority date"}</dt><dd className="mt-1 font-semibold tabular-nums">{spec.priorityDate}</dd></div>}
           {spec.cutoff && <div><dt className="text-xs text-[var(--color-muted)]">{lang === "es" ? "Corte publicado" : "Published cutoff"}</dt><dd className="mt-1 font-semibold tabular-nums">{spec.cutoff}</dd></div>}
+          {spec.forecast?.central && <div><dt className="text-xs text-[var(--color-muted)]">{lang === "es" ? "Pronóstico (trayectoria central)" : "Forecast (central path)"}</dt><dd className="mt-1 font-semibold text-[var(--color-accent)]">{monthLabel(spec.forecast.central, lang)}</dd></div>}
+          {spec.rangeText && <div><dt className="text-xs text-[var(--color-muted)]">{lang === "es" ? "Rango al 95 %" : "95% range"}</dt><dd className="mt-1 font-semibold">{spec.rangeText}</dd></div>}
         </dl>
         {spec.forecastNote && <p className="text-sm leading-relaxed text-[var(--color-ink)]">{spec.forecastNote}</p>}
         <p className="text-xs leading-relaxed text-[var(--color-muted)]">{spec.disclaimer}</p>

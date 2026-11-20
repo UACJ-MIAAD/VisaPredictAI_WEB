@@ -860,7 +860,9 @@ const handler = async (req) => {
         result = await runAgent({
           apiKey: key, model: MODEL, effort: EFFORT, lang, surface, catalog, messages, data,
           docs: (q, l) => searchDocs(q, l, dataBase(req)),
-          firstSourceN: ragCtx.length + 1, signal: upstreamCtrl.signal, deadline: t0 + toolBudgetMs,
+          // after the HIGHEST kept number: filtered chunks keep their original n, so
+          // length + 1 could repeat a number already cited (two different "[9]")
+          firstSourceN: Math.max(0, ...ragCtx.map((c) => c.n)) + 1, signal: upstreamCtrl.signal, deadline: t0 + toolBudgetMs,
           onText: relay,
           onSource: (src) => { obs.n_tool_sources++; send({ t: "source", source: src }); },
           onChart: (chart) => { if (surface === "console") { obs.charts++; send({ t: "chart", chart }); } },
