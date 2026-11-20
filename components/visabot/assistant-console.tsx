@@ -1,7 +1,8 @@
 "use client";
 
-// Full-page VisaBot (/asistente). Minimal redesign (19-nov-2026): one column,
-// a question box and the conversation. The agent (netlify/functions/chat.mjs)
+// Full-page VisaBot (/asistente). Minimal redesign (19-nov-2026): the
+// conversation and a question box, with the panel (KPIs, context, one-click
+// chart tools, quick questions) as a rail on desktop and a drawer on phones. The agent (netlify/functions/chat.mjs)
 // reads the verified release data and decides when to draw a chart
 // (show_chart); the console renders it inline. Chat state lives in
 // useVisabotChat and the thread in <ChatThread/>. A `?q=` parameter (from the
@@ -10,7 +11,9 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import {
   ArrowUp, Square, ArrowDown, RotateCcw, BookOpen, BarChart3, X,
-  Lightbulb, Database, Cpu, Quote, Maximize2, Minimize2,
+  Lightbulb, Database, Cpu, Quote, Maximize2, Minimize2, SlidersHorizontal,
+  TrendingUp, ArrowUpDown, PieChart as PieIcon, LineChart as LineIcon, Grid3x3,
+  Radar as RadarIcon, AreaChart as ForecastIcon,
 } from "lucide-react";
 
 type PromptCat = { icon: string; cat: string; items: string[] };
@@ -25,6 +28,7 @@ import { lockBodyScroll } from "@/lib/body-scroll-lock";
 import { track } from "@/lib/analytics";
 import { ChatThread } from "./chat-thread";
 import { SemanticConsent } from "./semantic-consent";
+import { AssistantSidebar, type ToolDef, type ToolKind } from "./assistant-sidebar";
 import { useVisabotChat } from "./use-visabot-chat";
 import { chartForQuery, chartFromAgent } from "@/lib/visabot/chart-router";
 import type { AgentChart, ChartPayload, Source, SyntheticDescriptor } from "./types";
@@ -34,7 +38,12 @@ import { SITE_STATS } from "@/lib/content/site-stats.generated";
 import {
   bulletinDiffText, buildFollowUps, mergeFollowUp,
   monthTableText, chartContextNote, chartUserNote, monthLabel, type ChartSpec,
+  buildLine, buildCompare, buildMovement, buildStatus, buildMultiLine,
+  buildHeatmap, buildRadar, buildForecast, buildPanorama, buildMonthTable,
+  buildBulletinDiff, type Kpi,
 } from "@/lib/visabot/analytics";
+
+const blockOf = (cat: string) => (/^F/i.test(cat) ? "familia" : "empleo");
 
 // Panel year range derived from the build-time stats (regla #0 — never hand-typed).
 // The chat.mjs security allowlist matches these synthetic sources by the PREFIX
@@ -68,7 +77,16 @@ export function AssistantConsole() {
   const [forecastsSettled, setForecastsSettled] = React.useState(false);
   const [stage, setStage] = React.useState(false);
   const [promptsOpen, setPromptsOpen] = React.useState(false);
-  const stageTrapRef = useFocusTrap<HTMLDivElement>(stage && !promptsOpen, true);
+  const [navOpen, setNavOpen] = React.useState(false); // mobile panel drawer
+  const [suggestions, setSuggestions] = React.useState<string[]>([]);
+  const stageTrapRef = useFocusTrap<HTMLDivElement>(stage && !promptsOpen && !navOpen, true);
+  const navTrapRef = useFocusTrap<HTMLElement>(navOpen);
+  // panel context (the selects the one-click tools read)
+  const [country, setCountry] = React.useState("mexico");
+  const [category, setCategory] = React.useState("F3");
+  const [table, setTable] = React.useState("FAD");
+  const [month, setMonth] = React.useState("");
+  const [monthB, setMonthB] = React.useState("");
   const promptsTrapRef = useFocusTrap<HTMLDivElement>(promptsOpen);
   const [prompts, setPrompts] = React.useState<PromptCat[]>([]);
   const [promptsView, setPromptsView] = React.useState<PromptCat[]>([]);
@@ -106,12 +124,13 @@ export function AssistantConsole() {
   }, [panel, lang, forecasts]);
 
   const {
-    messages, input, setInput, busy, send, stop, newChat, copy, copiedId,
-    atBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
+    messages, setMessages, input, setInput, busy, send, stop, newChat, copy, copiedId,
+    atBottom, setAtBottom, onScroll, scrollToBottom, scrollRef, inputRef, warm,
     semantic, constrained, enableSemantic, liveStatus,
   } = useVisabotChat({ lang, surface: "console", prepare, mergeFollowUp, buildAgentChart });
 
   const sendQ = React.useCallback((t: string) => {
+    setNavOpen(false);
     void send(t);
     inputRef.current?.focus({ preventScroll: true });
   }, [send, inputRef]);
@@ -120,6 +139,7 @@ export function AssistantConsole() {
     warm();
     loadPanel().then(setPanel).catch(() => setPanelErr(true));
     loadForecasts().then(setForecasts).catch(() => {}).finally(() => setForecastsSettled(true));
+    fetch("/rag/suggestions.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setSuggestions((d[lang]?.length ? d[lang] : d.es || d.en) || [])).catch(() => {});
     fetch("/rag/prompts.json").then((r) => (r.ok ? r.json() : null)).then((d) => d && setPrompts((d[lang]?.length ? d[lang] : d.es || d.en) || [])).catch(() => {});
   }, [lang, warm]);
 
@@ -137,15 +157,61 @@ export function AssistantConsole() {
     sendQ(q.slice(0, 500));
   }, [panel, panelErr, forecastsSettled, sendQ]);
 
+  const months = React.useMemo(() => (panel ? [...new Set(panel.rows.map((r) => r.bulletinMonth))].sort().reverse() : []), [panel]);
+  React.useEffect(() => {
+    if (!panel) return;
+    if (!panel.countries.includes(country)) setCountry(panel.countries.includes("mexico") ? "mexico" : panel.countries[0]);
+    if (!panel.categories.includes(category)) setCategory(panel.categories.includes("F3") ? "F3" : panel.categories[0]);
+    if (!panel.tables.includes(table)) setTable(panel.tables.includes("FAD") ? "FAD" : panel.tables[0]);
+    if (!month && months.length) setMonth(months[0]);
+    if (!monthB && months.length) setMonthB(months[Math.min(12, months.length - 1)]); // ≈ a year earlier
+  }, [panel]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // One-click chart tools: drawn locally from the verified panel, no model call.
+  const runTool = (kind: ToolKind) => {
+    if (!panel) return;
+    track("VisaBot Tool", { lang, tool: kind });
+    setNavOpen(false);
+    let chart: ChartPayload | null = null, lead = "";
+    if (kind === "table") { chart = buildMonthTable(panel, month || months[0], table, lang); lead = tr(lang, "acHereTable"); }
+    else if (kind === "diff") { chart = buildBulletinDiff(panel, month || months[0], monthB || months[Math.min(12, months.length - 1)], table, lang); lead = tr(lang, "acHereDiff"); }
+    else if (kind === "forecast") { chart = buildForecast(panel, country, category, table, lang, forecasts?.horizonMonths || undefined, 48, forecasts); lead = tr(lang, "acHereForecast"); }
+    else if (kind === "evol") { chart = buildLine(panel, country, category, table, lang); lead = tr(lang, "acHereEvol"); }
+    else if (kind === "compare") { chart = buildCompare(panel, category, table, lang); lead = tr(lang, "acHereCompare"); }
+    else if (kind === "move") { chart = buildMovement(panel, country, category, table, lang); lead = tr(lang, "acHereMove"); }
+    else if (kind === "race") { chart = buildMultiLine(panel, category, table, lang, forecasts); lead = tr(lang, "acHereRace"); }
+    else if (kind === "heat") { chart = buildHeatmap(panel, blockOf(category), table, lang); lead = tr(lang, "acHereHeat"); }
+    else if (kind === "radar") { chart = buildRadar(panel, table, lang); lead = tr(lang, "acHereRadar"); }
+    else { chart = buildStatus(panel, lang, { country, category, table }); lead = tr(lang, "acHereStatus"); }
+    setMessages((m) => [...m, chart ? { role: "assistant", content: lead, chart } : { role: "assistant", content: tr(lang, "acNoData") }]);
+    setAtBottom(true);
+  };
+  const kpis: Kpi[] = panel ? buildPanorama(panel, lang) : [];
+  const tools: ToolDef[] = [
+    { k: "forecast", icon: ForecastIcon, label: tr(lang, "toolForecast") },
+    { k: "evol", icon: TrendingUp, label: tr(lang, "toolEvol") },
+    { k: "compare", icon: BarChart3, label: tr(lang, "toolCompare") },
+    { k: "move", icon: ArrowUpDown, label: tr(lang, "toolMove") },
+    { k: "status", icon: PieIcon, label: tr(lang, "toolStatus") },
+    { k: "race", icon: LineIcon, label: tr(lang, "toolRace") },
+    { k: "heat", icon: Grid3x3, label: tr(lang, "toolHeat") },
+    { k: "radar", icon: RadarIcon, label: tr(lang, "toolRadar") },
+  ];
+  const sidebarProps = {
+    lang, panel, panelErr, kpis, months, suggestions, tools, runTool, onAsk: sendQ,
+    country, setCountry, category, setCategory, table, setTable, month, setMonth, monthB, setMonthB,
+  };
+
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (promptsOpen) setPromptsOpen(false);
+      else if (navOpen) setNavOpen(false);
       else setStage(false);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [promptsOpen]);
+  }, [promptsOpen, navOpen]);
 
   React.useEffect(() => (stage ? lockBodyScroll() : undefined), [stage]);
 
@@ -165,7 +231,11 @@ export function AssistantConsole() {
     <div id="asistente" ref={stageTrapRef} role={stage ? "dialog" : undefined} aria-modal={stage || undefined} aria-label={stage ? tr(lang, "acPresentationLabel") : undefined}
       data-vb-ready={(panel || panelErr) && forecastsSettled ? "true" : undefined}
       className={`vb-console ${stage ? "vb-stage" : ""} flex h-[calc(100dvh-4rem)] w-full flex-col overflow-hidden bg-[var(--color-bg)]`}>
-      <header className="vb-console-topbar mx-auto flex w-full max-w-[860px] items-center gap-2 px-4 py-3 sm:px-6">
+      <header className="vb-console-topbar flex w-full items-center gap-2 border-b border-border px-4 py-3 sm:px-6">
+        {/* the panel: always a rail on desktop, a drawer on small screens and in presentation mode */}
+        <button type="button" className={`vb-panel-toggle ${stage ? "" : "lg:hidden"}`} onClick={() => setNavOpen(true)} aria-label={tr(lang, "acPanelToggleLabel")} aria-expanded={navOpen} aria-haspopup="dialog">
+          <SlidersHorizontal className="h-4 w-4" aria-hidden /> {tr(lang, "acPanelToggle")}
+        </button>
         <h1 className="text-base font-semibold tracking-tight text-[var(--color-ink)]">{tr(lang, "vbName")}</h1>
         <div className="flex-1" />
         {!empty && (
@@ -184,6 +254,26 @@ export function AssistantConsole() {
         </button>
       </header>
 
+      <div className="flex min-h-0 flex-1">
+      {!stage && (
+        <aside className="vb-controls-rail hidden w-[300px] shrink-0 border-r border-border lg:block" aria-label={tr(lang, "acTools")}>
+          <AssistantSidebar sections="all" {...sidebarProps} />
+        </aside>
+      )}
+      {navOpen && (
+        <>
+          <div className={`fixed inset-0 z-[65] bg-black/40 ${stage ? "" : "lg:hidden"}`} onClick={() => setNavOpen(false)} aria-hidden />
+          <aside ref={navTrapRef} role="dialog" aria-modal="true" aria-label={tr(lang, "acTools")} className={`fixed inset-y-0 left-0 z-[66] w-[86%] max-w-[330px] bg-[var(--color-bg)] shadow-2xl ${stage ? "" : "lg:hidden"}`}>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="text-sm font-semibold">{tr(lang, "acPanelToggle")}</span>
+              <button className="vb-iconbtn" onClick={() => setNavOpen(false)} aria-label={tr(lang, "acCloseTools")}><X className="h-4 w-4" aria-hidden /></button>
+            </div>
+            <div className="h-[calc(100%-3.25rem)]">
+              <AssistantSidebar sections="all" {...sidebarProps} />
+            </div>
+          </aside>
+        </>
+      )}
       <div className="vb-conversation-pane relative flex min-h-0 min-w-0 flex-1 flex-col">
         <p className="sr-only" role="status" aria-live="polite">{liveStatus}</p>
         <div ref={scrollRef} onScroll={onScroll} className="vb-thread flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-4 sm:px-6" role="log" aria-live="off">
@@ -239,6 +329,7 @@ export function AssistantConsole() {
           </form>
           <p className="vb-composer-hint">{tr(lang, "acComposerHint")}</p>
         </div>
+      </div>
       </div>
 
       {promptsOpen && (

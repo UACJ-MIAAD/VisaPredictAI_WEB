@@ -882,3 +882,9 @@ main:focus {
 .fc-code { margin-right: 0.15rem; padding: 0 0.35rem; border-radius: 0.3rem; background: var(--color-surface-soft); color: var(--color-muted); font-size: 0.7rem; font-weight: 600; }
 .fc-mobile-only { display: none; }
 @media (max-width: 768px) { .fc-mobile-only { display: inline; } }
+/* VisaBot panel (restored 19-nov-2026) */
+.vb-panel-toggle { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 2.5rem; padding: 0 0.9rem; border: 1px solid var(--color-border); border-radius: 999px; font-size: 0.8rem; font-weight: 500; color: var(--color-ink); }
+.vb-panel-toggle:hover { border-color: var(--color-accent); }
+.vb-controls-rail { background: var(--color-bg); }
+@media (max-width: 480px) { .vb-console .vb-panel-toggle { min-height: 2.75rem; } }
+@media (min-width: 1024px) { .vb-console:not(.vb-stage) .vb-panel-toggle { display: none; } }
