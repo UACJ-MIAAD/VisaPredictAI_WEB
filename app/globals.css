@@ -481,7 +481,7 @@ main:focus {
 .vb-instrument-label > span { width: 0.3rem; height: 0.3rem; border-radius: 50%; background: var(--vb-sky); box-shadow: 0 0 12px #82d0ff90; }
 .vb-instrument-code { font-size: 0.6rem; color: var(--vb-sky); white-space: nowrap; letter-spacing: 0.1em; }
 .vb-observatory-controls { container-type:inline-size; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; align-items:end; gap:0.6rem; padding:0.8rem 1.3rem 0; }
-.vb-observatory-history-start { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) 5rem; align-items:end; gap:0.45rem; min-width:0; }
+.vb-observatory-history-start { grid-column:1/-1; display:grid; grid-template-columns:minmax(6.5rem,0.8fr) minmax(0,1fr); align-items:end; gap:0.45rem; min-width:0; }
 .vb-observatory-controls label { display:flex; flex-direction:column; gap:0.25rem; min-width:0; flex:1; color:var(--vb-muted); font-size:0.65rem; }
 .vb-observatory-controls select { width:100%; min-width:0; min-height:2.75rem; border:1px solid #b1c3dc55; border-radius:0.5rem; background:#102642; color:var(--vb-paper); padding:0.4rem; font-size:0.8rem; }
 .vb-observatory-view-controls { display:flex; gap:0.25rem; }
