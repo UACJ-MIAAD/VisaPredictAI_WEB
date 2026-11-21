@@ -251,14 +251,15 @@ export const PHASES: Phase[] = [
 // mejor referencia; la estratificada por tipo de categoría es peor en todo horizonte); «blend» = mezcla
 // rodante simulación + referencia. Todo pronóstico vale 0 si la fecha de prioridad no existe aún en o+K.
 // A 10–15 años no hay referencia sin fuga: null. Brier, menor es mejor. Habilidad de la mezcla frente a
-// la referencia (IC 95 % bootstrap cola × año, ronda 7 del 20-nov-2026): 1 a +0.049 [−0.004, 0.106],
-// 3 a +0.039 [−0.043, 0.134], 5 a +0.035 [−0.060, 0.155]; ningún intervalo excluye el cero.
+// la referencia (IC 95 % bootstrap cola × año; Épica A1 del 20-nov-2026: evento de primer paso único,
+// caminata gaussiana con barrera mensual, sin la guarda de avance nulo): 1 a +0.046 [−0.006, 0.104],
+// 3 a +0.039 [−0.053, 0.153], 5 a +0.043 [−0.059, 0.169]; ningún intervalo excluye el cero.
 export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
   { months: 12, n: 3875, fpt: 0.064, blend: 0.062, velocity: 0.094, reference: 0.065 },
-  { months: 36, n: 2960, fpt: 0.107, blend: 0.1, velocity: 0.152, reference: 0.104 },
-  { months: 60, n: 1995, fpt: 0.127, blend: 0.108, velocity: 0.2, reference: 0.112 },
-  { months: 120, n: 1470, fpt: 0.155, blend: null, velocity: 0.254, reference: null },
-  { months: 180, n: 565, fpt: 0.154, blend: null, velocity: 0.218, reference: null },
+  { months: 36, n: 2960, fpt: 0.105, blend: 0.099, velocity: 0.156, reference: 0.103 },
+  { months: 60, n: 1995, fpt: 0.12, blend: 0.107, velocity: 0.2, reference: 0.112 },
+  { months: 120, n: 1470, fpt: 0.134, blend: null, velocity: 0.254, reference: null },
+  { months: 180, n: 565, fpt: 0.127, blend: null, velocity: 0.218, reference: null },
 ];
 
 export const RISKS: { title: Copy; fix: Copy }[] = [
