@@ -254,6 +254,8 @@ export const PHASES: Phase[] = [
 // la referencia (IC 95 % bootstrap cola × año; Épica A1 del 20-nov-2026: evento de primer paso único,
 // caminata gaussiana con barrera mensual, sin la guarda de avance nulo): 1 a +0.046 [−0.006, 0.104],
 // 3 a +0.039 [−0.053, 0.153], 5 a +0.043 [−0.059, 0.169]; ningún intervalo excluye el cero.
+// Épica A2 (21-nov): cota = extremo superior de esos intervalos (0.104 / 0.153 / 0.169); BSS de la velocidad
+// lineal −0.440 [−0.671, −0.218], −0.517 [−0.761, −0.284], −0.786 [−1.127, −0.467] (bootstrap cola × año).
 export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
   { months: 12, n: 3875, fpt: 0.064, blend: 0.062, velocity: 0.094, reference: 0.065 },
   { months: 36, n: 2960, fpt: 0.105, blend: 0.099, velocity: 0.156, reference: 0.103 },
