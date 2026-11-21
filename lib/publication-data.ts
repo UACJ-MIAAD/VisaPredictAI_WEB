@@ -252,16 +252,16 @@ export const PHASES: Phase[] = [
 // rodante simulación + referencia. Todo pronóstico vale 0 si la fecha de prioridad no existe aún en o+K.
 // A 10–15 años no hay referencia sin fuga: null. Brier, menor es mejor. Habilidad de la mezcla frente a
 // la referencia (IC 95 % bootstrap cola × año; Épica A1 del 20-nov-2026: evento de primer paso único,
-// caminata gaussiana con barrera mensual, sin la guarda de avance nulo): 1 a +0.046 [−0.006, 0.104],
-// 3 a +0.039 [−0.053, 0.153], 5 a +0.043 [−0.059, 0.169]; ningún intervalo excluye el cero.
-// Épica A2 (21-nov): cota = extremo superior de esos intervalos (0.104 / 0.153 / 0.169); BSS de la velocidad
+// caminata gaussiana con barrera mensual, sin la guarda de avance nulo; R9-C del 21-nov: corte simulado topado
+// en el mes del boletín): 1 a +0.028 [−0.029, 0.089], 3 a +0.053 [−0.036, 0.146], 5 a +0.065 [−0.023, 0.166];
+// ningún intervalo excluye el cero. Épica A2: límites superiores de esos intervalos (0.089 / 0.146 / 0.166); BSS de la velocidad
 // lineal −0.440 [−0.671, −0.218], −0.517 [−0.761, −0.284], −0.786 [−1.127, −0.467] (bootstrap cola × año).
 export const FPT_BRIER: { months: number; n: number; fpt: number; blend: number | null; velocity: number; reference: number | null }[] = [
-  { months: 12, n: 3875, fpt: 0.064, blend: 0.062, velocity: 0.094, reference: 0.065 },
-  { months: 36, n: 2960, fpt: 0.105, blend: 0.099, velocity: 0.156, reference: 0.103 },
-  { months: 60, n: 1995, fpt: 0.12, blend: 0.107, velocity: 0.2, reference: 0.112 },
-  { months: 120, n: 1470, fpt: 0.134, blend: null, velocity: 0.254, reference: null },
-  { months: 180, n: 565, fpt: 0.127, blend: null, velocity: 0.218, reference: null },
+  { months: 12, n: 3875, fpt: 0.066, blend: 0.064, velocity: 0.094, reference: 0.065 },
+  { months: 36, n: 2960, fpt: 0.103, blend: 0.098, velocity: 0.156, reference: 0.103 },
+  { months: 60, n: 1995, fpt: 0.113, blend: 0.104, velocity: 0.2, reference: 0.112 },
+  { months: 120, n: 1470, fpt: 0.136, blend: null, velocity: 0.254, reference: null },
+  { months: 180, n: 565, fpt: 0.128, blend: null, velocity: 0.218, reference: null },
 ];
 
 export const RISKS: { title: Copy; fix: Copy }[] = [
