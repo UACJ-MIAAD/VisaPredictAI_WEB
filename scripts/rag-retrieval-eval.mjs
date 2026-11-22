@@ -125,6 +125,28 @@ if (e5Present) {
   console.log("COHORT probes: skipped — the served cut carries no e5_facts.json");
 }
 
+// /articulo · artículo científico: la pregunta debe recuperar un chunk del artículo en SU lengua,
+// también en BM25-only (pre-consentimiento). Gate propio al 100 %.
+const ARTICLE = [
+  { q: "¿De qué trata el artículo científico?", lang: "es" },
+  { q: "¿Qué concluye el paper sobre la fecha de prioridad?", lang: "es" },
+  { q: "¿Qué tan confiables son las calculadoras que dividen la brecha entre el avance promedio?", lang: "es" },
+  { q: "¿Por qué el artículo no da fechas a 20 o 30 años?", lang: "es" },
+  { q: "What is the scientific article about?", lang: "en" },
+  { q: "What does the paper conclude about first-passage forecasts?", lang: "en" },
+  { q: "Does the blend beat the reference class?", lang: "en" },
+];
+let articleHit = 0, articleN = 0;
+for (const p of ARTICLE) {
+  for (const qv of [await embed(p.q), null]) {
+    articleN++;
+    const { mmr } = rank(qv, p.lang, p.q);
+    if (mmr.some((i) => chunks[i].sourceId === "articulo" && chunks[i].lang === p.lang)) articleHit++;
+    else console.log(`  MISS article (${qv ? "hybrid" : "bm25"}): "${p.q}"`);
+  }
+}
+console.log(`ARTICLE probes (${ARTICLE.length} × hybrid/BM25): ${articleHit}/${articleN} reach a same-language article chunk`);
+
 let aHit = 0, aRankSum = 0, flagN = 0, flagHit = 0, aPrecSum = 0;
 const probeLog = [];
 for (const p of ACAD) {
@@ -168,9 +190,9 @@ if (process.argv.includes("--gate")) {
   // regression shows WHICH probe moved, not just an aggregate pass/fail.
   const probesPath = join(tmpdir(), "visabot-gate-probes.json");
   try { writeFileSync(probesPath, JSON.stringify({ built: idx.built, glossary: { recall1: r1 / n, recall6: r6 / n, mrr: mrrSum / n, bm25Recall6: b6 / n }, academic: probeLog }, null, 2)); console.log(`  per-probe ranks → ${probesPath}`); } catch { /* best-effort */ }
-  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85, flagship: 1.0, bm25Recall6: 0.90, cohort: 1.0 };
-  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length, flagship: flagN ? flagHit / flagN : 1, bm25Recall6: b6 / n, cohort: cohortN ? cohortHit / cohortN : 1 };
+  const T = { recall6: 1.0, mrr: 0.95, glossR1: 0.92, acadHit: 0.85, flagship: 1.0, bm25Recall6: 0.90, cohort: 1.0, article: 1.0 };
+  const m = { recall6: r6 / n, mrr: mrrSum / n, glossR1: r1 / n, acadHit: aHit / ACAD.length, flagship: flagN ? flagHit / flagN : 1, bm25Recall6: b6 / n, cohort: cohortN ? cohortHit / cohortN : 1, article: articleN ? articleHit / articleN : 0 };
   const fails = Object.entries(T).filter(([k, t]) => m[k] < t).map(([k, t]) => `${k} ${m[k].toFixed(3)} < ${t}`);
   if (fails.length) { console.error(`\n✗ RAG GATE FAILED:\n  ${fails.join("\n  ")}`); process.exit(1); }
-  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}, flagship ${m.flagship.toFixed(2)}, bm25@6 ${m.bm25Recall6.toFixed(2)}, cohort ${e5Present ? m.cohort.toFixed(2) : "n/a"}).`);
+  console.log(`\n✓ RAG gate passed (recall@6 ${m.recall6.toFixed(2)}, MRR ${m.mrr.toFixed(3)}, gloss@1 ${m.glossR1.toFixed(2)}, acad@6 ${m.acadHit.toFixed(2)}, flagship ${m.flagship.toFixed(2)}, bm25@6 ${m.bm25Recall6.toFixed(2)}, cohort ${e5Present ? m.cohort.toFixed(2) : "n/a"}, article ${m.article.toFixed(2)}).`);
 }

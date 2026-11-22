@@ -46,6 +46,7 @@ import { cohortChunks, readCohortFacts } from "../lib/data/cohort-facts.mjs";
 import { encodeF16, decodeF16 } from "../lib/visabot/retrieval-core.mjs";
 import { censusValues, renderCensus } from "../lib/census-bindings.mjs";
 import { assertOrtRuntimeVersion, ORT_RUNTIME_VERSION } from "../lib/ort-runtime.mjs";
+import { articleChunks } from "../lib/article/article-copy.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -374,6 +375,26 @@ function collectLocal() {
     nEn += chunks.length - before;
   }
   console.log(`  local academic: ${nEs} ES + ${nEn} EN chunks`);
+}
+
+// ── 1b. scientific article (/articulo) ──────────────────────────────────────
+// Same model that renders the page (lib/article/article-copy.mjs), with every number taken from
+// lib/article/article-facts.json, exported from the manuscript's generated facts.tex. A keyword
+// lead per chunk lets pre-consent BM25 match natural questions ("artículo", "paper", "publicación").
+function collectArticle() {
+  const data = JSON.parse(readFileSync(join(root, "lib", "article", "article-facts.json"), "utf8"));
+  const kw = {
+    es: "Artículo científico, paper, publicación, manuscrito, revista indexada, tiempo de primer paso, cuándo será vigente mi fecha de prioridad. ",
+    en: "Scientific article, paper, publication, manuscript, indexed journal, first-passage time, when will my priority date become current. ",
+  };
+  let n = 0;
+  for (const c of articleChunks(data)) {
+    add({ lang: c.lang, kind: "academic", source_type: "site_article",
+          source: c.lang === "es" ? "Artículo científico" : "Scientific article", sourceId: "articulo",
+          url: `${localePath("/articulo", c.lang)}#${c.anchor}`, title: c.title, text: kw[c.lang] + c.text });
+    n++;
+  }
+  console.log(`  article: ${n} chunks (ES + EN)`);
 }
 
 // ── 2. data-repo docs via GitHub raw (skip-on-fail) ─────────────────────────
@@ -736,6 +757,7 @@ function copyOrtWasm() {
   copyOrtWasm();
   await resolveSourcePin();
   collectLocal();
+  collectArticle();
   await collectRepoDocs();
   await collectFacts();
   collectFactSheetChunks();

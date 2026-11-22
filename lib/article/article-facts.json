@@ -1,0 +1,1806 @@
+{
+ "_source": "REVISTA2027/tools/export_web_facts.py from manuscript/facts.tex, main.tex and es/main_es.tex; do not edit by hand",
+ "sha256": {
+  "facts.tex": "fa637b0be6291b72be94891fcc9161bb0d1a7f7c7be9d0a7ad2f3081a85a2fef",
+  "main.tex": "c211587ea4815693cfc775c2917cd0d33ea5c9eb5111c9b60bc5703376b46718",
+  "main_es.tex": "9c6b44f5333c6fe7719014f34d38721bb0706c734e4703de14a27eb93322212a"
+ },
+ "en": {
+  "title": "When Will a Priority Date Become Current? Reference-Class and Series-Specific First-Passage Forecasts of U.S. Visa Bulletin Cutoff Dates",
+  "short_title": "First-passage forecasts of Visa Bulletin cutoff dates",
+  "abstract": "Applicants for U.S. immigrant visas in oversubscribed preference categories may wait for decades until the cutoff date of the Visa Bulletin passes their priority date. We ask how well one can forecast the probability that a priority date becomes current within a given number of years. One-month-ahead point forecasts from 300 monthly bulletins (December 2001 to November 2026) show that the random walk is never significantly beaten, so waiting times are estimated by resampling blocks of monthly cutoff increments and compared and blended with a reference class of how often equal gaps were covered in the past. Forecasts are issued at annual origins for 73 series, scored only on fully observed outcomes, and use only information available at the origin. The linear extrapolation used by public calculators is distinguishably worse than the reference class at every horizon, with Brier skill scores from −0.440 to −0.786. Neither the series simulation nor a Gaussian random walk is distinguishably better. Blending the simulation with the reference class gives Brier skill scores of 0.028, 0.053 and 0.065 at one, three and five years; the gain is positive in every sensitivity analysis, but on the full sample no 95 % bootstrap interval over queues and origin years excludes zero, and its upper limits (0.089, 0.146 and 0.166) bound the gain. In this administrative queue a reference class of past gaps is the forecast to beat, the queue's own history adds little to it, and waits beyond five years can only be reported as scenarios.",
+  "keywords": [
+   "First-passage time",
+   "Probabilistic forecasting",
+   "Block bootstrap",
+   "Brier skill score",
+   "Reference-class forecasting",
+   "Immigration queues"
+  ]
+ },
+ "es": {
+  "title": "¿Cuándo será vigente una fecha de prioridad? Pronósticos de primer paso basados en clases de referencia y en cada serie para las fechas de corte del Visa Bulletin de Estados Unidos",
+  "short_title": "Pronósticos de primer paso de las fechas de corte del Visa Bulletin",
+  "abstract": "Quienes solicitan una visa de inmigrante de Estados Unidos en categorías de preferencia con sobredemanda pueden esperar décadas hasta que la fecha de corte del Visa Bulletin rebase su fecha de prioridad. Aquí se pregunta qué tan bien puede pronosticarse la probabilidad de que una fecha de prioridad se vuelva vigente dentro de un número dado de años. Los pronósticos puntuales a un mes de 300 boletines mensuales (diciembre de 2001 a noviembre de 2026) muestran que la caminata aleatoria nunca es superada de forma significativa, por lo que los tiempos de espera se estiman remuestreando bloques de incrementos mensuales de la fecha de corte y se comparan y combinan con una clase de referencia que registra con qué frecuencia se cubrieron brechas iguales en el pasado. Los pronósticos se emiten en orígenes anuales para 73 series, se califican solo con desenlaces plenamente observados y usan solo información disponible en el origen. La extrapolación lineal que emplean las calculadoras públicas es distinguiblemente peor que la clase de referencia en todos los horizontes, con índices de habilidad de Brier de −0.440 a −0.786. Ni la simulación de cada serie ni una caminata aleatoria gaussiana resultan distinguiblemente mejores. Combinar la simulación con la clase de referencia da índices de habilidad de Brier de 0.028, 0.053 y 0.065 a uno, tres y cinco años; la ganancia es positiva en todos los análisis de sensibilidad, pero en la muestra completa ningún intervalo bootstrap al 95 % sobre colas y años de origen excluye el cero, y sus límites superiores (0.089, 0.146 y 0.166) acotan la ganancia. En esta cola administrativa, una clase de referencia de brechas pasadas es el pronóstico por vencer, la historia propia de la cola le añade poco y las esperas de más de cinco años solo pueden reportarse como escenarios.",
+  "keywords": [
+   "Tiempo de primer paso",
+   "Pronóstico probabilístico",
+   "Bootstrap por bloques",
+   "Índice de habilidad de Brier",
+   "Pronóstico por clase de referencia",
+   "Colas migratorias"
+  ]
+ },
+ "facts": {
+  "fBulletins": {
+   "text": "300",
+   "value": 300.0
+  },
+  "fRows": {
+   "text": "28,211",
+   "value": 28211.0
+  },
+  "fRowsF": {
+   "text": "16,323",
+   "value": 16323.0
+  },
+  "fSeriesAll": {
+   "text": "194",
+   "value": 194.0
+  },
+  "fSeriesF": {
+   "text": "136",
+   "value": 136.0
+  },
+  "fSeriesEval": {
+   "text": "74",
+   "value": 74.0
+  },
+  "fPctRetro": {
+   "text": "2.4",
+   "value": 2.4
+  },
+  "fPctFrozen": {
+   "text": "45",
+   "value": 45.0
+  },
+  "fNaiveFadMean": {
+   "text": "0.157",
+   "value": 0.157
+  },
+  "fNaiveFadMedian": {
+   "text": "0.135",
+   "value": 0.135
+  },
+  "fNaiveDffMean": {
+   "text": "0.125",
+   "value": 0.125
+  },
+  "fEtsFadMean": {
+   "text": "0.167",
+   "value": 0.167
+  },
+  "fThetaFadMean": {
+   "text": "0.171",
+   "value": 0.171
+  },
+  "fDeepFadMean": {
+   "text": "0.162",
+   "value": 0.162
+  },
+  "fSigSeriesFad": {
+   "text": "25",
+   "value": 25.0
+  },
+  "fSigModelsFad": {
+   "text": "22",
+   "value": 22.0
+  },
+  "fSigSeriesDff": {
+   "text": "14",
+   "value": 14.0
+  },
+  "fSigModelsDff": {
+   "text": "21",
+   "value": 21.0
+  },
+  "fNModels": {
+   "text": "24",
+   "value": 24.0
+  },
+  "fRankNaiveFad": {
+   "text": "1.60",
+   "value": 1.6
+  },
+  "fSeriesTotal": {
+   "text": "136",
+   "value": 136.0
+  },
+  "fSeriesUsed": {
+   "text": "73",
+   "value": 73.0
+  },
+  "fClusters": {
+   "text": "39",
+   "value": 39.0
+  },
+  "fCasesTotal": {
+   "text": "3,990",
+   "value": 3990.0
+  },
+  "fFirstOrigin": {
+   "text": "2007",
+   "value": 2007.0
+  },
+  "fPaths": {
+   "text": "4,000",
+   "value": 4000.0
+  },
+  "fNOne": {
+   "text": "3,875",
+   "value": 3875.0
+  },
+  "fSerOne": {
+   "text": "73",
+   "value": 73.0
+  },
+  "fFirstOOne": {
+   "text": "2008",
+   "value": 2008.0
+  },
+  "fNOOne": {
+   "text": "18",
+   "value": 18.0
+  },
+  "fBaseOne": {
+   "text": "0.10",
+   "value": 0.1
+  },
+  "fWOne": {
+   "text": "0.48",
+   "value": 0.48
+  },
+  "fBSimOne": {
+   "text": "0.066",
+   "value": 0.066
+  },
+  "fBBlendOne": {
+   "text": "0.064",
+   "value": 0.064
+  },
+  "fBRwOne": {
+   "text": "0.077",
+   "value": 0.077
+  },
+  "fBVelOne": {
+   "text": "0.094",
+   "value": 0.094
+  },
+  "fBRefOne": {
+   "text": "0.065",
+   "value": 0.065
+  },
+  "fBRefStratOne": {
+   "text": "0.066",
+   "value": 0.066
+  },
+  "fBBlendStratOne": {
+   "text": "0.063",
+   "value": 0.063
+  },
+  "fBIsoOne": {
+   "text": "0.067",
+   "value": 0.067
+  },
+  "fTSimOne": {
+   "text": "0.066",
+   "value": 0.066
+  },
+  "fTBlendOne": {
+   "text": "0.064",
+   "value": 0.064
+  },
+  "fTRwOne": {
+   "text": "0.077",
+   "value": 0.077
+  },
+  "fTVelOne": {
+   "text": "0.094",
+   "value": 0.094
+  },
+  "fTRefOne": {
+   "text": "0.065",
+   "value": 0.065
+  },
+  "fTRefStratOne": {
+   "text": "0.066",
+   "value": 0.066
+  },
+  "fTBlendStratOne": {
+   "text": "0.063",
+   "value": 0.063
+  },
+  "fTIsoOne": {
+   "text": "0.067",
+   "value": 0.067
+  },
+  "fSSimOne": {
+   "text": "−0.007",
+   "value": -0.007
+  },
+  "fSSimOneCi": {
+   "text": "[−0.110, 0.106]",
+   "ci": [
+    -0.11,
+    0.106
+   ]
+  },
+  "fSSimOneCiOne": {
+   "text": "[−0.053, 0.046]",
+   "ci": [
+    -0.053,
+    0.046
+   ]
+  },
+  "fSBlendOne": {
+   "text": "0.028",
+   "value": 0.028
+  },
+  "fSBlendOneCi": {
+   "text": "[−0.029, 0.089]",
+   "ci": [
+    -0.029,
+    0.089
+   ]
+  },
+  "fSBlendOneCiOne": {
+   "text": "[−0.003, 0.065]",
+   "ci": [
+    -0.003,
+    0.065
+   ]
+  },
+  "fSBlendStratOne": {
+   "text": "0.032",
+   "value": 0.032
+  },
+  "fSBlendStratOneCi": {
+   "text": "[−0.030, 0.102]",
+   "ci": [
+    -0.03,
+    0.102
+   ]
+  },
+  "fSBlendStratOneCiOne": {
+   "text": "[−0.008, 0.073]",
+   "ci": [
+    -0.008,
+    0.073
+   ]
+  },
+  "fSRwOne": {
+   "text": "−0.174",
+   "value": -0.174
+  },
+  "fSRwOneCi": {
+   "text": "[−0.322, −0.030]",
+   "ci": [
+    -0.322,
+    -0.03
+   ]
+  },
+  "fSRwOneCiOne": {
+   "text": "[−0.263, −0.092]",
+   "ci": [
+    -0.263,
+    -0.092
+   ]
+  },
+  "fSIsoOne": {
+   "text": "−0.023",
+   "value": -0.023
+  },
+  "fSIsoOneCi": {
+   "text": "[−0.106, 0.071]",
+   "ci": [
+    -0.106,
+    0.071
+   ]
+  },
+  "fSIsoOneCiOne": {
+   "text": "[−0.062, 0.022]",
+   "ci": [
+    -0.062,
+    0.022
+   ]
+  },
+  "fSStratOne": {
+   "text": "−0.006",
+   "value": -0.006
+  },
+  "fWStratOne": {
+   "text": "0.39",
+   "value": 0.39
+  },
+  "fSVelOne": {
+   "text": "−0.440",
+   "value": -0.44
+  },
+  "fNThree": {
+   "text": "2,960",
+   "value": 2960.0
+  },
+  "fSerThree": {
+   "text": "70",
+   "value": 70.0
+  },
+  "fFirstOThree": {
+   "text": "2010",
+   "value": 2010.0
+  },
+  "fNOThree": {
+   "text": "14",
+   "value": 14.0
+  },
+  "fBaseThree": {
+   "text": "0.27",
+   "value": 0.27
+  },
+  "fWThree": {
+   "text": "0.63",
+   "value": 0.63
+  },
+  "fBSimThree": {
+   "text": "0.103",
+   "value": 0.103
+  },
+  "fBBlendThree": {
+   "text": "0.098",
+   "value": 0.098
+  },
+  "fBRwThree": {
+   "text": "0.110",
+   "value": 0.11
+  },
+  "fBVelThree": {
+   "text": "0.156",
+   "value": 0.156
+  },
+  "fBRefThree": {
+   "text": "0.103",
+   "value": 0.103
+  },
+  "fBRefStratThree": {
+   "text": "0.108",
+   "value": 0.108
+  },
+  "fBBlendStratThree": {
+   "text": "0.097",
+   "value": 0.097
+  },
+  "fBIsoThree": {
+   "text": "0.108",
+   "value": 0.108
+  },
+  "fTSimThree": {
+   "text": "0.103",
+   "value": 0.103
+  },
+  "fTBlendThree": {
+   "text": "0.098",
+   "value": 0.098
+  },
+  "fTRwThree": {
+   "text": "0.110",
+   "value": 0.11
+  },
+  "fTVelThree": {
+   "text": "0.156",
+   "value": 0.156
+  },
+  "fTRefThree": {
+   "text": "0.103",
+   "value": 0.103
+  },
+  "fTRefStratThree": {
+   "text": "0.108",
+   "value": 0.108
+  },
+  "fTBlendStratThree": {
+   "text": "0.097",
+   "value": 0.097
+  },
+  "fTIsoThree": {
+   "text": "0.108",
+   "value": 0.108
+  },
+  "fSSimThree": {
+   "text": "−0.002",
+   "value": -0.002
+  },
+  "fSSimThreeCi": {
+   "text": "[−0.139, 0.140]",
+   "ci": [
+    -0.139,
+    0.14
+   ]
+  },
+  "fSSimThreeCiOne": {
+   "text": "[−0.094, 0.089]",
+   "ci": [
+    -0.094,
+    0.089
+   ]
+  },
+  "fSBlendThree": {
+   "text": "0.053",
+   "value": 0.053
+  },
+  "fSBlendThreeCi": {
+   "text": "[−0.036, 0.146]",
+   "ci": [
+    -0.036,
+    0.146
+   ]
+  },
+  "fSBlendThreeCiOne": {
+   "text": "[−0.008, 0.116]",
+   "ci": [
+    -0.008,
+    0.116
+   ]
+  },
+  "fSBlendStratThree": {
+   "text": "0.055",
+   "value": 0.055
+  },
+  "fSBlendStratThreeCi": {
+   "text": "[−0.029, 0.145]",
+   "ci": [
+    -0.029,
+    0.145
+   ]
+  },
+  "fSBlendStratThreeCiOne": {
+   "text": "[−0.015, 0.124]",
+   "ci": [
+    -0.015,
+    0.124
+   ]
+  },
+  "fSRwThree": {
+   "text": "−0.071",
+   "value": -0.071
+  },
+  "fSRwThreeCi": {
+   "text": "[−0.210, 0.071]",
+   "ci": [
+    -0.21,
+    0.071
+   ]
+  },
+  "fSRwThreeCiOne": {
+   "text": "[−0.173, 0.032]",
+   "ci": [
+    -0.173,
+    0.032
+   ]
+  },
+  "fSIsoThree": {
+   "text": "−0.051",
+   "value": -0.051
+  },
+  "fSIsoThreeCi": {
+   "text": "[−0.184, 0.094]",
+   "ci": [
+    -0.184,
+    0.094
+   ]
+  },
+  "fSIsoThreeCiOne": {
+   "text": "[−0.146, 0.040]",
+   "ci": [
+    -0.146,
+    0.04
+   ]
+  },
+  "fSStratThree": {
+   "text": "−0.047",
+   "value": -0.047
+  },
+  "fWStratThree": {
+   "text": "0.52",
+   "value": 0.52
+  },
+  "fSVelThree": {
+   "text": "−0.517",
+   "value": -0.517
+  },
+  "fNFive": {
+   "text": "1,995",
+   "value": 1995.0
+  },
+  "fSerFive": {
+   "text": "70",
+   "value": 70.0
+  },
+  "fFirstOFive": {
+   "text": "2012",
+   "value": 2012.0
+  },
+  "fNOFive": {
+   "text": "10",
+   "value": 10.0
+  },
+  "fBaseFive": {
+   "text": "0.45",
+   "value": 0.45
+  },
+  "fWFive": {
+   "text": "0.50",
+   "value": 0.5
+  },
+  "fBSimFive": {
+   "text": "0.113",
+   "value": 0.113
+  },
+  "fBBlendFive": {
+   "text": "0.104",
+   "value": 0.104
+  },
+  "fBRwFive": {
+   "text": "0.117",
+   "value": 0.117
+  },
+  "fBVelFive": {
+   "text": "0.200",
+   "value": 0.2
+  },
+  "fBRefFive": {
+   "text": "0.112",
+   "value": 0.112
+  },
+  "fBRefStratFive": {
+   "text": "0.114",
+   "value": 0.114
+  },
+  "fBBlendStratFive": {
+   "text": "0.103",
+   "value": 0.103
+  },
+  "fBIsoFive": {
+   "text": "0.117",
+   "value": 0.117
+  },
+  "fTSimFive": {
+   "text": "0.113",
+   "value": 0.113
+  },
+  "fTBlendFive": {
+   "text": "0.104",
+   "value": 0.104
+  },
+  "fTRwFive": {
+   "text": "0.117",
+   "value": 0.117
+  },
+  "fTVelFive": {
+   "text": "0.200",
+   "value": 0.2
+  },
+  "fTRefFive": {
+   "text": "0.112",
+   "value": 0.112
+  },
+  "fTRefStratFive": {
+   "text": "0.114",
+   "value": 0.114
+  },
+  "fTBlendStratFive": {
+   "text": "0.103",
+   "value": 0.103
+  },
+  "fTIsoFive": {
+   "text": "0.117",
+   "value": 0.117
+  },
+  "fSSimFive": {
+   "text": "−0.016",
+   "value": -0.016
+  },
+  "fSSimFiveCi": {
+   "text": "[−0.178, 0.175]",
+   "ci": [
+    -0.178,
+    0.175
+   ]
+  },
+  "fSSimFiveCiOne": {
+   "text": "[−0.146, 0.111]",
+   "ci": [
+    -0.146,
+    0.111
+   ]
+  },
+  "fSBlendFive": {
+   "text": "0.065",
+   "value": 0.065
+  },
+  "fSBlendFiveCi": {
+   "text": "[−0.023, 0.166]",
+   "ci": [
+    -0.023,
+    0.166
+   ]
+  },
+  "fSBlendFiveCiOne": {
+   "text": "[0.000, 0.133]",
+   "ci": [
+    0.0,
+    0.133
+   ]
+  },
+  "fSBlendStratFive": {
+   "text": "0.073",
+   "value": 0.073
+  },
+  "fSBlendStratFiveCi": {
+   "text": "[−0.019, 0.179]",
+   "ci": [
+    -0.019,
+    0.179
+   ]
+  },
+  "fSBlendStratFiveCiOne": {
+   "text": "[0.007, 0.140]",
+   "ci": [
+    0.007,
+    0.14
+   ]
+  },
+  "fSRwFive": {
+   "text": "−0.052",
+   "value": -0.052
+  },
+  "fSRwFiveCi": {
+   "text": "[−0.206, 0.123]",
+   "ci": [
+    -0.206,
+    0.123
+   ]
+  },
+  "fSRwFiveCiOne": {
+   "text": "[−0.167, 0.064]",
+   "ci": [
+    -0.167,
+    0.064
+   ]
+  },
+  "fSIsoFive": {
+   "text": "−0.052",
+   "value": -0.052
+  },
+  "fSIsoFiveCi": {
+   "text": "[−0.219, 0.154]",
+   "ci": [
+    -0.219,
+    0.154
+   ]
+  },
+  "fSIsoFiveCiOne": {
+   "text": "[−0.170, 0.063]",
+   "ci": [
+    -0.17,
+    0.063
+   ]
+  },
+  "fSStratFive": {
+   "text": "−0.020",
+   "value": -0.02
+  },
+  "fWStratFive": {
+   "text": "0.45",
+   "value": 0.45
+  },
+  "fSVelFive": {
+   "text": "−0.786",
+   "value": -0.786
+  },
+  "fSHoldBlendOne": {
+   "text": "0.040",
+   "value": 0.04
+  },
+  "fSHoldBlendOneCi": {
+   "text": "[−0.007, 0.095]",
+   "ci": [
+    -0.007,
+    0.095
+   ]
+  },
+  "fSHoldBlendThree": {
+   "text": "0.048",
+   "value": 0.048
+  },
+  "fSHoldBlendThreeCi": {
+   "text": "[−0.026, 0.149]",
+   "ci": [
+    -0.026,
+    0.149
+   ]
+  },
+  "fSHoldBlendFive": {
+   "text": "0.068",
+   "value": 0.068
+  },
+  "fSHoldBlendFiveCi": {
+   "text": "[−0.030, 0.159]",
+   "ci": [
+    -0.03,
+    0.159
+   ]
+  },
+  "fSFullBlendOne": {
+   "text": "0.020",
+   "value": 0.02
+  },
+  "fSFullBlendOneCi": {
+   "text": "[−0.030, 0.072]",
+   "ci": [
+    -0.03,
+    0.072
+   ]
+  },
+  "fSFullBlendThree": {
+   "text": "0.044",
+   "value": 0.044
+  },
+  "fSFullBlendThreeCi": {
+   "text": "[−0.028, 0.117]",
+   "ci": [
+    -0.028,
+    0.117
+   ]
+  },
+  "fSFullBlendFive": {
+   "text": "0.044",
+   "value": 0.044
+  },
+  "fSFullBlendFiveCi": {
+   "text": "[−0.026, 0.119]",
+   "ci": [
+    -0.026,
+    0.119
+   ]
+  },
+  "fSBlockBlendOne": {
+   "text": "0.019",
+   "value": 0.019
+  },
+  "fSBlockBlendOneCi": {
+   "text": "[−0.031, 0.075]",
+   "ci": [
+    -0.031,
+    0.075
+   ]
+  },
+  "fSBlockBlendThree": {
+   "text": "0.043",
+   "value": 0.043
+  },
+  "fSBlockBlendThreeCi": {
+   "text": "[−0.037, 0.125]",
+   "ci": [
+    -0.037,
+    0.125
+   ]
+  },
+  "fSBlockBlendFive": {
+   "text": "0.071",
+   "value": 0.071
+  },
+  "fSBlockBlendFiveCi": {
+   "text": "[−0.019, 0.167]",
+   "ci": [
+    -0.019,
+    0.167
+   ]
+  },
+  "fMonoPairsK": {
+   "text": "11,050",
+   "value": 11050.0
+  },
+  "fMonoRefK": {
+   "text": "110",
+   "value": 110.0
+  },
+  "fMonoBlendK": {
+   "text": "79",
+   "value": 79.0
+  },
+  "fNTen": {
+   "text": "1,470",
+   "value": 1470.0
+  },
+  "fSerTen": {
+   "text": "37",
+   "value": 37.0
+  },
+  "fBSimTen": {
+   "text": "0.136",
+   "value": 0.136
+  },
+  "fBRwTen": {
+   "text": "0.139",
+   "value": 0.139
+  },
+  "fBVelTen": {
+   "text": "0.254",
+   "value": 0.254
+  },
+  "fNFifteen": {
+   "text": "565",
+   "value": 565.0
+  },
+  "fSerFifteen": {
+   "text": "28",
+   "value": 28.0
+  },
+  "fBSimFifteen": {
+   "text": "0.128",
+   "value": 0.128
+  },
+  "fBRwFifteen": {
+   "text": "0.114",
+   "value": 0.114
+  },
+  "fBVelFifteen": {
+   "text": "0.218",
+   "value": 0.218
+  },
+  "fCovOne": {
+   "text": "0.75",
+   "value": 0.75
+  },
+  "fCovFive": {
+   "text": "0.61",
+   "value": 0.61
+  },
+  "fCovTwelve": {
+   "text": "0.50",
+   "value": 0.5
+  },
+  "fSubBlendFam": {
+   "text": "0.130",
+   "value": 0.13
+  },
+  "fSubBlendFamCi": {
+   "text": "[0.014, 0.252]",
+   "ci": [
+    0.014,
+    0.252
+   ]
+  },
+  "fSubBlendEmp": {
+   "text": "−0.067",
+   "value": -0.067
+  },
+  "fSubBlendEmpCi": {
+   "text": "[−0.171, 0.025]",
+   "ci": [
+    -0.171,
+    0.025
+   ]
+  },
+  "fSubBlendFad": {
+   "text": "0.086",
+   "value": 0.086
+  },
+  "fSubBlendFadCi": {
+   "text": "[0.005, 0.169]",
+   "ci": [
+    0.005,
+    0.169
+   ]
+  },
+  "fSubBlendDff": {
+   "text": "−0.078",
+   "value": -0.078
+  },
+  "fSubBlendDffCi": {
+   "text": "[−0.179, 0.040]",
+   "ci": [
+    -0.179,
+    0.04
+   ]
+  },
+  "fSgFamOne": {
+   "text": "0.057",
+   "value": 0.057
+  },
+  "fSgFamOneCi": {
+   "text": "[−0.010, 0.123]",
+   "ci": [
+    -0.01,
+    0.123
+   ]
+  },
+  "fSgFamOneN": {
+   "text": "2,825",
+   "value": 2825.0
+  },
+  "fSgFamThree": {
+   "text": "0.100",
+   "value": 0.1
+  },
+  "fSgFamThreeCi": {
+   "text": "[−0.002, 0.208]",
+   "ci": [
+    -0.002,
+    0.208
+   ]
+  },
+  "fSgFamThreeN": {
+   "text": "2,125",
+   "value": 2125.0
+  },
+  "fSgFamFive": {
+   "text": "0.130",
+   "value": 0.13
+  },
+  "fSgFamFiveCi": {
+   "text": "[0.014, 0.252]",
+   "ci": [
+    0.014,
+    0.252
+   ]
+  },
+  "fSgFamFiveN": {
+   "text": "1,375",
+   "value": 1375.0
+  },
+  "fSgEmpOne": {
+   "text": "−0.030",
+   "value": -0.03
+  },
+  "fSgEmpOneCi": {
+   "text": "[−0.115, 0.040]",
+   "ci": [
+    -0.115,
+    0.04
+   ]
+  },
+  "fSgEmpOneN": {
+   "text": "1,050",
+   "value": 1050.0
+  },
+  "fSgEmpThree": {
+   "text": "−0.062",
+   "value": -0.062
+  },
+  "fSgEmpThreeCi": {
+   "text": "[−0.166, 0.043]",
+   "ci": [
+    -0.166,
+    0.043
+   ]
+  },
+  "fSgEmpThreeN": {
+   "text": "835",
+   "value": 835.0
+  },
+  "fSgEmpFive": {
+   "text": "−0.067",
+   "value": -0.067
+  },
+  "fSgEmpFiveCi": {
+   "text": "[−0.171, 0.025]",
+   "ci": [
+    -0.171,
+    0.025
+   ]
+  },
+  "fSgEmpFiveN": {
+   "text": "620",
+   "value": 620.0
+  },
+  "fSgFadOne": {
+   "text": "0.029",
+   "value": 0.029
+  },
+  "fSgFadOneCi": {
+   "text": "[−0.034, 0.085]",
+   "ci": [
+    -0.034,
+    0.085
+   ]
+  },
+  "fSgFadOneN": {
+   "text": "3,040",
+   "value": 3040.0
+  },
+  "fSgFadThree": {
+   "text": "0.065",
+   "value": 0.065
+  },
+  "fSgFadThreeCi": {
+   "text": "[−0.010, 0.147]",
+   "ci": [
+    -0.01,
+    0.147
+   ]
+  },
+  "fSgFadThreeN": {
+   "text": "2,465",
+   "value": 2465.0
+  },
+  "fSgFadFive": {
+   "text": "0.086",
+   "value": 0.086
+  },
+  "fSgFadFiveCi": {
+   "text": "[0.005, 0.169]",
+   "ci": [
+    0.005,
+    0.169
+   ]
+  },
+  "fSgFadFiveN": {
+   "text": "1,830",
+   "value": 1830.0
+  },
+  "fSgDffOne": {
+   "text": "0.026",
+   "value": 0.026
+  },
+  "fSgDffOneCi": {
+   "text": "[−0.047, 0.101]",
+   "ci": [
+    -0.047,
+    0.101
+   ]
+  },
+  "fSgDffOneN": {
+   "text": "835",
+   "value": 835.0
+  },
+  "fSgDffThree": {
+   "text": "0.005",
+   "value": 0.005
+  },
+  "fSgDffThreeCi": {
+   "text": "[−0.156, 0.169]",
+   "ci": [
+    -0.156,
+    0.169
+   ]
+  },
+  "fSgDffThreeN": {
+   "text": "495",
+   "value": 495.0
+  },
+  "fSgDffFive": {
+   "text": "−0.078",
+   "value": -0.078
+  },
+  "fSgDffFiveCi": {
+   "text": "[−0.179, 0.040]",
+   "ci": [
+    -0.179,
+    0.04
+   ]
+  },
+  "fSgDffFiveN": {
+   "text": "165",
+   "value": 165.0
+  },
+  "fGpOneOne": {
+   "text": "0.027",
+   "value": 0.027
+  },
+  "fGpOneOneN": {
+   "text": "775",
+   "value": 775.0
+  },
+  "fGpOneOneBase": {
+   "text": "0.41",
+   "value": 0.41
+  },
+  "fGpThreeOne": {
+   "text": "0.040",
+   "value": 0.04
+  },
+  "fGpThreeOneN": {
+   "text": "775",
+   "value": 775.0
+  },
+  "fGpThreeOneBase": {
+   "text": "0.07",
+   "value": 0.07
+  },
+  "fGpFiveOne": {
+   "text": "0.013",
+   "value": 0.013
+  },
+  "fGpFiveOneN": {
+   "text": "775",
+   "value": 775.0
+  },
+  "fGpFiveOneBase": {
+   "text": "0.01",
+   "value": 0.01
+  },
+  "fGpEightOne": {
+   "text": "0.000",
+   "value": 0.0
+  },
+  "fGpEightOneN": {
+   "text": "775",
+   "value": 775.0
+  },
+  "fGpEightOneBase": {
+   "text": "<0.01"
+  },
+  "fGpTwelveOne": {
+   "text": "n/a"
+  },
+  "fGpTwelveOneN": {
+   "text": "775",
+   "value": 775.0
+  },
+  "fGpTwelveOneBase": {
+   "text": "0.00",
+   "value": 0.0
+  },
+  "fGpOneThree": {
+   "text": "−0.020",
+   "value": -0.02
+  },
+  "fGpOneThreeN": {
+   "text": "592",
+   "value": 592.0
+  },
+  "fGpOneThreeBase": {
+   "text": "0.83",
+   "value": 0.83
+  },
+  "fGpThreeThree": {
+   "text": "0.104",
+   "value": 0.104
+  },
+  "fGpThreeThreeN": {
+   "text": "592",
+   "value": 592.0
+  },
+  "fGpThreeThreeBase": {
+   "text": "0.39",
+   "value": 0.39
+  },
+  "fGpFiveThree": {
+   "text": "0.034",
+   "value": 0.034
+  },
+  "fGpFiveThreeN": {
+   "text": "592",
+   "value": 592.0
+  },
+  "fGpFiveThreeBase": {
+   "text": "0.10",
+   "value": 0.1
+  },
+  "fGpEightThree": {
+   "text": "0.044",
+   "value": 0.044
+  },
+  "fGpEightThreeN": {
+   "text": "592",
+   "value": 592.0
+  },
+  "fGpEightThreeBase": {
+   "text": "0.02",
+   "value": 0.02
+  },
+  "fGpTwelveThree": {
+   "text": "n/a"
+  },
+  "fGpTwelveThreeN": {
+   "text": "592",
+   "value": 592.0
+  },
+  "fGpTwelveThreeBase": {
+   "text": "0.00",
+   "value": 0.0
+  },
+  "fGpOneFive": {
+   "text": "−0.062",
+   "value": -0.062
+  },
+  "fGpOneFiveN": {
+   "text": "399",
+   "value": 399.0
+  },
+  "fGpOneFiveBase": {
+   "text": "0.97",
+   "value": 0.97
+  },
+  "fGpThreeFive": {
+   "text": "0.019",
+   "value": 0.019
+  },
+  "fGpThreeFiveN": {
+   "text": "399",
+   "value": 399.0
+  },
+  "fGpThreeFiveBase": {
+   "text": "0.76",
+   "value": 0.76
+  },
+  "fGpFiveFive": {
+   "text": "0.123",
+   "value": 0.123
+  },
+  "fGpFiveFiveN": {
+   "text": "399",
+   "value": 399.0
+  },
+  "fGpFiveFiveBase": {
+   "text": "0.44",
+   "value": 0.44
+  },
+  "fGpEightFive": {
+   "text": "0.042",
+   "value": 0.042
+  },
+  "fGpEightFiveN": {
+   "text": "399",
+   "value": 399.0
+  },
+  "fGpEightFiveBase": {
+   "text": "0.09",
+   "value": 0.09
+  },
+  "fGpTwelveFive": {
+   "text": "0.040",
+   "value": 0.04
+  },
+  "fGpTwelveFiveN": {
+   "text": "399",
+   "value": 399.0
+  },
+  "fGpTwelveFiveBase": {
+   "text": "0.01",
+   "value": 0.01
+  },
+  "fLiveWOne": {
+   "text": "0.35",
+   "value": 0.35
+  },
+  "fLiveWThree": {
+   "text": "0.40",
+   "value": 0.4
+  },
+  "fLiveWFive": {
+   "text": "0.40",
+   "value": 0.4
+  },
+  "fExPhCut": {
+   "text": "15 May 2008"
+  },
+  "fExPhCutEs": {
+   "text": "15 de mayo de 2008"
+  },
+  "fExPhGap": {
+   "text": "11.6",
+   "value": 11.6
+  },
+  "fExPhBlendOne": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExPhBlendThree": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExPhBlendFive": {
+   "text": "3 %",
+   "value": 3.0
+  },
+  "fExPhSimMedian": {
+   "text": "October 2034"
+  },
+  "fExPhSimMedianEs": {
+   "text": "octubre de 2034"
+  },
+  "fExPhSimLeFive": {
+   "text": "5 %",
+   "value": 5.0
+  },
+  "fExPhSimLeTen": {
+   "text": "82 %",
+   "value": 82.0
+  },
+  "fExPhSimLeTwenty": {
+   "text": "100 %",
+   "value": 100.0
+  },
+  "fExPhSimLeThirty": {
+   "text": "100 %",
+   "value": 100.0
+  },
+  "fExMxBCut": {
+   "text": "15 May 2010"
+  },
+  "fExMxBCutEs": {
+   "text": "15 de mayo de 2010"
+  },
+  "fExMxBGap": {
+   "text": "9.6",
+   "value": 9.6
+  },
+  "fExMxBBlendOne": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExMxBBlendThree": {
+   "text": "1 %",
+   "value": 1.0
+  },
+  "fExMxBBlendFive": {
+   "text": "10 %",
+   "value": 10.0
+  },
+  "fExMxBSimMedian": {
+   "text": "August 2033"
+  },
+  "fExMxBSimMedianEs": {
+   "text": "agosto de 2033"
+  },
+  "fExMxBSimLeFive": {
+   "text": "12 %",
+   "value": 12.0
+  },
+  "fExMxBSimLeTen": {
+   "text": "97 %",
+   "value": 97.0
+  },
+  "fExMxBSimLeTwenty": {
+   "text": "100 %",
+   "value": 100.0
+  },
+  "fExMxBSimLeThirty": {
+   "text": "100 %",
+   "value": 100.0
+  },
+  "fExInCut": {
+   "text": "1 November 2013"
+  },
+  "fExInCutEs": {
+   "text": "1 de noviembre de 2013"
+  },
+  "fExInGap": {
+   "text": "6.2",
+   "value": 6.2
+  },
+  "fExInBlendOne": {
+   "text": "1 %",
+   "value": 1.0
+  },
+  "fExInBlendThree": {
+   "text": "7 %",
+   "value": 7.0
+  },
+  "fExInBlendFive": {
+   "text": "26 %",
+   "value": 26.0
+  },
+  "fExInSimMedian": {
+   "text": "June 2035"
+  },
+  "fExInSimMedianEs": {
+   "text": "junio de 2035"
+  },
+  "fExInSimLeFive": {
+   "text": "18 %",
+   "value": 18.0
+  },
+  "fExInSimLeTen": {
+   "text": "61 %",
+   "value": 61.0
+  },
+  "fExInSimLeTwenty": {
+   "text": "90 %",
+   "value": 90.0
+  },
+  "fExInSimLeThirty": {
+   "text": "97 %",
+   "value": 97.0
+  },
+  "fExMxThreeCut": {
+   "text": "15 July 2001"
+  },
+  "fExMxThreeCutEs": {
+   "text": "15 de julio de 2001"
+  },
+  "fExMxThreeGap": {
+   "text": "13.9",
+   "value": 13.9
+  },
+  "fExMxThreeBlendOne": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExMxThreeBlendThree": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExMxThreeBlendFive": {
+   "text": "1 %",
+   "value": 1.0
+  },
+  "fExMxThreeSimMedian": {
+   "text": "February 2047"
+  },
+  "fExMxThreeSimMedianEs": {
+   "text": "febrero de 2047"
+  },
+  "fExMxThreeSimLeFive": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExMxThreeSimLeTen": {
+   "text": "0 %",
+   "value": 0.0
+  },
+  "fExMxThreeSimLeTwenty": {
+   "text": "48 %",
+   "value": 48.0
+  },
+  "fExMxThreeSimLeThirty": {
+   "text": "99 %",
+   "value": 99.0
+  },
+  "fUBlendOne": {
+   "text": "0.089",
+   "value": 0.089
+  },
+  "fUSimOne": {
+   "text": "0.106",
+   "value": 0.106
+  },
+  "fSVelOneCi": {
+   "text": "[−0.671, −0.218]",
+   "ci": [
+    -0.671,
+    -0.218
+   ]
+  },
+  "fSVelOneCiOne": {
+   "text": "[−0.539, −0.334]",
+   "ci": [
+    -0.539,
+    -0.334
+   ]
+  },
+  "fRelRefOne": {
+   "text": "0.0018",
+   "value": 0.0018
+  },
+  "fResRefOne": {
+   "text": "0.0253",
+   "value": 0.0253
+  },
+  "fRelSimOne": {
+   "text": "0.0025",
+   "value": 0.0025
+  },
+  "fResSimOne": {
+   "text": "0.0248",
+   "value": 0.0248
+  },
+  "fRelBlendOne": {
+   "text": "0.0012",
+   "value": 0.0012
+  },
+  "fResBlendOne": {
+   "text": "0.0260",
+   "value": 0.026
+  },
+  "fUncOne": {
+   "text": "0.0889",
+   "value": 0.0889
+  },
+  "fInfOne": {
+   "text": "1,110",
+   "value": 1110.0
+  },
+  "fRelRefFeasOne": {
+   "text": "0.0026",
+   "value": 0.0026
+  },
+  "fResRefFeasOne": {
+   "text": "0.0301",
+   "value": 0.0301
+  },
+  "fRelBlendFeasOne": {
+   "text": "0.0016",
+   "value": 0.0016
+  },
+  "fResBlendFeasOne": {
+   "text": "0.0311",
+   "value": 0.0311
+  },
+  "fUBlendThree": {
+   "text": "0.146",
+   "value": 0.146
+  },
+  "fUSimThree": {
+   "text": "0.140",
+   "value": 0.14
+  },
+  "fSVelThreeCi": {
+   "text": "[−0.761, −0.284]",
+   "ci": [
+    -0.761,
+    -0.284
+   ]
+  },
+  "fSVelThreeCiOne": {
+   "text": "[−0.667, −0.353]",
+   "ci": [
+    -0.667,
+    -0.353
+   ]
+  },
+  "fRelRefThree": {
+   "text": "0.0118",
+   "value": 0.0118
+  },
+  "fResRefThree": {
+   "text": "0.1050",
+   "value": 0.105
+  },
+  "fRelSimThree": {
+   "text": "0.0045",
+   "value": 0.0045
+  },
+  "fResSimThree": {
+   "text": "0.0972",
+   "value": 0.0972
+  },
+  "fRelBlendThree": {
+   "text": "0.0028",
+   "value": 0.0028
+  },
+  "fResBlendThree": {
+   "text": "0.1013",
+   "value": 0.1013
+  },
+  "fUncThree": {
+   "text": "0.1963",
+   "value": 0.1963
+  },
+  "fInfThree": {
+   "text": "620",
+   "value": 620.0
+  },
+  "fRelRefFeasThree": {
+   "text": "0.0149",
+   "value": 0.0149
+  },
+  "fResRefFeasThree": {
+   "text": "0.1087",
+   "value": 0.1087
+  },
+  "fRelBlendFeasThree": {
+   "text": "0.0036",
+   "value": 0.0036
+  },
+  "fResBlendFeasThree": {
+   "text": "0.1041",
+   "value": 0.1041
+  },
+  "fUBlendFive": {
+   "text": "0.166",
+   "value": 0.166
+  },
+  "fUSimFive": {
+   "text": "0.175",
+   "value": 0.175
+  },
+  "fSVelFiveCi": {
+   "text": "[−1.127, −0.467]",
+   "ci": [
+    -1.127,
+    -0.467
+   ]
+  },
+  "fSVelFiveCiOne": {
+   "text": "[−1.038, −0.537]",
+   "ci": [
+    -1.038,
+    -0.537
+   ]
+  },
+  "fRelRefFive": {
+   "text": "0.0049",
+   "value": 0.0049
+  },
+  "fResRefFive": {
+   "text": "0.1424",
+   "value": 0.1424
+  },
+  "fRelSimFive": {
+   "text": "0.0046",
+   "value": 0.0046
+  },
+  "fResSimFive": {
+   "text": "0.1372",
+   "value": 0.1372
+  },
+  "fRelBlendFive": {
+   "text": "0.0024",
+   "value": 0.0024
+  },
+  "fResBlendFive": {
+   "text": "0.1455",
+   "value": 0.1455
+  },
+  "fUncFive": {
+   "text": "0.2478",
+   "value": 0.2478
+  },
+  "fInfFive": {
+   "text": "273",
+   "value": 273.0
+  },
+  "fRelRefFeasFive": {
+   "text": "0.0057",
+   "value": 0.0057
+  },
+  "fResRefFeasFive": {
+   "text": "0.1272",
+   "value": 0.1272
+  },
+  "fRelBlendFeasFive": {
+   "text": "0.0028",
+   "value": 0.0028
+  },
+  "fResBlendFeasFive": {
+   "text": "0.1310",
+   "value": 0.131
+  },
+  "fFutShareOne": {
+   "text": "36 %",
+   "value": 36.0
+  },
+  "fPastNOne": {
+   "text": "2,501",
+   "value": 2501.0
+  },
+  "fPastBlendOne": {
+   "text": "0.048",
+   "value": 0.048
+  },
+  "fPastBlendOneCi": {
+   "text": "[−0.012, 0.113]",
+   "ci": [
+    -0.012,
+    0.113
+   ]
+  },
+  "fYbBlendOneCi": {
+   "text": "[−0.041, 0.095]",
+   "ci": [
+    -0.041,
+    0.095
+   ]
+  },
+  "fYbUpperOne": {
+   "text": "0.095",
+   "value": 0.095
+  },
+  "fFutShareThree": {
+   "text": "37 %",
+   "value": 37.0
+  },
+  "fPastNThree": {
+   "text": "1,852",
+   "value": 1852.0
+  },
+  "fPastBlendThree": {
+   "text": "0.053",
+   "value": 0.053
+  },
+  "fPastBlendThreeCi": {
+   "text": "[−0.045, 0.166]",
+   "ci": [
+    -0.045,
+    0.166
+   ]
+  },
+  "fYbBlendThreeCi": {
+   "text": "[−0.041, 0.160]",
+   "ci": [
+    -0.041,
+    0.16
+   ]
+  },
+  "fYbUpperThree": {
+   "text": "0.160",
+   "value": 0.16
+  },
+  "fFutShareFive": {
+   "text": "38 %",
+   "value": 38.0
+  },
+  "fPastNFive": {
+   "text": "1,233",
+   "value": 1233.0
+  },
+  "fPastBlendFive": {
+   "text": "0.045",
+   "value": 0.045
+  },
+  "fPastBlendFiveCi": {
+   "text": "[−0.067, 0.167]",
+   "ci": [
+    -0.067,
+    0.167
+   ]
+  },
+  "fYbBlendFiveCi": {
+   "text": "[0.002, 0.197]",
+   "ci": [
+    0.002,
+    0.197
+   ]
+  },
+  "fYbUpperFive": {
+   "text": "0.197",
+   "value": 0.197
+  },
+  "fCovCensOne": {
+   "text": "0.74",
+   "value": 0.74
+  },
+  "fCovCensDetOne": {
+   "text": "779",
+   "value": 779.0
+  },
+  "fCovCensFive": {
+   "text": "0.59",
+   "value": 0.59
+  },
+  "fCovCensDetFive": {
+   "text": "542",
+   "value": 542.0
+  },
+  "fCovCensTwelve": {
+   "text": "0.48",
+   "value": 0.48
+  },
+  "fCovCensDetTwelve": {
+   "text": "227",
+   "value": 227.0
+  },
+  "fVelNonPos": {
+   "text": "16",
+   "value": 16.0
+  },
+  "fSeriesOrigins": {
+   "text": "798",
+   "value": 798.0
+  },
+  "fKOneObservable": {
+   "text": "3,975",
+   "value": 3975.0
+  },
+  "fKOneNoRef": {
+   "text": "100",
+   "value": 100.0
+  },
+  "fKOneNotObs": {
+   "text": "15",
+   "value": 15.0
+  }
+ }
+}

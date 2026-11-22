@@ -1,5 +1,7 @@
 import { AlertTriangle, ArrowRight, Check, CircleDot, Lock, Users } from "lucide-react";
+import Link from "next/link";
 import { RouteHeader } from "@/components/route-header";
+import { localePath } from "@/lib/site-map";
 import { DaysLeft } from "@/components/days-left";
 import {
   BACKUPS,
@@ -79,7 +81,10 @@ export function PublicationPage({ lang }: { lang: Lang }) {
           </div>
           <p className="mt-6 max-w-[75ch] text-sm leading-relaxed text-muted-foreground">
             <strong className="text-foreground">{es ? "Manuscrito: " : "Manuscript: "}</strong>
-            <em>{PUB_META.manuscriptTitle}</em>
+            <em>{PUB_META.manuscriptTitle}</em>{" "}
+            <Link href={localePath("/articulo", lang)} className="font-semibold text-[var(--color-accent)] underline-offset-4 hover:underline">
+              {es ? "Leer la versión web del artículo" : "Read the web version of the article"}
+            </Link>
           </p>
         </div>
       </section>
