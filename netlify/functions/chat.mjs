@@ -526,7 +526,10 @@ export function makeCodeGuard(lang) {
     if (/=>|->|::|&&|\|\||!=|==|\+=|\bconsole\.\w|\bSystem\.\w|printf?\(/.test(s)) return true; // operators / calls
     if (
       /\b(def|class|function|import|from|return|const|let|var|public|private|void|static|SELECT|INSERT|UPDATE|DELETE|CREATE|FROM|WHERE|while|elif|async|await|lambda|func|fn)\b/.test(s) &&
-      /[(){}\[\]=;:]/.test(s)
+      // code punctuation glued to an identifier (`f(`, `x[`, `):`) or code-only marks (= ; { }).
+      // A bare "(", "[2]" citation or "**Label:**" colon is prose: English answers say
+      // "from 2007 (annual) [2]" and two such bullets cut article answers (suite 22-nov).
+      /\w[(\[]|\):|[{};=]/.test(s.replace(/\[\d+\]/g, ""))
     )
       return true; // code keyword + code punctuation
     if (/^\s*[#$>]\s*\S+.*[/|;()=]/.test(raw)) return true; // shell prompt line

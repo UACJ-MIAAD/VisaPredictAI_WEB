@@ -254,7 +254,26 @@ const run = (deltas, lang = "es") => {
   assert.equal(blocked, true, "code inside escaped braces remains blocked");
 }
 
-console.log("✓ code-guard: 31 groups passed");
+// 32) English prose bullets with "from"/"return"/"while" next to a citation, a label colon or a
+// parenthesis are not code (production suite 22-nov: two such lines cut article answers).
+{
+  const prose = [
+    "- **Method:** it resamples blocks of monthly cutoff increments from the last ten years [2].\n",
+    "- **Scale:** forecasts are issued at annual origins from 2007 (one per year) for 73 series [2].\n",
+    "- **Result:** the blend's gain over the reference class ranges from 0.028 to 0.065 [3].\n",
+    "- **Limits:** waits that return beyond five years, while plausible, are only scenarios [1].\n",
+  ];
+  const { out, blocked } = run(prose, "en");
+  assert.equal(blocked, false, "prose bullets with from/return/while + [n]/:/() pass");
+  assert.equal(out, prose.join(""));
+}
+// 33) …while the same keywords with code punctuation glued to an identifier are still code.
+{
+  const { blocked } = run(["rows = load(path) from cache\nreturn rows[0]\n"], "en");
+  assert.equal(blocked, true, "keyword + call/index/assignment is still code");
+}
+
+console.log("✓ code-guard: 33 groups passed");
 
 // ── emoji stripper (a serious RAG must never emit emojis) ───────────────────
 {
