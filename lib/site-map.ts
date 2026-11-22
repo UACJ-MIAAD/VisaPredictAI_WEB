@@ -138,6 +138,28 @@ export const ROUTES: Route[] = [
     ],
   },
   {
+    path: "/articulo",
+    label: "Artículo",
+    labelEn: "Article",
+    short: "Artículo",
+    shortEn: "Article",
+    blurb:
+      "El artículo científico en versión web: cuándo será vigente una fecha de prioridad, qué se puede pronosticar y qué no.",
+    blurbEn:
+      "The scientific article on the web: when a priority date will become current, what can be forecast and what cannot.",
+    sections: [
+      { id: "articulo", label: "Portada", labelEn: "Cover" },
+      { id: "resumen-articulo", label: "Resumen", labelEn: "Abstract" },
+      { id: "pregunta", label: "La pregunta", labelEn: "The question" },
+      { id: "metodos", label: "Métodos", labelEn: "Methods" },
+      { id: "resultados", label: "Resultados", labelEn: "Results" },
+      { id: "robustez", label: "Robustez", labelEn: "Robustness" },
+      { id: "ejemplos", label: "Ejemplos", labelEn: "Examples" },
+      { id: "limites", label: "Límites y estado", labelEn: "Limits and status" },
+      { id: "visabot", label: "Pregúntale a VisaBot", labelEn: "Ask VisaBot" },
+    ],
+  },
+  {
     path: "/publicacion",
     label: "Publicación",
     labelEn: "Publication",
