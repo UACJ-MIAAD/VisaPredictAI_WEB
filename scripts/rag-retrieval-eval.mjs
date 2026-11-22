@@ -136,6 +136,21 @@ const ARTICLE = [
   { q: "What does the paper conclude about first-passage forecasts?", lang: "en" },
   { q: "Does the blend beat the reference class?", lang: "en" },
 ];
+// Questions the 200-question production suite (22-nov-2026) saw fail: each must reach the article
+// chunk that actually holds the answer (by anchor), not just any article chunk.
+const ARTICLE_FACT = [
+  { q: "¿Quiénes son los autores del artículo?", lang: "es", anchors: ["ficha", "resumen-articulo"] },
+  { q: "¿Cuál es el título del artículo científico de VisaPredict AI?", lang: "es", anchors: ["ficha", "resumen-articulo"] },
+  { q: "¿Qué métrica principal usa el artículo para evaluar los pronósticos probabilísticos?", lang: "es", anchors: ["ficha", "metodos", "resultados"] },
+  { q: "¿Cuál es la conclusión principal del artículo?", lang: "es", anchors: ["ficha", "resultados"] },
+  { q: "Who wrote the article?", lang: "en", anchors: ["ficha", "resumen-articulo"] },
+  { q: "What is the title of the VisaPredict AI scientific article?", lang: "en", anchors: ["ficha", "resumen-articulo"] },
+  { q: "Which score evaluates the article's probability forecasts?", lang: "en", anchors: ["ficha", "metodos", "resultados"] },
+  { q: "What is the article's main conclusion?", lang: "en", anchors: ["ficha", "resultados"] },
+  { q: "How does linear extrapolation do in the paper?", lang: "en", anchors: ["ficha", "acto1", "faq-2"] },
+  { q: "Where can I read the article on the site?", lang: "en", anchors: ["ficha"] },
+  { q: "How many simulated paths does the article use?", lang: "en", anchors: ["ficha"] },
+];
 let articleHit = 0, articleN = 0;
 for (const p of ARTICLE) {
   for (const qv of [await embed(p.q), null]) {
@@ -145,7 +160,16 @@ for (const p of ARTICLE) {
     else console.log(`  MISS article (${qv ? "hybrid" : "bm25"}): "${p.q}"`);
   }
 }
-console.log(`ARTICLE probes (${ARTICLE.length} × hybrid/BM25): ${articleHit}/${articleN} reach a same-language article chunk`);
+for (const p of ARTICLE_FACT) {
+  for (const qv of [await embed(p.q), null]) {
+    articleN++;
+    const { mmr } = rank(qv, p.lang, p.q);
+    const anchorOf = (i) => String(chunks[i].url || "").split("#")[1];
+    if (mmr.some((i) => chunks[i].sourceId === "articulo" && chunks[i].lang === p.lang && p.anchors.includes(anchorOf(i)))) articleHit++;
+    else console.log(`  MISS article fact (${qv ? "hybrid" : "bm25"}): "${p.q}" → got ${mmr.map(anchorOf).join(",")}`);
+  }
+}
+console.log(`ARTICLE probes (${ARTICLE.length} topic + ${ARTICLE_FACT.length} fact, × hybrid/BM25): ${articleHit}/${articleN} reach a same-language article chunk`);
 
 let aHit = 0, aRankSum = 0, flagN = 0, flagHit = 0, aPrecSum = 0;
 const probeLog = [];
