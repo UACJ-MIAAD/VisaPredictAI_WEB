@@ -150,6 +150,8 @@ const ARTICLE_FACT = [
   { q: "How does linear extrapolation do in the paper?", lang: "en", anchors: ["ficha", "acto1", "faq-2"] },
   { q: "Where can I read the article on the site?", lang: "en", anchors: ["ficha"] },
   { q: "How many simulated paths does the article use?", lang: "en", anchors: ["ficha"] },
+  { q: "What resampling method does the paper use?", lang: "en", anchors: ["ficha", "metodos"] },
+  { q: "¿Qué método de remuestreo usa el artículo?", lang: "es", anchors: ["ficha", "metodos"] },
 ];
 let articleHit = 0, articleN = 0;
 for (const p of ARTICLE) {

@@ -66,6 +66,15 @@ describe("article copy is complete and symmetric", () => {
     const byLang = (l: string) => chunks.filter((c) => c.lang === l).map((c) => c.anchor);
     expect(byLang("es")).toEqual(byLang("en"));
   });
+  it("the fact sheet names the resampling method and the cluster count from the facts", () => {
+    const sheets = articleChunks(data).filter((c) => c.anchor === "ficha");
+    expect(sheets).toHaveLength(2);
+    for (const c of sheets) {
+      expect(c.text).toMatch(/bootstrap/i);
+      expect(c.text).toMatch(/pigeonhole/);
+      expect(c.text).toContain(`${data.facts.fClusters.text} `);
+    }
+  });
   it("a missing macro breaks loudly", () => {
     expect(() => fv({ facts: {} }, "fNope")).toThrow(/fNope/);
   });
