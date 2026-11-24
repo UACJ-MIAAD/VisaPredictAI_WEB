@@ -1,14 +1,14 @@
 {
  "_source": "REVISTA2027/tools/export_web_facts.py from manuscript/facts.tex, main.tex and es/main_es.tex; do not edit by hand",
  "sha256": {
-  "facts.tex": "dec0c176f7091943e4979ed2ca4d66ac2df1f303829112022542988893fcd5d8",
-  "main.tex": "ff787c83dd96bdd264182afc9b9fdcea9d66e8f55c01a9f0fd799bc1ce5317c6",
-  "main_es.tex": "cf9874e46ebb799258577de78ea9db054b321fea08e273aa4e3b1aa6ea1ef7a2"
+  "facts.tex": "3a452829207181beda97300a4b660bbc1cf176875fe085c0363407bf6e768ac2",
+  "main.tex": "38116641e9f849eaf6ba2b32cea0635215b763e4e129fdf9b55a90b24d7e5667",
+  "main_es.tex": "6bcd227d4aa840d27f3065210bbf6368fdb9097704bbcc7c67dfad90773b1324"
  },
  "en": {
   "title": "When Will a Priority Date Become Current? Reference-Class and Series-Specific First-Passage Forecasts of U.S. Visa Bulletin Cutoff Dates",
   "short_title": "First-passage forecasts of Visa Bulletin cutoff dates",
-  "abstract": "Applicants for U.S. immigrant visas in oversubscribed preference categories may wait decades until the Visa Bulletin cutoff passes their priority date. We forecast the probability that a priority date becomes current within one, three, or five years. In one-month-ahead point forecasts over 300 monthly bulletins (December 2001 through November 2026), no model significantly beats the random walk. We therefore estimate waiting times by resampling blocks of monthly cutoff increments, and compare and blend them with a reference class: how often equal gaps were covered in the past. Forecasts for 73 series are issued yearly, use only information available then, and are scored only on fully observed outcomes. The Brier skill score is the fractional reduction in Brier error relative to the reference class: zero means equal, positive better, negative worse. The linear extrapolation used by public calculators is detectably worse at every horizon (−0.440 to −0.786, that is, 44 to 79 % larger Brier error). Neither the series simulation nor a Gaussian random walk is detectably better. Blending the simulation with the reference class scores 0.028, 0.053, and 0.065, respectively, positive in every sensitivity analysis. Yet on the full sample every 95 % bootstrap interval over queues and origin years includes zero, so the blend may be no better than the reference; the upper limits (0.089, 0.146, and 0.166) bound plausible gains. A reference class of past gaps is the forecast to beat, the queue's own history adds little, and waits beyond five years can only be reported as scenarios.",
+  "abstract": "Millions of people with family or employment petitions for a U.S. green card wait years, sometimes decades, because visas are capped by category and country. Their place in line is a priority date. Each month, the State Department's Visa Bulletin sets a cutoff date for every country and category, and only applicants with earlier priority dates may proceed. Each applicant asks: when is my turn? Public calculators answer with a single date, extending recent progress in a straight line. We instead forecast the probability that a priority date becomes current within one, three, or five years, treating the wait as a first-passage time: the first month the cutoff date passes the priority date. Using 300 bulletins (2001--2026) and 73 series, we issue forecasts yearly with only information then available, and score them only on fully observed outcomes. No model forecasts next month's cutoff significantly better than assuming no change. For longer waits, we simulate cutoff paths by resampling blocks of each series' past monthly movements, and compare them with a simple reference: how often equal gaps closed in the past. Straight-line extrapolation is the worst method evaluated, significantly worse than the reference at every horizon. The reference is hard to beat: simulation alone does not improve on it, and blending the two yields small gains that hold across sensitivity analyses but are not statistically distinguishable from zero. Beyond the validated five years, only scenarios are possible. An exact date promises more than the data allow.",
   "keywords": [
    "First-passage time",
    "Probabilistic forecasting",
@@ -21,7 +21,7 @@
  "es": {
   "title": "¿Cuándo será vigente una fecha de prioridad? Pronósticos de primer paso basados en clases de referencia y en cada serie para las fechas de corte del Visa Bulletin de Estados Unidos",
   "short_title": "Pronósticos de primer paso de las fechas de corte del Visa Bulletin",
-  "abstract": "Quienes solicitan una visa de inmigrante de Estados Unidos en categorías de preferencia con sobredemanda pueden esperar décadas hasta que la fecha de corte del Visa Bulletin rebase su fecha de prioridad. Pronosticamos la probabilidad de que una fecha de prioridad se vuelva vigente en uno, tres o cinco años. En pronósticos puntuales a un mes sobre 300 boletines mensuales (diciembre de 2001 a noviembre de 2026), ningún modelo supera de forma significativa a la caminata aleatoria. Por eso estimamos los tiempos de espera remuestreando bloques de incrementos mensuales de la fecha de corte, y los comparamos y combinamos con una clase de referencia: la frecuencia con que se cubrieron brechas iguales en el pasado. Los pronósticos para 73 series se emiten cada año, usan solo información disponible en ese momento y se califican solo con desenlaces plenamente observados. El índice de habilidad de Brier es la reducción proporcional del error de Brier respecto de la clase de referencia: cero significa igual; positivo, mejor; negativo, peor. La extrapolación lineal que emplean las calculadoras públicas es peor, de forma detectable, en todos los horizontes (−0.440 a −0.786, es decir, un error de Brier entre 44 y 79 % mayor). Ni la simulación de cada serie ni una caminata aleatoria gaussiana resultan mejores de forma detectable. Combinar la simulación con la clase de referencia da 0.028, 0.053 y 0.065, respectivamente, con valores positivos en todos los análisis de sensibilidad. Sin embargo, en la muestra completa todos los intervalos bootstrap al 95 % sobre colas y años de origen incluyen el cero, así que la combinación podría no ser mejor que la referencia; los límites superiores (0.089, 0.146 y 0.166) acotan las ganancias plausibles. Una clase de referencia de brechas pasadas es el pronóstico por vencer, la historia propia de la cola le añade poco y las esperas de más de cinco años solo pueden reportarse como escenarios.",
+  "abstract": "Millones de personas con una petición familiar o de empleo para obtener la residencia permanente (green card) en Estados Unidos esperan años, a veces décadas, porque las visas tienen topes por categoría y por país. Su lugar en la fila es una fecha de prioridad. Cada mes, el Visa Bulletin del Departamento de Estado fija una fecha de corte para cada país y categoría, y solo avanzan quienes tienen una fecha de prioridad anterior. Cada solicitante se pregunta: ¿cuándo me toca? Las calculadoras públicas responden con una sola fecha, obtenida al prolongar en línea recta el avance reciente. Nosotros pronosticamos, en cambio, la probabilidad de que una fecha de prioridad se vuelva vigente en uno, tres o cinco años, y tratamos la espera como un tiempo de primer paso: el primer mes en que la fecha de corte rebasa la fecha de prioridad. Con 300 boletines (2001--2026) y 73 series, emitimos pronósticos cada año solo con la información disponible en ese momento, y los calificamos solo con desenlaces plenamente observados. Ningún modelo pronostica la fecha de corte del mes siguiente de forma significativamente mejor que suponer que no cambia. Para esperas más largas, simulamos trayectorias de la fecha de corte remuestreando bloques de los movimientos mensuales pasados de cada serie, y las comparamos con una referencia simple: con qué frecuencia se cerraron en el pasado brechas del mismo tamaño. La extrapolación en línea recta es el peor método evaluado, significativamente peor que la referencia en todos los horizontes. La referencia es difícil de vencer: la simulación sola no la mejora, y combinar ambas da ganancias pequeñas que se sostienen en todos los análisis de sensibilidad, pero que no se distinguen estadísticamente de cero. Más allá de los cinco años validados, solo caben escenarios. Una fecha exacta promete más de lo que los datos permiten.",
   "keywords": [
    "Tiempo de primer paso",
    "Pronóstico probabilístico",
@@ -330,6 +330,10 @@
    "text": "44",
    "value": 44.0
   },
+  "fSBlendOnePct": {
+   "text": "2.8",
+   "value": 2.8
+  },
   "fNThree": {
    "text": "2,960",
    "value": 2960.0
@@ -524,6 +528,10 @@
    "text": "52",
    "value": 52.0
   },
+  "fSBlendThreePct": {
+   "text": "5.3",
+   "value": 5.3
+  },
   "fNFive": {
    "text": "1,995",
    "value": 1995.0
@@ -717,6 +725,10 @@
   "fSVelFivePct": {
    "text": "79",
    "value": 79.0
+  },
+  "fSBlendFivePct": {
+   "text": "6.5",
+   "value": 6.5
   },
   "fSHoldBlendOne": {
    "text": "0.040",
@@ -1478,6 +1490,10 @@
    "text": "0.106",
    "value": 0.106
   },
+  "fUBlendOnePct": {
+   "text": "8.9",
+   "value": 8.9
+  },
   "fSVelOneCi": {
    "text": "[−0.671, −0.218]",
    "ci": [
@@ -1548,6 +1564,10 @@
    "text": "0.140",
    "value": 0.14
   },
+  "fUBlendThreePct": {
+   "text": "14.6",
+   "value": 14.6
+  },
   "fSVelThreeCi": {
    "text": "[−0.761, −0.284]",
    "ci": [
@@ -1617,6 +1637,10 @@
   "fUSimFive": {
    "text": "0.175",
    "value": 0.175
+  },
+  "fUBlendFivePct": {
+   "text": "16.6",
+   "value": 16.6
   },
   "fSVelFiveCi": {
    "text": "[−1.127, −0.467]",
