@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { chartForQuery, chartFromAgent } from "@/lib/visabot/chart-router";
 import { buildPanel } from "@/lib/data/panel-core";
+import { latestCutoff } from "./helpers/latest-cutoff";
 const panel = buildPanel(readFileSync(new URL("../public/data/visa_panel_long.csv", import.meta.url), "utf8"));
 const months = [...new Set(panel.rows.map(r => r.bulletinMonth))].sort();
+const CUT = latestCutoff(panel, "mexico", "F2A", "FAD");
 describe("rehearsal routing (Opus findings, executed)", () => {
   // Priority dates are read by the agent (check_priority_date); the console
   // draws the card from the descriptor it emits, never from a regex parse.
   it("the agent's priority card for an already-reached date says so", () => {
-    expect(chartFromAgent({kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2024-09-19"}, panel, "es", null)).toMatchObject({kind:"priorityCheck",result:"before",cutoff:"2026-04-22",priorityDate:"2024-09-19"});
+    expect(chartFromAgent({kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2024-09-19"}, panel, "es", null)).toMatchObject({kind:"priorityCheck",result:"before",cutoff:CUT,priorityDate:"2024-09-19"});
   });
   it("the agent's priority card states clearly when a date is not yet before the cutoff", () => {
-    expect(chartFromAgent({kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2027-09-19"}, panel, "es", null)).toMatchObject({kind:"priorityCheck",result:"after",cutoff:"2026-04-22"});
+    expect(chartFromAgent({kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2027-09-19"}, panel, "es", null)).toMatchObject({kind:"priorityCheck",result:"after",cutoff:CUT});
   });
   it("the wording router no longer turns a priority-date question into a rigid card", () => {
     expect(chartForQuery("Soy de México, F2B, mi fecha de prioridad es marzo 2010. ¿Cuándo me toca?", panel, "es", null)?.chart.kind).not.toBe("priorityCheck");
@@ -47,7 +49,7 @@ describe("rehearsal routing (Opus findings, executed)", () => {
 describe("agent date comparison vs stale local data", () => {
   const d = {kind:"priority_check",country:"mexico",category:"F2A",table:"FAD",priority_date:"2024-09-19"} as const;
   it("draws the card when the server's verified outcome matches the local data", () => {
-    expect(chartFromAgent({...d,result:"before",cutoff:"2026-04-22"}, panel, "es", null)?.kind).toBe("priorityCheck");
+    expect(chartFromAgent({...d,result:"before",cutoff:CUT}, panel, "es", null)?.kind).toBe("priorityCheck");
   });
   it.each([[{result:"after",cutoff:"2020-04-22"}],[{result:"before",cutoff:"2025-01-01"}]])("drops the card when the server saw %j", (srv) => {
     expect(chartFromAgent({...d,...srv}, panel, "es", null)).toBeNull();

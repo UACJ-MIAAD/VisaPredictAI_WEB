@@ -51,7 +51,7 @@ const story = (
 // fecha de actualización se calculan en `planFocus()`: cablearlas aquí es lo que dejó la cabecera
 // anunciando «D9 → D8» meses después de entregar ambas.
 export const PLAN_META = {
-  dataMain: "7e95849ee7487d62809a4e09812043c1cc0b42f5",
+  dataMain: "0efd94a4b096e86c8eac7979740b8d4706c5be46",
   releaseId: "2026-11-5ed564aa4d00",
   releaseStatus: "fresh",
 } as const;
@@ -225,8 +225,8 @@ export const PLAN_CLOSEOUT = [
     id: "visa-bulletin",
     title: c("Diciembre ingerido desde el boletín oficial en PDF", "December ingested from the official bulletin as a PDF"),
     detail: c(
-      "El boletín de diciembre de 2026 entró por la vía asistida a partir de la página oficial guardada en PDF: 150 celdas validadas, panel de 301 meses y 28,361 observaciones (16,426 con fecha). El PDF es una impresión de Safari, que repite líneas en los saltos de página; el lector quita solo esa repetición exacta (datos #68) y diez revisores independientes cotejaron las 150 celdas contra el boletín sin hallar diferencias. El HTML derivado se subió a S3 sin sobrescribir nada y la corrida mensual generó panel, pronósticos y EDA; el sello del corte esperó a que este plan reflejara las cifras nuevas. Producción sigue sirviendo noviembre hasta que el corte de diciembre quede sellado y Netlify vuelva a desplegar el 1 de diciembre.",
-      "The December 2026 bulletin entered through the assisted path from the official page saved as a PDF: 150 validated cells, a 301-month panel and 28,361 observations (16,426 dated). The PDF is a Safari print, which repeats lines across page breaks; the reader removes only that exact repetition (data #68), and ten independent reviewers checked the 150 cells against the bulletin with no differences. The derived HTML was uploaded to S3 without overwriting anything and the monthly run produced the panel, forecasts and EDA; sealing waited for this plan to reflect the new counts. Production keeps serving November until the December release is sealed and Netlify resumes deploys on 1 December.",
+      "El boletín de diciembre de 2026 entró por la vía asistida a partir de la página oficial guardada en PDF: 150 celdas validadas, panel de 301 meses y 28,361 observaciones (16,426 con fecha). El PDF es una impresión de Safari, que repite líneas en los saltos de página; el lector quita solo esa repetición exacta (datos #68) y diez revisores independientes cotejaron las 150 celdas contra el boletín sin hallar diferencias. El HTML derivado se subió a S3 sin sobrescribir nada; la corrida mensual generó panel, pronósticos y EDA, y tras alinear este plan y el documental se selló el corte 2026-12-fcd7c16407a2. Producción lo servirá cuando Netlify reanude los despliegues el 1 de diciembre; hasta entonces sigue el de noviembre.",
+      "The December 2026 bulletin entered through the assisted path from the official page saved as a PDF: 150 validated cells, a 301-month panel and 28,361 observations (16,426 dated). The PDF is a Safari print, which repeats lines across page breaks; the reader removes only that exact repetition (data #68), and ten independent reviewers checked the 150 cells against the bulletin with no differences. The derived HTML was uploaded to S3 without overwriting anything; the monthly run produced the panel, forecasts and EDA, and once this plan and the documentary repository were aligned the 2026-12-fcd7c16407a2 release was sealed. Production will serve it when Netlify resumes deploys on 1 December; until then November stays.",
     ),
   },
   {
