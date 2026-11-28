@@ -31,6 +31,8 @@ export type ArticleModel = {
   subgroups: { id: string; label: string; points: Point[] }[];
   landscape: { gaps: number[]; horizons: number[]; cells: { g: number; k: number; value: number | null; text: string; base: string }[][]; nByHorizon: string[] };
   examples: Example[];
+  /** "FAD cutoff, <last bulletin>" label for the worked examples (from \fLastBulletin). */
+  cutLabel: string;
   sections: {
     pregunta: Para; acto1: Para;
     metodos: { tag: string; title: string; lead: string };
