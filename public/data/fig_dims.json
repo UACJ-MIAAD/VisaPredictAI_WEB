@@ -1,290 +1,290 @@
 {
  "eda/g01_panel.png": {
-  "w": 2651,
-  "h": 3509
+  "w": 1351,
+  "h": 2236
  },
  "eda/dark/g01_panel.png": {
-  "w": 2651,
-  "h": 3509
+  "w": 1351,
+  "h": 2236
  },
  "eda/en/g01_panel.png": {
-  "w": 2678,
-  "h": 3509
+  "w": 1360,
+  "h": 2236
  },
  "eda/en/dark/g01_panel.png": {
-  "w": 2678,
-  "h": 3509
+  "w": 1360,
+  "h": 2236
  },
  "eda/g02_trayectorias.png": {
   "w": 2588,
-  "h": 1822
+  "h": 1817
  },
  "eda/dark/g02_trayectorias.png": {
   "w": 2588,
-  "h": 1822
+  "h": 1817
  },
  "eda/en/g02_trayectorias.png": {
   "w": 2588,
-  "h": 1822
+  "h": 1817
  },
  "eda/en/dark/g02_trayectorias.png": {
   "w": 2588,
-  "h": 1822
+  "h": 1817
  },
  "eda/g03_backlog.png": {
   "w": 2823,
-  "h": 1908
+  "h": 1856
  },
  "eda/dark/g03_backlog.png": {
   "w": 2823,
-  "h": 1908
+  "h": 1856
  },
  "eda/en/g03_backlog.png": {
   "w": 2823,
-  "h": 1906
+  "h": 1854
  },
  "eda/en/dark/g03_backlog.png": {
   "w": 2823,
-  "h": 1906
+  "h": 1854
  },
  "eda/g04_retros.png": {
-  "w": 2588,
-  "h": 1779
+  "w": 1800,
+  "h": 1366
  },
  "eda/dark/g04_retros.png": {
-  "w": 2588,
-  "h": 1779
+  "w": 1800,
+  "h": 1366
  },
  "eda/en/g04_retros.png": {
-  "w": 2588,
-  "h": 1841
+  "w": 1825,
+  "h": 1364
  },
  "eda/en/dark/g04_retros.png": {
-  "w": 2588,
-  "h": 1841
+  "w": 1825,
+  "h": 1364
  },
  "eda/g05_brecha.png": {
-  "w": 2412,
-  "h": 2174
+  "w": 1783,
+  "h": 1827
  },
  "eda/dark/g05_brecha.png": {
-  "w": 2412,
-  "h": 2174
+  "w": 1783,
+  "h": 1827
  },
  "eda/en/g05_brecha.png": {
-  "w": 2412,
-  "h": 2175
+  "w": 1796,
+  "h": 1827
  },
  "eda/en/dark/g05_brecha.png": {
-  "w": 2412,
-  "h": 2175
+  "w": 1796,
+  "h": 1827
  },
  "eda/g06_pulso_fiscal.png": {
   "w": 2176,
-  "h": 2190
+  "h": 2132
  },
  "eda/dark/g06_pulso_fiscal.png": {
   "w": 2176,
-  "h": 2190
+  "h": 2132
  },
  "eda/en/g06_pulso_fiscal.png": {
   "w": 2176,
-  "h": 2186
+  "h": 2128
  },
  "eda/en/dark/g06_pulso_fiscal.png": {
   "w": 2176,
-  "h": 2186
+  "h": 2128
  },
  "eda/g07_leadlag.png": {
-  "w": 1803,
-  "h": 2059
+  "w": 1173,
+  "h": 1191
  },
  "eda/dark/g07_leadlag.png": {
-  "w": 1803,
-  "h": 2059
+  "w": 1173,
+  "h": 1191
  },
  "eda/en/g07_leadlag.png": {
-  "w": 1745,
-  "h": 1991
+  "w": 1194,
+  "h": 1160
  },
  "eda/en/dark/g07_leadlag.png": {
-  "w": 1745,
-  "h": 1991
+  "w": 1194,
+  "h": 1160
  },
  "eda/g08_congelados.png": {
   "w": 2294,
-  "h": 2034
+  "h": 1964
  },
  "eda/dark/g08_congelados.png": {
   "w": 2294,
-  "h": 2034
+  "h": 1964
  },
  "eda/en/g08_congelados.png": {
   "w": 2294,
-  "h": 2032
+  "h": 1962
  },
  "eda/en/dark/g08_congelados.png": {
   "w": 2294,
-  "h": 2032
+  "h": 1962
  },
  "eda/g09_estacionariedad.png": {
   "w": 2118,
-  "h": 1703
+  "h": 1681
  },
  "eda/dark/g09_estacionariedad.png": {
   "w": 2118,
-  "h": 1703
+  "h": 1681
  },
  "eda/en/g09_estacionariedad.png": {
   "w": 2118,
-  "h": 1701
+  "h": 1679
  },
  "eda/en/dark/g09_estacionariedad.png": {
   "w": 2118,
-  "h": 1701
+  "h": 1679
  },
  "eda/g10_dv.png": {
-  "w": 2588,
-  "h": 1838
+  "w": 2214,
+  "h": 1203
  },
  "eda/dark/g10_dv.png": {
-  "w": 2588,
-  "h": 1838
+  "w": 2214,
+  "h": 1203
  },
  "eda/en/g10_dv.png": {
-  "w": 2588,
-  "h": 1839
+  "w": 2180,
+  "h": 1203
  },
  "eda/en/dark/g10_dv.png": {
-  "w": 2588,
-  "h": 1839
+  "w": 2180,
+  "h": 1203
  },
  "eda/g11_completitud.png": {
-  "w": 2764,
-  "h": 2300
+  "w": 1403,
+  "h": 1786
  },
  "eda/dark/g11_completitud.png": {
-  "w": 2764,
-  "h": 2300
+  "w": 1403,
+  "h": 1786
  },
  "eda/en/g11_completitud.png": {
-  "w": 2764,
-  "h": 2298
+  "w": 1403,
+  "h": 1740
  },
  "eda/en/dark/g11_completitud.png": {
-  "w": 2764,
-  "h": 2298
+  "w": 1403,
+  "h": 1740
  },
  "fe/f01_differencing.png": {
-  "w": 2353,
-  "h": 1882
+  "w": 1414,
+  "h": 1164
  },
  "fe/dark/f01_differencing.png": {
-  "w": 2353,
-  "h": 1882
+  "w": 1414,
+  "h": 1164
  },
  "fe/en/f01_differencing.png": {
-  "w": 2353,
-  "h": 1828
+  "w": 1334,
+  "h": 1161
  },
  "fe/en/dark/f01_differencing.png": {
-  "w": 2353,
-  "h": 1828
+  "w": 1334,
+  "h": 1161
  },
  "fe/f02_calendar.png": {
-  "w": 2353,
-  "h": 1464
+  "w": 1570,
+  "h": 1111
  },
  "fe/dark/f02_calendar.png": {
-  "w": 2353,
-  "h": 1464
+  "w": 1570,
+  "h": 1111
  },
  "fe/en/f02_calendar.png": {
-  "w": 2353,
-  "h": 1464
+  "w": 1443,
+  "h": 1111
  },
  "fe/en/dark/f02_calendar.png": {
-  "w": 2353,
-  "h": 1464
+  "w": 1443,
+  "h": 1111
  },
  "fe/f03_importance.png": {
-  "w": 2390,
-  "h": 1471
+  "w": 1277,
+  "h": 964
  },
  "fe/dark/f03_importance.png": {
-  "w": 2390,
-  "h": 1471
+  "w": 1277,
+  "h": 964
  },
  "fe/en/f03_importance.png": {
-  "w": 2345,
-  "h": 1471
+  "w": 1277,
+  "h": 959
  },
  "fe/en/dark/f03_importance.png": {
-  "w": 2345,
-  "h": 1471
+  "w": 1277,
+  "h": 959
  },
  "fe/f04_gaps.png": {
-  "w": 2529,
-  "h": 1875
+  "w": 1390,
+  "h": 1083
  },
  "fe/dark/f04_gaps.png": {
-  "w": 2529,
-  "h": 1875
+  "w": 1390,
+  "h": 1083
  },
  "fe/en/f04_gaps.png": {
-  "w": 2529,
-  "h": 1871
+  "w": 1390,
+  "h": 1080
  },
  "fe/en/dark/f04_gaps.png": {
-  "w": 2529,
-  "h": 1871
+  "w": 1390,
+  "h": 1080
  },
  "fe/f05_regime.png": {
-  "w": 2529,
-  "h": 1952
+  "w": 1420,
+  "h": 1087
  },
  "fe/dark/f05_regime.png": {
-  "w": 2529,
-  "h": 1952
+  "w": 1420,
+  "h": 1087
  },
  "fe/en/f05_regime.png": {
-  "w": 2529,
-  "h": 1949
+  "w": 1532,
+  "h": 1081
  },
  "fe/en/dark/f05_regime.png": {
-  "w": 2529,
-  "h": 1949
+  "w": 1532,
+  "h": 1081
  },
  "fe/f06_parser.png": {
   "w": 2470,
-  "h": 1538
+  "h": 1533
  },
  "fe/dark/f06_parser.png": {
   "w": 2470,
-  "h": 1538
+  "h": 1533
  },
  "fe/en/f06_parser.png": {
   "w": 2470,
-  "h": 1536
+  "h": 1531
  },
  "fe/en/dark/f06_parser.png": {
   "w": 2470,
-  "h": 1536
+  "h": 1531
  },
  "fe/f07_pipeline.png": {
   "w": 3176,
-  "h": 1251
+  "h": 1133
  },
  "fe/dark/f07_pipeline.png": {
   "w": 3176,
-  "h": 1251
+  "h": 1133
  },
  "fe/en/f07_pipeline.png": {
   "w": 3176,
-  "h": 1186
+  "h": 1133
  },
  "fe/en/dark/f07_pipeline.png": {
   "w": 3176,
-  "h": 1186
+  "h": 1133
  }
 }

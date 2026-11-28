@@ -1,10 +1,10 @@
 {
   "status": "fresh",
   "reason": null,
-  "release_id": "2026-11-5ed564aa4d00",
-  "panel_vintage": "2026-11",
-  "generated_at": "2026-10-24T22:16:05+00:00",
+  "release_id": "2026-12-fcd7c16407a2",
+  "panel_vintage": "2026-12",
+  "generated_at": "2026-11-28T00:27:10+00:00",
   "rejected_release_id": null,
-  "fetched_at": "2026-10-25T00:10:44.544Z",
+  "fetched_at": "2026-11-28T01:19:50.076Z",
   "missing_optional": []
 }

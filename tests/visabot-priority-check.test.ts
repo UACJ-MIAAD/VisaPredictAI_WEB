@@ -4,9 +4,11 @@ import {buildPanel} from "@/lib/data/panel-core";
 import {parseForecastStore} from "@/lib/data/forecasts-core.mjs";
 import {buildPriorityCheck,parsePriorityDate,isPriorityQuery,priorityCheckSummary,priorityCheckSpec} from "@/lib/visabot/priority-check.mjs";
 import {mergeFollowUp} from "@/lib/visabot/analytics";
+import {latestCutoff,addDays} from "./helpers/latest-cutoff";
 const file=(n:string)=>readFileSync(new URL(`../public/data/${n}`,import.meta.url),"utf8");
 const panel=buildPanel(file("visa_panel_long.csv"));
 const store=parseForecastStore(file("forecasts.csv"),JSON.parse(file("forecasts_meta.json")),null);
+const CUT=latestCutoff(panel,"mexico","F2A","FAD"), AFTER=addDays(CUT,1), LATER=addDays(CUT,9);
 describe("priority-date calendar and input boundaries",()=>{
   it.each(["¿Cuándo me toca México F2A? fecha de prioridad 2024/09/19","cuándo me toca F2A mexicano, fecha de prioridad 19-09-2024","cuándo me toca México F2A con fecha de prioridad 19 de septiembre del 2024","cuándo me toca México F2A, fecha de prioridad 2024-9-19","when is my turn Mexico F2A priority date 9/19/24","cuando me toca Mexico F2A 2024"])("never falls back to an LLM forecast for %s",q=>expect(isPriorityQuery(q)).toBe(true));
   it.each(["¿Cuándo llegó el corte de México F2A FAD a 2024-09-19?","When did Mexico F2A FAD reach September 19, 2024?","What is my priority date?"])("does not turn history/concepts into a personal PD: %s",q=>expect(isPriorityQuery(q)).toBe(false));
@@ -18,14 +20,14 @@ describe("priority-date calendar and input boundaries",()=>{
 });
 describe("exact current series, no personal appointment inference",()=>{
   it("filing the petition does not implicitly select the DFF table",()=>{
-    expect(buildPriorityCheck("Mi fecha de prioridad es 2026-05-01 (fecha de presentación del I-130), México F2A, ¿cuándo me toca?",panel,store,"es")).toMatchObject({result:"after",table:"FAD",cutoff:"2026-04-22"});
+    expect(buildPriorityCheck(`Mi fecha de prioridad es ${LATER} (fecha de presentación del I-130), México F2A, ¿cuándo me toca?`,panel,store,"es")).toMatchObject({result:"after",table:"FAD",cutoff:CUT});
   });
   for(const lang of ["es","en"] as const) {
     it.each([
-      ["2024-09-19","before"], ["2026-04-22","equal"], ["2026-04-23","after"], ["2099-09-19","after"],
+      ["2024-09-19","before"], [CUT,"equal"], [AFTER,"after"], ["2099-09-19","after"],
     ])(`${lang}: %s is %s`,(pd,result)=>{
       const s=buildPriorityCheck(`Mexico F2A FAD PD ${pd}`,panel,store,lang)!;
-      expect(s).toMatchObject({result,cutoff:"2026-04-22",priorityDate:pd,country:"mexico",table:"FAD"});
+      expect(s).toMatchObject({result,cutoff:CUT,priorityDate:pd,country:"mexico",table:"FAD"});
       const text=priorityCheckSummary(s,lang);
       expect(text).not.toContain("2026-10-22");
       expect(text).not.toMatch(/tu turno ya pasó|you will receive|tu cita ser[aá]/i);

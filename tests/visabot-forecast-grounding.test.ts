@@ -16,12 +16,20 @@ import { resetSyntheticData } from "@/lib/visabot/synthetic-context.mjs";
 import { validSyntheticShape } from "../netlify/functions/chat.mjs";
 import { anthropicSSE, sseResponse, type MockTurn } from "./anthropic-sse";
 import { buildPanel } from "@/lib/data/panel-core";
+import { latestCutoff, lastTwoMonths } from "./helpers/latest-cutoff";
 import { parseForecastStore, backfillScored } from "@/lib/data/forecasts-core.mjs";
 import { buildForecast, buildBulletinDiff, chartUserNote, forecastText, priorityYearTick } from "@/lib/visabot/analytics";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dataFile = (name: string) => readFileSync(join(root, "public", "data", name));
 const scorecard = JSON.parse(String(dataFile("forecast_scorecard.json")));
+// Current cutoffs and the last two bulletins, read from the served panel (no month literals).
+const PANEL0 = buildPanel(String(dataFile("visa_panel_long.csv")));
+const MX_F2A = latestCutoff(PANEL0, "mexico", "F2A", "FAD");
+const ROW_F2A = latestCutoff(PANEL0, "all_chargeability", "F2A", "FAD");
+const [MONTH_A, MONTH_B] = lastTwoMonths(PANEL0);
+const MONTH_NAME = (m: string, lang: "es" | "en") =>
+  new Date(`${m}-01T00:00:00Z`).toLocaleDateString(lang === "es" ? "es-MX" : "en-US", { month: "long", year: "numeric", timeZone: "UTC" }).replace(" de ", " ");
 
 // Expected band straight from the CSV row, converted independently of the builders.
 const BASE = Date.UTC(1975, 0, 1);
@@ -65,7 +73,7 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
           ? (lang === "en" ? "Show me the Mexico F4 forecast" : "Muéstrame el pronóstico de México F4")
           : (lang === "en" ? "Explain the Mexico F4 forecast" : "Explica el pronóstico de México F4")), surface: "console",
         synthetics: comparison
-          ? [{kind:"bulletin_diff",monthA:"2026-10",monthB:"2026-11",table:"FAD",release_id:DATA_PINS.releaseId}]
+          ? [{kind:"bulletin_diff",monthA:MONTH_A,monthB:MONTH_B,table:"FAD",release_id:DATA_PINS.releaseId}]
           : [{ kind: "forecast_note", country: "mexico", category: "F4", table: "FAD", release_id: DATA_PINS.releaseId }],
       }),
     }));
@@ -103,14 +111,14 @@ describe("forecast grounding over the released artifacts (chat handler → Anthr
     it(`${lang}: the priority check the agent runs reads Mexico's own F2A cutoff`, async () => {
       turns = [{ tools: [{ id: "t1", name: "check_priority_date", input: { country: "mexico", category: "F2A", table: "FAD", priority_date: "2024-09-19" } }] }, { text: ["ok"] }];
       const read = await ask(lang, false, lang === "es" ? "cuando me toca F2A pd sept 19 2024 mexicano" : "When is my turn, Mexican F2A priority date September 19 2024?");
-      expect(read).toContain("2026-04-22");
+      expect(read).toContain(MX_F2A);
       expect(read).toContain("2024-09-19");
-      expect(read).not.toContain("2026-10-22");
+      expect(read).not.toContain(ROW_F2A);
     });
     it(`${lang}: direct bulletin changes use the same table counts without model rewriting`, async () => {
-      const spec = buildBulletinDiff(buildPanel(String(dataFile("visa_panel_long.csv"))), "2026-10", "2026-11", "FAD", lang)!;
+      const spec = buildBulletinDiff(PANEL0, MONTH_A, MONTH_B, "FAD", lang)!;
       if (spec.kind !== "bulletinDiff") throw new Error("expected comparison table");
-      const answer = await ask(lang, true, lang === "es" ? "¿Qué cambió en el boletín de noviembre 2026, FAD?" : "What changed in the November 2026 bulletin, FAD?", true);
+      const answer = await ask(lang, true, lang === "es" ? `¿Qué cambió en el boletín de ${MONTH_NAME(MONTH_B, "es")}, FAD?` : `What changed in the ${MONTH_NAME(MONTH_B, "en")} bulletin, FAD?`, true);
       expect(answer).toContain(`${spec.summary.advanced} ${lang === "es" ? "avanzaron" : "advanced"}`);
       expect(answer).toContain(`${spec.summary.unchanged} ${lang === "es" ? "sin cambio" : "unchanged"}`);
       expect(answer).toContain("FAD");

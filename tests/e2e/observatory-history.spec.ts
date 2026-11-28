@@ -21,8 +21,10 @@ test("month and year handle partial years and restore all history",async({page,c
   await year.selectOption("2001");await expect(month).toHaveValue("12");
   expect(await month.locator("option").allTextContents()).toEqual(["Mes","diciembre"]);
   await expect(root.locator(".vb-instrument-axis text").first()).toHaveText("diciembre 2001");
-  await year.selectOption("2026");await expect(month).toHaveValue("01");
-  expect(await month.locator("option").count()).toBe(12); // January–November plus placeholder.
+  // The last year is partial until December: the month kept from 2001 (12) survives only if it exists.
+  const [lastYear,lastMonth]=panel.monthRange[1].split("-");
+  await year.selectOption(lastYear);await expect(month).toHaveValue(lastMonth==="12"?"12":"01");
+  expect(await month.locator("option").count()).toBe(Number(lastMonth)+1); // its months plus placeholder.
   await year.selectOption("");await expect(month).toHaveValue("");await expect(month).toBeDisabled();
   await expect(root.getByRole("slider")).toHaveAttribute("max",String(series().length-1));
 });
