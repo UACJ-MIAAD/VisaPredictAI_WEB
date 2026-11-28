@@ -7,12 +7,16 @@ import {parseForecastStore} from "../../lib/data/forecasts-core.mjs";
 import {priorityCheckSpec,priorityCheckSummary,PRIORITY_SOURCE} from "../../lib/visabot/priority-check.mjs";
 // The agent reads the user's words and calls check_priority_date with structured
 // input; this table stands in for the model so the console flow is deterministic.
+// Current cutoffs come from the served panel: a monthly release never breaks this flow.
+const PANEL0=buildPanel(readFileSync("public/data/visa_panel_long.csv","utf8"));
+const lastCut=(country:string)=>{const rs=PANEL0.rows.filter(r=>r.country===country&&r.category==="F2A"&&r.table==="FAD");const r=rs.reduce((a,b)=>b.bulletinMonth>a.bulletinMonth?b:a);if(r.status!=="F"||!r.priorityDate)throw new Error(`${country} F2A FAD is ${r.status}`);return r.priorityDate.slice(0,10);};
+const MX_CUT=lastCut("mexico"), IN_CUT=lastCut("india");
 type Ask={country:string;category:string;table:string;priority_date:string};
 const MX_F2A={country:"mexico",category:"F2A",table:"FAD",priority_date:"2024-09-19"};
 const INTENT:Record<string,Ask>={
   "cuando me toca F2A pd sept 19 2024 mexicano":MX_F2A,"When is my turn, Mexican F2A priority date September 19 2024?":MX_F2A,
   "¿y mi PD 2099-09-19?":{...MX_F2A,priority_date:"2099-09-19"},"and my PD 2099-09-19?":{...MX_F2A,priority_date:"2099-09-19"},
-  "¿y mi PD 2026-04-22?":{...MX_F2A,priority_date:"2026-04-22"},"and my PD 2026-04-22?":{...MX_F2A,priority_date:"2026-04-22"},
+  [`¿y mi PD ${MX_CUT}?`]:{...MX_F2A,priority_date:MX_CUT},[`and my PD ${MX_CUT}?`]:{...MX_F2A,priority_date:MX_CUT},
   "¿y India?":{...MX_F2A,country:"india"},"and India?":{...MX_F2A,country:"india"},
   "¿y DFF?":{...MX_F2A,country:"india",table:"DFF"},"and DFF?":{...MX_F2A,country:"india",table:"DFF"},
   "Mexico F2A PD 2024-09-19":MX_F2A,
@@ -48,8 +52,8 @@ for(const lang of ["es","en"] as const) for(const theme of ["light","dark"] as c
       return card;
     };
     const before=await ask(lang==="es"?"cuando me toca F2A pd sept 19 2024 mexicano":"When is my turn, Mexican F2A priority date September 19 2024?","before");
-    await expect(before).toContainText("2026-04-22");await expect(before).toContainText("2024-09-19");
-    await expect(before).not.toContainText("2026-10-22");
+    await expect(before).toContainText(MX_CUT);await expect(before).toContainText("2024-09-19");
+    await expect(before).not.toContainText(IN_CUT);
     // the card answers the question; the series chart stays below it (it used to vanish)
     const turn = page.locator(".vb-console .vb-assistant-turn").last();
     await expect(turn.locator("[data-vb-priority-result]")).toHaveCount(1);
@@ -61,11 +65,11 @@ for(const lang of ["es","en"] as const) for(const theme of ["light","dark"] as c
     await expect(after).toContainText(lang==="es"?"TODAVÍA NO":"NOT YET");
     await expect(after).toContainText(lang==="es"?"NO supera":"NOT exceed");
     await page.screenshot({path:`e2e-screenshots/visabot-priority-after-${lang}-${theme}-${width}.png`});
-    await ask(lang==="es"?"¿y mi PD 2026-04-22?":"and my PD 2026-04-22?","equal");
+    await ask(lang==="es"?`¿y mi PD ${MX_CUT}?`:`and my PD ${MX_CUT}?`,"equal");
     const india=await ask(lang==="es"?"¿y India?":"and India?","before");
-    await expect(india).toContainText("2026-10-22");
+    await expect(india).toContainText(IN_CUT);
     const current=await ask(lang==="es"?"¿y DFF?":"and DFF?","current");
-    await expect(current).toContainText("CURRENT");await expect(current).not.toContainText("2026-10-22");
+    await expect(current).toContainText("CURRENT");await expect(current).not.toContainText(IN_CUT);
     await input.fill("Borrador");
     let navigations=0;page.on("request",r=>{if(r.isNavigationRequest()&&r.frame()===page.mainFrame())navigations++;});
     await page.locator(".vb-console a.vb-chip").last().click();
@@ -85,7 +89,7 @@ test("a stale local card cannot contradict the verified server comparison",async
   const input=page.locator(".vb-console textarea");await input.fill("Mexico F2A PD 2024-09-19");await input.press("Enter");
   await expect(page.locator(".vb-console .vb-bot")).toContainText("2020-04-22");
   await expect(page.locator("[data-vb-priority-result]")).toHaveCount(0);
-  await expect(page.locator(".vb-console .vb-bot")).not.toContainText("2026-04-22");
+  await expect(page.locator(".vb-console .vb-bot")).not.toContainText(MX_CUT);
   await expect(page.locator(".vb-console a.vb-chip")).toHaveAttribute("href","/datos-historicos/#historico");
   await expect(page.locator(".vb-console .recharts-surface")).toHaveCount(0);
 });
