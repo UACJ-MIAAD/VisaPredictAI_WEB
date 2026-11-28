@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { ArticleModel } from "@/lib/article/article-copy.mjs";
 import styles from "./article.module.css";
 
-// Ejemplos trabajados del manuscrito (boletín de noviembre de 2026, FAD). Probabilidades de la
+// Ejemplos trabajados del manuscrito (último boletín del panel, FAD). Probabilidades de la
 // mezcla a 1/3/5 años (evaluadas) y escenario de la simulación a 5/10/20/30 años (no validado).
 
 export function ExampleExplorer({ m }: { m: ArticleModel }) {
@@ -26,7 +26,7 @@ export function ExampleExplorer({ m }: { m: ArticleModel }) {
       </div>
       <div id="example-panel" role="tabpanel" aria-labelledby={`tab-${e.id}`} className={styles.exPanel}>
         <dl className={styles.exFacts}>
-          <div><dt>{es ? "Corte FAD, nov. 2026" : "FAD cutoff, Nov 2026"}</dt><dd>{e.cut}</dd></div>
+          <div><dt>{m.cutLabel}</dt><dd>{e.cut}</dd></div>
           <div><dt>{es ? "Fecha de prioridad" : "Priority date"}</dt><dd>{e.pd}</dd></div>
           <div><dt>{es ? "Brecha" : "Gap"}</dt><dd>{e.gap} {es ? "años" : "years"}</dd></div>
           <div><dt>{es ? "Mediana del escenario" : "Scenario median"}</dt><dd>{e.median}</dd></div>

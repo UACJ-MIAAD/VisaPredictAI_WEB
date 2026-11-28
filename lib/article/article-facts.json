@@ -1,14 +1,14 @@
 {
  "_source": "REVISTA2027/tools/export_web_facts.py from manuscript/facts.tex, main.tex and es/main_es.tex; do not edit by hand",
  "sha256": {
-  "facts.tex": "3a452829207181beda97300a4b660bbc1cf176875fe085c0363407bf6e768ac2",
-  "main.tex": "ea3e03dde4ae72d49df0786e480fca4d5ea7dc2441a02e31303309c7b2072c27",
-  "main_es.tex": "111521906c9cca18a8bf1eff5b75db2e4e745838e9b0fa31a020adf05cad2a17"
+  "facts.tex": "3da7028c91fa72a73312d11a373fc45bf33dadc64a52f49895d02c39aff3489d",
+  "main.tex": "c719db07f3f227acc3fe0be42f28448ead326dee762f197b0ab691d3b9f05116",
+  "main_es.tex": "e1036adc943d8c373f30c45c2b4736caf049bdc4004463578a3c34f51aebc5a2"
  },
  "en": {
   "title": "When Will a Priority Date Become Current? Reference-Class and Series-Specific First-Passage Forecasts of U.S. Visa Bulletin Cutoff Dates",
   "short_title": "First-passage forecasts of Visa Bulletin cutoff dates",
-  "abstract": "Millions of people with family or employment petitions for a U.S. green card wait years, sometimes decades, because visas are capped by category and country. Their place in line is a priority date. Each month, the State Department's Visa Bulletin sets a cutoff date for every country and category, and only applicants with earlier priority dates may proceed. Each applicant asks: when is my turn? Public calculators answer with a single date, extending recent progress in a straight line. We instead forecast the probability that a priority date becomes current within one, three, or five years, treating the wait as a first-passage time: the first month the cutoff date passes the priority date. Using 300 bulletins (2001--2026) and 73 series, we issue forecasts yearly with only information then available, and score them only on fully observed outcomes. No compared model forecasts next month's cutoff significantly better than assuming no change. For longer waits, we simulate cutoff paths by resampling blocks of each series' past monthly movements, and compare them with a simple reference: how often equal gaps closed in the past. Straight-line extrapolation is the worst method evaluated, significantly worse than the reference at all three horizons. The reference is hard to beat: simulation alone does not improve on it, and blending the two yields small gains that hold across sensitivity analyses, though not statistically significant in the primary analysis. Beyond five years, we report scenarios, not validated forecasts. An exact date promises more than the data allow.",
+  "abstract": "Millions of people with family or employment petitions for a U.S. green card wait years, sometimes decades, because visas are capped by category and country. Their place in line is a priority date. Each month, the State Department's Visa Bulletin sets a cutoff date for every country and category, and only applicants with earlier priority dates may proceed. Each applicant asks: when is my turn? Most unofficial calculators answer with a single date, extending recent progress in a straight line. We instead forecast the probability that a priority date becomes current within one, three, or five years, treating the wait as a first-passage time: the first month the cutoff date passes the priority date. Using 301 bulletins (2001--2026) and 73 series, we issue forecasts yearly with only information then available, and score them only on fully observed outcomes. No compared model forecasts next month's cutoff significantly better than assuming no change. For longer waits, we simulate cutoff paths by resampling blocks of each series' past monthly movements, and compare them with a simple reference: how often equal gaps closed in the past. Straight-line extrapolation is the worst method evaluated, significantly worse than the reference at all three horizons. The reference is hard to beat: simulation alone does not improve on it, and blending the two yields small gains that hold across sensitivity analyses, though not statistically significant in the primary analysis. Beyond five years, we report scenarios, not validated forecasts. An exact date promises more than the data allow.",
   "keywords": [
    "First-passage time",
    "Probabilistic forecasting",
@@ -21,7 +21,7 @@
  "es": {
   "title": "¿Cuándo será vigente una fecha de prioridad? Pronósticos de primer paso basados en clases de referencia y en cada serie para las fechas de corte del Visa Bulletin de Estados Unidos",
   "short_title": "Pronósticos de primer paso de las fechas de corte del Visa Bulletin",
-  "abstract": "Millones de personas con una petición familiar o de empleo para obtener la residencia permanente (green card) en Estados Unidos esperan años, a veces décadas, porque las visas tienen topes por categoría y por país. Su lugar en la fila es una fecha de prioridad. Cada mes, el Visa Bulletin del Departamento de Estado fija una fecha de corte para cada país y categoría, y solo avanzan quienes tienen una fecha de prioridad anterior. Cada solicitante se pregunta: ¿cuándo me toca? Las calculadoras públicas responden con una sola fecha, obtenida al prolongar en línea recta el avance reciente. Nosotros pronosticamos, en cambio, la probabilidad de que una fecha de prioridad se vuelva vigente en uno, tres o cinco años, y tratamos la espera como un tiempo de primer paso: el primer mes en que la fecha de corte rebasa la fecha de prioridad. Con 300 boletines (2001--2026) y 73 series, emitimos pronósticos cada año solo con la información disponible en ese momento, y los calificamos solo con desenlaces plenamente observados. Ninguno de los modelos comparados pronostica la fecha de corte del mes siguiente de forma significativamente mejor que suponer que no cambia. Para esperas más largas, simulamos trayectorias de la fecha de corte remuestreando bloques de los movimientos mensuales pasados de cada serie, y las comparamos con una referencia simple: con qué frecuencia se cerraron en el pasado brechas del mismo tamaño. La extrapolación en línea recta es el peor método evaluado, significativamente peor que la referencia en los tres horizontes. La referencia es difícil de vencer: la simulación sola no la mejora, y combinar ambas da ganancias pequeñas que se sostienen en todos los análisis de sensibilidad, aunque en el análisis principal no son estadísticamente significativas. Más allá de cinco años, reportamos escenarios, no pronósticos validados. Una fecha exacta promete más de lo que los datos permiten.",
+  "abstract": "Millones de personas con una petición familiar o de empleo para obtener la residencia permanente (green card) en Estados Unidos esperan años, a veces décadas, porque las visas tienen topes por categoría y por país. Su lugar en la fila es una fecha de prioridad. Cada mes, el Visa Bulletin del Departamento de Estado fija una fecha de corte para cada país y categoría, y solo avanzan quienes tienen una fecha de prioridad anterior. Cada solicitante se pregunta: ¿cuándo me toca? La mayoría de las calculadoras no oficiales responde con una sola fecha, obtenida al prolongar en línea recta el avance reciente. Nosotros pronosticamos, en cambio, la probabilidad de que una fecha de prioridad se vuelva vigente en uno, tres o cinco años, y tratamos la espera como un tiempo de primer paso: el primer mes en que la fecha de corte rebasa la fecha de prioridad. Con 301 boletines (2001--2026) y 73 series, emitimos pronósticos cada año solo con la información disponible en ese momento, y los calificamos solo con desenlaces plenamente observados. Ninguno de los modelos comparados pronostica la fecha de corte del mes siguiente de forma significativamente mejor que suponer que no cambia. Para esperas más largas, simulamos trayectorias de la fecha de corte remuestreando bloques de los movimientos mensuales pasados de cada serie, y las comparamos con una referencia simple: con qué frecuencia se cerraron en el pasado brechas del mismo tamaño. La extrapolación en línea recta es el peor método evaluado, significativamente peor que la referencia en los tres horizontes. La referencia es difícil de vencer: la simulación sola no la mejora, y combinar ambas da ganancias pequeñas que se sostienen en todos los análisis de sensibilidad, aunque en el análisis principal no son estadísticamente significativas. Más allá de cinco años, reportamos escenarios, no pronósticos validados. Una fecha exacta promete más de lo que los datos permiten.",
   "keywords": [
    "Tiempo de primer paso",
    "Pronóstico probabilístico",
@@ -33,16 +33,16 @@
  },
  "facts": {
   "fBulletins": {
-   "text": "300",
-   "value": 300.0
+   "text": "301",
+   "value": 301.0
   },
   "fRows": {
-   "text": "28,211",
-   "value": 28211.0
+   "text": "28,361",
+   "value": 28361.0
   },
   "fRowsF": {
-   "text": "16,323",
-   "value": 16323.0
+   "text": "16,426",
+   "value": 16426.0
   },
   "fSeriesAll": {
    "text": "194",
@@ -882,8 +882,8 @@
    "value": 0.218
   },
   "fCovOne": {
-   "text": "0.75",
-   "value": 0.75
+   "text": "0.76",
+   "value": 0.76
   },
   "fCovFive": {
    "text": "0.61",
@@ -1306,45 +1306,53 @@
    "text": "0.40",
    "value": 0.4
   },
+  "fLastBulletin": {
+   "text": "December 2026"
+  },
+  "fLastBulletinEs": {
+   "text": "diciembre de 2026"
+  },
+  "fOriginYearBound": {
+   "text": "2026",
+   "value": 2026.0
+  },
   "fExPhCut": {
-   "text": "May 15, 2008"
+   "text": "May 15, 2009"
   },
   "fExPhCutEs": {
-   "text": "15 de mayo de 2008"
+   "text": "15 de mayo de 2009"
   },
   "fExPhGap": {
-   "text": "11.6",
-   "value": 11.6
+   "text": "10.6",
+   "value": 10.6
   },
   "fExPhBlendOne": {
-   "text": "0 %",
-   "value": 0.0
+   "text": "<1 %"
   },
   "fExPhBlendThree": {
-   "text": "0 %",
-   "value": 0.0
+   "text": "1 %",
+   "value": 1.0
   },
   "fExPhBlendFive": {
-   "text": "3 %",
-   "value": 3.0
+   "text": "7 %",
+   "value": 7.0
   },
   "fExPhSimMedian": {
-   "text": "October 2034"
+   "text": "February 2034"
   },
   "fExPhSimMedianEs": {
-   "text": "octubre de 2034"
+   "text": "febrero de 2034"
   },
   "fExPhSimLeFive": {
-   "text": "5 %",
-   "value": 5.0
+   "text": "11 %",
+   "value": 11.0
   },
   "fExPhSimLeTen": {
-   "text": "82 %",
-   "value": 82.0
+   "text": "90 %",
+   "value": 90.0
   },
   "fExPhSimLeTwenty": {
-   "text": "100 %",
-   "value": 100.0
+   "text": ">99 %"
   },
   "fExPhSimLeThirty": {
    "text": "100 %",
@@ -1361,8 +1369,7 @@
    "value": 9.6
   },
   "fExMxBBlendOne": {
-   "text": "0 %",
-   "value": 0.0
+   "text": "<1 %"
   },
   "fExMxBBlendThree": {
    "text": "1 %",
@@ -1373,14 +1380,14 @@
    "value": 10.0
   },
   "fExMxBSimMedian": {
-   "text": "August 2033"
+   "text": "September 2033"
   },
   "fExMxBSimMedianEs": {
-   "text": "agosto de 2033"
+   "text": "septiembre de 2033"
   },
   "fExMxBSimLeFive": {
-   "text": "12 %",
-   "value": 12.0
+   "text": "13 %",
+   "value": 13.0
   },
   "fExMxBSimLeTen": {
    "text": "97 %",
@@ -1427,8 +1434,8 @@
    "value": 18.0
   },
   "fExInSimLeTen": {
-   "text": "61 %",
-   "value": 61.0
+   "text": "60 %",
+   "value": 60.0
   },
   "fExInSimLeTwenty": {
    "text": "90 %",
@@ -1439,14 +1446,14 @@
    "value": 97.0
   },
   "fExMxThreeCut": {
-   "text": "July 15, 2001"
+   "text": "July 15, 2002"
   },
   "fExMxThreeCutEs": {
-   "text": "15 de julio de 2001"
+   "text": "15 de julio de 2002"
   },
   "fExMxThreeGap": {
-   "text": "13.9",
-   "value": 13.9
+   "text": "12.9",
+   "value": 12.9
   },
   "fExMxThreeBlendOne": {
    "text": "0 %",
@@ -1461,26 +1468,36 @@
    "value": 1.0
   },
   "fExMxThreeSimMedian": {
-   "text": "February 2047"
+   "text": "July 2045"
   },
   "fExMxThreeSimMedianEs": {
-   "text": "febrero de 2047"
+   "text": "julio de 2045"
   },
   "fExMxThreeSimLeFive": {
    "text": "0 %",
    "value": 0.0
   },
   "fExMxThreeSimLeTen": {
-   "text": "0 %",
-   "value": 0.0
+   "text": "<1 %"
   },
   "fExMxThreeSimLeTwenty": {
-   "text": "48 %",
-   "value": 48.0
+   "text": "64 %",
+   "value": 64.0
   },
   "fExMxThreeSimLeThirty": {
-   "text": "99 %",
-   "value": 99.0
+   "text": ">99 %"
+  },
+  "fMxThreeFadCut": {
+   "text": "July 15, 2002"
+  },
+  "fMxThreeFadCutEs": {
+   "text": "15 de julio de 2002"
+  },
+  "fMxThreeDffCut": {
+   "text": "December 1, 2002"
+  },
+  "fMxThreeDffCutEs": {
+   "text": "1 de diciembre de 2002"
   },
   "fUBlendOne": {
    "text": "0.089",
@@ -1799,16 +1816,16 @@
    "value": 0.74
   },
   "fCovCensDetOne": {
-   "text": "779",
-   "value": 779.0
+   "text": "783",
+   "value": 783.0
   },
   "fCovCensFive": {
    "text": "0.59",
    "value": 0.59
   },
   "fCovCensDetFive": {
-   "text": "542",
-   "value": 542.0
+   "text": "547",
+   "value": 547.0
   },
   "fCovCensTwelve": {
    "text": "0.48",
